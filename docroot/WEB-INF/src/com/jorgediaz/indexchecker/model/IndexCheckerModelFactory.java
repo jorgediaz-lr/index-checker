@@ -48,7 +48,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 	}
 
 	@Override
-	public Model getModelObject(Class<? extends ClassedModel> clazz) throws Exception {
+	public Model getModelObject(Class<? extends ClassedModel> clazz) {
 
 		Model model = super.getModelObject(clazz);
 

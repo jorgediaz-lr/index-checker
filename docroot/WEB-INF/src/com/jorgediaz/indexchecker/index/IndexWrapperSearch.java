@@ -37,7 +37,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 	}
 
 	@Override
-	public Set<Data> getClassNameData(IndexCheckerModel modelClass) {
+	public Set<Data> getClassNameData(IndexCheckerModel model) {
 
 		Set<Data> indexData = new HashSet<Data>();
 
@@ -45,7 +45,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 		searchContext.setCompanyId(companyId);
 		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(searchContext);
 		contextQuery.addRequiredTerm(Field.COMPANY_ID, companyId);
-		contextQuery.addRequiredTerm(Field.ENTRY_CLASS_NAME, modelClass.getFullClassName());
+		contextQuery.addRequiredTerm(Field.ENTRY_CLASS_NAME, model.getClassName());
 
 		try {
 			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
@@ -60,9 +60,9 @@ public class IndexWrapperSearch extends IndexWrapper {
 	
 					String entryClassName = doc.getEntryClassName();
 	
-					if(entryClassName != null && entryClassName.equals(modelClass.getFullClassName()))
+					if(entryClassName != null && entryClassName.equals(model.getClassName()))
 					{
-						Data data = new Data(modelClass);
+						Data data = new Data(model);
 						data.init(doc);
 
 						indexData.add(data);
@@ -78,14 +78,14 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 
 	@Override
-	public Map<Long,Set<Data>> getClassNameDataByGroupId(IndexCheckerModel modelClass) {
+	public Map<Long,Set<Data>> getClassNameDataByGroupId(IndexCheckerModel model) {
 		Map<Long,Set<Data>> indexData = new HashMap<Long,Set<Data>>();
 
 		SearchContext searchContext = new SearchContext();
 		searchContext.setCompanyId(companyId);
 		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(searchContext);
 		contextQuery.addRequiredTerm(Field.COMPANY_ID, companyId);
-		contextQuery.addRequiredTerm(Field.ENTRY_CLASS_NAME, modelClass.getFullClassName());
+		contextQuery.addRequiredTerm(Field.ENTRY_CLASS_NAME, model.getClassName());
 
 
 		try {
@@ -101,9 +101,9 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if(entryClassName != null && entryClassName.equals(modelClass.getFullClassName()))
+					if(entryClassName != null && entryClassName.equals(model.getClassName()))
 					{
-						Data data = new Data(modelClass);
+						Data data = new Data(model);
 						data.init(doc);
 
 						Long groupId = data.getGroupId();

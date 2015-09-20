@@ -32,28 +32,29 @@ public class JournalArticle extends IndexCheckerModel {
 		}
 	}
 
+	@Override
 	public void reindex(Data value) throws SearchException {
 		if(indexAllVersions) {
 			super.reindex(value);
 		}
 		else {
-			getIndexer().reindex(this.getFullClassName(), value.getResourcePrimKey());
+			getIndexer().reindex(this.getClassName(), value.getResourcePrimKey());
 		}
 	}
 
 	@Override
-	public int[] getIndexedStatuses() {
+	public int[] getValidStatuses() {
 		if(indexAllVersions) {
 			return null;
 		}
 
-		return super.getIndexedStatuses();
+		return super.getValidStatuses();
 	}
 
-
-	public void addQueryCriterias(Conjunction conjunction) {
+	@Override
+	public Conjunction generateQueryFilter() {
 		
-		super.addQueryCriterias(conjunction);
+		Conjunction conjunction = super.generateQueryFilter();
 
 		Property propertyClassnameid = PropertyFactoryUtil.forName("classNameId");
 
@@ -62,5 +63,7 @@ public class JournalArticle extends IndexCheckerModel {
 		Property propertyIndexable = PropertyFactoryUtil.forName("indexable");
 
 		conjunction.add(propertyIndexable.eq(true));
+
+		return conjunction;
 	}
 }

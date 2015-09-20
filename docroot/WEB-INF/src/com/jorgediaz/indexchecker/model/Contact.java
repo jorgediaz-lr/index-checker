@@ -13,13 +13,14 @@ import com.liferay.portal.model.User;
 public class Contact extends IndexCheckerModel {
 
 	@Override
-	public int[] getIndexedStatuses() {
+	public int[] getValidStatuses() {
 		return null;
 	}
 
-	public void addQueryCriterias(Conjunction conjunction) {
+	@Override
+	public Conjunction generateQueryFilter() {
 		
-		super.addQueryCriterias(conjunction);
+		Conjunction conjunction = super.generateQueryFilter();
 
 		DynamicQuery userDynamicQuery = this.newDynamicQuery(User.class);
 
@@ -36,5 +37,7 @@ public class Contact extends IndexCheckerModel {
 		Property property = PropertyFactoryUtil.forName("classPK");
 
 		conjunction.add(property.notIn(userDynamicQuery));
+
+		return conjunction;
 	}
 }

@@ -45,6 +45,13 @@ indexWrapperClassName: <%= indexWrapperClassName %>
 dumpAllObjectsToLog: <%= dumpAllObjectsToLog %>
 </pre>
 
+
+<%
+if(!outputBothExact & !outputBothNotExact & !outputLiferay & !outputIndex) {
+	return;
+}
+%>
+
 <i>Output</i>
 <pre>
 <%

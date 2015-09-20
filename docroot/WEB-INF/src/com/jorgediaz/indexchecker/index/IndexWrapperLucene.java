@@ -25,7 +25,7 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 	abstract public int numDocs();
 
 	@Override
-	public Set<Data> getClassNameData(IndexCheckerModel modelClass) {
+	public Set<Data> getClassNameData(IndexCheckerModel model) {
 		Set<Data> indexData = new HashSet<Data>();
 		for(int i=0;i<maxDoc();i++) {
 		
@@ -36,9 +36,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if(entryClassName != null && entryClassName.equals(modelClass.getFullClassName()))
+					if(entryClassName != null && entryClassName.equals(model.getClassName()))
 					{
-						Data data = new Data(modelClass);
+						Data data = new Data(model);
 						data.init(doc);
 
 						indexData.add(data);
@@ -54,7 +54,7 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 	}
 
 	@Override
-	public Map<Long,Set<Data>> getClassNameDataByGroupId(IndexCheckerModel modelClass) {
+	public Map<Long,Set<Data>> getClassNameDataByGroupId(IndexCheckerModel model) {
 		Map<Long,Set<Data>> indexData = new HashMap<Long,Set<Data>>();
 		for(int i=0;i<maxDoc();i++) {
 		
@@ -65,9 +65,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if(entryClassName != null && entryClassName.equals(modelClass.getFullClassName()))
+					if(entryClassName != null && entryClassName.equals(model.getClassName()))
 					{
-						Data data = new Data(modelClass);
+						Data data = new Data(model);
 						data.init(doc);
 
 						Long groupId = data.getGroupId();

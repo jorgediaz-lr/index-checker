@@ -1,16 +1,17 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
+import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelFactory;
 import com.jorgediaz.util.model.ModelImpl;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.AuditedModel;
 import com.liferay.portal.model.ClassedModel;
@@ -112,6 +113,8 @@ public abstract class IndexCheckerModel extends ModelImpl {
 				}
 			}
 		}
+
+		this.setFilter(this.generateQueryFilter());
 	}
 
 	public String toString() {
@@ -123,14 +126,15 @@ public abstract class IndexCheckerModel extends ModelImpl {
 	}
 
 	public void reindex(Data value) throws SearchException {
-		getIndexer().reindex(getFullClassName(), value.getPrimaryKey());
+		getIndexer().reindex(getClassName(), value.getPrimaryKey());
 	}
 
 	public void delete(Data value) throws SearchException {
 		getIndexer().delete(value.getCompanyId(), value.getUid());
 	}
 
-	public int[] getIndexedStatuses() {
+	@Override
+	public int[] getValidStatuses() {
 		if (!this.modelExtendsClass(WorkflowedModel.class)) {
 			return null;
 		}
@@ -142,30 +146,25 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		return statuses;
 	}
 
-	public void addQueryCriterias(Conjunction conjunction) {
-	
-		int[] statuses = this.getIndexedStatuses();
-	
-		if(statuses != null) {
-			Property property = PropertyFactoryUtil.forName("status");
-	
-			conjunction.add(property.in(statuses));
-		}
-	}
-
 	public List<String> getIndexAttributes() {
 		return indexedAttributes;
 	}
 
-	public Map<Long,Data> getLiferayData(Long companyId) throws Exception {
-		return getLiferayData(companyId, null);
-	}
+	public Map<Long,Data> getLiferayData(Criterion filter) throws Exception {
 
-	public Map<Long,Data> getLiferayData(Long companyId, List<Long> listGroupId) throws Exception {
-		
 		Map<Long,Data> dataMap = new HashMap<Long,Data>();
-	
-		DynamicQuery query = getQueryOfObjectType(companyId, listGroupId);
+		/* TODO Añadir "Distinct" */
+		DynamicQuery query = newDynamicQuery();
+
+		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
+
+		for (String attrib : indexedAttributes) {
+			projectionList.add(ProjectionFactoryUtil.property(attrib));
+		}
+
+		query.setProjection(projectionList);
+
+		query.add(filter);
 	
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>) executeDynamicQuery(query);
@@ -180,58 +179,41 @@ public abstract class IndexCheckerModel extends ModelImpl {
 	
 	}
 
-	public DynamicQuery getQueryOfObjectType(Long companyId,
-			List<Long> listGroupId) throws Exception {
-
-		/* TODO Añadir "Distinct" */
-		DynamicQuery query = newDynamicQuery();
-
-		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
-
-		for (String attrib : indexedAttributes) {
-			projectionList.add(ProjectionFactoryUtil.property(attrib));
-		}
-
-		query.setProjection(projectionList);
-
-		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
-
-		if (indexedAttributes.contains("companyId") && companyId != null) {
-			Property property = PropertyFactoryUtil.forName("companyId");
-
-			conjunction.add(property.eq(companyId));
-		}
-
-		if (hasGroupId() && listGroupId != null) {
-			Property property = PropertyFactoryUtil.forName("groupId");
-
-			conjunction.add(property.in(listGroupId));
-		}
-
-		addQueryCriterias(conjunction);
-
-		query.add(conjunction);
-
-		return query;
+	public Conjunction generateQueryFilter() {
+		return RestrictionsFactoryUtil.conjunction();
 	}
 
-	public void addIndexedAttribute(String col) {
+	protected void addIndexedAttribute(String col) {
 		if(!indexedAttributes.contains(col)) {
 			indexedAttributes.add(col);
 		}
 	}
 
-	public void removeIndexedAttribute(String col) {
+	protected void removeIndexedAttribute(String col) {
 		while (indexedAttributes.contains(col)) {
 			indexedAttributes.remove(col);
 		}
 	}
 
-	public void setIndexPrimaryKey(String col) {
+	protected void setIndexPrimaryKey(String col) {
 		if(indexedAttributes.contains(col)) {
 			indexedAttributes.remove(col);
 		}
 		indexedAttributes.add(0, col);
+	}
+
+	@Override
+	public Model clone() {
+		IndexCheckerModel model;
+		try {
+			model = (IndexCheckerModel) super.clone();
+			model.indexedAttributes = ListUtil.copy(this.indexedAttributes);
+		}
+		catch (Exception e) {
+			System.err.println("Error executing clone");
+			throw new RuntimeException(e);
+		}
+		return model;
 	}
 
 	private List<String> indexedAttributes = null;

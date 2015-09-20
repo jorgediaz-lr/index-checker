@@ -14,9 +14,10 @@ public class WikiPage extends IndexCheckerModel {
 		this.setIndexPrimaryKey("nodeId");
 	}
 
-	public void addQueryCriterias(Conjunction conjunction) {
+	@Override
+	public Conjunction generateQueryFilter() {
 		
-		super.addQueryCriterias(conjunction);
+		Conjunction conjunction = super.generateQueryFilter();
 
 		Property propertyHead = PropertyFactoryUtil.forName("head");
 
@@ -25,5 +26,7 @@ public class WikiPage extends IndexCheckerModel {
 		Property propertyRedirectTitle = PropertyFactoryUtil.forName("redirectTitle");
 
 		conjunction.add(propertyRedirectTitle.eq(""));
+
+		return conjunction;
 	}
 }

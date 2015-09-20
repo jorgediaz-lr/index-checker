@@ -17,12 +17,15 @@ public class User extends IndexCheckerModel {
 		this.addIndexedAttribute("status");
 	}
 
-	public void addQueryCriterias(Conjunction conjunction) {
+	@Override
+	public Conjunction generateQueryFilter() {
 		
-		super.addQueryCriterias(conjunction);
+		Conjunction conjunction = super.generateQueryFilter();
 
 		Property property = PropertyFactoryUtil.forName("defaultUser");
 
 		conjunction.add(property.eq(false));
+
+		return conjunction;
 	}
 }

@@ -7,9 +7,10 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 
 public class MBMessage extends IndexCheckerModel {
 
-	public void addQueryCriterias(Conjunction conjunction) {
+	@Override
+	public Conjunction generateQueryFilter() {
 		
-		super.addQueryCriterias(conjunction);
+		Conjunction conjunction = super.generateQueryFilter();
 
 		Property propertyCategoryId = PropertyFactoryUtil.forName("categoryId");
 
@@ -21,5 +22,7 @@ public class MBMessage extends IndexCheckerModel {
 						.add(propertyCategoryId.eq(-1L))
 						.add(propertyParentMessageId.eq(0L))
 				));
+
+		return conjunction;
 	}
 }

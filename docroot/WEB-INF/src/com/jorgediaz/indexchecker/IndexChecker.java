@@ -6,7 +6,10 @@ import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.jorgediaz.indexchecker.model.IndexCheckerModelFactory;
 import com.jorgediaz.util.model.ModelFactory;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
@@ -146,9 +149,9 @@ public class IndexChecker {
 					continue;
 				}
 
-				out.println("\n---------------\nClassName["+(i++)+"]: "+ model.getFullClassName() +"\n---------------");
+				out.println("\n---------------\nClassName["+(i++)+"]: "+ model.getName() +"\n---------------");
 				if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-					System.out.println("\n---------------\nClassName["+(i++)+"]: "+ model.getFullClassName() +"\n---------------");
+					System.out.println("\n---------------\nClassName["+(i++)+"]: "+ model.getName() +"\n---------------");
 				}
 
 				if(model.hasGroupId()) {
@@ -158,7 +161,15 @@ public class IndexChecker {
 						for(Group group : groups) {
 							List<Long> listGroupId = new ArrayList<>();
 							listGroupId.add(group.getGroupId());
-							Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(companyId, listGroupId).values());
+							Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+							if (model.getIndexAttributes().contains("companyId")) {
+								conjunction.add(PropertyFactoryUtil.forName("companyId").eq(companyId));
+							}
+							
+							if (model.hasGroupId()) {
+								conjunction.add(PropertyFactoryUtil.forName("groupId").in(listGroupId));
+							}
+							Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(conjunction).values());
 							Set<Data> indexData = indexDataMap.get(group.getGroupId());
 							if(indexData == null) {
 								indexData = new HashSet<Data>();
@@ -177,7 +188,15 @@ public class IndexChecker {
 						for(Group group : groups) {
 							listGroupId.add(group.getGroupId());
 						}
-						Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(companyId, listGroupId).values());
+						Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+						if (model.getIndexAttributes().contains("companyId")) {
+							conjunction.add(PropertyFactoryUtil.forName("companyId").eq(companyId));
+						}
+						
+						if (model.hasGroupId()) {
+							conjunction.add(PropertyFactoryUtil.forName("groupId").in(listGroupId));
+						}
+						Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(conjunction).values());
 						Set<Data> indexData = indexWrapper.getClassNameData(model);
 
 						if(indexData.size() > 0 || liferayData.size() > 0) {
@@ -186,7 +205,11 @@ public class IndexChecker {
 					}
 				}
 				else {
-					Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(companyId).values());
+					Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+					if (model.getIndexAttributes().contains("companyId")) {
+						conjunction.add(PropertyFactoryUtil.forName("companyId").eq(companyId));
+					}
+					Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(conjunction).values());
 					Set<Data> indexData = indexWrapper.getClassNameData(model);
 
 					if(indexData.size() > 0 || liferayData.size() > 0) {
@@ -238,7 +261,7 @@ public class IndexChecker {
 				}
 				if(exactDataSetIndex.size() > 0 && executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT)) {
 					out.println("==both-exact==");
-					dumpData(modelClass.getFullClassName(), exactDataSetLiferay, maxLength);
+					dumpData(modelClass.getName(), exactDataSetLiferay, maxLength);
 					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 						System.out.println("==both-exact(index)==");
 						for(Data d : exactDataSetIndex) {
@@ -252,7 +275,7 @@ public class IndexChecker {
 				}
 				if(notExactDataSetIndex.size() > 0 && executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT)) {
 					out.println("==both-notexact==");
-					dumpData(modelClass.getFullClassName(), notExactDataSetIndex, maxLength);
+					dumpData(modelClass.getClassName(), notExactDataSetIndex, maxLength);
 					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 						System.out.println("==both-notexact(index)==");
 						for(Data d : notExactDataSetIndex) {
@@ -276,7 +299,7 @@ public class IndexChecker {
 			if(liferayData.size() > 0) {
 				if(executionMode.contains(ExecutionMode.SHOW_LIFERAY)) {
 					out.println("==only liferay==");
-					dumpData(modelClass.getFullClassName(), liferayData, maxLength);
+					dumpData(modelClass.getName(), liferayData, maxLength);
 					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 						System.out.println("==only liferay==");
 						for(Data d : liferayData) {
@@ -294,7 +317,7 @@ public class IndexChecker {
 			if(indexData.size() > 0) {
 				if(executionMode.contains(ExecutionMode.SHOW_INDEX)) {
 					out.println("==only index==");
-					dumpData(modelClass.getFullClassName(), indexData, maxLength);
+					dumpData(modelClass.getName(), indexData, maxLength);
 					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 						System.out.println("==only index==");
 						for(Data d : indexData) {

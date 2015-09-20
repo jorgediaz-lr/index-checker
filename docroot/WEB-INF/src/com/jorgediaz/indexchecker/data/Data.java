@@ -38,7 +38,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public Data(IndexCheckerModel baseModel) {
-		this.baseModel = baseModel;
+		this.model = baseModel;
 	}
 
 	public void init(DocumentWrapper  doc) {
@@ -53,7 +53,7 @@ public class Data implements Comparable<Data> {
 		this.setPrimaryKey((long) dataArray[0]);
 
 		int i = 0;
-		for(String attrib : baseModel.getIndexAttributes()) {
+		for(String attrib : model.getIndexAttributes()) {
 			BeanUtil.setPropertySilent(this,attrib,dataArray[i++]);
 		}
 	}
@@ -90,7 +90,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String getEntryClassName() {
-		return baseModel.getFullClassName();
+		return model.getClassName();
 	}
 
 	public long getPrimaryKey() {
@@ -158,7 +158,7 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 		Data data=(Data)obj;
-		if(this.baseModel != data.baseModel) {
+		if(this.model != data.model) {
 			return false;
 		}
 		if(this.primaryKey != -1 && data.primaryKey != -1) {
@@ -181,7 +181,7 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if(this.baseModel.hasGroupId() && !exactLongs(this.groupId,data.groupId)) {
+		if(this.model.hasGroupId() && !exactLongs(this.groupId,data.groupId)) {
 			return false;
 		}
 
@@ -249,7 +249,7 @@ public class Data implements Comparable<Data> {
 		return this.getEntryClassName() + " " + entryClassPK + " " + primaryKey + " " + resourcePrimKey + " " + uid;
 	}
 
-	protected IndexCheckerModel baseModel = null;
+	protected IndexCheckerModel model = null;
 	/* Liferay */
 	protected long primaryKey = -1;
 	protected long resourcePrimKey = -1;
