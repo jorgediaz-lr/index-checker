@@ -1,33 +1,62 @@
 package com.jorgediaz.indexchecker.model;
 
-import com.test.ModelUtil;
+import com.jorgediaz.indexchecker.data.Data;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.Map;
 
-public class DLFileEntry extends DefaultStatusModel {
+public class DLFileEntry extends BaseModelIndexChecker {
 
-	Set<String> attrAux = new HashSet<String>();
+	public Map<Long,Data> getLiferayData(Long companyId, List<Long> listGroupId) throws Exception {
+		Map<Long,Data> dataMap = super.getLiferayData(companyId, listGroupId);
 
-	public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
-		super.init(modelUtil, fullClassName);
+		DynamicQuery query = getDLFileVersionQuery(companyId, listGroupId);
 
-		attrAux.addAll(this.attributes);
-		attrAux.add("status");
+		@SuppressWarnings("unchecked")
+		List<Object[]> results = (List<Object[]>) this.executeDynamicQuery(DLFileVersion.class, query);
 
-		this.tableName = "dlfileversion v, dlfileentry";
+		for(Object[] result : results) {
+			long fileEntryId = (long) result[0];
+			int status = (int) result[1];
+
+			if (status == WorkflowConstants.STATUS_APPROVED || status == WorkflowConstants.STATUS_IN_TRASH) {
+				dataMap.get(fileEntryId).setStatus(status);
+			}
+			else {
+				dataMap.remove(fileEntryId);
+			}
+		}
+
+		return dataMap;
 	}
 
-	public Set<String> getAttributes() {
-		return attrAux;
-	}
+	protected DynamicQuery getDLFileVersionQuery(Long companyId, List<Long> listGroupId)
+			throws IllegalAccessException, InvocationTargetException {
+		DynamicQuery query = this.newDynamicQuery(DLFileVersion.class);
 
-	public String getSQLAttributes() {
-		return super.getSQLAttributes() + ",status";
-	}
+		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
+		projectionList.add(ProjectionFactoryUtil.property("fileEntryId"));
+		projectionList.add(ProjectionFactoryUtil.property("status"));
 
-	public String getSQLWhere() {
-		return super.getSQLWhere() + " and t.fileentryid = v.fileentryid and t.version = v.version";
-	}
+		query.setProjection(projectionList);
 
+		Property propertyCompanyId = PropertyFactoryUtil.forName("companyId");
+
+		Property propertyGroupId = PropertyFactoryUtil.forName("groupId");
+
+		query.add(RestrictionsFactoryUtil.conjunction()
+						.add(propertyCompanyId.eq(companyId))
+						.add(propertyGroupId.in(listGroupId)));
+
+		return query;
+	}
 }

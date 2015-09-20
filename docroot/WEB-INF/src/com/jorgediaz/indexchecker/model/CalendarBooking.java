@@ -2,12 +2,17 @@ package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-public class CalendarBooking extends BaseModel {
+public class CalendarBooking extends BaseModelIndexChecker {
 
 	public static final int STATUS_MAYBE = 9;
 
-	protected String getSQLWhere() {
+	@Override
+	public int[] getIndexedStatuses() {
 
-		return super.getSQLWhere() + " and status in (" + WorkflowConstants.STATUS_APPROVED + "," + STATUS_MAYBE + ")";
+		int[] statuses = {
+				WorkflowConstants.STATUS_APPROVED,
+				STATUS_MAYBE
+			};
+		return statuses;
 	}
 }

@@ -1,32 +1,33 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
+import com.jorgediaz.util.model.ModelUtil;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.test.ModelUtil;
+import com.liferay.portal.model.ClassedModel;
 
 
-public class JournalArticle extends BaseModel {
+public class JournalArticle extends BaseModelIndexChecker {
 
 	protected boolean indexAllVersions;
 
-	public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
-		super.init(modelUtil, fullClassName);
-
-		conditions.remove("indexable");
+	@Override
+	public void init(ModelUtil modelUtil, Class<? extends ClassedModel> clazz) throws Exception {
+		super.init(modelUtil, clazz);
 
 		try {
 			indexAllVersions = PrefsPropsUtil.getBoolean("journal.articles.index.all.versions");
 		} catch (SystemException e) {
-			e.printStackTrace();
 
 			throw new RuntimeException(e);
 		}
 
 		if(!indexAllVersions) {
-			this.primaryKey = "resourcePrimKey";
+			this.setIndexPrimaryKey("resourcePrimKey");
 		}
 	}
 
@@ -35,18 +36,30 @@ public class JournalArticle extends BaseModel {
 			super.reindex(value);
 		}
 		else {
-			indexer.reindex(fullClassName, value.getResourcePrimKey());
+			getIndexer().reindex(this.getFullClassName(), value.getResourcePrimKey());
 		}
 	}
 
-	public String getSQLWhere() {
+	@Override
+	public int[] getIndexedStatuses() {
 		if(indexAllVersions) {
-			return super.getSQLWhere() + " and classnameid = 0 and indexable = [$TRUE$]";
+			return null;
 		}
-		else {
-			return super.getSQLWhere() + " and classnameid = 0 and indexable = [$TRUE$] " + 
-					"and status in (" + WorkflowConstants.STATUS_APPROVED + "," +
-						WorkflowConstants.STATUS_IN_TRASH + ")";
-		}
+
+		return super.getIndexedStatuses();
+	}
+
+
+	public void addQueryCriterias(Conjunction conjunction) {
+		
+		super.addQueryCriterias(conjunction);
+
+		Property propertyClassnameid = PropertyFactoryUtil.forName("classNameId");
+
+		conjunction.add(propertyClassnameid.eq(0L));
+
+		Property propertyIndexable = PropertyFactoryUtil.forName("indexable");
+
+		conjunction.add(propertyIndexable.eq(true));
 	}
 }

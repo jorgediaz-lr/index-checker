@@ -1,17 +1,29 @@
 package com.jorgediaz.indexchecker.model;
 
-import com.test.ModelUtil;
+import com.jorgediaz.util.model.ModelUtil;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.model.ClassedModel;
 
-public class WikiPage extends DefaultStatusModel {
+public class WikiPage extends BaseModelIndexChecker {
 	
-	public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
-		super.init(modelUtil, fullClassName);
+	public void init(ModelUtil modelUtil, Class<? extends ClassedModel> clazz) throws Exception {
+		super.init(modelUtil, clazz);
 
-		this.primaryKey = "nodeId";
-		this.attributes.add(this.primaryKey);
+		this.setIndexPrimaryKey("nodeId");
 	}
 
-	public String getSQLWhere() {
-		return super.getSQLWhere() + " and head = [$TRUE$] and redirecttitle = ''";
+	public void addQueryCriterias(Conjunction conjunction) {
+		
+		super.addQueryCriterias(conjunction);
+
+		Property propertyHead = PropertyFactoryUtil.forName("head");
+
+		conjunction.add(propertyHead.eq(true));
+
+		Property propertyRedirectTitle = PropertyFactoryUtil.forName("redirectTitle");
+
+		conjunction.add(propertyRedirectTitle.eq(""));
 	}
 }

@@ -1,5 +1,7 @@
 package com.jorgediaz.indexchecker.model;
 
+import com.jorgediaz.util.model.BaseModel;
+import com.jorgediaz.util.model.ModelUtil;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.BaseIndexer;
@@ -8,7 +10,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.service.PortletLocalServiceUtil;
 import com.liferay.portal.util.comparator.PortletLuceneComparator;
-import com.test.ModelUtil;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -16,13 +17,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ModelInfo {
+public class ModelInfoIndexChecker {
 
-	public ModelInfo(long companyId, String filter) 
+	public static Class<? extends BaseModel> defaultModelClass = DefaultModelIndexChecker.class;
+
+	public static Map<String, Class<? extends BaseModel>> modelClassMap = new HashMap<String, Class<? extends BaseModel>>();
+	
+	static {
+		modelClassMap.put("com.liferay.portlet.asset.model.AssetEntry", NotIndexed.class);
+		modelClassMap.put("com.liferay.portlet.calendar.model.CalendarBooking", CalendarBooking.class);
+		modelClassMap.put("com.liferay.portal.model.Contact", Contact.class);
+		modelClassMap.put("com.liferay.portlet.documentlibrary.model.DLFileEntry", DLFileEntry.class);
+		modelClassMap.put("com.liferay.portlet.journal.model.JournalArticle", JournalArticle.class);
+		modelClassMap.put("com.liferay.portlet.messageboards.model.MBMessage", MBMessage.class);
+		modelClassMap.put("com.liferay.portlet.trash.model.TrashEntry", NotIndexed.class);
+		modelClassMap.put("com.liferay.portal.model.User", User.class);
+		modelClassMap.put("com.liferay.portlet.wiki.model.WikiNode", WikiNode.class);
+		modelClassMap.put("com.liferay.portlet.wiki.model.WikiPage", WikiPage.class);
+	}
+
+	
+
+	public ModelInfoIndexChecker(long companyId, String filter) 
 			throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException, InstantiationException, SystemException {
 
-		this.modelHash = new HashMap<String, BaseModel>();
-		this.modelList = new ArrayList<BaseModel>();
+		ModelUtil modelUtil = new ModelUtil(defaultModelClass, modelClassMap); 
+
+		this.modelList = new ArrayList<BaseModelIndexChecker>();
 
 		List<Portlet> portlets = PortletLocalServiceUtil.getPortlets(companyId);
 
@@ -42,12 +63,10 @@ public class ModelInfo {
 				continue;
 			}
 
-			ModelUtil modelUtil = new ModelUtil(); 
-
 			for(Indexer indexer : indexers) {
 				System.out.println("Indexer: "+indexer);
 				try {
-					BaseIndexer baseindexer = ModelInfo.getBaseIndexer(indexer);
+					BaseIndexer baseindexer = ModelInfoIndexChecker.getBaseIndexer(indexer);
 
 					if(baseindexer != null && !baseindexer.isIndexerEnabled()) {
 						continue;
@@ -60,17 +79,16 @@ public class ModelInfo {
 						if(fullClassName != null && 
 								(filter == null || fullClassName.contains(filter))) {
 
-							BaseModel model = ModelInfo.createModel(modelUtil, fullClassName);
+							BaseModelIndexChecker model = (BaseModelIndexChecker) modelUtil.getModelObject(fullClassName);
 
-							if(model != null && model.isIndexedModel()) {
-								modelHash.put(fullClassName, model);
+							if(model != null) {
 								modelList.add(model);
 							}
 						}
 					}
 				}
 				catch (Exception e) {
-					System.out.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+					System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
 					e.printStackTrace();
 					continue;
 				}
@@ -91,51 +109,10 @@ public class ModelInfo {
 		return baseindexer;
 	}
 
-	protected static BaseModel createModel(ModelUtil modelUtil, String fullClassName)
-			throws Exception {
-
-		BaseModel type = getModelJavaClass(fullClassName);
-
-		type.init(modelUtil, fullClassName);
-
-		return type;
-	}
-
-	public static BaseModel getModelJavaClass(String fullClassName)
-			throws InstantiationException, IllegalAccessException {
-
-		int lastDot = fullClassName.lastIndexOf(".");
-
-		String className = 
-			fullClassName.substring(lastDot+1,fullClassName.length());
-		BaseModel type;
-		
-		try {
-			Class<?> typeClass = Class.forName("com.jorgediaz.indexchecker.model."+className);
-			System.out.println(typeClass);
-			type = (BaseModel) typeClass.newInstance();
-		}
-		catch (ClassNotFoundException e) {
-			System.out.println(e);
-			type = new DefaultModel();
-		}
-
-		return type;
-	}
-
-	public BaseModel getModel(String fullClassName) {
-		return modelHash.get(fullClassName);
-	}
-
-	public boolean hasModel(String fullClassName) {
-		return modelHash.containsKey(fullClassName);
-	}
-
-	public List<BaseModel> getModelList() {
+	public List<BaseModelIndexChecker> getModelList() {
 		return modelList;
 	}
 
-	private Map<String, BaseModel> modelHash = null;
-	private List<BaseModel> modelList = null;
+	private List<BaseModelIndexChecker> modelList = null;
 
 }

@@ -2,10 +2,14 @@ package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-public class WikiNode extends BaseModel {
+public class WikiNode extends BaseModelIndexChecker {
 
-	public String getSQLWhere() {
+	@Override
+	public int[] getIndexedStatuses() {
 
-		return super.getSQLWhere() + " and status = " + WorkflowConstants.STATUS_IN_TRASH;
+		int[] statuses = {
+				WorkflowConstants.STATUS_IN_TRASH
+			};
+		return statuses;
 	}
 }

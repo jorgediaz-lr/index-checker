@@ -1,17 +1,28 @@
 package com.jorgediaz.indexchecker.model;
 
-import com.test.ModelUtil;
+import com.jorgediaz.util.model.ModelUtil;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.model.ClassedModel;
 
 
-public class User extends BaseModel {
+public class User extends BaseModelIndexChecker {
 
-	public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
-		super.init(modelUtil, fullClassName);
+	@Override
+	public void init(ModelUtil modelUtil, Class<? extends ClassedModel> clazz) throws Exception {
+		super.init(modelUtil, clazz);
 
-		attributes.remove("createDate");
+		this.removeIndexedAttribute("createDate");
+		this.addIndexedAttribute("status");
 	}
 
-	public String getSQLWhere() {
-		return super.getSQLWhere() + " and defaultuser = [$FALSE$]";
+	public void addQueryCriterias(Conjunction conjunction) {
+		
+		super.addQueryCriterias(conjunction);
+
+		Property property = PropertyFactoryUtil.forName("defaultUser");
+
+		conjunction.add(property.eq(false));
 	}
 }

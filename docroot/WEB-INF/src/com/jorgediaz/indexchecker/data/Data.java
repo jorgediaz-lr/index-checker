@@ -1,11 +1,9 @@
 package com.jorgediaz.indexchecker.data;
 
 import com.jorgediaz.indexchecker.index.DocumentWrapper;
-import com.jorgediaz.indexchecker.model.BaseModel;
+import com.jorgediaz.indexchecker.model.BaseModelIndexChecker;
 import com.liferay.portal.kernel.search.Field;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import jodd.bean.BeanUtil;
@@ -39,20 +37,8 @@ public class Data implements Comparable<Data> {
 		return null;
 	}
 
-	protected static String getValue(ResultSet rs, String attrib) throws SQLException {
-		String value = null;
-		try {
-			Timestamp t = rs.getTimestamp(attrib);
-			value = String.valueOf(t.getTime());
-		}
-		catch(Exception e) {
-			value = rs.getString(attrib);
-		}
-		return value;
-	}
-
-	public Data(BaseModel modelClass) {
-		this.modelClass = modelClass;
+	public Data(BaseModelIndexChecker baseModel) {
+		this.baseModel = baseModel;
 	}
 
 	public void init(DocumentWrapper  doc) {
@@ -62,12 +48,13 @@ public class Data implements Comparable<Data> {
 		}
 	}
 
-	public void init(ResultSet rs) throws SQLException {
+	public void init(Object[] dataArray) {
 
-		this.setPrimaryKey(rs.getLong(modelClass.getPrimaryKey()));
+		this.setPrimaryKey((long) dataArray[0]);
 
-		for(String attrib : modelClass.getAttributes()) {
-			BeanUtil.setPropertySilent(this,attrib,getValue(rs, attrib));
+		int i = 0;
+		for(String attrib : baseModel.getIndexAttributes()) {
+			BeanUtil.setPropertySilent(this,attrib,dataArray[i++]);
 		}
 	}
 
@@ -103,7 +90,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String getEntryClassName() {
-		return modelClass.getFullClassName();
+		return baseModel.getFullClassName();
 	}
 
 	public long getPrimaryKey() {
@@ -158,11 +145,11 @@ public class Data implements Comparable<Data> {
 		this.setModifiedDate(modifiedDate);
 	}
 
-	public Long getStatus() {
+	public Integer getStatus() {
 		return status;
 	}
 
-	public void setStatus(Long status) {
+	public void setStatus(Integer status) {
 		this.status = status;
 	}
 
@@ -171,7 +158,7 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 		Data data=(Data)obj;
-		if(this.modelClass != data.modelClass) {
+		if(this.baseModel != data.baseModel) {
 			return false;
 		}
 		if(this.primaryKey != -1 && data.primaryKey != -1) {
@@ -194,7 +181,7 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if(this.modelClass.hasGroupId() && !exactLongs(this.groupId,data.groupId)) {
+		if(this.baseModel.hasGroupId() && !exactLongs(this.groupId,data.groupId)) {
 			return false;
 		}
 
@@ -206,11 +193,19 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if(!exactLongs(this.status,data.status)) {
+		if(!exactIntegers(this.status,data.status)) {
 			return false;
 		}
 
 		return true;
+	}
+
+	public static boolean exactIntegers(Integer i1, Integer i2) {
+		if(i1 == null) {
+			return (i1 == i2);
+		}
+
+		return i1.equals(i2);
 	}
 
 	public static boolean exactLongs(Long l1, Long l2) {
@@ -250,7 +245,7 @@ public class Data implements Comparable<Data> {
 		return this.getEntryClassName() + " - " + entryClassPK + " - " + primaryKey + " - " + resourcePrimKey + " - " + uid;
 	}
 
-	protected BaseModel modelClass = null;
+	protected BaseModelIndexChecker baseModel = null;
 	/* Liferay */
 	protected long primaryKey = -1;
 	protected long resourcePrimKey = -1;
@@ -262,5 +257,5 @@ public class Data implements Comparable<Data> {
 	protected Long groupId = null;
 	protected Long createDate = null;
 	protected Long modifiedDate = null;
-	protected Long status = null;
+	protected Integer status = null;
 }

@@ -1,5 +1,5 @@
-package com.jorgediaz.indexchecker.model;
+package com.jorgediaz.util.model;
 
 public class DefaultModel extends BaseModel {
-	
+
 }
