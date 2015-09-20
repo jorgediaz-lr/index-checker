@@ -4,11 +4,9 @@ import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.model.Company;
 import com.liferay.portal.util.PortalUtil;
 import com.script.data.Data;
 
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -210,7 +208,10 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 			return indexedModel;
 		}
 
-		public Set<Data> getLiferayData(PrintWriter out, Long companyId, Long groupId) throws SQLException {
+		public Set<Data> getLiferayData(Long companyId) throws SQLException {
+			return getLiferayData(companyId, null);
+		}
+		public Set<Data> getLiferayData(Long companyId, Long groupId) throws SQLException {
 		
 			Set<Data> dataSet = new HashSet<Data>();
 			
@@ -225,7 +226,7 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 		
 				sql = PortalUtil.transformSQL(sql);
 		
-				out.println("SQL: "+ sql);
+				System.out.println("SQL: "+ sql);
 			
 				ps = con.prepareStatement(sql);
 			

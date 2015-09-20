@@ -20,7 +20,7 @@ public abstract class IndexWrapper {
 	abstract public boolean isDeleted(int i);
 	abstract public DocumentWrapper document(int i);
 
-	public Set<Data> getClassNameData(String fullClassName, Long groupId) {
+	public Set<Data> getClassNameData(String fullClassName) {
 		Set<Data> indexData = new HashSet<Data>();
 		for(int i=0;i<maxDoc();i++) {
 		
@@ -36,9 +36,44 @@ public abstract class IndexWrapper {
 						Data data = new Data();
 						data.init(doc, fullClassName);
 
-						if((groupId == null) || (data.groupId == groupId)) {
-							indexData.add(data);
+						indexData.add(data);
+					}
+	
+				}
+			}
+			catch(Exception e) {
+				out.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+			}
+		}
+		return indexData;
+	}
+
+	public Map<Long,Set<Data>> getClassNameDataByGroupId(String fullClassName) {
+		Map<Long,Set<Data>> indexData = new HashMap<Long,Set<Data>>();
+		for(int i=0;i<maxDoc();i++) {
+		
+			try {
+				if(!isDeleted(i)) {
+	
+					DocumentWrapper doc = document(i);
+
+					String entryClassName = doc.getEntryClassName();
+
+					if(entryClassName != null && entryClassName.equals(fullClassName))
+					{
+						Data data = new Data();
+						data.init(doc, fullClassName);
+
+						Long groupId = null;
+						if(data.groupId != -1) {groupId = data.groupId;}
+
+						Set<Data> indexDataSet = indexData.get(groupId);
+						if(indexDataSet == null) {
+							indexDataSet = new HashSet<Data>();
+							indexData.put(groupId, indexDataSet);
 						}
+
+						indexDataSet.add(data);
 					}
 	
 				}

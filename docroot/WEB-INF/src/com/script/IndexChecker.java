@@ -65,37 +65,36 @@ public class IndexChecker {
 					return;
 				}
 				Map<String,Long> indexClassNameNum = indexWrapper.getClassNameNum(filter);
-	
-				List<Group> groups = new ArrayList<Group>(GroupLocalServiceUtil.getCompanyGroups(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS));
+
+				List<Group> groups = GroupLocalServiceUtil.getCompanyGroups(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 				int i = 0;
 				for(BaseModel modelClass : modelClassList) {
 					try {
 						indexClassNameNum.remove(modelClass.getFullClassName());
 						out.println("\n---------------\nClassName["+(i++)+"]: "+ modelClass.getFullClassName() +"\n---------------");
-	
-						Set<Data> liferayData = modelClass.getLiferayData(out,company.getCompanyId(),(Long)null);
-						Set<Data> indexData = indexWrapper.getClassNameData(modelClass.getFullClassName(),(Long)null);
+
 						if(outputMode.contains(OutputMode.GROUP_BY_SITE) && modelClass.hasGroupId()) {
-							groups.add(null);
+							Map<Long, Set<Data>> indexDataMap = indexWrapper.getClassNameDataByGroupId(modelClass.getFullClassName());
 							for(Group group : groups) {
-								Set<Data> filteredLiferayData = filterByGroup(group, liferayData);
-								Set<Data> filteredIndexData = filterByGroup(group, indexData);
-								if(filteredIndexData.size() > 0 || filteredLiferayData.size() > 0) {
-									if(group != null) {
-										out.println("***GROUP: "+group.getGroupId() + " - " + group.getName());
-									}
-									else {
-										out.println("***GROUP: N/A");
-									}
-									dumpData(modelClass, filteredLiferayData, filteredIndexData, maxLength, outputMode, reindex, removeOrphan);
+
+								Set<Data> liferayData = modelClass.getLiferayData(company.getCompanyId(),group.getGroupId());
+								Set<Data> indexData = indexDataMap.get(group.getGroupId());
+								if((indexData != null && indexData.size() > 0) || liferayData.size() > 0) {
+									out.println("***GROUP: "+group.getGroupId() + " - " + group.getName());
+									dumpData(modelClass, liferayData, indexData, maxLength, outputMode, reindex, removeOrphan);
 								}
 							}
 						}
 						else {
-							if(outputMode.contains(OutputMode.GROUP_BY_SITE)) {
-								out.println("***GROUP: N/A");
+							Set<Data> liferayData = modelClass.getLiferayData(company.getCompanyId());
+							Set<Data> indexData = indexWrapper.getClassNameData(modelClass.getFullClassName());
+
+							if(indexData.size() > 0 || liferayData.size() > 0) {
+								if(outputMode.contains(OutputMode.GROUP_BY_SITE)) {
+									out.println("***GROUP: N/A");
+								}
+								dumpData(modelClass, liferayData, indexData, maxLength, outputMode, reindex, removeOrphan);
 							}
-							dumpData(modelClass, liferayData, indexData, maxLength, outputMode, reindex, removeOrphan);
 						}
 					}
 					catch (Exception e) {
