@@ -1,0 +1,20 @@
+http://wiki.apache.org/solr/CommonQueryParameters#Deep_paging_with_cursorMark
+http://solr.pl/en/2014/03/10/solr-4-7-efficient-deep-paging/
+http://heliosearch.org/solr/paging-and-deep-paging/
+https://cwiki.apache.org/confluence/display/solr/Pagination+of+Results
+
+SolrQuery q = (new SolrQuery(some_query)).setRows(r).setSort(SortClause.asc("id"));
+String cursorMark = CursorMarkParams.CURSOR_MARK_START;
+boolean done = false;
+while (! done) {
+  q.set(CursorMarkParams.CURSOR_MARK_PARAM, cursorMark);
+  QueryResponse rsp = solrServer.query(q);
+  String nextCursorMark = rsp.getNextCursorMark();
+  doCustomProcessingOfResults(rsp);
+  if (cursorMark.equals(nextCursorMark)) {
+    done = true;
+  }
+  cursorMark = nextCursorMark;
+}
+
+https://www.permeance.com.au/web/peter.svehla/home/-/blogs/liferay-solr-integration
