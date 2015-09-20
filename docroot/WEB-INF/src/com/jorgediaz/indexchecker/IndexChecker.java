@@ -62,7 +62,9 @@ public class IndexChecker {
 				}
 				List<Group> groups = GroupLocalServiceUtil.getCompanyGroups(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 				
-				dumpData(maxLength, executionMode, indexWrapper, modelInfo, groups);
+				dumpUncheckedClassNames(modelInfo, indexWrapper);
+				
+				dumpData(modelInfo, indexWrapper, groups, executionMode, maxLength);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -70,15 +72,30 @@ public class IndexChecker {
 		}
 	}
 
-	protected void dumpData(int maxLength, Set<ExecutionMode> executionMode,
-			IndexWrapper indexWrapper, ModelInfo modelUtil, List<Group> groups) {
+	protected void dumpUncheckedClassNames(ModelInfo modelUtil,
+			IndexWrapper indexWrapper) {
+		Set<String> indexClassNameSet = indexWrapper.getTermValues("entryClassName");
+		
+		for(BaseModel modelClass : modelUtil.getModelList()) {
+			indexClassNameSet.remove(modelClass.getFullClassName());
+		}
+		if(indexClassNameSet.size() > 0) {
+			out.println("");
+			out.println("---------------");
+			out.println("classNames at Index, that we are not going to check!!");
+			out.println("---------------");
+			for(String className : indexClassNameSet) {
+				out.println(className);
+			}
+		}
+	}
 
-		Map<String,Long> indexClassNameNum = indexWrapper.getClassNameNum(modelUtil);
+	protected void dumpData(ModelInfo modelUtil, IndexWrapper indexWrapper,
+			List<Group> groups, Set<ExecutionMode> executionMode, int maxLength) {
 
 		int i = 0;
 		for(BaseModel modelClass : modelUtil.getModelList()) {
 			try {
-				indexClassNameNum.remove(modelClass.getFullClassName());
 				out.println("\n---------------\nClassName["+(i++)+"]: "+ modelClass.getFullClassName() +"\n---------------");
 
 				if(executionMode.contains(ExecutionMode.GROUP_BY_SITE) && modelClass.hasGroupId()) {
@@ -112,13 +129,6 @@ public class IndexChecker {
 				out.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
 				e.printStackTrace();
 			}
-		}
-
-		if(indexClassNameNum.keySet().size() > 0) {
-			out.println("\n---------------\nclassNames at Index, that we didn't check!!\n---------------");
-		}
-		for(String className : indexClassNameNum.keySet()) {
-			out.println(className + " - " + indexClassNameNum.get(className));
 		}
 	}
 

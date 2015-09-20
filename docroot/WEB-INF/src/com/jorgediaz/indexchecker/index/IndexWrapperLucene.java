@@ -1,6 +1,11 @@
 package com.jorgediaz.indexchecker.index;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.IndexSearcher;
 
 public class IndexWrapperLucene extends IndexWrapper {
@@ -16,6 +21,27 @@ public class IndexWrapperLucene extends IndexWrapper {
 		index = indexSearcher.getIndexReader();
 	}
 
+	@Override
+	public Set<String> getTermValues(String field) {
+
+		Set<String> values=new HashSet<String>();
+		try {
+			TermEnum terms = ((IndexReader)index).terms(new Term(field));
+			Term currTerm = terms.term();
+			while((currTerm != null) && currTerm.field().equals(field)) {
+				values.add(currTerm.text());
+				terms.next();
+				currTerm = terms.term();
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+		return values;
+	}
+
+	@Override
 	public int numDocs() {
 		if(index == null) {
 			return 0;
@@ -23,6 +49,7 @@ public class IndexWrapperLucene extends IndexWrapper {
 		return ((IndexReader)index).numDocs();
 	}
 
+	@Override
 	public int maxDoc() {
 		if(index == null) {
 			return 0;
@@ -30,6 +57,7 @@ public class IndexWrapperLucene extends IndexWrapper {
 		return ((IndexReader)index).maxDoc();
 	}
 
+	@Override
 	public boolean isDeleted(int i) {
 		if(index == null) {
 			return true;
@@ -37,6 +65,7 @@ public class IndexWrapperLucene extends IndexWrapper {
 		return ((IndexReader)index).isDeleted(i);
 	}
 
+	@Override
 	public DocumentWrapper document(int i) {
 		if(index == null) {
 			return null;

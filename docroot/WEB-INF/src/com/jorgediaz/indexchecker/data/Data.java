@@ -19,7 +19,7 @@ public class Data implements Comparable<Data> {
 		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
 		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID};
 
-	public static Long stringToTime(String dateString) {
+	protected static Long stringToTime(String dateString) {
 		if(dateString == null) {
 			return null;
 		}
@@ -29,10 +29,26 @@ public class Data implements Comparable<Data> {
 		} catch (Exception e) {}
 
 		try {
+			return (Long.valueOf(dateString))/1000;
+		} catch (Exception e) {}
+
+		try {
 			return (Timestamp.valueOf(dateString).getTime())/1000;
 		} catch (Exception e) {}
 
 		return null;
+	}
+
+	protected static String getValue(ResultSet rs, String attrib) throws SQLException {
+		String value = null;
+		try {
+			Timestamp t = rs.getTimestamp(attrib);
+			value = String.valueOf(t.getTime());
+		}
+		catch(Exception e) {
+			value = rs.getString(attrib);
+		}
+		return value;
 	}
 
 	public Data(BaseModel modelClass) {
@@ -51,7 +67,7 @@ public class Data implements Comparable<Data> {
 		this.setPrimaryKey(rs.getLong(modelClass.getPrimaryKey()));
 
 		for(String attrib : modelClass.getAttributes()) {
-			BeanUtil.setPropertySilent(this,attrib,rs.getString(attrib));
+			BeanUtil.setPropertySilent(this,attrib,getValue(rs, attrib));
 		}
 	}
 

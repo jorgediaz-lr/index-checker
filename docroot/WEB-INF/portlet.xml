@@ -4,36 +4,6 @@
 	<portlet>
 		<portlet-name>index_checker</portlet-name>
 		<display-name>Index Checker</display-name>
-		<portlet-class>com.liferay.util.bridges.mvc.MVCPortlet</portlet-class>
-		<init-param>
-			<name>view-template</name>
-			<value>/view.jsp</value>
-		</init-param>
-		<expiration-cache>0</expiration-cache>
-		<supports>
-			<mime-type>text/html</mime-type>
-		</supports>
-		<portlet-info>
-			<title>Index Checker</title>
-			<short-title>Index Checker</short-title>
-			<keywords>Index Checker</keywords>
-		</portlet-info>
-		<security-role-ref>
-			<role-name>administrator</role-name>
-		</security-role-ref>
-		<security-role-ref>
-			<role-name>guest</role-name>
-		</security-role-ref>
-		<security-role-ref>
-			<role-name>power-user</role-name>
-		</security-role-ref>
-		<security-role-ref>
-			<role-name>user</role-name>
-		</security-role-ref>
-	</portlet>
-	<portlet>
-		<portlet-name>index-checker</portlet-name>
-		<display-name>Index Checker</display-name>
 		<portlet-class>com.test.IndexChecker</portlet-class>
 		<init-param>
 			<name>view-template</name>

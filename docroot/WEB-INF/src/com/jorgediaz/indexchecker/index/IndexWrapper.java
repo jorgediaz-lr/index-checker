@@ -2,7 +2,6 @@ package com.jorgediaz.indexchecker.index;
 
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.model.BaseModel;
-import com.jorgediaz.indexchecker.model.ModelInfo;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +13,8 @@ public abstract class IndexWrapper {
 
 	protected Object index = null;
 
-	abstract public  int numDocs();
+	abstract public Set<String> getTermValues(String term);
+	abstract public int numDocs();
 	abstract public int maxDoc();
 	abstract public boolean isDeleted(int i);
 	abstract public DocumentWrapper document(int i);
@@ -81,37 +81,6 @@ public abstract class IndexWrapper {
 			}
 		}
 		return indexData;
-	}
-
-	public Map<String,Long> getClassNameNum(ModelInfo modelUtil) {
-		Map<String,Long> classNameNum = new HashMap<String,Long>();
-		for(int i=0;i<maxDoc();i++) {
-		
-			try {
-				if(!isDeleted(i)) {
-	
-					DocumentWrapper doc = document(i);
-	
-					String entryClassName = doc.getEntryClassName();
-	
-					if(entryClassName == null) {
-						continue;
-					}
-	
-					if(modelUtil.hasModel(entryClassName)) {
-						Long numEntries = classNameNum.get(entryClassName);
-						if(numEntries == null) {
-							numEntries = Long.valueOf(0);
-						}
-						classNameNum.put(entryClassName, numEntries+1);
-					}
-				}
-			}
-			catch(Exception e) {
-				System.out.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
-			}
-		}
-		return classNameNum;
 	}
 
 }

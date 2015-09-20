@@ -22,6 +22,12 @@
 	String filterClassName = PortalUtil.getOriginalServletRequest(request).getParameter("filterClassName");
 %>
 
+<%
+/*if(!outputBothExact & !outputBothNotExact & !outputLiferay & !outputIndex) {
+	return;
+}*/
+%>
+
 This is the <b>Index Checker</b> portlet<br/>
 <br/>
 <i>Parameters</i>
