@@ -241,8 +241,12 @@ public class Data implements Comparable<Data> {
 		}
 	}
 
+	public String getAllData(String sep) {
+		return this.getEntryClassName() + sep + companyId + sep + groupId + sep + entryClassPK + sep + primaryKey + sep + resourcePrimKey + sep + uid + sep + createDate + sep + modifiedDate + sep + status;
+	}
+
 	public String toString() {
-		return this.getEntryClassName() + " - " + entryClassPK + " - " + primaryKey + " - " + resourcePrimKey + " - " + uid;
+		return this.getEntryClassName() + " " + entryClassPK + " " + primaryKey + " " + resourcePrimKey + " " + uid;
 	}
 
 	protected BaseModelIndexChecker baseModel = null;

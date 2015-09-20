@@ -1,7 +1,7 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.util.model.BaseModel;
+import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelUtil;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -66,7 +66,7 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 
 	 */
 
-public abstract class BaseModelIndexChecker extends BaseModel {
+public abstract class BaseModelIndexChecker extends Model {
 
 
 	public static Map<Class<?>, String[]> modelInterfaceAttributesMap = new HashMap<Class<?>, String[]>();
@@ -189,6 +189,7 @@ public abstract class BaseModelIndexChecker extends BaseModel {
 	public DynamicQuery getQueryOfObjectType(Long companyId,
 			List<Long> listGroupId) throws Exception {
 
+		/* TODO Añadir "Distinct" */
 		DynamicQuery query = newDynamicQuery();
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();

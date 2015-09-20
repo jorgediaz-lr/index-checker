@@ -1,5 +1,5 @@
 package com.jorgediaz.util.model;
 
-public class DefaultModel extends BaseModel {
+public class DefaultModel extends Model {
 
 }

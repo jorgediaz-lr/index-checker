@@ -33,12 +33,16 @@ public class IndexChecker {
 		this.out = out;
 	}
 
-	public void dumpData(int maxLength, String filter, Set<ExecutionMode> executionMode) throws IOException, SystemException{
+	public void dumpData(int maxLength, String filter, Set<ExecutionMode> executionMode, Class<? extends IndexWrapper> indexWrapperClass) throws IOException, SystemException{
 		
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
 		for (Company company : companies) {
+			long startTime = System.currentTimeMillis();
 			out.println("COMPANY: "+company);
+			if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+				System.out.println("COMPANY: "+company);
+			}
 
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
@@ -47,11 +51,9 @@ public class IndexChecker {
 				ModelInfoIndexChecker modelInfo = null;
 	
 				try {
-					//indexWrapper = new IndexWrapperLucene(company.getCompanyId());
-					indexWrapper = new IndexWrapperLuceneReflection(company.getCompanyId());
+					indexWrapper = indexWrapperClass.getDeclaredConstructor(long.class).newInstance(company.getCompanyId());
 					out.println("IndexWrapper: "+indexWrapper);
 					out.println("num documents: "+indexWrapper.numDocs());
-					out.println("max documents: "+indexWrapper.maxDoc());
 					modelInfo = new ModelInfoIndexChecker(company.getCompanyId(), filter);
 					out.println("ModelInfo: "+modelInfo);
 				}
@@ -69,6 +71,9 @@ public class IndexChecker {
 			finally {
 				ShardUtil.popCompanyService();
 			}
+			long endTime = System.currentTimeMillis();
+			out.println("\nProcessed company "+company.getCompanyId()+" in "+(endTime-startTime)+" ms");
+			out.println();
 		}
 	}
 
@@ -90,13 +95,16 @@ public class IndexChecker {
 		}
 	}
 
-	protected void dumpData(ModelInfoIndexChecker modelUtil, IndexWrapper indexWrapper, Long companyId,
+	protected void dumpData(ModelInfoIndexChecker modelInfo, IndexWrapper indexWrapper, Long companyId,
 			List<Group> groups, Set<ExecutionMode> executionMode, int maxLength) {
 
 		int i = 0;
-		for(BaseModelIndexChecker modelClass : modelUtil.getModelList()) {
+		for(BaseModelIndexChecker modelClass : modelInfo.getModelList()) {
 			try {
 				out.println("\n---------------\nClassName["+(i++)+"]: "+ modelClass.getFullClassName() +"\n---------------");
+				if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+					System.out.println("\n---------------\nClassName["+(i++)+"]: "+ modelClass.getFullClassName() +"\n---------------");
+				}
 
 				if(modelClass.hasGroupId()) {
 					Map<Long, Set<Data>> indexDataMap = indexWrapper.getClassNameDataByGroupId(modelClass);
@@ -112,6 +120,9 @@ public class IndexChecker {
 							}
 							if((indexData.size() > 0) || liferayData.size() > 0) {
 								out.println("***GROUP: "+group.getGroupId() + " - " + group.getName());
+								if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+									System.out.println("***GROUP: "+group.getGroupId() + " - " + group.getName());
+								}
 								dumpData(modelClass, liferayData, indexData, maxLength, executionMode);
 							}
 						}
@@ -136,6 +147,9 @@ public class IndexChecker {
 					if(indexData.size() > 0 || liferayData.size() > 0) {
 						if(executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 							out.println("***GROUP: N/A");
+							if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+								System.out.println("***GROUP: N/A");
+							}
 						}
 						dumpData(modelClass, liferayData, indexData, maxLength, executionMode);
 					}
@@ -155,7 +169,8 @@ public class IndexChecker {
 		Data[] bothArrSetIndex = getBothDataArray(indexData, liferayData);
 		if(executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT) || executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT) || reindex) {
 			if(bothArrSetIndex.length > 0 && bothArrSetLiferay.length > 0) {
-				Set<Data> exactDataSet = new HashSet<Data>();
+				Set<Data> exactDataSetIndex = new HashSet<Data>();
+				Set<Data> exactDataSetLiferay = new HashSet<Data>();
 				Set<Data> notExactDataSetIndex = new HashSet<Data>();
 				Set<Data> notExactDataSetLiferay = new HashSet<Data>();
 				for(int i = 0; i<bothArrSetIndex.length; i++) {
@@ -166,7 +181,8 @@ public class IndexChecker {
 					}
 					else if(dataIndex.exact(dataLiferay)) {
 						if(executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT)) {
-							exactDataSet.add(dataIndex);
+							exactDataSetIndex.add(dataIndex);
+							exactDataSetLiferay.add(dataLiferay);
 						}
 					}
 					else if(executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT)) {
@@ -174,13 +190,33 @@ public class IndexChecker {
 						notExactDataSetLiferay.add(dataLiferay);
 					}
 				}
-				if(exactDataSet.size() > 0 && executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT)) {
+				if(exactDataSetIndex.size() > 0 && executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT)) {
 					out.println("==both-exact==");
-					dumpData(modelClass.getFullClassName(), exactDataSet, maxLength);
+					dumpData(modelClass.getFullClassName(), exactDataSetLiferay, maxLength);
+					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+						System.out.println("==both-exact(index)==");
+						for(Data d : exactDataSetIndex) {
+							System.out.println(d.getAllData(","));
+						}
+						System.out.println("==both-exact(liferay)==");
+						for(Data d : exactDataSetLiferay) {
+							System.out.println(d.getAllData(","));
+						}
+					}
 				}
 				if(notExactDataSetIndex.size() > 0 && executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT)) {
 					out.println("==both-notexact==");
 					dumpData(modelClass.getFullClassName(), notExactDataSetIndex, maxLength);
+					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+						System.out.println("==both-notexact(index)==");
+						for(Data d : notExactDataSetIndex) {
+							System.out.println(d.getAllData(","));
+						}
+						System.out.println("==both-notexact(liferay)==");
+						for(Data d : notExactDataSetLiferay) {
+							System.out.println(d.getAllData(","));
+						}
+					}
 				}
 				if(reindex) {
 					reindexData(modelClass, notExactDataSetIndex);
@@ -195,6 +231,12 @@ public class IndexChecker {
 				if(executionMode.contains(ExecutionMode.SHOW_LIFERAY)) {
 					out.println("==only liferay==");
 					dumpData(modelClass.getFullClassName(), liferayData, maxLength);
+					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+						System.out.println("==only liferay==");
+						for(Data d : liferayData) {
+							System.out.println(d.getAllData(","));
+						}
+					}
 				}
 				if(reindex) {
 					reindexData(modelClass, liferayData);
@@ -207,6 +249,12 @@ public class IndexChecker {
 				if(executionMode.contains(ExecutionMode.SHOW_INDEX)) {
 					out.println("==only index==");
 					dumpData(modelClass.getFullClassName(), indexData, maxLength);
+					if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+						System.out.println("==only index==");
+						for(Data d : indexData) {
+							System.out.println(d.getAllData(","));
+						}
+					}
 				}
 				if(removeOrphan) {
 					deleteDataFromIndex(modelClass, indexData);
@@ -228,12 +276,12 @@ public class IndexChecker {
 		}
 		
 		String listPK = getListValues(valuesPK,maxLength);
-		out.println(entryClassName+" PKsize: "+valuesPK.size()+" PKvalues: "+listPK);
+		out.println(entryClassName+"\n\tnumber of primary keys: "+valuesPK.size()+"\n\tprimary keys values: ["+listPK+"]");
 
 		Set<Long> valuesRPKset = new HashSet<Long>(valuesRPK);
 		if(valuesRPKset.size()>0) {
 			String listRPK = getListValues(valuesRPKset,maxLength);
-			out.println(entryClassName+" RPKsize: "+valuesRPKset.size()+" RPKvalues: "+listRPK);
+			out.println(entryClassName+"\n\tnumber of resource primary keys: "+valuesRPKset.size()+"\n\tresource primary keys values: ["+listRPK+"]");
 		}
 	}
 
@@ -288,13 +336,15 @@ public class IndexChecker {
 	}
 
 	public static void dumpData(PrintWriter out) throws IOException, SystemException {
-		int maxLength = 120;
+		int maxLength = 160;
 		//maxLength = Integer.MAX_VALUE;
 		String filterClassName = null;
 		EnumSet<ExecutionMode> executionMode = EnumSet.of( ExecutionMode.GROUP_BY_SITE, ExecutionMode.SHOW_BOTH_EXACT, ExecutionMode.SHOW_BOTH_NOTEXACT, ExecutionMode.SHOW_LIFERAY, ExecutionMode.SHOW_INDEX);
 
+		Class<? extends IndexWrapper> indexWrapperClass = IndexWrapperLuceneReflection.class;
+
 		IndexChecker ic = new IndexChecker(out);
-		ic.dumpData(maxLength, filterClassName, executionMode);
+		ic.dumpData(maxLength, filterClassName, executionMode, indexWrapperClass);
 	}
 }
 

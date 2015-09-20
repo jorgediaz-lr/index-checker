@@ -1,11 +1,12 @@
 package com.jorgediaz.indexchecker.model;
 
-import com.jorgediaz.util.model.BaseModel;
+import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelUtil;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.service.PortletLocalServiceUtil;
@@ -19,9 +20,9 @@ import java.util.Map;
 
 public class ModelInfoIndexChecker {
 
-	public static Class<? extends BaseModel> defaultModelClass = DefaultModelIndexChecker.class;
+	public static Class<? extends Model> defaultModelClass = DefaultModelIndexChecker.class;
 
-	public static Map<String, Class<? extends BaseModel>> modelClassMap = new HashMap<String, Class<? extends BaseModel>>();
+	public static Map<String, Class<? extends Model>> modelClassMap = new HashMap<String, Class<? extends Model>>();
 	
 	static {
 		modelClassMap.put("com.liferay.portlet.asset.model.AssetEntry", NotIndexed.class);
@@ -49,51 +50,41 @@ public class ModelInfoIndexChecker {
 
 		portlets = ListUtil.sort(portlets, new PortletLuceneComparator());
 
+		List<Indexer> indexers = IndexerRegistryUtil.getIndexers();
 
-		for (Portlet portlet : portlets) {
-			System.out.println("Portlet: "+portlet);
+		if (indexers == null) {
+			return;
+		}
 
-			if (!portlet.isActive()) {
-				continue;
-			}
+		for(Indexer indexer : indexers) {
+			System.out.println("Indexer: "+indexer);
+			try {
+				BaseIndexer baseindexer = ModelInfoIndexChecker.getBaseIndexer(indexer);
 
-			List<Indexer> indexers = portlet.getIndexerInstances();
+				if(baseindexer != null && !baseindexer.isIndexerEnabled()) {
+					continue;
+				}
 
-			if (indexers == null) {
-				continue;
-			}
+				String[] classNames = indexer.getClassNames();
 
-			for(Indexer indexer : indexers) {
-				System.out.println("Indexer: "+indexer);
-				try {
-					BaseIndexer baseindexer = ModelInfoIndexChecker.getBaseIndexer(indexer);
+				for(String fullClassName : classNames) {
 
-					if(baseindexer != null && !baseindexer.isIndexerEnabled()) {
-						continue;
-					}
+					if(fullClassName != null && 
+							(filter == null || fullClassName.contains(filter))) {
 
-					String[] classNames = indexer.getClassNames();
+						BaseModelIndexChecker model = (BaseModelIndexChecker) modelUtil.getModelObject(fullClassName);
 
-					for(String fullClassName : classNames) {
-
-						if(fullClassName != null && 
-								(filter == null || fullClassName.contains(filter))) {
-
-							BaseModelIndexChecker model = (BaseModelIndexChecker) modelUtil.getModelObject(fullClassName);
-
-							if(model != null) {
-								modelList.add(model);
-							}
+						if(model != null) {
+							modelList.add(model);
 						}
 					}
 				}
-				catch (Exception e) {
-					System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
-					e.printStackTrace();
-					continue;
-				}
 			}
-			
+			catch (Exception e) {
+				System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+				e.printStackTrace();
+				continue;
+			}
 		}
 	}
 

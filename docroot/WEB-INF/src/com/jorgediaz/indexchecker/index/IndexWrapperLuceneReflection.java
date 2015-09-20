@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
-public class IndexWrapperLuceneReflection extends IndexWrapper{
+public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 
 	protected Class<?> indexReaderClass = null;
 	protected Class<?> termClass = null;
@@ -86,7 +86,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapper{
 	@Override
 	public int numDocs() {
 		if(index == null) {
-			return 0;
+			return -1;
 		}
 		try {
 			return (Integer) numDocs.invoke(index);
@@ -97,7 +97,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapper{
 	}
 
 	@Override
-	public int maxDoc() {
+	protected int maxDoc() {
 		if(index == null) {
 			return 0;
 		}
@@ -110,7 +110,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapper{
 	}
 
 	@Override
-	public boolean isDeleted(int i) {
+	protected boolean isDeleted(int i) {
 		if(index == null) {
 			return true;
 		}
@@ -123,7 +123,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapper{
 	}
 
 	@Override
-	public DocumentWrapper document(int i) {
+	protected DocumentWrapper document(int i) {
 		if(index == null) {
 			return null;
 		}

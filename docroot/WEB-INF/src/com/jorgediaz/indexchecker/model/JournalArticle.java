@@ -12,7 +12,7 @@ import com.liferay.portal.model.ClassedModel;
 
 
 public class JournalArticle extends BaseModelIndexChecker {
-
+/* TODO Falta añadir la ultima version cuando no hay ninguna version aprobada (LPS de Jose) */
 	protected boolean indexAllVersions;
 
 	@Override
@@ -27,6 +27,7 @@ public class JournalArticle extends BaseModelIndexChecker {
 		}
 
 		if(!indexAllVersions) {
+			this.removeIndexedAttribute("id_");
 			this.setIndexPrimaryKey("resourcePrimKey");
 		}
 	}

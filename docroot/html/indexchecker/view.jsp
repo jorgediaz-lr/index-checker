@@ -3,6 +3,11 @@
 <%@ page import="com.liferay.portal.util.PortalUtil" %>
 <%@ page import="com.jorgediaz.indexchecker.IndexChecker" %>
 <%@ page import="com.jorgediaz.indexchecker.ExecutionMode" %>
+<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapper" %>
+<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar" %>
+<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection" %>
+<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperSearch" %>
+<%@ page import="com.test.GetStatistics" %>
 <%@ page import="java.io.PrintWriter" %>
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.lang.Boolean" %>
@@ -10,16 +15,32 @@
 <portlet:defineObjects />
 
 <%
+	String script = PortalUtil.getOriginalServletRequest(request).getParameter("script");
+
+if("GetStatistics".equals(script)) {
+%>
+<pre>
+<%
+	GetStatistics.execute(new PrintWriter(out, true));
+%>
+</pre>
+<%
+	return;
+}
+%>
+<%
 	boolean outputGroupBySite = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputGroupBySite"));
 	boolean outputBothExact = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputBothExact"));
 	boolean outputBothNotExact = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputBothNotExact"));
 	boolean outputLiferay = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputLiferay"));
 	boolean outputIndex = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputIndex"));
-	int outputMaxLength = 120;
+	int outputMaxLength = 160;
 	try {outputMaxLength = Integer.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputMaxLength"));} catch (Exception e){}
 	boolean reindex = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("reindex"));
 	boolean removeOrphan = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("removeOrphan"));
 	String filterClassName = PortalUtil.getOriginalServletRequest(request).getParameter("filterClassName");
+	String indexWrapperClassName = PortalUtil.getOriginalServletRequest(request).getParameter("indexWrapperClassName");
+	boolean dumpAllObjectsToLog = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("dumpAllObjectsToLog"));
 %>
 
 <%
@@ -41,6 +62,8 @@ outputMaxLength: <%= outputMaxLength %>
 reindex: <%= reindex %>
 removeOrphan: <%= removeOrphan %>
 filterClassName: <%= filterClassName %>
+indexWrapperClassName: <%= indexWrapperClassName %>
+dumpAllObjectsToLog: <%= dumpAllObjectsToLog %>
 </pre>
 
 <i>Output</i>
@@ -69,7 +92,26 @@ filterClassName: <%= filterClassName %>
 	if(removeOrphan) {
 		executionMode.add(ExecutionMode.REMOVE_ORPHAN);
 	}
+	if(dumpAllObjectsToLog) {
+		executionMode.add(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG);
+	}
+
+	Class<? extends IndexWrapper> indexWrapperClass;
+
+	if("LuceneJar".equals(indexWrapperClassName)) {
+		indexWrapperClass = IndexWrapperLuceneJar.class;
+	}
+	else if("LuceneReflection".equals(indexWrapperClassName)) {
+		indexWrapperClass = IndexWrapperLuceneReflection.class;
+	}
+	else if("Search".equals(indexWrapperClassName)) {
+		indexWrapperClass = IndexWrapperSearch.class;
+	}
+	else {
+		indexWrapperClass = IndexWrapperLuceneReflection.class;
+	}
+	
 	IndexChecker ic = new IndexChecker(pw);
-	ic.dumpData(outputMaxLength, filterClassName, executionMode);
+	ic.dumpData(outputMaxLength, filterClassName, executionMode, indexWrapperClass);
 %>
 </pre>

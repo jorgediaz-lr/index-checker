@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ModelUtil {
 
 	public ClassLoader classLoader = null;
-	public Class<? extends BaseModel> defaultModelClass = null;
-	public Map<String, Class<? extends BaseModel>> modelClassMap = null;
+	public Class<? extends Model> defaultModelClass = null;
+	public Map<String, Class<? extends Model>> modelClassMap = null;
 
 	public ModelUtil() {
 		this.classLoader = getClassLoader();
@@ -31,7 +31,7 @@ public class ModelUtil {
 		this.modelClassMap = null;
 	}
 
-	public ModelUtil(Class<? extends BaseModel> defaultModelClass, Map<String, Class<? extends BaseModel>> modelClassMap) {
+	public ModelUtil(Class<? extends Model> defaultModelClass, Map<String, Class<? extends Model>> modelClassMap) {
 		this.classLoader = getClassLoader();
 		this.defaultModelClass = defaultModelClass;
 		this.modelClassMap = modelClassMap;
@@ -61,14 +61,10 @@ public class ModelUtil {
 		}
 		return aggregateClassLoader;
 	}
-	
-	public BaseModel getModelObject(ClassName className) throws Exception {
-		return getModelObject(className.getValue());
-	}
 
-	public Class<? extends BaseModel> getModelClass(String className) throws InstantiationException, IllegalAccessException {
+	public Class<? extends Model> getModelClass(String className) throws InstantiationException, IllegalAccessException {
 
-		Class<? extends BaseModel> modelClass = defaultModelClass;
+		Class<? extends Model> modelClass = defaultModelClass;
 
 		if(modelClassMap != null && modelClassMap.containsKey(className)) {
 			modelClass = modelClassMap.get(className);
@@ -77,26 +73,35 @@ public class ModelUtil {
 		return modelClass;
 	}
 
-	public BaseModel getModelObject(String className) throws Exception {
+	public Model getModelObject(ClassName className) throws Exception {
+		return getModelObject(className.getValue());
+	}
+
+	public Model getModelObject(String className) throws Exception {
 
 		@SuppressWarnings("unchecked")
 		Class<? extends ClassedModel> clazz = (Class<? extends ClassedModel>) this.getJavaClass(className);
+	
+		return getModelObject(clazz);
+	}
 
-		Class<? extends BaseModel> modelClass = this.getModelClass(className);
+	public Model getModelObject(Class<? extends ClassedModel> clazz) throws Exception {
+
+		Class<? extends Model> modelClass = this.getModelClass(clazz.getCanonicalName());
 
 		if(clazz == null || modelClass == null || !ClassedModel.class.isAssignableFrom(clazz)) {
 			return null;
 		}
 
-		BaseModel model = null;
+		Model model = null;
 		try {
-			model = (BaseModel) modelClass.newInstance();
+			model = (Model) modelClass.newInstance();
 	
 			model.init(this, clazz);
 		}
 		catch(Exception e) {
-			System.err.println("getModelObject("+className+") ERROR "+e.getMessage());
-			e.printStackTrace();
+			System.err.println("getModelObject("+clazz.getCanonicalName()+") ERROR "+e.getClass().getCanonicalName()+": "+e.getMessage());
+			throw new RuntimeException(e);
 		}
 
 		return model;
@@ -187,10 +192,8 @@ public class ModelUtil {
 		}
 		catch (Exception e) {
 			System.err.println("Class not found: " + className);
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-
-		return null;
 	}
 
 	protected DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz) {

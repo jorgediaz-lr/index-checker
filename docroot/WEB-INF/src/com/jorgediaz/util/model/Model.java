@@ -6,7 +6,7 @@ import com.liferay.portal.model.GroupedModel;
 
 import java.util.List;
 
-	public abstract class BaseModel {
+	public abstract class Model {
 
 		public void init(ModelUtil modelUtil, Class<? extends ClassedModel> modelClass) throws Exception {
 			this.modelUtil = modelUtil;
