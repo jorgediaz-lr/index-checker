@@ -2,7 +2,7 @@ package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-public class WikiNode extends BaseModelIndexChecker {
+public class WikiNode extends IndexCheckerModel {
 
 	@Override
 	public int[] getIndexedStatuses() {

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NotIndexed extends BaseModelIndexChecker {
+public class NotIndexed extends IndexCheckerModel {
 
 	@Override
 	public Map<Long,Data> getLiferayData(Long companyId, List<Long> listGroupId) throws Exception {

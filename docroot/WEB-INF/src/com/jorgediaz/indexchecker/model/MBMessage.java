@@ -5,7 +5,7 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 
-public class MBMessage extends BaseModelIndexChecker {
+public class MBMessage extends IndexCheckerModel {
 
 	public void addQueryCriterias(Conjunction conjunction) {
 		

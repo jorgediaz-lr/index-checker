@@ -10,7 +10,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.User;
 
 
-public class Contact extends BaseModelIndexChecker {
+public class Contact extends IndexCheckerModel {
 
 	@Override
 	public int[] getIndexedStatuses() {

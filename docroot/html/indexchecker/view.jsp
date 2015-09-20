@@ -7,27 +7,12 @@
 <%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar" %>
 <%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection" %>
 <%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperSearch" %>
-<%@ page import="com.test.GetStatistics" %>
 <%@ page import="java.io.PrintWriter" %>
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.lang.Boolean" %>
 
 <portlet:defineObjects />
 
-<%
-	String script = PortalUtil.getOriginalServletRequest(request).getParameter("script");
-
-if("GetStatistics".equals(script)) {
-%>
-<pre>
-<%
-	GetStatistics.execute(new PrintWriter(out, true));
-%>
-</pre>
-<%
-	return;
-}
-%>
 <%
 	boolean outputGroupBySite = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputGroupBySite"));
 	boolean outputBothExact = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputBothExact"));
@@ -41,12 +26,6 @@ if("GetStatistics".equals(script)) {
 	String filterClassName = PortalUtil.getOriginalServletRequest(request).getParameter("filterClassName");
 	String indexWrapperClassName = PortalUtil.getOriginalServletRequest(request).getParameter("indexWrapperClassName");
 	boolean dumpAllObjectsToLog = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("dumpAllObjectsToLog"));
-%>
-
-<%
-/*if(!outputBothExact & !outputBothNotExact & !outputLiferay & !outputIndex) {
-	return;
-}*/
 %>
 
 This is the <b>Index Checker</b> portlet<br/>

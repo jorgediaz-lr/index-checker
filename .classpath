@@ -18,5 +18,6 @@
 			<attribute name="org.eclipse.jst.component.nondependency" value=""/>
 		</attributes>
 	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/model-util-shared"/>
 	<classpathentry kind="output" path="docroot/WEB-INF/classes"/>
 </classpath>

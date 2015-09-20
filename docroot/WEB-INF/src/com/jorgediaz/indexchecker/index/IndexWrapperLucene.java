@@ -1,7 +1,7 @@
 package com.jorgediaz.indexchecker.index;
 
 import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.indexchecker.model.BaseModelIndexChecker;
+import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +25,7 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 	abstract public int numDocs();
 
 	@Override
-	public Set<Data> getClassNameData(BaseModelIndexChecker modelClass) {
+	public Set<Data> getClassNameData(IndexCheckerModel modelClass) {
 		Set<Data> indexData = new HashSet<Data>();
 		for(int i=0;i<maxDoc();i++) {
 		
@@ -54,7 +54,7 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 	}
 
 	@Override
-	public Map<Long,Set<Data>> getClassNameDataByGroupId(BaseModelIndexChecker modelClass) {
+	public Map<Long,Set<Data>> getClassNameDataByGroupId(IndexCheckerModel modelClass) {
 		Map<Long,Set<Data>> indexData = new HashMap<Long,Set<Data>>();
 		for(int i=0;i<maxDoc();i++) {
 		

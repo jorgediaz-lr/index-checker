@@ -3,14 +3,17 @@ package com.jorgediaz.indexchecker;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.index.IndexWrapper;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
-import com.jorgediaz.indexchecker.model.BaseModelIndexChecker;
-import com.jorgediaz.indexchecker.model.ModelInfoIndexChecker;
+import com.jorgediaz.indexchecker.model.IndexCheckerModel;
+import com.jorgediaz.indexchecker.model.IndexCheckerModelFactory;
+import com.jorgediaz.util.model.ModelFactory;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
@@ -48,14 +51,28 @@ public class IndexChecker {
 				ShardUtil.pushCompanyService(company.getCompanyId());
 
 				IndexWrapper indexWrapper = null;
-				ModelInfoIndexChecker modelInfo = null;
+				ModelFactory modelFactory = null;
+				List<IndexCheckerModel> modelList = null;
+				List<String> classNames = new ArrayList<String>();
 	
 				try {
 					indexWrapper = indexWrapperClass.getDeclaredConstructor(long.class).newInstance(company.getCompanyId());
+
 					out.println("IndexWrapper: "+indexWrapper);
 					out.println("num documents: "+indexWrapper.numDocs());
-					modelInfo = new ModelInfoIndexChecker(company.getCompanyId(), filter);
-					out.println("ModelInfo: "+modelInfo);
+
+					modelFactory = new IndexCheckerModelFactory(IndexCheckerModelFactory.defaultModelClass, IndexCheckerModelFactory.modelClassMap); 
+					
+					List<ClassName> classNamesAux = ClassNameLocalServiceUtil.getClassNames(QueryUtil.ALL_POS,QueryUtil.ALL_POS);
+
+					for(ClassName className : classNamesAux) {
+						if(className.getValue() != null) {
+							classNames.add(className.getValue());
+						}
+					}
+
+					
+					out.println("ModelInfo: "+modelList);
 				}
 				catch (Exception e) {
 					out.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
@@ -64,9 +81,9 @@ public class IndexChecker {
 				}
 				List<Group> groups = GroupLocalServiceUtil.getCompanyGroups(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 				
-				dumpUncheckedClassNames(modelInfo, indexWrapper);
+				dumpUncheckedClassNames(modelFactory, indexWrapper);
 				
-				dumpData(modelInfo, indexWrapper, company.getCompanyId(), groups, executionMode, maxLength);
+				dumpData(modelFactory, indexWrapper, company.getCompanyId(), groups, classNames, executionMode, maxLength);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -77,43 +94,71 @@ public class IndexChecker {
 		}
 	}
 
-	protected void dumpUncheckedClassNames(ModelInfoIndexChecker modelUtil,
-			IndexWrapper indexWrapper) {
+	protected void dumpUncheckedClassNames(ModelFactory modelFactory, IndexWrapper indexWrapper) {
+		Set<String> classNamesNotAvailable = new HashSet<String>();
+
 		Set<String> indexClassNameSet = indexWrapper.getTermValues("entryClassName");
-		
-		for(BaseModelIndexChecker modelClass : modelUtil.getModelList()) {
-			indexClassNameSet.remove(modelClass.getFullClassName());
+
+		for(String indexClassName : indexClassNameSet) {
+			IndexCheckerModel model;
+			try {
+				model = (IndexCheckerModel) modelFactory.getModelObject(indexClassName);
+			}
+			catch (Exception e) {
+				model = null;
+			}
+
+			if(model == null) {
+				classNamesNotAvailable.add(indexClassName);
+			}
 		}
-		if(indexClassNameSet.size() > 0) {
+
+		if(classNamesNotAvailable.size() > 0) {
 			out.println("");
 			out.println("---------------");
 			out.println("classNames at Index, that we are not going to check!!");
 			out.println("---------------");
-			for(String className : indexClassNameSet) {
+			for(String className : classNamesNotAvailable) {
 				out.println(className);
 			}
 		}
 	}
 
-	protected void dumpData(ModelInfoIndexChecker modelInfo, IndexWrapper indexWrapper, Long companyId,
-			List<Group> groups, Set<ExecutionMode> executionMode, int maxLength) {
+	protected void dumpData(ModelFactory modelFactory, IndexWrapper indexWrapper, Long companyId,
+			List<Group> groups, List<String> classNames, Set<ExecutionMode> executionMode, int maxLength) {
 
 		int i = 0;
-		for(BaseModelIndexChecker modelClass : modelInfo.getModelList()) {
+		for(String className : classNames) {
+
 			try {
-				out.println("\n---------------\nClassName["+(i++)+"]: "+ modelClass.getFullClassName() +"\n---------------");
-				if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-					System.out.println("\n---------------\nClassName["+(i++)+"]: "+ modelClass.getFullClassName() +"\n---------------");
+				IndexCheckerModel model;
+				try {
+					model = (IndexCheckerModel) modelFactory.getModelObject(className);
+				}
+				catch(Exception e) {
+					/* TODO DEBUG */
+					System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+					e.printStackTrace();
+					model = null;
 				}
 
-				if(modelClass.hasGroupId()) {
-					Map<Long, Set<Data>> indexDataMap = indexWrapper.getClassNameDataByGroupId(modelClass);
+				if(model == null) {
+					continue;
+				}
+
+				out.println("\n---------------\nClassName["+(i++)+"]: "+ model.getFullClassName() +"\n---------------");
+				if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+					System.out.println("\n---------------\nClassName["+(i++)+"]: "+ model.getFullClassName() +"\n---------------");
+				}
+
+				if(model.hasGroupId()) {
+					Map<Long, Set<Data>> indexDataMap = indexWrapper.getClassNameDataByGroupId(model);
 
 					if(executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 						for(Group group : groups) {
 							List<Long> listGroupId = new ArrayList<>();
 							listGroupId.add(group.getGroupId());
-							Set<Data> liferayData = new HashSet<Data>(modelClass.getLiferayData(companyId, listGroupId).values());
+							Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(companyId, listGroupId).values());
 							Set<Data> indexData = indexDataMap.get(group.getGroupId());
 							if(indexData == null) {
 								indexData = new HashSet<Data>();
@@ -123,7 +168,7 @@ public class IndexChecker {
 								if(executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 									System.out.println("***GROUP: "+group.getGroupId() + " - " + group.getName());
 								}
-								dumpData(modelClass, liferayData, indexData, maxLength, executionMode);
+								dumpData(model, liferayData, indexData, maxLength, executionMode);
 							}
 						}
 					}
@@ -132,17 +177,17 @@ public class IndexChecker {
 						for(Group group : groups) {
 							listGroupId.add(group.getGroupId());
 						}
-						Set<Data> liferayData = new HashSet<Data>(modelClass.getLiferayData(companyId, listGroupId).values());
-						Set<Data> indexData = indexWrapper.getClassNameData(modelClass);
+						Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(companyId, listGroupId).values());
+						Set<Data> indexData = indexWrapper.getClassNameData(model);
 
 						if(indexData.size() > 0 || liferayData.size() > 0) {
-							dumpData(modelClass, liferayData, indexData, maxLength, executionMode);
+							dumpData(model, liferayData, indexData, maxLength, executionMode);
 						}
 					}
 				}
 				else {
-					Set<Data> liferayData = new HashSet<Data>(modelClass.getLiferayData(companyId).values());
-					Set<Data> indexData = indexWrapper.getClassNameData(modelClass);
+					Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(companyId).values());
+					Set<Data> indexData = indexWrapper.getClassNameData(model);
 
 					if(indexData.size() > 0 || liferayData.size() > 0) {
 						if(executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
@@ -151,18 +196,19 @@ public class IndexChecker {
 								System.out.println("***GROUP: N/A");
 							}
 						}
-						dumpData(modelClass, liferayData, indexData, maxLength, executionMode);
+						dumpData(model, liferayData, indexData, maxLength, executionMode);
 					}
 				}
 			}
 			catch (Exception e) {
 				out.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+				System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
 	}
 
-	protected void dumpData(BaseModelIndexChecker modelClass, Set<Data> liferayData, Set<Data> indexData, int maxLength, Set<ExecutionMode> executionMode) {
+	protected void dumpData(IndexCheckerModel modelClass, Set<Data> liferayData, Set<Data> indexData, int maxLength, Set<ExecutionMode> executionMode) {
 		boolean reindex = executionMode.contains(ExecutionMode.REINDEX);
 		boolean removeOrphan = executionMode.contains(ExecutionMode.REMOVE_ORPHAN);
 		Data[] bothArrSetLiferay = getBothDataArray(liferayData, indexData);
@@ -285,7 +331,7 @@ public class IndexChecker {
 		}
 	}
 
-	protected void reindexData(BaseModelIndexChecker modelClass, Set<Data> liferayData) {
+	protected void reindexData(IndexCheckerModel modelClass, Set<Data> liferayData) {
 		for(Data value : liferayData) {
 			try {
 				modelClass.reindex(value);
@@ -296,7 +342,7 @@ public class IndexChecker {
 		}
 	}
 
-	protected void deleteDataFromIndex(BaseModelIndexChecker modelClass, Set<Data> liferayData) {
+	protected void deleteDataFromIndex(IndexCheckerModel modelClass, Set<Data> liferayData) {
 		for(Data value : liferayData) {
 			/* Delete object from index */
 			try {

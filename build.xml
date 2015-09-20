@@ -2,5 +2,6 @@
 <!DOCTYPE project>
 
 <project name="index_checker-portlet" basedir="." default="deploy">
-	<import file="D:\LRDevStudioWorkspace2\liferay-plugins-sdk-6.2-ee-sp8\portlets/build-common-portlet.xml" />
+	<property name="import.shared" value="model-util-shared" />
+	<import file="D:/LRDevStudioWorkspace2/liferay-plugins-sdk-6.2-ee-sp8/portlets/build-common-portlet.xml" />
 </project>

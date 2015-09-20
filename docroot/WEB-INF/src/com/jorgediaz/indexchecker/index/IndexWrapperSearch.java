@@ -1,7 +1,7 @@
 package com.jorgediaz.indexchecker.index;
 
 import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.indexchecker.model.BaseModelIndexChecker;
+import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
@@ -37,7 +37,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 	}
 
 	@Override
-	public Set<Data> getClassNameData(BaseModelIndexChecker modelClass) {
+	public Set<Data> getClassNameData(IndexCheckerModel modelClass) {
 
 		Set<Data> indexData = new HashSet<Data>();
 
@@ -78,7 +78,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 
 	@Override
-	public Map<Long,Set<Data>> getClassNameDataByGroupId(BaseModelIndexChecker modelClass) {
+	public Map<Long,Set<Data>> getClassNameDataByGroupId(IndexCheckerModel modelClass) {
 		Map<Long,Set<Data>> indexData = new HashMap<Long,Set<Data>>();
 
 		SearchContext searchContext = new SearchContext();

@@ -14,7 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
-public class DLFileEntry extends BaseModelIndexChecker {
+public class DLFileEntry extends IndexCheckerModel {
 
 	public Map<Long,Data> getLiferayData(Long companyId, List<Long> listGroupId) throws Exception {
 		Map<Long,Data> dataMap = super.getLiferayData(companyId, listGroupId);

@@ -2,7 +2,7 @@ package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-public class CalendarBooking extends BaseModelIndexChecker {
+public class CalendarBooking extends IndexCheckerModel {
 
 	public static final int STATUS_MAYBE = 9;
 

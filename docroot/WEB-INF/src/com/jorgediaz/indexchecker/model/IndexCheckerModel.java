@@ -1,8 +1,8 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.util.model.Model;
-import com.jorgediaz.util.model.ModelUtil;
+import com.jorgediaz.util.model.ModelFactory;
+import com.jorgediaz.util.model.ModelImpl;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
@@ -10,8 +10,6 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.AuditedModel;
@@ -66,7 +64,7 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 
 	 */
 
-public abstract class BaseModelIndexChecker extends Model {
+public abstract class IndexCheckerModel extends ModelImpl {
 
 
 	public static Map<Class<?>, String[]> modelInterfaceAttributesMap = new HashMap<Class<?>, String[]>();
@@ -86,9 +84,9 @@ public abstract class BaseModelIndexChecker extends Model {
 	}
 
 	@Override
-	public void init(ModelUtil modelUtil, Class<? extends ClassedModel> modelClass) throws Exception {
+	public void init(ModelFactory modelFactory, Class<? extends ClassedModel> modelClass) throws Exception {
 
-		super.init(modelUtil, modelClass);
+		super.init(modelFactory, modelClass);
 
 		this.indexedAttributes = new ArrayList<String>();
 		String attributes = this.getAttributes();
@@ -122,10 +120,6 @@ public abstract class BaseModelIndexChecker extends Model {
 			toString += " " + attr;
 		}
 		return toString;
-	}
-
-	public Indexer getIndexer() {
-		return IndexerRegistryUtil.nullSafeGetIndexer(modelClass);
 	}
 
 	public void reindex(Data value) throws SearchException {

@@ -13,7 +13,7 @@ public class IndexCheckerControlPanelEntry extends BaseControlPanelEntry {
     @Override
     public boolean isVisible(PermissionChecker permissionChecker, Portlet portlet)
             throws Exception {
-        return false;
+        return true;
     }
 
 }

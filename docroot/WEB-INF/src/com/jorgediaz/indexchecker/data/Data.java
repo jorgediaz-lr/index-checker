@@ -1,7 +1,7 @@
 package com.jorgediaz.indexchecker.data;
 
 import com.jorgediaz.indexchecker.index.DocumentWrapper;
-import com.jorgediaz.indexchecker.model.BaseModelIndexChecker;
+import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.liferay.portal.kernel.search.Field;
 
 import java.sql.Timestamp;
@@ -37,7 +37,7 @@ public class Data implements Comparable<Data> {
 		return null;
 	}
 
-	public Data(BaseModelIndexChecker baseModel) {
+	public Data(IndexCheckerModel baseModel) {
 		this.baseModel = baseModel;
 	}
 
@@ -249,7 +249,7 @@ public class Data implements Comparable<Data> {
 		return this.getEntryClassName() + " " + entryClassPK + " " + primaryKey + " " + resourcePrimKey + " " + uid;
 	}
 
-	protected BaseModelIndexChecker baseModel = null;
+	protected IndexCheckerModel baseModel = null;
 	/* Liferay */
 	protected long primaryKey = -1;
 	protected long resourcePrimKey = -1;
