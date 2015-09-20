@@ -3,6 +3,7 @@ package com.jorgediaz.indexchecker.data;
 import com.jorgediaz.indexchecker.index.DocumentWrapper;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.Timestamp;
 
@@ -18,7 +19,7 @@ public class Data implements Comparable<Data> {
 		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID};
 
 	protected static Long stringToTime(String dateString) {
-		if(dateString == null) {
+		if(Validator.isNull(dateString)) {
 			return null;
 		}
 

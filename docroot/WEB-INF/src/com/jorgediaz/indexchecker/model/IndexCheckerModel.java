@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.AuditedModel;
 import com.liferay.portal.model.ClassedModel;
@@ -95,7 +96,7 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 		this.setIndexPrimaryKey(primaryKey);
 
-		if(primaryKey == null || primaryKey.isEmpty()) {
+		if(Validator.isNull(primaryKey)) {
 			throw new RuntimeException("Missing primary key!!");
 		}
 

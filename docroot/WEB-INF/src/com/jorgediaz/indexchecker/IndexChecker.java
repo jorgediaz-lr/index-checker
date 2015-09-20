@@ -69,7 +69,7 @@ public class IndexChecker {
 					List<ClassName> classNamesAux = ClassNameLocalServiceUtil.getClassNames(QueryUtil.ALL_POS,QueryUtil.ALL_POS);
 
 					for(ClassName className : classNamesAux) {
-						if(className.getValue() != null) {
+						if(className.getValue() != null && (filter == null || className.getValue().contains(filter))) {
 							classNames.add(className.getValue());
 						}
 					}
