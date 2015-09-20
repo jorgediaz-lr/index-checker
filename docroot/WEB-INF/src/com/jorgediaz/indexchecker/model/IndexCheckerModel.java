@@ -90,17 +90,16 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		super.init(modelFactory, modelClass);
 
 		this.indexedAttributes = new ArrayList<String>();
-		String attributes = this.getAttributes();
 
 		String primaryKey =  this.getPrimaryKeyAttribute();
 
 		this.setIndexPrimaryKey(primaryKey);
 
-		if(primaryKey == null) {
+		if(primaryKey == null || primaryKey.isEmpty()) {
 			throw new RuntimeException("Missing primary key!!");
 		}
 
-		if(attributes.contains("companyId")) {
+		if(this.hasAttribute("companyId")) {
 			this.addIndexedAttribute("companyId");
 		}
 
@@ -153,7 +152,7 @@ public abstract class IndexCheckerModel extends ModelImpl {
 	public Map<Long,Data> getLiferayData(Criterion filter) throws Exception {
 
 		Map<Long,Data> dataMap = new HashMap<Long,Data>();
-		/* TODO Añadir "Distinct" */
+
 		DynamicQuery query = newDynamicQuery();
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
@@ -162,7 +161,7 @@ public abstract class IndexCheckerModel extends ModelImpl {
 			projectionList.add(ProjectionFactoryUtil.property(attrib));
 		}
 
-		query.setProjection(projectionList);
+		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
 		query.add(filter);
 	

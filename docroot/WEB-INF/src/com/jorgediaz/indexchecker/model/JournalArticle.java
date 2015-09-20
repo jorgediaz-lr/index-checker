@@ -27,7 +27,7 @@ public class JournalArticle extends IndexCheckerModel {
 		}
 
 		if(!indexAllVersions) {
-			this.removeIndexedAttribute("id_");
+			this.removeIndexedAttribute("id");
 			this.setIndexPrimaryKey("resourcePrimKey");
 		}
 	}

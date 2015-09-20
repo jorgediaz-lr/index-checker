@@ -30,6 +30,9 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		modelClassMap.put("com.liferay.portlet.wiki.model.WikiPage", WikiPage.class);
 	}
 
+	public IndexCheckerModelFactory() {
+		super(defaultModelClass, modelClassMap);
+	}
 
 	public IndexCheckerModelFactory(Class<? extends Model> defaultModelClass, Map<String, Class<? extends Model>> modelClassMap) {
 		super(defaultModelClass, modelClassMap);

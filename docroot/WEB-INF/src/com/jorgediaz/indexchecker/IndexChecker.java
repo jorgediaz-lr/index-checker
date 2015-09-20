@@ -64,7 +64,7 @@ public class IndexChecker {
 					out.println("IndexWrapper: "+indexWrapper);
 					out.println("num documents: "+indexWrapper.numDocs());
 
-					modelFactory = new IndexCheckerModelFactory(IndexCheckerModelFactory.defaultModelClass, IndexCheckerModelFactory.modelClassMap); 
+					modelFactory = new IndexCheckerModelFactory(); 
 					
 					List<ClassName> classNamesAux = ClassNameLocalServiceUtil.getClassNames(QueryUtil.ALL_POS,QueryUtil.ALL_POS);
 
@@ -162,7 +162,7 @@ public class IndexChecker {
 							List<Long> listGroupId = new ArrayList<>();
 							listGroupId.add(group.getGroupId());
 							Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
-							if (model.getIndexAttributes().contains("companyId")) {
+							if (model.hasAttribute("companyId")) {
 								conjunction.add(PropertyFactoryUtil.forName("companyId").eq(companyId));
 							}
 							
@@ -189,7 +189,7 @@ public class IndexChecker {
 							listGroupId.add(group.getGroupId());
 						}
 						Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
-						if (model.getIndexAttributes().contains("companyId")) {
+						if (model.hasAttribute("companyId")) {
 							conjunction.add(PropertyFactoryUtil.forName("companyId").eq(companyId));
 						}
 						
@@ -206,7 +206,7 @@ public class IndexChecker {
 				}
 				else {
 					Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
-					if (model.getIndexAttributes().contains("companyId")) {
+					if (model.hasAttribute("companyId")) {
 						conjunction.add(PropertyFactoryUtil.forName("companyId").eq(companyId));
 					}
 					Set<Data> liferayData = new HashSet<Data>(model.getLiferayData(conjunction).values());
