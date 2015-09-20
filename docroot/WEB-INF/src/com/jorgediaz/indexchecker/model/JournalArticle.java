@@ -5,14 +5,15 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.test.ModelUtil;
 
 
 public class JournalArticle extends BaseModel {
 
 	protected boolean indexAllVersions;
 
-	public void init(String fullClassName, String tableName, String[] arrAttributes) {
-		super.init(fullClassName, tableName, arrAttributes);
+	public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
+		super.init(modelUtil, fullClassName);
 
 		conditions.remove("indexable");
 

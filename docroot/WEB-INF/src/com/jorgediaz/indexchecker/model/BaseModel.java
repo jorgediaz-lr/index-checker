@@ -2,16 +2,30 @@ package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.model.Group;
 import com.liferay.portal.util.PortalUtil;
+import com.test.ModelUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /*
@@ -58,18 +72,17 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 		public static Set<String> defaultAttributes =
 				new HashSet<String>(Arrays.asList("createDate", "modifiedDate","status","resourcePrimKey","companyId","groupId"));
 
-		public void init(String fullClassName, String tableName, String[] arrAttributes) {
+		public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
 
+			this.clazz = modelUtil.getJavaClass(fullClassName);
 			this.fullClassName = fullClassName;
 			this.name = tableName;
-			this.tableName = tableName;
-			this.attributes = new HashSet<String>();
+			this.attributes = new ArrayList<String>();
 			this.conditions = new HashSet<String>();
 
-			if(arrAttributes == null) {
-				arrAttributes = new String[0];
-				return;
-			}
+			this.indexer = IndexerRegistryUtil.nullSafeGetIndexer(clazz);
+			this.tableName = modelUtil.getTableName(clazz);
+			String[] arrAttributes = modelUtil.getAttributes(clazz);
 
 			for(String attr : arrAttributes) {
 				String[] aux = attr.split(" ");
@@ -87,20 +100,8 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 			}
 		}
 
-		public long getCompanyId() {
-			return companyId;
-		}
-
-		public void setCompanyId(long companyId) {
-			this.companyId = companyId;
-		}
-
 		public Indexer getIndexer() {
 			return indexer;
-		}
-
-		public void setIndexer(Indexer indexer) {
-			this.indexer = indexer;
 		}
 
 		public void reindex(Data value) throws SearchException {
@@ -109,39 +110,6 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 
 		public void delete(Data value) throws SearchException {
 			this.indexer.delete(value.getCompanyId(), value.getUid());
-		}
-
-		protected String getSQLWhere() {
-			return "";
-		}
-
-		public String getSQLAttributes() {
-			String selectAttr = "";
-			for(String attrib : attributes) {
-				if(selectAttr.length() > 0) {
-					selectAttr += ",";
-				}
-				selectAttr = selectAttr + "t."+attrib;
-			}
-			return selectAttr;
-		}
-
-		public String getSQLOfObjectType(Long companyId, Long groupId) {
-			String attr = this.getSQLAttributes();
-			
-			String where = " t where ";
-			if(attributes.contains("companyId") && companyId != null) {
-				where += "t.companyId  = " + companyId + " ";
-			}
-			if(attributes.contains("groupId") && groupId == null) {
-				where += "and t.groupid in (select groupid from group_) ";
-			}
-			else if(attributes.contains("groupId") && groupId != null) {
-				where += "and t.groupid in (select groupid from group_ where groupId = " + groupId + ") ";
-			}
-			where += this.getSQLWhere();
-
-			return "select " + attr + " from " + this.tableName + where;
 		}
 
 		public String toString() {
@@ -167,7 +135,7 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 			return indexedModel;
 		}
 
-		public Set<String> getAttributes() {
+		public List<String> getAttributes() {
 			return attributes;
 		}
 
@@ -175,10 +143,11 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 			return primaryKey;
 		}
 
-		public Set<Data> getLiferayData() throws SQLException {
-			return getLiferayData(null);
+		/* TODO Inicio ==> Reemplazar con DynamicQueries */
+		public Set<Data> getLiferayData(Long companyId) throws SQLException {
+			return getLiferayData(companyId, null);
 		}
-		public Set<Data> getLiferayData(Long groupId) throws SQLException {
+		public Set<Data> getLiferayData(Long companyId, Long groupId) throws SQLException {
 		
 			Set<Data> dataSet = new HashSet<Data>();
 			
@@ -216,9 +185,98 @@ DLFolder t where t.companyId  = ?  and (status = 8 or status = 0)
 		
 		}
 
-		protected long companyId = 0;
+		protected String getSQLWhere() {
+			return "";
+		}
+
+		public String getSQLAttributes() {
+			String selectAttr = "";
+			for(String attrib : attributes) {
+				if(selectAttr.length() > 0) {
+					selectAttr += ",";
+				}
+				selectAttr = selectAttr + "t."+attrib;
+			}
+			return selectAttr;
+		}
+
+		public String getSQLOfObjectType(Long companyId, Long groupId) {
+			String attr = this.getSQLAttributes();
+			
+			String where = " t where ";
+			if(attributes.contains("companyId") && companyId != null) {
+				where += "t.companyId  = " + companyId + " ";
+			}
+			if(attributes.contains("groupId") && groupId == null) {
+				where += "and t.groupid in (select groupid from group_) ";
+			}
+			else if(attributes.contains("groupId") && groupId != null) {
+				where += "and t.groupid in (select groupid from group_ where groupId = " + groupId + ") ";
+			}
+			where += this.getSQLWhere();
+
+			return "select " + attr + " from " + this.tableName + where;
+		}
+
+		public void addQueryCriterias(Conjunction conjunction) {
+		}
+
+		public DynamicQuery getQueryOfObjectType(Long companyId, Long groupId) {
+
+			DynamicQuery query = modelUtil.newDynamicQuery(clazz);
+
+			ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
+
+			for(String attrib : attributes) {
+				projectionList.add(ProjectionFactoryUtil.property(attrib));
+			}
+
+			query.setProjection(projectionList);
+
+			Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+
+			if(attributes.contains("companyId") && companyId != null) {
+				Property property = PropertyFactoryUtil.forName("companyId");
+				conjunction.add(property.eq(companyId));
+			}
+
+			if(attributes.contains("groupId")) {
+				DynamicQuery groupDynamicQuery = DynamicQueryFactoryUtil.forClass(Group.class, PortalClassLoaderUtil.getClassLoader());
+
+				groupDynamicQuery.setProjection(ProjectionFactoryUtil.property("groupId"));
+
+				if(groupId != null) {
+					groupDynamicQuery.add(PropertyFactoryUtil.forName("groupId").eq(groupId));
+				}
+
+				Property property = PropertyFactoryUtil.forName("groupId");
+
+				conjunction.add(property.eq(groupDynamicQuery));
+			}
+
+			addQueryCriterias(conjunction);
+
+			query.add(conjunction);
+
+			return query;
+		}
+
+		/* TODO Fin ==> Reemplazar con DynamicQueries */
+
+		public DynamicQuery newDynamicQuery() throws Exception {
+			return modelUtil.newDynamicQuery(this.clazz);
+		}
+
+		public List<?> executeDynamicQuery(DynamicQuery dynamicQuery) throws Exception {
+			return modelUtil.executeDynamicQuery(this.clazz, dynamicQuery);
+		}
+
+		protected ModelUtil modelUtil = null;
+		protected Class<?> clazz = null;
+
 		protected Indexer indexer = null;
-		protected Set<String> attributes = null;
+
+		protected List<String> attributes = null;
 		protected Set<String> conditions = null;
 		protected String fullClassName = null;
 		protected String name = null;

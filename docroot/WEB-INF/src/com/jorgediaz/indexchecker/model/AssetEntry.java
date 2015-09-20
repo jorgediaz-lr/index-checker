@@ -1,9 +1,11 @@
 package com.jorgediaz.indexchecker.model;
 
+import com.test.ModelUtil;
+
 public class AssetEntry extends BaseModel {
 
-	public void init(String fullClassName, String tableName, String[] arrAttributes) {
-		super.init(fullClassName, tableName, arrAttributes);
+	public void init(ModelUtil modelutil, String fullClassName) throws Exception {
+		super.init(modelutil, fullClassName);
 
 		this.indexedModel = false;
 	}

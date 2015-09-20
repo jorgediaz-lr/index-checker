@@ -64,7 +64,7 @@ public class IndexChecker {
 				
 				dumpUncheckedClassNames(modelInfo, indexWrapper);
 				
-				dumpData(modelInfo, indexWrapper, groups, executionMode, maxLength);
+				dumpData(modelInfo, indexWrapper, company.getCompanyId(), groups, executionMode, maxLength);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -90,7 +90,7 @@ public class IndexChecker {
 		}
 	}
 
-	protected void dumpData(ModelInfo modelUtil, IndexWrapper indexWrapper,
+	protected void dumpData(ModelInfo modelUtil, IndexWrapper indexWrapper, Long companyId,
 			List<Group> groups, Set<ExecutionMode> executionMode, int maxLength) {
 
 		int i = 0;
@@ -102,7 +102,7 @@ public class IndexChecker {
 					Map<Long, Set<Data>> indexDataMap = indexWrapper.getClassNameDataByGroupId(modelClass);
 					for(Group group : groups) {
 
-						Set<Data> liferayData = modelClass.getLiferayData(group.getGroupId());
+						Set<Data> liferayData = modelClass.getLiferayData(companyId, group.getGroupId());
 						Set<Data> indexData = indexDataMap.get(group.getGroupId());
 						if(indexData == null) {
 							indexData = new HashSet<Data>();
@@ -114,7 +114,7 @@ public class IndexChecker {
 					}
 				}
 				else {
-					Set<Data> liferayData = modelClass.getLiferayData();
+					Set<Data> liferayData = modelClass.getLiferayData(companyId);
 					Set<Data> indexData = indexWrapper.getClassNameData(modelClass);
 
 					if(indexData.size() > 0 || liferayData.size() > 0) {

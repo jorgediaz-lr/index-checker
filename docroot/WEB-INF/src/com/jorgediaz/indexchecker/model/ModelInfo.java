@@ -8,8 +8,8 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.service.PortletLocalServiceUtil;
 import com.liferay.portal.util.comparator.PortletLuceneComparator;
+import com.test.ModelUtil;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +42,8 @@ public class ModelInfo {
 				continue;
 			}
 
+			ModelUtil modelUtil = new ModelUtil(); 
+
 			for(Indexer indexer : indexers) {
 				System.out.println("Indexer: "+indexer);
 				try {
@@ -58,7 +60,7 @@ public class ModelInfo {
 						if(fullClassName != null && 
 								(filter == null || fullClassName.contains(filter))) {
 
-							BaseModel model = ModelInfo.getModel(fullClassName, companyId, indexer, baseindexer.getClass().getClassLoader());
+							BaseModel model = ModelInfo.createModel(modelUtil, fullClassName);
 
 							if(model != null && model.isIndexedModel()) {
 								modelHash.put(fullClassName, model);
@@ -89,49 +91,25 @@ public class ModelInfo {
 		return baseindexer;
 	}
 
-	protected static BaseModel getModel(String fullClassName, long companyId, Indexer indexer, ClassLoader classLoader)
-			throws ClassNotFoundException, NoSuchFieldException,
-			IllegalAccessException, InstantiationException {
+	protected static BaseModel createModel(ModelUtil modelUtil, String fullClassName)
+			throws Exception {
 
-		int lastDot = fullClassName.lastIndexOf(".");
+		BaseModel type = getModelJavaClass(fullClassName);
 
-		String packageName = fullClassName.substring(0,lastDot);
-		String className = 
-			fullClassName.substring(lastDot+1,fullClassName.length());
-		String modelImplClassName = packageName + ".impl." + className + "ModelImpl"; /* PROBLEMATICO DESDE PORTLET */
-
-		Class<?> modelImplClass = classLoader.loadClass(modelImplClassName);
-
-		Field fieldTableName = 
-				modelImplClass.getDeclaredField("TABLE_NAME");
-		String tableName = (String) fieldTableName.get(null);
-		System.out.println("\tTableName: "+tableName);
-
-		Field fieldTableSqlCreate = 
-				modelImplClass.getDeclaredField("TABLE_SQL_CREATE");
-		String tableSqlCreate = (String) fieldTableSqlCreate.get(null);
-		System.out.println("\tTableSqlCreate: "+tableSqlCreate);
-
-		int posTableName = tableSqlCreate.indexOf(tableName);
-		if(posTableName<=0) {
-			System.out.println("Error, TABLE_NAME not found at TABLE_SQL_CREATE");
-		}
-		posTableName = posTableName + tableName.length()+2;
-
-		String attributes = tableSqlCreate.substring(posTableName,tableSqlCreate.length()-1);
-		System.out.println("\tAttributes: "+attributes);
-
-		BaseModel type = getModelJavaClass(className);
-		type.init(fullClassName, tableName, attributes.split(","));
-		type.setIndexer(indexer);
-		type.setCompanyId(companyId);
+		type.init(modelUtil, fullClassName);
 
 		return type;
 	}
 
-	protected static BaseModel getModelJavaClass(String className) throws InstantiationException, IllegalAccessException {
-		BaseModel type;
+	public static BaseModel getModelJavaClass(String fullClassName)
+			throws InstantiationException, IllegalAccessException {
 
+		int lastDot = fullClassName.lastIndexOf(".");
+
+		String className = 
+			fullClassName.substring(lastDot+1,fullClassName.length());
+		BaseModel type;
+		
 		try {
 			Class<?> typeClass = Class.forName("com.jorgediaz.indexchecker.model."+className);
 			System.out.println(typeClass);
@@ -141,6 +119,7 @@ public class ModelInfo {
 			System.out.println(e);
 			type = new DefaultModel();
 		}
+
 		return type;
 	}
 

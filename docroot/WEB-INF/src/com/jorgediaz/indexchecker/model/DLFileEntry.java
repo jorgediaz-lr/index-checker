@@ -1,5 +1,7 @@
 package com.jorgediaz.indexchecker.model;
 
+import com.test.ModelUtil;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -7,8 +9,8 @@ public class DLFileEntry extends DefaultStatusModel {
 
 	Set<String> attrAux = new HashSet<String>();
 
-	public void init(String fullClassName, String tableName, String[] arrAttributes) {
-		super.init(fullClassName, tableName, arrAttributes);
+	public void init(ModelUtil modelUtil, String fullClassName) throws Exception {
+		super.init(modelUtil, fullClassName);
 
 		attrAux.addAll(this.attributes);
 		attrAux.add("status");
