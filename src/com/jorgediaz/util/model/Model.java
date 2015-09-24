@@ -6,24 +6,23 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.model.ClassedModel;
 
 import java.util.List;
-
 public interface Model extends Cloneable {
 
-	public void init(ModelFactory modelFactory, Class<? extends ClassedModel> modelClass) throws Exception;
+	public Model clone();
 
-	public String getName();
+	public List<?> executeDynamicQuery(
+		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery)
+			throws Exception;
 
-	public void setNameSuffix(String suffix);
+	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
+		throws Exception;
 
-	public String getClassName();
+	public ClassedModel fetchObject(
+		Class<? extends ClassedModel> clazz, long primaryKey);
 
-	public Class<?> getModelClass();
+	public ClassedModel fetchObject(long primaryKey);
 
-	public boolean modelExtendsClass(Class<?> clazz);
-
-	public boolean hasIndexer();
-
-	public Indexer getIndexer();
+	public int getAttributePos(String name);
 
 	public Object[][] getAttributes();
 
@@ -31,40 +30,47 @@ public interface Model extends Cloneable {
 
 	public int[] getAttributesType();
 
-	public int getAttributePos(String name);
-
 	public int getAttributeType(String name);
+
+	public String getClassName();
+
+	public Criterion getFilter();
+
+	public Indexer getIndexer();
+
+	public Class<?> getModelClass();
+
+	public String getName();
 
 	public String getPrimaryKeyAttribute();
 
 	public String[] getPrimaryKeyMultiAttribute();
 
+	public int[] getValidStatuses();
+
 	public boolean hasAttribute(String attribute);
 
 	public boolean hasGroupId();
 
-	public DynamicQuery newDynamicQuery();
+	public boolean hasIndexer();
 
-	public DynamicQuery newDynamicQuery(String alias);
+	public void init(
+		ModelFactory modelFactory, Class<? extends ClassedModel> modelClass)
+			throws Exception;
+
+	public boolean modelExtendsClass(Class<?> clazz);
+
+	public DynamicQuery newDynamicQuery();
 
 	public DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz);
 
-	public DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz, String alias);
+	public DynamicQuery newDynamicQuery(
+		Class<? extends ClassedModel> clazz, String alias);
 
-	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery) throws Exception;
-
-	public List<?> executeDynamicQuery(Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery) throws Exception;
-
-	public ClassedModel fetchObject(long primaryKey);
-
-	public ClassedModel fetchObject(Class<? extends ClassedModel> clazz, long primaryKey);
-
-	public Criterion getFilter();
+	public DynamicQuery newDynamicQuery(String alias);
 
 	public void setFilter(Criterion filter);
 
-	public int[] getValidStatuses();
-
-	public Model clone();
+	public void setNameSuffix(String suffix);
 
 }
