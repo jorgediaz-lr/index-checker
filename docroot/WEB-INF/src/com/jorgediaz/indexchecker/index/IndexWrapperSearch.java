@@ -28,9 +28,11 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 		SearchContext searchContext = new SearchContext();
 		searchContext.setCompanyId(companyId);
-		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(searchContext);
+		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
+			searchContext);
 		contextQuery.addRequiredTerm(Field.COMPANY_ID, companyId);
-		contextQuery.addRequiredTerm(Field.ENTRY_CLASS_NAME, model.getClassName());
+		contextQuery.addRequiredTerm(
+			Field.ENTRY_CLASS_NAME, model.getClassName());
 
 		try {
 			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
@@ -43,8 +45,9 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if (entryClassName != null && entryClassName.equals(model.getClassName()))
-					{
+					if ((entryClassName != null) &&
+						entryClassName.equals(model.getClassName())) {
+
 						Data data = new Data(model);
 						data.init(doc);
 
@@ -54,21 +57,26 @@ public class IndexWrapperSearch extends IndexWrapper {
 			}
 		}
 		catch (Exception e) {
-			System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+			System.err.println(
+				"\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
 		}
 
 		return indexData;
 	}
 
 	@Override
-	public Map<Long, Set<Data>> getClassNameDataByGroupId(IndexCheckerModel model) {
+	public Map<Long, Set<Data>> getClassNameDataByGroupId(
+		IndexCheckerModel model) {
+
 		Map<Long, Set<Data>> indexData = new HashMap<Long, Set<Data>>();
 
 		SearchContext searchContext = new SearchContext();
 		searchContext.setCompanyId(companyId);
-		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(searchContext);
+		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
+			searchContext);
 		contextQuery.addRequiredTerm(Field.COMPANY_ID, companyId);
-		contextQuery.addRequiredTerm(Field.ENTRY_CLASS_NAME, model.getClassName());
+		contextQuery.addRequiredTerm(
+			Field.ENTRY_CLASS_NAME, model.getClassName());
 
 		try {
 			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
@@ -81,8 +89,9 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if (entryClassName != null && entryClassName.equals(model.getClassName()))
-					{
+					if ((entryClassName != null) &&
+						entryClassName.equals(model.getClassName())) {
+
 						Data data = new Data(model);
 						data.init(doc);
 
@@ -101,7 +110,8 @@ public class IndexWrapperSearch extends IndexWrapper {
 			}
 		}
 		catch (Exception e) {
-			System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+			System.err.println(
+				"\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
 		}
 
 		return indexData;

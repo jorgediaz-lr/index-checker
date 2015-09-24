@@ -68,20 +68,28 @@ DLFolder t where t.companyId = ? and (status = 8 or status = 0)
 
 public abstract class IndexCheckerModel extends ModelImpl {
 
-	public static Map<Class<?>, String[]> modelInterfaceAttributesMap = new HashMap<Class<?>, String[]>();
+	public static Map<Class<?>, String[]> modelInterfaceAttributesMap =
+		new HashMap<Class<?>, String[]>();
 
 	static {
-		String[] auditedModelAttributes = new String[] { "companyId", "createDate", "modifiedDate"};
+		String[] auditedModelAttributes =
+			new String[] { "companyId", "createDate", "modifiedDate"};
 		String[] groupedModelAttributes = new String[] { "groupId" };
 		String[] resourcedModelAttributes = new String[] { "resourcePrimKey" };
-		String[] stagedModelAttributes = new String[] { "companyId", "createDate", "modifiedDate" };
+		String[] stagedModelAttributes =
+			new String[] { "companyId", "createDate", "modifiedDate" };
 		String[] workflowModelAttributes = new String[] { "status" };
 
-		modelInterfaceAttributesMap.put(AuditedModel.class, auditedModelAttributes);
-		modelInterfaceAttributesMap.put(GroupedModel.class, groupedModelAttributes);
-		modelInterfaceAttributesMap.put(ResourcedModel.class, resourcedModelAttributes);
-		modelInterfaceAttributesMap.put(StagedModel.class, stagedModelAttributes);
-		modelInterfaceAttributesMap.put(WorkflowedModel.class, workflowModelAttributes);
+		modelInterfaceAttributesMap.put(
+			AuditedModel.class, auditedModelAttributes);
+		modelInterfaceAttributesMap.put(
+			GroupedModel.class, groupedModelAttributes);
+		modelInterfaceAttributesMap.put(
+			ResourcedModel.class, resourcedModelAttributes);
+		modelInterfaceAttributesMap.put(
+			StagedModel.class, stagedModelAttributes);
+		modelInterfaceAttributesMap.put(
+			WorkflowedModel.class, workflowModelAttributes);
 	}
 
 	@Override
@@ -146,14 +154,16 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		}
 
 		int[] statuses = {
-				WorkflowConstants.STATUS_APPROVED,
-				WorkflowConstants.STATUS_IN_TRASH
+			WorkflowConstants.STATUS_APPROVED, WorkflowConstants.STATUS_IN_TRASH
 			};
+
 		return statuses;
 	}
 
 	@Override
-	public void init(ModelFactory modelFactory, Class<? extends ClassedModel> modelClass) throws Exception {
+	public void init(
+			ModelFactory modelFactory, Class<? extends ClassedModel> modelClass)
+		throws Exception {
 
 		super.init(modelFactory, modelClass);
 
@@ -173,7 +183,8 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 		for (Class<?> modelInterface : modelInterfaceAttributesMap.keySet()) {
 			if (this.modelExtendsClass(modelInterface)) {
-				String[] modelInterfaceAttributes = modelInterfaceAttributesMap.get(modelInterface);
+				String[] modelInterfaceAttributes =
+					modelInterfaceAttributesMap.get(modelInterface);
 
 				for (int i = 0; i<modelInterfaceAttributes.length; i++)
 				{

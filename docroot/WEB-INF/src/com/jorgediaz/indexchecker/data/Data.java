@@ -35,10 +35,10 @@ public class Data implements Comparable<Data> {
 
 	@Override
 	public int compareTo(Data data) {
-		if (this.primaryKey != -1 && data.primaryKey != -1) {
+		if ((this.primaryKey != -1) && (data.primaryKey != -1)) {
 			return Long.compare(this.primaryKey, data.primaryKey);
 		}
-		else if (this.resourcePrimKey != -1 && data.resourcePrimKey != -1) {
+		else if ((this.resourcePrimKey != -1) && (data.resourcePrimKey != -1)) {
 			return Long.compare(this.resourcePrimKey, data.resourcePrimKey);
 		}
 		else {
@@ -57,10 +57,10 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if (this.primaryKey != -1 && data.primaryKey != -1) {
+		if ((this.primaryKey != -1) && (data.primaryKey != -1)) {
 			return (this.primaryKey == data.primaryKey);
 		}
-		else if (this.resourcePrimKey != -1 && data.resourcePrimKey != -1) {
+		else if ((this.resourcePrimKey != -1) && (data.resourcePrimKey != -1)) {
 			return (this.resourcePrimKey == data.resourcePrimKey);
 		}
 		else {
@@ -77,7 +77,9 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if (this.model.hasGroupId() && !exactLongs(this.groupId, data.groupId)) {
+		if (this.model.hasGroupId() &&
+			!exactLongs(this.groupId, data.groupId)) {
+
 			return false;
 		}
 
@@ -97,7 +99,9 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String getAllData(String sep) {
-		return this.getEntryClassName() + sep + companyId + sep + groupId + sep + entryClassPK + sep + primaryKey + sep + resourcePrimKey + sep + uid + sep + createDate + sep + modifiedDate + sep + status;
+		return this.getEntryClassName() + sep + companyId + sep + groupId +
+			sep + entryClassPK + sep + primaryKey + sep + resourcePrimKey +
+			sep + uid + sep + createDate + sep + modifiedDate + sep + status;
 	}
 
 	public Long getCompanyId() {
@@ -142,10 +146,12 @@ public class Data implements Comparable<Data> {
 
 	public int hashCode() {
 		if (this.primaryKey != -1) {
-			return this.getEntryClassName().hashCode() * Long.valueOf(this.primaryKey).hashCode();
+			return this.getEntryClassName().hashCode() *
+				Long.valueOf(this.primaryKey).hashCode();
 		}
 		else if (this.resourcePrimKey != -1) {
-			return -1 * this.getEntryClassName().hashCode() * Long.valueOf(this.resourcePrimKey).hashCode();
+			return -1 * this.getEntryClassName().hashCode() *
+				Long.valueOf(this.resourcePrimKey).hashCode();
 		}
 		else {
 			return super.hashCode();
@@ -181,7 +187,9 @@ public class Data implements Comparable<Data> {
 	public void setEntryClassPK(long entryClassPK) {
 		this.entryClassPK = entryClassPK;
 
-		if (primaryKey != -1 && resourcePrimKey == -1 && primaryKey != entryClassPK) {
+		if ((primaryKey != -1) && (resourcePrimKey == -1) &&
+			(primaryKey != entryClassPK)) {
+
 			this.resourcePrimKey = entryClassPK;
 		}
 	}
@@ -219,13 +227,14 @@ public class Data implements Comparable<Data> {
 		catch (Exception e) {
 		}
 
-		if (resourcePrimKey == -1 && primaryKey != entryClassPK) {
+		if ((resourcePrimKey == -1) && (primaryKey != entryClassPK)) {
 			this.resourcePrimKey = entryClassPK;
 		}
 	}
 
 	public String toString() {
-		return this.getEntryClassName() + " " + entryClassPK + " " + primaryKey + " " + resourcePrimKey + " " + uid;
+		return this.getEntryClassName() + " " + entryClassPK + " " +
+				primaryKey + " " + resourcePrimKey + " " + uid;
 	}
 
 	protected static Long stringToTime(String dateString) {
@@ -235,15 +244,18 @@ public class Data implements Comparable<Data> {
 
 		try {
 			return (DateTools.stringToTime(dateString))/1000;
-		} catch (Exception e) {}
+		}
+		catch (Exception e) {}
 
 		try {
 			return (Long.valueOf(dateString))/1000;
-		} catch (Exception e) {}
+		}
+		catch (Exception e) {}
 
 		try {
 			return (Timestamp.valueOf(dateString).getTime())/1000;
-		} catch (Exception e) {}
+		}
+		catch (Exception e) {}
 
 		return null;
 	}

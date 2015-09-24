@@ -14,28 +14,45 @@ import java.util.HashMap;
 import java.util.Map;
 public class IndexCheckerModelFactory extends ModelFactory {
 
-	public static Class<? extends Model> defaultModelClass = DefaultModelIndexChecker.class;
+	public static Class<? extends Model> defaultModelClass =
+		DefaultModelIndexChecker.class;
 
-	public static Map<String, Class<? extends Model>> modelClassMap = new HashMap<String, Class<? extends Model>>();
+	public static Map<String, Class<? extends Model>> modelClassMap =
+		new HashMap<String, Class<? extends Model>>();
 
 	static {
-		modelClassMap.put("com.liferay.portlet.asset.model.AssetEntry", NotIndexed.class);
-		modelClassMap.put("com.liferay.portlet.calendar.model.CalendarBooking", CalendarBooking.class);
+		modelClassMap.put(
+			"com.liferay.portlet.asset.model.AssetEntry", NotIndexed.class);
+		modelClassMap.put(
+			"com.liferay.portlet.calendar.model.CalendarBooking",
+			CalendarBooking.class);
 		modelClassMap.put("com.liferay.portal.model.Contact", Contact.class);
-		modelClassMap.put("com.liferay.portlet.documentlibrary.model.DLFileEntry", DLFileEntry.class);
-		modelClassMap.put("com.liferay.portlet.journal.model.JournalArticle", JournalArticle.class);
-		modelClassMap.put("com.liferay.portlet.messageboards.model.MBMessage", MBMessage.class);
-		modelClassMap.put("com.liferay.portlet.trash.model.TrashEntry", NotIndexed.class);
+		modelClassMap.put(
+			"com.liferay.portlet.documentlibrary.model.DLFileEntry",
+			DLFileEntry.class);
+		modelClassMap.put(
+			"com.liferay.portlet.journal.model.JournalArticle",
+			JournalArticle.class);
+		modelClassMap.put(
+			"com.liferay.portlet.messageboards.model.MBMessage",
+			MBMessage.class);
+		modelClassMap.put(
+			"com.liferay.portlet.trash.model.TrashEntry", NotIndexed.class);
 		modelClassMap.put("com.liferay.portal.model.User", User.class);
-		modelClassMap.put("com.liferay.portlet.wiki.model.WikiNode", WikiNode.class);
-		modelClassMap.put("com.liferay.portlet.wiki.model.WikiPage", WikiPage.class);
+		modelClassMap.put(
+			"com.liferay.portlet.wiki.model.WikiNode", WikiNode.class);
+		modelClassMap.put(
+			"com.liferay.portlet.wiki.model.WikiPage", WikiPage.class);
 	}
 
 	public IndexCheckerModelFactory() {
 		super(defaultModelClass, modelClassMap);
 	}
 
-	public IndexCheckerModelFactory(Class<? extends Model> defaultModelClass, Map<String, Class<? extends Model>> modelClassMap) {
+	public IndexCheckerModelFactory(
+		Class<? extends Model> defaultModelClass,
+		Map<String, Class<? extends Model>> modelClassMap) {
+
 		super(defaultModelClass, modelClassMap);
 	}
 
@@ -48,9 +65,10 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			return null;
 		}
 
-		BaseIndexer baseindexer = IndexCheckerModelFactory.getBaseIndexer(model.getIndexer());
+		BaseIndexer baseindexer = IndexCheckerModelFactory.getBaseIndexer(
+			model.getIndexer());
 
-		if (baseindexer == null || !baseindexer.isIndexerEnabled()) {
+		if ((baseindexer == null) || !baseindexer.isIndexerEnabled()) {
 			return null;
 		}
 
@@ -64,7 +82,8 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			baseindexer = (BaseIndexer)indexer;
 		}
 		else if (indexer instanceof Proxy) {
-			ClassLoaderBeanHandler classLoaderBeanHandler = (ClassLoaderBeanHandler)Proxy.getInvocationHandler(indexer);
+			ClassLoaderBeanHandler classLoaderBeanHandler =
+				(ClassLoaderBeanHandler)Proxy.getInvocationHandler(indexer);
 			baseindexer = (BaseIndexer)classLoaderBeanHandler.getBean();
 		}
 

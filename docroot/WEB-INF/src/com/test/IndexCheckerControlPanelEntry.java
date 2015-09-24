@@ -10,8 +10,10 @@ import com.liferay.portlet.BaseControlPanelEntry;
 public class IndexCheckerControlPanelEntry extends BaseControlPanelEntry {
 
 	@Override
-	public boolean isVisible(PermissionChecker permissionChecker, Portlet portlet)
-			throws Exception {
+	public boolean isVisible(
+			PermissionChecker permissionChecker, Portlet portlet)
+		throws Exception {
+
 		return true;
 	}
 

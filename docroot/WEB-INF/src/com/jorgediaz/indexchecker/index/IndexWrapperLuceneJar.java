@@ -12,8 +12,11 @@ public class IndexWrapperLuceneJar extends IndexWrapperLucene {
 	public IndexWrapperLuceneJar(long companyId) {
 		IndexSearcher indexSearcher;
 		try {
-			indexSearcher = (IndexSearcher)IndexWrapperLuceneReflection.getIndexSearcher(companyId);
-		} catch (Exception e) {
+			indexSearcher =
+				(IndexSearcher)IndexWrapperLuceneReflection.getIndexSearcher(
+					companyId);
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
@@ -59,7 +62,8 @@ public class IndexWrapperLuceneJar extends IndexWrapperLucene {
 
 		try {
 			return new DocumentWrapperLucene(((IndexReader)index).document(i));
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}

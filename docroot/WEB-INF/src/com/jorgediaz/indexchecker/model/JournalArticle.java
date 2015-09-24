@@ -20,21 +20,10 @@ import java.util.List;
 import java.util.Map;
 public class JournalArticle extends IndexCheckerModel {
 
-	@Override
-	public Conjunction generateQueryFilter() {
+	public void addMissingJournalArticles(
+			Criterion filter, Map<Long, Data> dataMap)
+		throws Exception {
 
-		Conjunction conjunction = super.generateQueryFilter();
-
-		Property propertyClassnameid = PropertyFactoryUtil.forName("classNameId");
-
-		conjunction.add(propertyClassnameid.eq(0L));
-
-		Property propertyIndexable = PropertyFactoryUtil.forName("indexable");
-
-		conjunction.add(propertyIndexable.eq(true));
-
-		return conjunction;
-	} public void addMissingJournalArticles(Criterion filter, Map<Long, Data> dataMap) throws Exception {
 		DynamicQuery query = this.newDynamicQuery();
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
@@ -47,22 +36,31 @@ public class JournalArticle extends IndexCheckerModel {
 
 		query.add(filter);
 
-		DynamicQuery articleVersionDynamicQuery = this.newDynamicQuery("articleVersion");
+		DynamicQuery articleVersionDynamicQuery = this.newDynamicQuery(
+			"articleVersion");
 
-		articleVersionDynamicQuery.setProjection(ProjectionFactoryUtil.alias(ProjectionFactoryUtil.max("articleVersion.version"), "articleVersion.version"));
+		articleVersionDynamicQuery.setProjection(
+			ProjectionFactoryUtil.alias(
+				ProjectionFactoryUtil.max(
+					"articleVersion.version"), "articleVersion.version"));
 
 		// We need to use the "this" default alias to make sure the database
 		// engine handles this subquery as a correlated subquery
 
-		articleVersionDynamicQuery.add(RestrictionsFactoryUtil.eqProperty("this.resourcePrimKey", "articleVersion.resourcePrimKey"));
+		articleVersionDynamicQuery.add(
+			RestrictionsFactoryUtil.eqProperty(
+				"this.resourcePrimKey", "articleVersion.resourcePrimKey"));
 
-		query.add(PropertyFactoryUtil.forName("version").eq(articleVersionDynamicQuery));
+		query.add(
+			PropertyFactoryUtil.forName("version").eq(
+				articleVersionDynamicQuery));
 
 		boolean indexAllVersionsOld = indexAllVersions;
 		indexAllVersions = true;
 
 		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)this.executeDynamicQuery(query);
+		List<Object[]> results = (List<Object[]>)this.executeDynamicQuery(
+			query);
 
 		indexAllVersions = indexAllVersionsOld;
 
@@ -75,6 +73,23 @@ public class JournalArticle extends IndexCheckerModel {
 				dataMap.put(data.getPrimaryKey(), data);
 			}
 		}
+	}
+
+	@Override
+	public Conjunction generateQueryFilter() {
+
+		Conjunction conjunction = super.generateQueryFilter();
+
+		Property propertyClassnameid = PropertyFactoryUtil.forName(
+			"classNameId");
+
+		conjunction.add(propertyClassnameid.eq(0L));
+
+		Property propertyIndexable = PropertyFactoryUtil.forName("indexable");
+
+		conjunction.add(propertyIndexable.eq(true));
+
+		return conjunction;
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
@@ -97,13 +112,18 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
-	public void init(ModelFactory modelUtil, Class<? extends ClassedModel> clazz) throws Exception {
+	public void init(
+			ModelFactory modelUtil, Class<? extends ClassedModel> clazz)
+		throws Exception {
+
 		super.init(modelUtil, clazz);
 
 		try {
-			indexAllVersions = PrefsPropsUtil.getBoolean("journal.articles.index.all.versions");
-		} catch (SystemException e) {
-
+			indexAllVersions =
+				PrefsPropsUtil.getBoolean(
+					"journal.articles.index.all.versions");
+		}
+		catch (SystemException e) {
 			throw new RuntimeException(e);
 		}
 
@@ -119,7 +139,8 @@ public class JournalArticle extends IndexCheckerModel {
 			super.reindex(value);
 		}
 		else {
-			getIndexer().reindex(this.getClassName(), value.getResourcePrimKey());
+			getIndexer().reindex(
+				this.getClassName(), value.getResourcePrimKey());
 		}
 	}
 

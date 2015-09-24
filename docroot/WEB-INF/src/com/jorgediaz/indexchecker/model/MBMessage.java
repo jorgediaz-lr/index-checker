@@ -13,15 +13,17 @@ public class MBMessage extends IndexCheckerModel {
 
 		Property propertyCategoryId = PropertyFactoryUtil.forName("categoryId");
 
-		Property propertyParentMessageId = PropertyFactoryUtil.forName("parentMessageId");
+		Property propertyParentMessageId = PropertyFactoryUtil.forName(
+			"parentMessageId");
 
 		conjunction.add(
-				RestrictionsFactoryUtil.not(
-					RestrictionsFactoryUtil.conjunction()
-						.add(propertyCategoryId.eq(-1L))
-						.add(propertyParentMessageId.eq(0L))
+			RestrictionsFactoryUtil.not(
+				RestrictionsFactoryUtil.conjunction().add(
+					propertyCategoryId.eq(-1L)).add(
+						propertyParentMessageId.eq(0L))
 				));
 
 		return conjunction;
 	}
+
 }

@@ -9,14 +9,6 @@ import com.liferay.portal.model.ClassedModel;
 public class User extends IndexCheckerModel {
 
 	@Override
-	public void init(ModelFactory modelUtil, Class<? extends ClassedModel> clazz) throws Exception {
-		super.init(modelUtil, clazz);
-
-		this.removeIndexedAttribute("createDate");
-		this.addIndexedAttribute("status");
-	}
-
-	@Override
 	public Conjunction generateQueryFilter() {
 
 		Conjunction conjunction = super.generateQueryFilter();
@@ -27,4 +19,16 @@ public class User extends IndexCheckerModel {
 
 		return conjunction;
 	}
+
+	@Override
+	public void init(
+			ModelFactory modelUtil, Class<? extends ClassedModel> clazz)
+		throws Exception {
+
+		super.init(modelUtil, clazz);
+
+		this.removeIndexedAttribute("createDate");
+		this.addIndexedAttribute("status");
+	}
+
 }

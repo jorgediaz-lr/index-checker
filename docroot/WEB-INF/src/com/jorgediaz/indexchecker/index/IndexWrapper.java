@@ -13,6 +13,7 @@ public abstract class IndexWrapper {
 
 	abstract public Set<Data> getClassNameData(IndexCheckerModel modelClass);
 
-	abstract public Map<Long, Set<Data>> getClassNameDataByGroupId(IndexCheckerModel modelClass);
+	abstract public Map<Long, Set<Data>> getClassNameDataByGroupId(
+		IndexCheckerModel modelClass);
 
 }

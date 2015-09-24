@@ -13,4 +13,5 @@ public class NotIndexed extends IndexCheckerModel {
 		/* Return empty data as it is not indexed */
 		return new HashMap<Long, Data>();
 	}
+
 }

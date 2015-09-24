@@ -10,4 +10,5 @@ public class DocumentWrapperSearch extends DocumentWrapper {
 	public String get(String key) {
 		return ((Document)document).get(key);
 	}
+
 }

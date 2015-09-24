@@ -8,12 +8,6 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.model.ClassedModel;
 public class WikiPage extends IndexCheckerModel {
 
-	public void init(ModelFactory modelUtil, Class<? extends ClassedModel> clazz) throws Exception {
-		super.init(modelUtil, clazz);
-
-		this.setIndexPrimaryKey("nodeId");
-	}
-
 	@Override
 	public Conjunction generateQueryFilter() {
 
@@ -23,10 +17,21 @@ public class WikiPage extends IndexCheckerModel {
 
 		conjunction.add(propertyHead.eq(true));
 
-		Property propertyRedirectTitle = PropertyFactoryUtil.forName("redirectTitle");
+		Property propertyRedirectTitle = PropertyFactoryUtil.forName(
+			"redirectTitle");
 
 		conjunction.add(propertyRedirectTitle.eq(""));
 
 		return conjunction;
 	}
+
+	public void init(
+			ModelFactory modelUtil, Class<? extends ClassedModel> clazz)
+		throws Exception {
+
+		super.init(modelUtil, clazz);
+
+		this.setIndexPrimaryKey("nodeId");
+	}
+
 }

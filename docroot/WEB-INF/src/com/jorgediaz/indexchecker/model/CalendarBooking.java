@@ -8,9 +8,9 @@ public class CalendarBooking extends IndexCheckerModel {
 	@Override
 	public int[] getValidStatuses() {
 
-		int[] statuses = {
-				WorkflowConstants.STATUS_APPROVED, STATUS_MAYBE
+		int[] statuses = {WorkflowConstants.STATUS_APPROVED, STATUS_MAYBE
 			};
 		return statuses;
 	}
+
 }

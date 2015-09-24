@@ -9,39 +9,37 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
-	protected Class<?> indexReaderClass = null;
-	protected Class<?> termClass = null;
-	protected Class<?> termEnumClass = null;
-	protected Method getIndexReader = null;
-	protected Method terms = null;
-	protected Method numDocs = null;
-	protected Method maxDoc = null;
-	protected Method isDeleted = null;
-
-	protected Method document = null;
 
 	public IndexWrapperLuceneReflection(long companyId) {
-
 		Object indexSearcher;
 		try {
-			indexSearcher = IndexWrapperLuceneReflection.getIndexSearcher(companyId);
-		} catch (Exception e) {
+			indexSearcher = IndexWrapperLuceneReflection.getIndexSearcher(
+				companyId);
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 
 		try {
-			getIndexReader = indexSearcher.getClass().getMethod("getIndexReader");
+			getIndexReader =
+				indexSearcher.getClass().getMethod("getIndexReader");
 			index = getIndexReader.invoke(indexSearcher);
-			indexReaderClass = index.getClass().getSuperclass().getSuperclass(); /* ReadOnlyDirectoryReader => DirectoryReader => IndexReader*/
-			termClass = indexReaderClass.getClassLoader().loadClass("org.apache.lucene.index.Term");
-			termEnumClass = indexReaderClass.getClassLoader().loadClass("org.apache.lucene.index.TermEnum");
+			/* ReadOnlyDirectoryReader => DirectoryReader => IndexReader*/
+			indexReaderClass = index.getClass().getSuperclass().getSuperclass();
+			termClass =
+				indexReaderClass.getClassLoader().loadClass(
+					"org.apache.lucene.index.Term");
+			termEnumClass =
+				indexReaderClass.getClassLoader().loadClass(
+					"org.apache.lucene.index.TermEnum");
 			terms = indexReaderClass.getMethod("terms", termClass);
 			numDocs = indexReaderClass.getMethod("numDocs");
 			maxDoc = indexReaderClass.getMethod("maxDoc");
 			isDeleted = indexReaderClass.getMethod("isDeleted", int.class);
 			document = indexReaderClass.getMethod("document", int.class);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
@@ -52,14 +50,18 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 
 		Set<String> values = new HashSet<String>();
 		try {
-			Object termObj = termClass.getConstructor(String.class).newInstance(field);
+			Object termObj = termClass.getConstructor(
+				String.class).newInstance(field);
 			Object termEnum = terms.invoke(index, termObj);
 			Method termMethod = termEnumClass.getMethod("term");
 			Method nextMethod = termEnumClass.getMethod("next");
 			Method termTextMethod = termClass.getMethod("text");
 			Method termFieldMethod = termClass.getMethod("field");
 			Object currTermObj = termMethod.invoke(termEnum);
-			while ((currTermObj != null) && ((String)termFieldMethod.invoke(currTermObj)).equals(field)) {
+			while ((currTermObj != null) &&
+				   ((String)termFieldMethod.invoke(currTermObj)).equals(
+					   field)) {
+
 				values.add((String)termTextMethod.invoke(currTermObj));
 				nextMethod.invoke(termEnum);
 				currTermObj = termMethod.invoke(termEnum);
@@ -81,33 +83,41 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 
 		try {
 			return (Integer)numDocs.invoke(index);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
 
 	protected static Object getIndexSearcher(long companyId)
-			throws ClassNotFoundException, Exception {
+		throws ClassNotFoundException, Exception {
 
-		//Ejecutamos desde Portlet:
-		//		IndexSearcher indexSearcher = LuceneHelperUtil.getIndexSearcher(company.getCompanyId());
+	/* We execute from Portlet:
+	*		IndexSearcher indexSearcher =
+	*			LuceneHelperUtil.getIndexSearcher(company.getCompanyId());
+	*/
 
-		Class<?> luceneHelperUtil = PortalClassLoaderUtil.getClassLoader().loadClass("com.liferay.portal.search.lucene.LuceneHelperUtil");
-		MethodKey getIndexSearcher1 = new MethodKey(luceneHelperUtil,"getIndexSearcher",long.class);
+		Class<?> luceneHelperUtil =
+			PortalClassLoaderUtil.getClassLoader().loadClass(
+				"com.liferay.portal.search.lucene.LuceneHelperUtil");
+		MethodKey getIndexSearcher1 = new MethodKey(
+			luceneHelperUtil,"getIndexSearcher", long.class);
 		MethodKey getIndexSearcher = getIndexSearcher1;
 		return PortalClassInvoker.invoke(false, getIndexSearcher, companyId);
 	}
 
 	@Override
-	protected int maxDoc() {
+	protected DocumentWrapper document(int i) {
 		if (index == null) {
-			return 0;
+			return null;
 		}
 
 		try {
-			return (Integer)maxDoc.invoke(index);
-		} catch (Exception e) {
+			return new DocumentWrapperLuceneReflection(
+				document.invoke(index, i));
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
@@ -121,23 +131,36 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 
 		try {
 			return (Boolean)isDeleted.invoke(index, i);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
-	protected DocumentWrapper document(int i) {
+	protected int maxDoc() {
 		if (index == null) {
-			return null;
+			return 0;
 		}
 
 		try {
-			return new DocumentWrapperLuceneReflection(document.invoke(index, i));
-		} catch (Exception e) {
+			return (Integer)maxDoc.invoke(index);
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
+
+	protected Method document = null;
+	protected Method getIndexReader = null;
+	protected Class<?> indexReaderClass = null;
+	protected Method isDeleted = null;
+	protected Method maxDoc = null;
+	protected Method numDocs = null;
+	protected Class<?> termClass = null;
+	protected Class<?> termEnumClass = null;
+	protected Method terms = null;
+
 }

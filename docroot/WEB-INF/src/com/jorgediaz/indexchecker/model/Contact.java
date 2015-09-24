@@ -11,26 +11,23 @@ import com.liferay.portal.model.User;
 public class Contact extends IndexCheckerModel {
 
 	@Override
-	public int[] getValidStatuses() {
-		return null;
-	}
-
-	@Override
 	public Conjunction generateQueryFilter() {
 
 		Conjunction conjunction = super.generateQueryFilter();
 
 		DynamicQuery userDynamicQuery = this.newDynamicQuery(User.class);
 
-		userDynamicQuery.setProjection(ProjectionFactoryUtil.property("userId"));
+		userDynamicQuery.setProjection(
+			ProjectionFactoryUtil.property("userId"));
 
-		Property propertyDefaultUser = PropertyFactoryUtil.forName("defaultUser");
+		Property propertyDefaultUser = PropertyFactoryUtil.forName(
+			"defaultUser");
 
 		Property propertyStatus = PropertyFactoryUtil.forName("status");
 
-		userDynamicQuery.add(RestrictionsFactoryUtil.disjunction()
-				.add(propertyDefaultUser.eq(true))
-				.add(propertyStatus.ne(WorkflowConstants.STATUS_APPROVED)));
+		userDynamicQuery.add(RestrictionsFactoryUtil.disjunction().add(
+			propertyDefaultUser.eq(true)).add(
+				propertyStatus.ne(WorkflowConstants.STATUS_APPROVED)));
 
 		Property property = PropertyFactoryUtil.forName("classPK");
 
@@ -38,4 +35,10 @@ public class Contact extends IndexCheckerModel {
 
 		return conjunction;
 	}
+
+	@Override
+	public int[] getValidStatuses() {
+		return null;
+	}
+
 }

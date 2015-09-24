@@ -20,8 +20,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if (entryClassName != null && entryClassName.equals(model.getClassName()))
-					{
+					if ((entryClassName != null) &&
+						entryClassName.equals(model.getClassName())) {
+
 						Data data = new Data(model);
 						data.init(doc);
 
@@ -30,7 +31,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 				}
 			}
 			catch (Exception e) {
-				System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+				System.err.println(
+					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage());
 			}
 		}
 
@@ -38,7 +41,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 	}
 
 	@Override
-	public Map<Long, Set<Data>> getClassNameDataByGroupId(IndexCheckerModel model) {
+	public Map<Long, Set<Data>> getClassNameDataByGroupId(
+		IndexCheckerModel model) {
+
 		Map<Long, Set<Data>> indexData = new HashMap<Long, Set<Data>>();
 
 		for (int i = 0; i<maxDoc(); i++) {
@@ -48,8 +53,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 
 					String entryClassName = doc.getEntryClassName();
 
-					if (entryClassName != null && entryClassName.equals(model.getClassName()))
-					{
+					if ((entryClassName != null) &&
+						entryClassName.equals(model.getClassName())) {
+
 						Data data = new Data(model);
 						data.init(doc);
 
@@ -67,7 +73,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 				}
 			}
 			catch (Exception e) {
-				System.err.println("\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+				System.err.println(
+					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage());
 			}
 		}
 

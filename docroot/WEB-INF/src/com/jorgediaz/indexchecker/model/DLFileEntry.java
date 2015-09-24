@@ -16,7 +16,8 @@ public class DLFileEntry extends IndexCheckerModel {
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
 		Map<Long, Data> dataMap = super.getLiferayData(filter);
 
-		DynamicQuery queryDLFileVersion = this.newDynamicQuery(DLFileVersion.class);
+		DynamicQuery queryDLFileVersion = this.newDynamicQuery(
+			DLFileVersion.class);
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
 		projectionList.add(ProjectionFactoryUtil.property("fileEntryId"));
@@ -27,13 +28,17 @@ public class DLFileEntry extends IndexCheckerModel {
 		queryDLFileVersion.add(filter);
 
 		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)this.executeDynamicQuery(DLFileVersion.class, queryDLFileVersion);
+		List<Object[]> results =
+			(List<Object[]>)this.executeDynamicQuery(
+				DLFileVersion.class, queryDLFileVersion);
 
 		for (Object[] result : results) {
 			long fileEntryId = (long)result[0];
 			int status = (int)result[1];
 
-			if (status == WorkflowConstants.STATUS_APPROVED || status == WorkflowConstants.STATUS_IN_TRASH) {
+			if ((status == WorkflowConstants.STATUS_APPROVED) ||
+				(status == WorkflowConstants.STATUS_IN_TRASH)) {
+
 				dataMap.get(fileEntryId).setStatus(status);
 			}
 			else {
@@ -43,4 +48,5 @@ public class DLFileEntry extends IndexCheckerModel {
 
 		return dataMap;
 	}
+
 }
