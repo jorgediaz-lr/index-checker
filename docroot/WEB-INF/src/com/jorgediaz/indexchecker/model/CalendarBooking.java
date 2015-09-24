@@ -1,7 +1,6 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-
 public class CalendarBooking extends IndexCheckerModel {
 
 	public static final int STATUS_MAYBE = 9;
@@ -10,8 +9,7 @@ public class CalendarBooking extends IndexCheckerModel {
 	public int[] getValidStatuses() {
 
 		int[] statuses = {
-				WorkflowConstants.STATUS_APPROVED,
-				STATUS_MAYBE
+				WorkflowConstants.STATUS_APPROVED, STATUS_MAYBE
 			};
 		return statuses;
 	}

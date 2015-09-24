@@ -5,11 +5,10 @@ import com.liferay.portal.kernel.util.PortalClassInvoker;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
 import java.lang.reflect.Method;
+
 import java.util.HashSet;
 import java.util.Set;
-
-public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
-
+public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 	protected Class<?> indexReaderClass = null;
 	protected Class<?> termClass = null;
 	protected Class<?> termEnumClass = null;
@@ -18,19 +17,8 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 	protected Method numDocs = null;
 	protected Method maxDoc = null;
 	protected Method isDeleted = null;
+
 	protected Method document = null;
-
-	protected static Object getIndexSearcher(long companyId)
-			throws ClassNotFoundException, Exception {
-	
-		//Ejecutamos desde Portlet: 
-		//		IndexSearcher indexSearcher = LuceneHelperUtil.getIndexSearcher(company.getCompanyId());
-
-		Class<?> luceneHelperUtil = PortalClassLoaderUtil.getClassLoader().loadClass("com.liferay.portal.search.lucene.LuceneHelperUtil");
-		MethodKey getIndexSearcher1 = new MethodKey(luceneHelperUtil,"getIndexSearcher",long.class);
-		MethodKey getIndexSearcher = getIndexSearcher1;
-		return PortalClassInvoker.invoke(false,getIndexSearcher, companyId);
-	}
 
 	public IndexWrapperLuceneReflection(long companyId) {
 
@@ -41,6 +29,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
+
 		try {
 			getIndexReader = indexSearcher.getClass().getMethod("getIndexReader");
 			index = getIndexReader.invoke(indexSearcher);
@@ -61,7 +50,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 	@Override
 	public Set<String> getTermValues(String field) {
 
-		Set<String> values=new HashSet<String>();
+		Set<String> values = new HashSet<String>();
 		try {
 			Object termObj = termClass.getConstructor(String.class).newInstance(field);
 			Object termEnum = terms.invoke(index, termObj);
@@ -70,8 +59,8 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 			Method termTextMethod = termClass.getMethod("text");
 			Method termFieldMethod = termClass.getMethod("field");
 			Object currTermObj = termMethod.invoke(termEnum);
-			while((currTermObj != null) && ((String)termFieldMethod.invoke(currTermObj)).equals(field)) {
-				values.add((String) termTextMethod.invoke(currTermObj));
+			while ((currTermObj != null) && ((String)termFieldMethod.invoke(currTermObj)).equals(field)) {
+				values.add((String)termTextMethod.invoke(currTermObj));
 				nextMethod.invoke(termEnum);
 				currTermObj = termMethod.invoke(termEnum);
 			}
@@ -80,29 +69,44 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
+
 		return values;
 	}
 
 	@Override
 	public int numDocs() {
-		if(index == null) {
+		if (index == null) {
 			return -1;
 		}
+
 		try {
-			return (Integer) numDocs.invoke(index);
+			return (Integer)numDocs.invoke(index);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
 
+	protected static Object getIndexSearcher(long companyId)
+			throws ClassNotFoundException, Exception {
+
+		//Ejecutamos desde Portlet:
+		//		IndexSearcher indexSearcher = LuceneHelperUtil.getIndexSearcher(company.getCompanyId());
+
+		Class<?> luceneHelperUtil = PortalClassLoaderUtil.getClassLoader().loadClass("com.liferay.portal.search.lucene.LuceneHelperUtil");
+		MethodKey getIndexSearcher1 = new MethodKey(luceneHelperUtil,"getIndexSearcher",long.class);
+		MethodKey getIndexSearcher = getIndexSearcher1;
+		return PortalClassInvoker.invoke(false, getIndexSearcher, companyId);
+	}
+
 	@Override
 	protected int maxDoc() {
-		if(index == null) {
+		if (index == null) {
 			return 0;
 		}
+
 		try {
-			return (Integer) maxDoc.invoke(index);
+			return (Integer)maxDoc.invoke(index);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -111,11 +115,12 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 
 	@Override
 	protected boolean isDeleted(int i) {
-		if(index == null) {
+		if (index == null) {
 			return true;
 		}
+
 		try {
-			return (Boolean) isDeleted.invoke(index,i);
+			return (Boolean)isDeleted.invoke(index, i);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -124,11 +129,12 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene{
 
 	@Override
 	protected DocumentWrapper document(int i) {
-		if(index == null) {
+		if (index == null) {
 			return null;
 		}
+
 		try {
-			return new DocumentWrapperLuceneReflection(document.invoke(index,i));
+			return new DocumentWrapperLuceneReflection(document.invoke(index, i));
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);

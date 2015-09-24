@@ -2,21 +2,22 @@ package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelFactory;
+
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.model.ClassedModel;
 
 import java.lang.reflect.Proxy;
+
 import java.util.HashMap;
 import java.util.Map;
-
 public class IndexCheckerModelFactory extends ModelFactory {
 
 	public static Class<? extends Model> defaultModelClass = DefaultModelIndexChecker.class;
 
 	public static Map<String, Class<? extends Model>> modelClassMap = new HashMap<String, Class<? extends Model>>();
-	
+
 	static {
 		modelClassMap.put("com.liferay.portlet.asset.model.AssetEntry", NotIndexed.class);
 		modelClassMap.put("com.liferay.portlet.calendar.model.CalendarBooking", CalendarBooking.class);
@@ -38,34 +39,36 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		super(defaultModelClass, modelClassMap);
 	}
 
-	protected static BaseIndexer getBaseIndexer(Indexer indexer) {
-		BaseIndexer baseindexer = null;
-		if(indexer instanceof BaseIndexer) {
-			baseindexer = (BaseIndexer)indexer;
-		}
-		else if(indexer instanceof Proxy) {
-			ClassLoaderBeanHandler classLoaderBeanHandler = (ClassLoaderBeanHandler)Proxy.getInvocationHandler(indexer);
-			baseindexer = (BaseIndexer)classLoaderBeanHandler.getBean();
-		}
-		return baseindexer;
-	}
-
 	@Override
 	public Model getModelObject(Class<? extends ClassedModel> clazz) {
 
 		Model model = super.getModelObject(clazz);
 
-		if(!model.hasIndexer()) {
+		if (!model.hasIndexer()) {
 			return null;
 		}
 
 		BaseIndexer baseindexer = IndexCheckerModelFactory.getBaseIndexer(model.getIndexer());
 
-		if(baseindexer == null || !baseindexer.isIndexerEnabled()) {
+		if (baseindexer == null || !baseindexer.isIndexerEnabled()) {
 			return null;
 		}
 
 		return model;
+	}
+
+	protected static BaseIndexer getBaseIndexer(Indexer indexer) {
+		BaseIndexer baseindexer = null;
+
+		if (indexer instanceof BaseIndexer) {
+			baseindexer = (BaseIndexer)indexer;
+		}
+		else if (indexer instanceof Proxy) {
+			ClassLoaderBeanHandler classLoaderBeanHandler = (ClassLoaderBeanHandler)Proxy.getInvocationHandler(indexer);
+			baseindexer = (BaseIndexer)classLoaderBeanHandler.getBean();
+		}
+
+		return baseindexer;
 	}
 
 }

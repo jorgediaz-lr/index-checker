@@ -18,4 +18,4 @@
 
 <portlet:defineObjects />
 
-This is the <b>Index Checker</b> portlet<br/>
+This is the <b>Index Checker</b> portlet<br />
