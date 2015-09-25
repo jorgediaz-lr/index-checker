@@ -130,7 +130,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public String getClassName() {
-		return modelClass.getCanonicalName();
+		return modelClass.getName();
 	}
 
 	public Criterion getFilter() {

@@ -36,8 +36,7 @@ public class ModelFactory {
 
 	public Model getModelObject(Class<? extends ClassedModel> clazz) {
 
-		Class<? extends Model> modelClass = this.getModelClass(
-			clazz.getCanonicalName());
+		Class<? extends Model> modelClass = this.getModelClass(clazz.getName());
 
 		if ((clazz == null) || (modelClass == null) ||
 			!ClassedModel.class.isAssignableFrom(clazz)) {
@@ -53,8 +52,8 @@ public class ModelFactory {
 		}
 		catch (Exception e) {
 			_log.error(
-				"getModelObject(" + clazz.getCanonicalName() + ") ERROR " +
-				e.getClass().getCanonicalName() + ": " + e.getMessage());
+				"getModelObject(" + clazz.getName() + ") ERROR " +
+				e.getClass().getName() + ": " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 
@@ -99,10 +98,6 @@ public class ModelFactory {
 		return getModelObject(clazz);
 	}
 
-	public ClassLoader classLoader = null;
-	public Class<? extends Model> defaultModelClass = null;
-	public Map<String, Class<? extends Model>> modelClassMap = null;
-
 	protected List<?> executeDynamicQuery(
 		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery) {
 
@@ -119,7 +114,7 @@ public class ModelFactory {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"executeDynamicQuery: dynamicQuery method not found for " +
-					clazz.getCanonicalName() + " - " + e.getMessage());
+					clazz.getName() + " - " + e.getMessage());
 			}
 
 			try {
@@ -130,7 +125,7 @@ public class ModelFactory {
 				throw new RuntimeException(
 					"executeDynamicQuery: error executing " +
 						"GroupLocalServiceUtil.dynamicQuery for " +
-						clazz.getCanonicalName(), se);
+						clazz.getName(), se);
 			}
 		}
 		catch (IllegalAccessException | IllegalArgumentException
@@ -145,7 +140,7 @@ public class ModelFactory {
 
 			throw new RuntimeException(
 				"executeDynamicQuery: error invoking dynamicQuery method for " +
-					clazz.getCanonicalName() + cause, e);
+					clazz.getName() + cause, e);
 		}
 	}
 
@@ -166,7 +161,7 @@ public class ModelFactory {
 
 			throw new RuntimeException(
 				"fetchObject: fetch" + clazz.getSimpleName() +
-				" method not found for " + clazz.getCanonicalName(), e);
+				" method not found for " + clazz.getName(), e);
 		}
 		catch (IllegalAccessException | IllegalArgumentException
 			| InvocationTargetException e) {
@@ -180,14 +175,14 @@ public class ModelFactory {
 
 			throw new RuntimeException(
 				"fetchObject: fetch" + clazz.getSimpleName() + " method for " +
-				clazz.getCanonicalName() + cause, e);
+				clazz.getName() + cause, e);
 		}
 	}
 
 	protected Object[][] getDatabaseAttributesArr(
 		Class<? extends ClassedModel> clazz) {
 
-		String liferayModelImpl = ModelUtil.getLiferayModelImpl(clazz);
+		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(clazz);
 		Class<?> classLiferayModelImpl;
 		try {
 			classLiferayModelImpl =
@@ -212,7 +207,7 @@ public class ModelFactory {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Database attributes array of " + clazz.getCanonicalName() +
+				"Database attributes array of " + clazz.getName() +
 				": " + tableColumns);
 		}
 
@@ -222,7 +217,7 @@ public class ModelFactory {
 	protected String getDatabaseAttributesStr(
 		Class<? extends ClassedModel> clazz) {
 
-		String liferayModelImpl = ModelUtil.getLiferayModelImpl(clazz);
+		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(clazz);
 		Class<?> classLiferayModelImpl;
 		try {
 			classLiferayModelImpl =
@@ -269,7 +264,7 @@ public class ModelFactory {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Database attributes of " + clazz.getCanonicalName() + ": " +
+				"Database attributes of " + clazz.getName() + ": " +
 				tableAttributes);
 		}
 
@@ -293,8 +288,8 @@ public class ModelFactory {
 		}
 
 		if (method == null) {
-			String localServiceUtil = ModelUtil.getLiferayLocalServiceUtil(
-				clazz);
+			String localServiceUtil =
+				ModelUtil.getLiferayLocalServiceUtilClassName(clazz);
 			Class<?> classLocalServiceUtil =
 				ModelUtil.getJavaClass(
 					javaClasses, classLoader, localServiceUtil);
@@ -333,8 +328,8 @@ public class ModelFactory {
 		}
 
 		if (method == null) {
-			String localServiceUtil = ModelUtil.getLiferayLocalServiceUtil(
-				clazz);
+			String localServiceUtil =
+				ModelUtil.getLiferayLocalServiceUtilClassName(clazz);
 			Class<?> classLocalServiceUtil =
 				ModelUtil.getJavaClass(
 					javaClasses, classLoader, localServiceUtil);
@@ -378,6 +373,10 @@ public class ModelFactory {
 
 		return DynamicQueryFactoryUtil.forClass(clazz, alias, classLoader);
 	}
+
+	protected ClassLoader classLoader = null;
+	protected Class<? extends Model> defaultModelClass = null;
+	protected Map<String, Class<? extends Model>> modelClassMap = null;
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 

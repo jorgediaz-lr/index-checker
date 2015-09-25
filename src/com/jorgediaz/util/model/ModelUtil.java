@@ -90,7 +90,7 @@ public class ModelUtil {
 		return jdbcTypeNames;
 	}
 
-	public static String getLiferayLocalServiceUtil(
+	public static String getLiferayLocalServiceUtilClassName(
 		Class<? extends ClassedModel> clazz) {
 
 		Package pkg = clazz.getPackage();
@@ -102,33 +102,31 @@ public class ModelUtil {
 			packageName = packageName.substring(0, pos);
 		}
 
-		String name =
+		String className =
 			packageName + ".service." + clazz.getSimpleName() +
 				"LocalServiceUtil";
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"LocalServiceUtil of " + clazz.getCanonicalName() + ": " +
-				name);
+				"LocalServiceUtil of " + clazz.getName() + ": " + className);
 		}
 
-		return name;
+		return className;
 	}
 
-	public static String getLiferayModelImpl(
+	public static String getLiferayModelImplClassName(
 		Class<? extends ClassedModel> clazz) {
 
 		Package pkg = clazz.getPackage();
 
-		String name =
+		String className =
 			pkg.getName() + ".impl." + clazz.getSimpleName() + "ModelImpl";
 
 		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"ModelImpl of " + clazz.getCanonicalName() + ": " + name);
+			_log.debug("ModelImpl of " + clazz.getName() + ": " + className);
 		}
 
-		return name;
+		return className;
 	}
 
 	public static Object getLiferayModelImplField(
@@ -143,7 +141,7 @@ public class ModelUtil {
 		catch (Exception e) {
 			throw new RuntimeException(
 				"Error accessing to " +
-				classLiferayModelImpl.getCanonicalName() + "#" +
+				classLiferayModelImpl.getName() + "#" +
 				liferayModelImplField, e);
 		}
 
