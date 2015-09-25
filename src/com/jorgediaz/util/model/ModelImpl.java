@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.GroupedModel;
 
+import java.util.Arrays;
 import java.util.List;
 public abstract class ModelImpl implements Model {
 
@@ -50,7 +51,8 @@ public abstract class ModelImpl implements Model {
 				PropertyFactoryUtil.forName("status").in(statuses));
 
 			if (_log.isDebugEnabled()) {
-				_log.debug("adding filter by status: " + statuses);
+				_log.debug(
+					"adding filter by status: " + Arrays.toString(statuses));
 			}
 		}
 

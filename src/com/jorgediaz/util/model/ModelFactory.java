@@ -12,6 +12,7 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -220,7 +221,7 @@ public class ModelFactory {
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"Database attributes array of " + clazz.getName() +
-				": " + tableColumns);
+				": " + Arrays.toString(tableColumns));
 		}
 
 		return tableColumns;
