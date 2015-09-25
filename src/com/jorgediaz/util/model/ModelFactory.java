@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ModelFactory {
 
 	public ModelFactory() {
-		this(DefaultModel.class, null);
+		this(null, null);
 	}
 
 	public ModelFactory(Class<? extends Model> defaultModelClass) {
@@ -30,18 +30,30 @@ public class ModelFactory {
 		Map<String, Class<? extends Model>> modelClassMap) {
 
 		this.classLoader = ModelUtil.getClassLoader();
-		this.defaultModelClass = defaultModelClass;
+
+		if (defaultModelClass == null) {
+			this.defaultModelClass = DefaultModel.class;
+		}
+		else {
+			this.defaultModelClass = defaultModelClass;
+		}
+
 		this.modelClassMap = modelClassMap;
 	}
 
 	public Model getModelObject(Class<? extends ClassedModel> clazz) {
 
-		Class<? extends Model> modelClass = this.getModelClass(clazz.getName());
-
-		if ((clazz == null) || (modelClass == null) ||
-			!ClassedModel.class.isAssignableFrom(clazz)) {
-
+		if ((clazz == null) || !ClassedModel.class.isAssignableFrom(clazz)) {
 			return null;
+		}
+
+		String className = clazz.getName();
+		Class<? extends Model> modelClass = this.defaultModelClass;
+
+		if ((this.modelClassMap != null) &&
+			this.modelClassMap.containsKey(className)) {
+
+			modelClass = this.modelClassMap.get(className);
 		}
 
 		Model model = null;
@@ -349,23 +361,6 @@ public class ModelFactory {
 		}
 
 		return method;
-	}
-
-	protected Class<? extends Model> getModelClass(String className) {
-
-		Class<? extends Model> modelClass = defaultModelClass;
-
-		if ((modelClassMap != null) && modelClassMap.containsKey(className)) {
-			modelClass = modelClassMap.get(className);
-		}
-
-		return modelClass;
-	}
-
-	protected DynamicQuery newDynamicQuery(
-		Class<? extends ClassedModel> clazz) {
-
-		return DynamicQueryFactoryUtil.forClass(clazz, classLoader);
 	}
 
 	protected DynamicQuery newDynamicQuery(

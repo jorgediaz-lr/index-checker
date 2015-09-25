@@ -243,11 +243,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public DynamicQuery newDynamicQuery() {
-		return modelFactory.newDynamicQuery(this.modelClass);
+		return modelFactory.newDynamicQuery(this.modelClass, null);
 	}
 
 	public DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz) {
-		return modelFactory.newDynamicQuery(clazz);
+		return modelFactory.newDynamicQuery(clazz, null);
 	}
 
 	public DynamicQuery newDynamicQuery(
