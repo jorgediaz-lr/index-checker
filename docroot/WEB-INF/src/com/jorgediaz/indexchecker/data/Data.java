@@ -15,7 +15,7 @@ public class Data implements Comparable<Data> {
 
 	public static boolean exactIntegers(Integer i1, Integer i2) {
 		if (i1 == null) {
-			return (i1 == i2);
+			return (i2 == null);
 		}
 
 		return i1.equals(i2);
@@ -23,7 +23,7 @@ public class Data implements Comparable<Data> {
 
 	public static boolean exactLongs(Long l1, Long l2) {
 		if (l1 == null) {
-			return (l1 == l2);
+			return (l2 == null);
 		}
 
 		return l1.equals(l2);
