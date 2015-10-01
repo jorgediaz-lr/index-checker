@@ -13,6 +13,8 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -21,8 +23,6 @@ import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,27 +38,33 @@ public class IndexChecker {
 		Class<? extends IndexWrapper> indexWrapperClass)
 	throws IOException, SystemException {
 
-		StringWriter writer = new StringWriter();
-		PrintWriter pw = new PrintWriter(writer, true);
-		IndexChecker ic = new IndexChecker(pw);
-		ic.dumpData(maxLength, filter, executionMode, indexWrapperClass);
-		return writer.toString();
+		IndexChecker ic = new IndexChecker();
+
+		List<String> out = ic.executeScript(
+			maxLength, filter, executionMode, indexWrapperClass);
+
+		StringBundler stringBundler = new StringBundler(out.size()*2);
+
+		for (String s : out) {
+			stringBundler.append(s);
+			stringBundler.append(StringPool.NEW_LINE);
+		}
+
+		return stringBundler.toString();
 	}
 
-	public IndexChecker(PrintWriter out) {
-		this.out = out;
-	}
-
-	public void dumpData(
+	public List<String> executeScript(
 			int maxLength, String filter, Set<ExecutionMode> executionMode,
 			Class<? extends IndexWrapper> indexWrapperClass)
 		throws IOException, SystemException {
+
+		List<String> out = new ArrayList<String>();
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
 		for (Company company : companies) {
 			long startTime = System.currentTimeMillis();
-			out.println("COMPANY: "+company);
+			out.add("COMPANY: "+company);
 
 			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 				System.out.println("COMPANY: "+company);
@@ -77,8 +83,8 @@ public class IndexChecker {
 						indexWrapperClass.getDeclaredConstructor(
 							long.class).newInstance(company.getCompanyId());
 
-					out.println("IndexWrapper: "+indexWrapper);
-					out.println("num documents: "+indexWrapper.numDocs());
+					out.add("IndexWrapper: "+indexWrapper);
+					out.add("num documents: "+indexWrapper.numDocs());
 
 					modelFactory = new IndexCheckerModelFactory();
 
@@ -95,14 +101,14 @@ public class IndexChecker {
 						}
 					}
 
-					out.println("ModelInfo: "+modelList);
+					out.add("ModelInfo: "+modelList);
 				}
 				catch (Exception e) {
-					out.println(
+					out.add(
 						"\t" + "EXCEPTION: " + e.getClass() + " - " +
 							e.getMessage());
 					e.printStackTrace();
-					return;
+					return out;
 				}
 
 				List<Group> groups =
@@ -110,25 +116,26 @@ public class IndexChecker {
 						company.getCompanyId(), QueryUtil.ALL_POS,
 						QueryUtil.ALL_POS);
 
-				dumpUncheckedClassNames(modelFactory, indexWrapper);
+				out.addAll(dumpUncheckedClassNames(modelFactory, indexWrapper));
 
-				dumpData(
-					modelFactory, indexWrapper, company.getCompanyId(), groups,
-					classNames, executionMode, maxLength);
+				out.addAll(
+					dumpData(
+						modelFactory, indexWrapper, company.getCompanyId(),
+						groups, classNames, executionMode, maxLength));
 			}
 			finally {
 				ShardUtil.popCompanyService();
 			}
 
 			long endTime = System.currentTimeMillis();
-			out.println(
+			out.add(
 				"\nProcessed company "+company.getCompanyId()+" in "+
 					(endTime-startTime)+" ms");
-			out.println();
+			out.add(StringPool.BLANK);
 		}
-	}
 
-	public PrintWriter out = null;
+		return out;
+	}
 
 	protected static Data[] getBothDataArray(Set<Data> set1, Set<Data> set2) {
 		Set<Data> both = new TreeSet<Data>(set1);
@@ -157,8 +164,10 @@ public class IndexChecker {
 		return list;
 	}
 
-	protected void deleteDataFromIndex(
+	protected List<String> deleteDataFromIndex(
 		IndexCheckerModel modelClass, Set<Data> liferayData) {
+
+		List<String> out = new ArrayList<String>();
 
 		for (Data value : liferayData) {
 			/* Delete object from index */
@@ -166,7 +175,7 @@ public class IndexChecker {
 				modelClass.delete(value);
 			}
 			catch (SearchException e) {
-				out.println(
+				out.add(
 					"\t" + "EXCEPTION: " + e.getClass() + " - " +
 						e.getMessage());
 				e.printStackTrace();
@@ -179,11 +188,15 @@ public class IndexChecker {
 			catch (Exception e) {
 			}
 		}
+
+		return out;
 	}
 
-	protected void dumpData(
+	protected List<String> dumpData(
 		IndexCheckerModel modelClass, Set<Data> liferayData,
 		Set<Data> indexData, int maxLength, Set<ExecutionMode> executionMode) {
+
+		List<String> out = new ArrayList<String>();
 
 		boolean reindex = executionMode.contains(ExecutionMode.REINDEX);
 		boolean removeOrphan = executionMode.contains(
@@ -229,9 +242,11 @@ public class IndexChecker {
 				if ((exactDataSetIndex.size() > 0) &&
 					executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT)) {
 
-					out.println("==both-exact==");
-					dumpData(
-						modelClass.getName(), exactDataSetLiferay, maxLength);
+					out.add("==both-exact==");
+					out.addAll(
+						dumpData(
+							modelClass.getName(), exactDataSetLiferay,
+							maxLength));
 
 					if (executionMode.contains(
 							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
@@ -253,10 +268,11 @@ public class IndexChecker {
 				if ((notExactDataSetIndex.size() > 0) &&
 					executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT)) {
 
-					out.println("==both-notexact==");
-					dumpData(
-						modelClass.getClassName(), notExactDataSetIndex,
-						maxLength);
+					out.add("==both-notexact==");
+					out.addAll(
+						dumpData(
+							modelClass.getClassName(), notExactDataSetIndex,
+							maxLength));
 
 					if (executionMode.contains(
 							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
@@ -276,7 +292,7 @@ public class IndexChecker {
 				}
 
 				if (reindex) {
-					reindexData(modelClass, notExactDataSetIndex);
+					out.addAll(reindexData(modelClass, notExactDataSetIndex));
 				}
 			}
 		}
@@ -289,8 +305,9 @@ public class IndexChecker {
 
 			if (liferayData.size() > 0) {
 				if (executionMode.contains(ExecutionMode.SHOW_LIFERAY)) {
-					out.println("==only liferay==");
-					dumpData(modelClass.getName(), liferayData, maxLength);
+					out.add("==only liferay==");
+					out.addAll(
+						dumpData(modelClass.getName(), liferayData, maxLength));
 
 					if (executionMode.contains(
 							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
@@ -304,7 +321,7 @@ public class IndexChecker {
 				}
 
 				if (reindex) {
-					reindexData(modelClass, liferayData);
+					out.addAll(reindexData(modelClass, liferayData));
 				}
 			}
 		}
@@ -314,8 +331,9 @@ public class IndexChecker {
 
 			if (indexData.size() > 0) {
 				if (executionMode.contains(ExecutionMode.SHOW_INDEX)) {
-					out.println("==only index==");
-					dumpData(modelClass.getName(), indexData, maxLength);
+					out.add("==only index==");
+					out.addAll(
+						dumpData(modelClass.getName(), indexData, maxLength));
 
 					if (executionMode.contains(
 							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
@@ -329,16 +347,20 @@ public class IndexChecker {
 				}
 
 				if (removeOrphan) {
-					deleteDataFromIndex(modelClass, indexData);
+					out.addAll(deleteDataFromIndex(modelClass, indexData));
 				}
 			}
 		}
+
+		return out;
 	}
 
-	protected void dumpData(
+	protected List<String> dumpData(
 		ModelFactory modelFactory, IndexWrapper indexWrapper, Long companyId,
 		List<Group> groups, List<String> classNames,
 		Set<ExecutionMode> executionMode, int maxLength) {
+
+		List<String> out = new ArrayList<String>();
 
 		int i = 0;
 
@@ -364,9 +386,9 @@ public class IndexChecker {
 					continue;
 				}
 
-				out.println("\n---------------");
-				out.println("ClassName["+ i +"]: "+ model.getName());
-				out.println("---------------");
+				out.add("\n---------------");
+				out.add("ClassName["+ i +"]: "+ model.getName());
+				out.add("---------------");
 
 				if (executionMode.contains(
 						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
@@ -414,7 +436,7 @@ public class IndexChecker {
 							if ((indexData.size() > 0) ||
 								(liferayData.size() > 0)) {
 
-								out.println(
+								out.add(
 									"***GROUP: "+group.getGroupId() + " - " +
 										group.getName());
 
@@ -426,9 +448,10 @@ public class IndexChecker {
 										" - " + group.getName());
 								}
 
-								dumpData(
-									model, liferayData, indexData, maxLength,
-									executionMode);
+								out.addAll(
+									dumpData(
+										model, liferayData, indexData,
+										maxLength, executionMode));
 							}
 						}
 					}
@@ -463,9 +486,10 @@ public class IndexChecker {
 						if ((indexData.size() > 0) ||
 							(liferayData.size() > 0)) {
 
-							dumpData(
-								model, liferayData, indexData, maxLength,
-								executionMode);
+							out.addAll(
+								dumpData(
+									model, liferayData, indexData, maxLength,
+									executionMode));
 						}
 					}
 				}
@@ -488,7 +512,7 @@ public class IndexChecker {
 						if (executionMode.contains(
 								ExecutionMode.GROUP_BY_SITE)) {
 
-							out.println("***GROUP: N/A");
+							out.add("***GROUP: N/A");
 
 							if (executionMode.contains(
 									ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
@@ -497,14 +521,15 @@ public class IndexChecker {
 							}
 						}
 
-						dumpData(
-							model, liferayData, indexData, maxLength,
-							executionMode);
+						out.addAll(
+							dumpData(
+								model, liferayData, indexData, maxLength,
+								executionMode));
 					}
 				}
 			}
 			catch (Exception e) {
-				out.println(
+				out.add(
 					"\t" + "EXCEPTION: " + e.getClass() + " - " +
 						e.getMessage());
 				System.err.println(
@@ -513,10 +538,14 @@ public class IndexChecker {
 				e.printStackTrace();
 			}
 		}
+
+		return out;
 	}
 
-	protected void dumpData(
+	protected List<String> dumpData(
 		String entryClassName, Collection<Data> liferayData, int maxLength) {
+
+		List<String> out = new ArrayList<String>();
 
 		List<Long> valuesPK = new ArrayList<Long>();
 		List<Long> valuesRPK = new ArrayList<Long>();
@@ -530,7 +559,7 @@ public class IndexChecker {
 		}
 
 		String listPK = getListValues(valuesPK, maxLength);
-		out.println(
+		out.add(
 			entryClassName+"\n\tnumber of primary keys: "+valuesPK.size()+
 			"\n\tprimary keys values: ["+listPK+"]");
 
@@ -538,15 +567,19 @@ public class IndexChecker {
 
 		if (valuesRPKset.size()>0) {
 			String listRPK = getListValues(valuesRPKset, maxLength);
-			out.println(
+			out.add(
 				entryClassName+"\n\tnumber of resource primary keys: "+
 				valuesRPKset.size()+"\n\tresource primary keys values: ["+
 				listRPK+"]");
 		}
+
+		return out;
 	}
 
-	protected void dumpUncheckedClassNames(
+	protected List<String> dumpUncheckedClassNames(
 		ModelFactory modelFactory, IndexWrapper indexWrapper) {
+
+		List<String> out = new ArrayList<String>();
 
 		Set<String> classNamesNotAvailable = new HashSet<String>();
 
@@ -570,32 +603,37 @@ public class IndexChecker {
 		}
 
 		if (classNamesNotAvailable.size() > 0) {
-			out.println("");
-			out.println("---------------");
-			out.println(
-				"classNames at Index, that we are not going to check!!");
-			out.println("---------------");
+			out.add("");
+			out.add("---------------");
+			out.add("classNames at Index, that we are not going to check!!");
+			out.add("---------------");
 
 			for (String className : classNamesNotAvailable) {
-				out.println(className);
+				out.add(className);
 			}
 		}
+
+		return out;
 	}
 
-	protected void reindexData(
+	protected List<String> reindexData(
 		IndexCheckerModel modelClass, Set<Data> liferayData) {
+
+		List<String> out = new ArrayList<String>();
 
 		for (Data value : liferayData) {
 			try {
 				modelClass.reindex(value);
 			}
 			catch (SearchException e) {
-				out.println(
+				out.add(
 					"\t" + "EXCEPTION: " + e.getClass() + " - " +
 						e.getMessage());
 				e.printStackTrace();
 			}
 		}
+
+		return out;
 	}
 
 }
