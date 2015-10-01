@@ -1,5 +1,14 @@
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
+<%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
+<%@ taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %>
+<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
+<%@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
+
+<%@ page contentType="text/html; charset=UTF-8" %>
+
 <%@ page import="com.jorgediaz.indexchecker.ExecutionMode" %>
 <%@ page import="com.jorgediaz.indexchecker.IndexChecker" %>
 <%@ page import="com.jorgediaz.indexchecker.index.IndexWrapper" %>
@@ -8,8 +17,6 @@
 <%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperSearch" %>
 
 <%@ page import="com.liferay.portal.util.PortalUtil" %>
-
-<%@ page import="java.io.PrintWriter" %>
 
 <%@ page import="java.lang.Boolean" %>
 
@@ -34,7 +41,7 @@
 
 This is the <b>Index Checker</b> portlet<br />
 <br />
-<i>Parameters</i>
+Parameters
 <pre>
 outputGroupBySite: <%= outputGroupBySite %>
 outputBothExact: <%= outputBothExact %>
@@ -55,11 +62,7 @@ if (!outputBothExact & !outputBothNotExact & !outputLiferay & !outputIndex) {
 }
 %>
 
-<i>Output</i>
-<pre>
-
 <%
-	PrintWriter pw = new PrintWriter(out, true);
 	EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(ExecutionMode.class);
 	if (outputGroupBySite) {
 		executionMode.add(ExecutionMode.GROUP_BY_SITE);
@@ -101,8 +104,7 @@ if (!outputBothExact & !outputBothNotExact & !outputLiferay & !outputIndex) {
 		indexWrapperClass = IndexWrapperLuceneReflection.class;
 	}
 
-	IndexChecker ic = new IndexChecker(pw);
-	ic.dumpData(outputMaxLength, filterClassName, executionMode, indexWrapperClass);
+	String output = IndexChecker.execute(outputMaxLength, filterClassName, executionMode, indexWrapperClass);
 %>
 
-</pre>
+<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= output %>" />

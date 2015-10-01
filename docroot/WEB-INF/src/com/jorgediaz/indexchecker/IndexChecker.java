@@ -2,7 +2,6 @@ package com.jorgediaz.indexchecker;
 
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.index.IndexWrapper;
-import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.jorgediaz.indexchecker.model.IndexCheckerModelFactory;
 import com.jorgediaz.util.model.ModelFactory;
@@ -23,10 +22,10 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,23 +33,16 @@ import java.util.Set;
 import java.util.TreeSet;
 public class IndexChecker {
 
-	public static void dumpData(PrintWriter out)
-		throws IOException, SystemException {
+	public static String execute(
+		int maxLength, String filter, Set<ExecutionMode> executionMode,
+		Class<? extends IndexWrapper> indexWrapperClass)
+	throws IOException, SystemException {
 
-		int maxLength = 160;
-		//maxLength = Integer.MAX_VALUE;
-		String filterClassName = null;
-		EnumSet<ExecutionMode> executionMode =
-			EnumSet.of(ExecutionMode.GROUP_BY_SITE,
-			ExecutionMode.SHOW_BOTH_EXACT, ExecutionMode.SHOW_BOTH_NOTEXACT,
-			ExecutionMode.SHOW_LIFERAY, ExecutionMode.SHOW_INDEX);
-
-		Class<? extends IndexWrapper> indexWrapperClass =
-			IndexWrapperLuceneReflection.class;
-
-		IndexChecker ic = new IndexChecker(out);
-		ic.dumpData(
-			maxLength, filterClassName, executionMode, indexWrapperClass);
+		StringWriter writer = new StringWriter();
+		PrintWriter pw = new PrintWriter(writer, true);
+		IndexChecker ic = new IndexChecker(pw);
+		ic.dumpData(maxLength, filter, executionMode, indexWrapperClass);
+		return writer.toString();
 	}
 
 	public IndexChecker(PrintWriter out) {
