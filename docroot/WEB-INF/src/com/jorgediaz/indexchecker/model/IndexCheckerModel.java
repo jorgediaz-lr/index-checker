@@ -23,6 +23,7 @@ import com.liferay.portal.model.StagedModel;
 import com.liferay.portal.model.WorkflowedModel;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,31 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		getIndexer().delete(value.getCompanyId(), value.getUid());
 	}
 
+	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
+
+		Map<Data, String> errors = new HashMap<Data, String>();
+
+		for (Data data : dataCollection) {
+			/* Delete object from index */
+			try {
+				this.delete(data);
+			}
+			catch (SearchException e) {
+				errors.put(data, e.getClass() + " - " + e.getMessage());
+				e.printStackTrace(); /*TODO Revisar trazas ?debug?*/
+			}
+
+			/* Reindex object, perhaps we deleted it by error */
+			try {
+				this.reindex(data);
+			}
+			catch (Exception e) {
+			}
+		}
+
+		return errors;
+	}
+
 	public Conjunction generateQueryFilter() {
 		return RestrictionsFactoryUtil.conjunction();
 	}
@@ -194,6 +220,23 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		}
 
 		this.setFilter(this.generateQueryFilter());
+	}
+
+	public Map<Data, String> reindex(Collection<Data> dataCollection) {
+
+		Map<Data, String> errors = new HashMap<Data, String>();
+
+		for (Data data : dataCollection) {
+			try {
+				this.reindex(data);
+			}
+			catch (SearchException e) {
+				errors.put(data, e.getClass() + " - " + e.getMessage());
+				e.printStackTrace(); /*TODO Revisar trazas ?debug?*/
+			}
+		}
+
+		return errors;
 	}
 
 	public void reindex(Data value) throws SearchException {

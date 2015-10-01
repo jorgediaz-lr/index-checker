@@ -12,7 +12,6 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassName;
@@ -29,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 public class IndexChecker {
@@ -164,34 +164,6 @@ public class IndexChecker {
 		return list;
 	}
 
-	protected List<String> deleteDataFromIndex(
-		IndexCheckerModel modelClass, Set<Data> liferayData) {
-
-		List<String> out = new ArrayList<String>();
-
-		for (Data value : liferayData) {
-			/* Delete object from index */
-			try {
-				modelClass.delete(value);
-			}
-			catch (SearchException e) {
-				out.add(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				e.printStackTrace();
-			}
-
-			/* Reindex object, perhaps we deleted it by error */
-			try {
-				modelClass.reindex(value);
-			}
-			catch (Exception e) {
-			}
-		}
-
-		return out;
-	}
-
 	protected List<String> dumpData(
 		IndexCheckerModel modelClass, Set<Data> liferayData,
 		Set<Data> indexData, int maxLength, Set<ExecutionMode> executionMode) {
@@ -292,7 +264,14 @@ public class IndexChecker {
 				}
 
 				if (reindex) {
-					out.addAll(reindexData(modelClass, notExactDataSetIndex));
+					Map<Data, String> errors = modelClass.reindex(
+						notExactDataSetIndex);
+
+					for (Entry<Data, String> error : errors.entrySet()) {
+						out.add(
+							"\t" + "ERROR reindexing " + error.getKey() +
+							"EXCEPTION" + error.getValue());
+					}
 				}
 			}
 		}
@@ -321,7 +300,13 @@ public class IndexChecker {
 				}
 
 				if (reindex) {
-					out.addAll(reindexData(modelClass, liferayData));
+					Map<Data, String> errors = modelClass.reindex(liferayData);
+
+					for (Entry<Data, String> error : errors.entrySet()) {
+						out.add(
+							"\t" + "ERROR reindexing " + error.getKey() +
+							"EXCEPTION" + error.getValue());
+					}
 				}
 			}
 		}
@@ -347,7 +332,14 @@ public class IndexChecker {
 				}
 
 				if (removeOrphan) {
-					out.addAll(deleteDataFromIndex(modelClass, indexData));
+					Map<Data, String> errors = modelClass.deleteAndCheck(
+						indexData);
+
+					for (Entry<Data, String> error : errors.entrySet()) {
+						out.add(
+							"\tERROR deleting from index " + error.getKey() +
+							"EXCEPTION" + error.getValue());
+					}
 				}
 			}
 		}
@@ -610,26 +602,6 @@ public class IndexChecker {
 
 			for (String className : classNamesNotAvailable) {
 				out.add(className);
-			}
-		}
-
-		return out;
-	}
-
-	protected List<String> reindexData(
-		IndexCheckerModel modelClass, Set<Data> liferayData) {
-
-		List<String> out = new ArrayList<String>();
-
-		for (Data value : liferayData) {
-			try {
-				modelClass.reindex(value);
-			}
-			catch (SearchException e) {
-				out.add(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				e.printStackTrace();
 			}
 		}
 
