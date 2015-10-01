@@ -75,7 +75,6 @@ public class IndexChecker {
 
 				IndexWrapper indexWrapper = null;
 				ModelFactory modelFactory = null;
-				List<IndexCheckerModel> modelList = null;
 				List<String> classNames = new ArrayList<String>();
 
 				try {
@@ -100,8 +99,6 @@ public class IndexChecker {
 							classNames.add(className.getValue());
 						}
 					}
-
-					out.add("ModelInfo: "+modelList);
 				}
 				catch (Exception e) {
 					out.add(
