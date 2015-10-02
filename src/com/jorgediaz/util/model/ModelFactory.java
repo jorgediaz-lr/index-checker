@@ -13,6 +13,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +42,28 @@ public class ModelFactory {
 		}
 
 		this.modelClassMap = modelClassMap;
+	}
+
+	public Map<String, Model> getModelMap(Collection<String> classNames) {
+
+		Map<String, Model> modelMap = new HashMap<String, Model>();
+
+		for (String classname : classNames) {
+			Model model = null;
+			try {
+				model = this.getModelObject(classname);
+			}
+			catch (Exception e) {
+			}
+
+			if (model == null) {
+				continue;
+			}
+
+			modelMap.put(model.getName(), model);
+		}
+
+		return modelMap;
 	}
 
 	public Model getModelObject(Class<? extends ClassedModel> clazz) {

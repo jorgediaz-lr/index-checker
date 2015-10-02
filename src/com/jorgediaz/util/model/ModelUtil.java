@@ -6,6 +6,7 @@ import com.liferay.portal.kernel.portlet.PortletClassLoaderUtil;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.ClassLoaderPool;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.service.PortletLocalServiceUtil;
@@ -14,6 +15,8 @@ import java.lang.reflect.Field;
 
 import java.sql.Types;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +52,18 @@ public class ModelUtil {
 		}
 
 		return aggregateClassLoader;
+	}
+
+	public static List<String> getClassNameValues(
+			Collection<ClassName> classNames) {
+
+		List<String> classNameStr = new ArrayList<String>();
+
+		for (ClassName className : classNames) {
+			classNameStr.add(className.getValue());
+		}
+
+		return classNameStr;
 	}
 
 	public static Class<?> getJavaClass(
