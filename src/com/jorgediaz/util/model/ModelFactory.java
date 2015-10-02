@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,21 +46,21 @@ public class ModelFactory {
 
 	public Map<String, Model> getModelMap(Collection<String> classNames) {
 
-		Map<String, Model> modelMap = new HashMap<String, Model>();
+		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
 
 		for (String classname : classNames) {
 			Model model = null;
+			String[] attributes = null;
 			try {
 				model = this.getModelObject(classname);
+				attributes = model.getAttributesName();
 			}
 			catch (Exception e) {
 			}
 
-			if (model == null) {
-				continue;
+			if ((model != null) && (attributes != null)) {
+				modelMap.put(model.getName(), model);
 			}
-
-			modelMap.put(model.getName(), model);
 		}
 
 		return modelMap;
