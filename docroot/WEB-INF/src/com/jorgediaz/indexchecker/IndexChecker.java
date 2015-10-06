@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -33,15 +34,10 @@ import java.util.Set;
 import java.util.TreeSet;
 public class IndexChecker {
 
-	public static String execute(
-		int maxLength, String filter, Set<ExecutionMode> executionMode,
-		Class<? extends IndexWrapper> indexWrapperClass)
-	throws IOException, SystemException {
-
-		IndexChecker ic = new IndexChecker();
-
-		List<String> out = ic.executeScript(
-			maxLength, filter, executionMode, indexWrapperClass);
+	public static String listStringToString(List<String> out) {
+		if (Validator.isNull(out)) {
+			return null;
+		}
 
 		StringBundler stringBundler = new StringBundler(out.size()*2);
 

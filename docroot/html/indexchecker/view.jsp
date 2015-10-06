@@ -1,5 +1,11 @@
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/xml" prefix="x" %>
+
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
 <%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
 <%@ taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %>
@@ -9,102 +15,55 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
-<%@ page import="com.jorgediaz.indexchecker.ExecutionMode" %>
-<%@ page import="com.jorgediaz.indexchecker.IndexChecker" %>
-<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapper" %>
-<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar" %>
-<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection" %>
-<%@ page import="com.jorgediaz.indexchecker.index.IndexWrapperSearch" %>
-
-<%@ page import="com.liferay.portal.util.PortalUtil" %>
-
-<%@ page import="java.lang.Boolean" %>
-
-<%@ page import="java.util.EnumSet" %>
+<%@ page import="com.liferay.portal.kernel.util.Validator" %>
 
 <portlet:defineObjects />
 
-<%
-	boolean outputGroupBySite = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputGroupBySite"));
-	boolean outputBothExact = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputBothExact"));
-	boolean outputBothNotExact = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputBothNotExact"));
-	boolean outputLiferay = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputLiferay"));
-	boolean outputIndex = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputIndex"));
-	int outputMaxLength = 160;
-	try {outputMaxLength = Integer.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("outputMaxLength"));} catch (Exception e){}
-	boolean reindex = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("reindex"));
-	boolean removeOrphan = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("removeOrphan"));
-	String filterClassName = PortalUtil.getOriginalServletRequest(request).getParameter("filterClassName");
-	String indexWrapperClassName = PortalUtil.getOriginalServletRequest(request).getParameter("indexWrapperClassName");
-	boolean dumpAllObjectsToLog = Boolean.valueOf(PortalUtil.getOriginalServletRequest(request).getParameter("dumpAllObjectsToLog"));
-%>
+<portlet:renderURL var="viewURL" />
+
+<portlet:actionURL name="executeScript" var="executeScriptURL" windowState="normal" />
+
+<liferay-ui:header
+	backURL="<%= viewURL %>"
+	title="test"
+/>
 
 This is the <b>Index Checker</b> portlet<br />
 <br />
-Parameters
-<pre>
-outputGroupBySite: <%= outputGroupBySite %>
-outputBothExact: <%= outputBothExact %>
-outputBothNotExact: <%= outputBothNotExact %>
-outputLiferay: <%= outputLiferay %>
-outputIndex: <%= outputIndex %>
-outputMaxLength: <%= outputMaxLength %>
-reindex: <%= reindex %>
-removeOrphan: <%= removeOrphan %>
-filterClassName: <%= filterClassName %>
-indexWrapperClassName: <%= indexWrapperClassName %>
-dumpAllObjectsToLog: <%= dumpAllObjectsToLog %>
-</pre>
+<br />
+
+<aui:form action="<%= executeScriptURL %>" method="POST" name="fm">
+	<aui:fieldset>
+		<aui:column>
+			<aui:input name="outputBothExact" type="checkbox" value="false" />
+			<aui:input name="outputBothNotExact" type="checkbox" value="true" />
+			<aui:input name="outputLiferay" type="checkbox" value="true" />
+			<aui:input name="outputIndex" type="checkbox" value="true" />
+		</aui:column>
+		<aui:column>
+			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
+			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
+			<aui:input name="reindex" type="checkbox" value="false" />
+			<aui:input name="removeOrphan" type="checkbox" value="false" />
+		</aui:column>
+		<aui:column>
+			<aui:input inlineLabel="left" name="outputMaxLength" type="text" value="160" />
+			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
+			<aui:input inlineLabel="left" name="indexWrapperClassName" type="text" value="Search" />
+		</aui:column>
+	</aui:fieldset>
+
+	<aui:button-row>
+		<aui:button type="submit" value="execute" />
+
+		<aui:button onClick="<%= viewURL %>" type="cancel" value="clean" />
+	</aui:button-row>
+</aui:form>
 
 <%
-if (!outputBothExact & !outputBothNotExact & !outputLiferay & !outputIndex) {
-	return;
-}
+	String outputScript = (String)renderRequest.getParameter("outputScript");
 %>
 
-<%
-	EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(ExecutionMode.class);
-	if (outputGroupBySite) {
-		executionMode.add(ExecutionMode.GROUP_BY_SITE);
-	}
-	if (outputBothExact) {
-		executionMode.add(ExecutionMode.SHOW_BOTH_EXACT);
-	}
-	if (outputBothNotExact) {
-		executionMode.add(ExecutionMode.SHOW_BOTH_NOTEXACT);
-	}
-	if (outputLiferay) {
-		executionMode.add(ExecutionMode.SHOW_LIFERAY);
-	}
-	if (outputIndex) {
-		executionMode.add(ExecutionMode.SHOW_INDEX);
-	}
-	if (reindex) {
-		executionMode.add(ExecutionMode.REINDEX);
-	}
-	if (removeOrphan) {
-		executionMode.add(ExecutionMode.REMOVE_ORPHAN);
-	}
-	if (dumpAllObjectsToLog) {
-		executionMode.add(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG);
-	}
-
-	Class<? extends IndexWrapper> indexWrapperClass;
-
-	if ("LuceneJar".equals(indexWrapperClassName)) {
-		indexWrapperClass = IndexWrapperLuceneJar.class;
-	}
-	else if ("LuceneReflection".equals(indexWrapperClassName)) {
-		indexWrapperClass = IndexWrapperLuceneReflection.class;
-	}
-	else if ("Search".equals(indexWrapperClassName)) {
-		indexWrapperClass = IndexWrapperSearch.class;
-	}
-	else {
-		indexWrapperClass = IndexWrapperLuceneReflection.class;
-	}
-
-	String output = IndexChecker.execute(outputMaxLength, filterClassName, executionMode, indexWrapperClass);
-%>
-
-<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= output %>" />
+<c:if test="<%= Validator.isNotNull(outputScript) %>">
+	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= outputScript %>" />
+</c:if>
