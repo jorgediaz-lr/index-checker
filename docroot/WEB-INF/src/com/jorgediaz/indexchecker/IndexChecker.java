@@ -15,14 +15,9 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.service.ClassNameLocalServiceUtil;
-import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
-
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,83 +45,65 @@ public class IndexChecker {
 	}
 
 	public List<String> executeScript(
-			int maxLength, String filter, Set<ExecutionMode> executionMode,
-			Class<? extends IndexWrapper> indexWrapperClass)
-		throws IOException, SystemException {
+			int maxLength, List<String> classNames,
+			Set<ExecutionMode> executionMode,
+			Class<? extends IndexWrapper> indexWrapperClass, Company company)
+		throws SystemException {
 
 		List<String> out = new ArrayList<String>();
 
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+		long startTime = System.currentTimeMillis();
+		out.add("COMPANY: "+company);
 
-		for (Company company : companies) {
-			long startTime = System.currentTimeMillis();
-			out.add("COMPANY: "+company);
-
-			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-				System.out.println("COMPANY: "+company);
-			}
-
-			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
-				IndexWrapper indexWrapper = null;
-				ModelFactory modelFactory = null;
-				List<String> classNames = new ArrayList<String>();
-
-				try {
-					indexWrapper =
-						indexWrapperClass.getDeclaredConstructor(
-							long.class).newInstance(company.getCompanyId());
-
-					out.add("IndexWrapper: "+indexWrapper);
-					out.add("num documents: "+indexWrapper.numDocs());
-
-					modelFactory = new IndexCheckerModelFactory();
-
-					List<ClassName> classNamesAux =
-						ClassNameLocalServiceUtil.getClassNames(
-							QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-					for (ClassName className : classNamesAux) {
-						if ((className.getValue() != null) &&
-							((filter == null) ||
-							 className.getValue().contains(filter))) {
-
-							classNames.add(className.getValue());
-						}
-					}
-				}
-				catch (Exception e) {
-					out.add(
-						"\t" + "EXCEPTION: " + e.getClass() + " - " +
-							e.getMessage());
-					e.printStackTrace();
-					return out;
-				}
-
-				List<Group> groups =
-					GroupLocalServiceUtil.getCompanyGroups(
-						company.getCompanyId(), QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS);
-
-				out.addAll(dumpUncheckedClassNames(modelFactory, indexWrapper));
-
-				out.addAll(
-					dumpData(
-						modelFactory, indexWrapper, company.getCompanyId(),
-						groups, classNames, executionMode, maxLength));
-			}
-			finally {
-				ShardUtil.popCompanyService();
-			}
-
-			long endTime = System.currentTimeMillis();
-			out.add(
-				"\nProcessed company "+company.getCompanyId()+" in "+
-					(endTime-startTime)+" ms");
-			out.add(StringPool.BLANK);
+		if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+			System.out.println("COMPANY: "+company);
 		}
 
+		try {
+			ShardUtil.pushCompanyService(company.getCompanyId());
+
+			IndexWrapper indexWrapper = null;
+			ModelFactory modelFactory = null;
+
+			try {
+				indexWrapper =
+					indexWrapperClass.getDeclaredConstructor(
+						long.class).newInstance(company.getCompanyId());
+
+				out.add("IndexWrapper: "+indexWrapper);
+				out.add("num documents: "+indexWrapper.numDocs());
+
+				modelFactory = new IndexCheckerModelFactory();
+			}
+			catch (Exception e) {
+				out.add(
+					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage());
+				e.printStackTrace();
+				return out;
+			}
+
+			List<Group> groups =
+				GroupLocalServiceUtil.getCompanyGroups(
+					company.getCompanyId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS);
+
+			out.addAll(dumpUncheckedClassNames(modelFactory, indexWrapper));
+
+			out.addAll(
+				dumpData(
+					modelFactory, indexWrapper, company.getCompanyId(), groups,
+					classNames, executionMode, maxLength));
+		}
+		finally {
+			ShardUtil.popCompanyService();
+		}
+
+		long endTime = System.currentTimeMillis();
+		out.add(
+			"\nProcessed company "+company.getCompanyId()+" in "+
+				(endTime-startTime)+" ms");
+		out.add(StringPool.BLANK);
 		return out;
 	}
 

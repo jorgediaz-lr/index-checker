@@ -6,11 +6,17 @@ import com.jorgediaz.indexchecker.index.IndexWrapper;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
 import com.jorgediaz.indexchecker.index.IndexWrapperSearch;
+import com.jorgediaz.util.model.ModelUtil;
 
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.model.Company;
+import com.liferay.portal.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -86,8 +92,33 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			request, "filterClassName");
 
 		IndexChecker ic = new IndexChecker();
-		List<String> outputScript = ic.executeScript(
-			outputMaxLength, filterClassName, executionMode, indexWrapperClass);
+		List<String> outputScript = new ArrayList<String>();
+
+		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+		for (Company company : companies) {
+			List<String> allClassName =
+				ModelUtil.getClassNameValues(
+					ClassNameLocalServiceUtil.getClassNames(
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
+
+			List<String> classNames = new ArrayList<String>();
+
+			for (String className : allClassName) {
+				if ((className != null) &&
+					((filterClassName == null) ||
+					 className.contains(filterClassName))) {
+
+					classNames.add(className);
+				}
+			}
+
+			outputScript.addAll(
+				ic.executeScript(
+					outputMaxLength, classNames, executionMode,
+					indexWrapperClass, company));
+		}
+
 		response.setRenderParameter(
 			"outputScript",IndexChecker.listStringToString(outputScript));
 	}
