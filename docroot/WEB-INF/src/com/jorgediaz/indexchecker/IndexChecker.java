@@ -27,8 +27,85 @@ import java.util.Set;
 import java.util.TreeMap;
 public class IndexChecker {
 
-	public List<String> dumpData(
-		int maxLength, IndexCheckerModel model, Tuple data,
+	public List<String> executeScript(
+			Class<? extends IndexWrapper> indexWrapperClass, Company company,
+			List<String> classNames, int maxLength,
+			Set<ExecutionMode> executionMode)
+		throws SystemException {
+
+		List<String> out = new ArrayList<String>();
+
+		long startTime = System.currentTimeMillis();
+		out.add("COMPANY: "+company);
+
+		if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+			System.out.println("COMPANY: "+company);
+		}
+
+		try {
+			ShardUtil.pushCompanyService(company.getCompanyId());
+
+			IndexWrapper indexWrapper = null;
+			ModelFactory modelFactory = null;
+
+			try {
+				indexWrapper =
+					indexWrapperClass.getDeclaredConstructor(
+						long.class).newInstance(company.getCompanyId());
+
+				out.add("IndexWrapper: "+indexWrapper);
+				out.add("num documents: "+indexWrapper.numDocs());
+
+				modelFactory = new IndexCheckerModelFactory();
+			}
+			catch (Exception e) {
+				out.add(
+					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage());
+				e.printStackTrace();
+				return out;
+			}
+
+			List<Group> groups =
+				GroupLocalServiceUtil.getCompanyGroups(
+					company.getCompanyId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS);
+
+			Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
+
+			Set<String> classNamesNotAvailable =
+				indexWrapper.getMissingClassNamesAtLiferay(modelMap);
+
+			if (classNamesNotAvailable.size() > 0) {
+				out.add("");
+				out.add("---------------");
+				out.add(
+					"classNames at Index, that we are not going to check!!");
+				out.add("---------------");
+
+				for (String className : classNamesNotAvailable) {
+					out.add(className);
+				}
+			}
+
+			executeScript(
+				out, indexWrapper, company.getCompanyId(), groups, modelMap,
+				classNames, maxLength, executionMode);
+		}
+		finally {
+			ShardUtil.popCompanyService();
+		}
+
+		long endTime = System.currentTimeMillis();
+		out.add(
+			"\nProcessed company "+company.getCompanyId()+" in "+
+				(endTime-startTime)+" ms");
+		out.add(StringPool.BLANK);
+		return out;
+	}
+
+	protected List<String> dumpData(
+		IndexCheckerModel model, Tuple data, int maxLength,
 		Set<ExecutionMode> executionMode) {
 
 		List<String> out = new ArrayList<String>();
@@ -149,10 +226,138 @@ public class IndexChecker {
 		return out;
 	}
 
-	public void dumpDataModel(
-			IndexWrapper indexWrapper, List<String> out, long companyId,
-			List<Group> groups, IndexCheckerModel icModel, int maxLength,
-			Set<ExecutionMode> executionMode)
+	protected List<String> dumpData(
+		String entryClassName, Collection<Data> liferayData, int maxLength) {
+
+		List<String> out = new ArrayList<String>();
+
+		List<Long> valuesPK = new ArrayList<Long>();
+		List<Long> valuesRPK = new ArrayList<Long>();
+
+		for (Data value : liferayData) {
+			valuesPK.add(value.getPrimaryKey());
+
+			if (value.getResourcePrimKey() != -1) {
+				valuesRPK.add(value.getResourcePrimKey());
+			}
+		}
+
+		String listPK = IndexCheckerUtil.getListValues(valuesPK, maxLength);
+		out.add(
+			entryClassName+"\n\tnumber of primary keys: "+valuesPK.size()+
+			"\n\tprimary keys values: ["+listPK+"]");
+
+		Set<Long> valuesRPKset = new HashSet<Long>(valuesRPK);
+
+		if (valuesRPKset.size()>0) {
+			String listRPK = IndexCheckerUtil.getListValues(
+				valuesRPKset, maxLength);
+			out.add(
+				entryClassName+"\n\tnumber of resource primary keys: "+
+				valuesRPKset.size()+"\n\tresource primary keys values: ["+
+				listRPK+"]");
+		}
+
+		return out;
+	}
+
+	protected List<String> executeScript(
+		List<String> out, IndexWrapper indexWrapper, long companyId,
+		List<Group> groups, Map<String, Model> modelMap,
+		List<String> classNames, int maxLength,
+		Set<ExecutionMode> executionMode) {
+
+		int i = 0;
+
+		for (Model model : modelMap.values()) {
+			try {
+				IndexCheckerModel icModel;
+				try {
+					icModel = (IndexCheckerModel)model;
+				}
+				catch (Exception e) {
+					/* TODO DEBUG */
+					System.err.println(
+						"\t" + "EXCEPTION: " + e.getClass() + " - " +
+							e.getMessage());
+
+					e.printStackTrace();
+					icModel = null;
+				}
+
+				if (icModel == null) {
+					continue;
+				}
+
+				out.add("\n---------------");
+				out.add("ClassName["+ i +"]: "+ icModel.getName());
+				out.add("---------------");
+
+				if (executionMode.contains(
+						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+					System.out.println("\n---------------");
+					System.out.println(
+						"ClassName["+ i +"]: "+ icModel.getName());
+					System.out.println("---------------");
+				}
+
+				i++;
+
+				Map<Long, Tuple> resultMap =
+					getData(
+						indexWrapper, companyId, groups, icModel,
+						executionMode);
+
+				for (Entry<Long, Tuple> entry : resultMap.entrySet()) {
+					Group group = GroupLocalServiceUtil.fetchGroup(
+						entry.getKey());
+
+					String groupTitle = null;
+
+					if ((group == null) &&
+						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+						groupTitle = "N/A";
+					}
+					else if (group != null) {
+						groupTitle =
+							group.getGroupId() + " - " + group.getName();
+					}
+
+					if (groupTitle != null) {
+						out.add("***GROUP: " + groupTitle);
+
+						if (executionMode.contains(
+								ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+							System.out.println("***GROUP: " + groupTitle);
+						}
+					}
+
+					Tuple data = entry.getValue();
+
+					out.addAll(
+						dumpData(icModel, data, maxLength, executionMode));
+				}
+			}
+			catch (Exception e) {
+				out.add(
+					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage());
+				System.err.println(
+					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage());
+				e.printStackTrace();
+			}
+		}
+
+		return out;
+	}
+
+	protected Map<Long, Tuple> getData(
+			IndexWrapper indexWrapper, long companyId, List<Group> groups,
+			IndexCheckerModel icModel, Set<ExecutionMode> executionMode)
 		throws Exception {
 
 		Map<Long, Tuple> dataMap = new TreeMap<Long, Tuple>();
@@ -194,119 +399,10 @@ public class IndexChecker {
 			}
 		}
 
-		for (Entry<Long, Tuple> entry : dataMap.entrySet()) {
-			Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
-
-			String groupTitle;
-
-			if (group == null &&
-				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-				groupTitle = "N/A";
-			}
-			else if (group != null) {
-				groupTitle = group.getGroupId() + " - " +
-					group.getName();
-			}
-			else {
-				groupTitle = null;
-			}
-
-			if (groupTitle != null) {
-				out.add("***GROUP: " + groupTitle);
-
-				if (executionMode.contains(
-						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-					System.out.println("***GROUP: " + groupTitle);
-				}
-			}
-
-			Tuple data = entry.getValue();
-
-			out.addAll(dumpData(maxLength, icModel, data, executionMode));
-		}
+		return dataMap;
 	}
 
-	public List<String> executeScript(
-			int maxLength, List<String> classNames,
-			Set<ExecutionMode> executionMode,
-			Class<? extends IndexWrapper> indexWrapperClass, Company company)
-		throws SystemException {
-
-		List<String> out = new ArrayList<String>();
-
-		long startTime = System.currentTimeMillis();
-		out.add("COMPANY: "+company);
-
-		if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-			System.out.println("COMPANY: "+company);
-		}
-
-		try {
-			ShardUtil.pushCompanyService(company.getCompanyId());
-
-			IndexWrapper indexWrapper = null;
-			ModelFactory modelFactory = null;
-
-			try {
-				indexWrapper =
-					indexWrapperClass.getDeclaredConstructor(
-						long.class).newInstance(company.getCompanyId());
-
-				out.add("IndexWrapper: "+indexWrapper);
-				out.add("num documents: "+indexWrapper.numDocs());
-
-				modelFactory = new IndexCheckerModelFactory();
-			}
-			catch (Exception e) {
-				out.add(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				e.printStackTrace();
-				return out;
-			}
-
-			List<Group> groups =
-				GroupLocalServiceUtil.getCompanyGroups(
-					company.getCompanyId(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS);
-
-			Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
-
-			Set<String> classNamesNotAvailable =
-				indexWrapper.getMissingClassNamesAtLiferay(modelMap);
-
-			if (classNamesNotAvailable.size() > 0) {
-				out.add("");
-				out.add("---------------");
-				out.add(
-					"classNames at Index, that we are not going to check!!");
-				out.add("---------------");
-
-				for (String className : classNamesNotAvailable) {
-					out.add(className);
-				}
-			}
-
-			out.addAll(
-				dumpData(
-					modelMap, indexWrapper, company.getCompanyId(), groups,
-					classNames, executionMode, maxLength));
-		}
-		finally {
-			ShardUtil.popCompanyService();
-		}
-
-		long endTime = System.currentTimeMillis();
-		out.add(
-			"\nProcessed company "+company.getCompanyId()+" in "+
-				(endTime-startTime)+" ms");
-		out.add(StringPool.BLANK);
-		return out;
-	}
-
-	public Tuple getData(
+	protected Tuple getData(
 			long companyId, List<Group> groups, IndexCheckerModel icModel,
 			Set<Data> indexData, Set<ExecutionMode> executionMode)
 		throws Exception {
@@ -332,7 +428,7 @@ public class IndexChecker {
 		return data;
 	}
 
-	public Tuple getData(
+	protected Tuple getData(
 		Set<Data> liferayData, Set<Data> indexData,
 		Set<ExecutionMode> executionMode) {
 
@@ -340,8 +436,10 @@ public class IndexChecker {
 		boolean removeOrphan = executionMode.contains(
 			ExecutionMode.REMOVE_ORPHAN);
 
-		Data[] bothArrSetLiferay = IndexCheckerUtil.getBothDataArray(liferayData, indexData);
-		Data[] bothArrSetIndex = IndexCheckerUtil.getBothDataArray(indexData, liferayData);
+		Data[] bothArrSetLiferay = IndexCheckerUtil.getBothDataArray(
+			liferayData, indexData);
+		Data[] bothArrSetIndex = IndexCheckerUtil.getBothDataArray(
+			indexData, liferayData);
 
 		Set<Data> exactDataSetIndex = new HashSet<Data>();
 		Set<Data> exactDataSetLiferay = new HashSet<Data>();
@@ -397,102 +495,6 @@ public class IndexChecker {
 		return new Tuple(
 			exactDataSetIndex, exactDataSetLiferay, notExactDataSetIndex,
 			notExactDataSetLiferay, liferayOnlyData, indexOnlyData);
-	}
-
-	protected List<String> dumpData(
-		Map<String, Model> modelMap, IndexWrapper indexWrapper, long companyId,
-		List<Group> groups, List<String> classNames,
-		Set<ExecutionMode> executionMode, int maxLength) {
-
-		List<String> out = new ArrayList<String>();
-
-		int i = 0;
-
-		for (Model model : modelMap.values()) {
-			try {
-				IndexCheckerModel icModel;
-				try {
-					icModel = (IndexCheckerModel)model;
-				}
-				catch (Exception e) {
-					/* TODO DEBUG */
-					System.err.println(
-						"\t" + "EXCEPTION: " + e.getClass() + " - " +
-							e.getMessage());
-
-					e.printStackTrace();
-					icModel = null;
-				}
-
-				if (icModel == null) {
-					continue;
-				}
-
-				out.add("\n---------------");
-				out.add("ClassName["+ i +"]: "+ icModel.getName());
-				out.add("---------------");
-
-				if (executionMode.contains(
-						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-					System.out.println("\n---------------");
-					System.out.println(
-						"ClassName["+ i +"]: "+ icModel.getName());
-					System.out.println("---------------");
-				}
-
-				i++;
-
-				dumpDataModel(
-					indexWrapper, out, companyId, groups, icModel, maxLength,
-					executionMode);
-			}
-			catch (Exception e) {
-				out.add(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				System.err.println(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				e.printStackTrace();
-			}
-		}
-
-		return out;
-	}
-
-	protected List<String> dumpData(
-		String entryClassName, Collection<Data> liferayData, int maxLength) {
-
-		List<String> out = new ArrayList<String>();
-
-		List<Long> valuesPK = new ArrayList<Long>();
-		List<Long> valuesRPK = new ArrayList<Long>();
-
-		for (Data value : liferayData) {
-			valuesPK.add(value.getPrimaryKey());
-
-			if (value.getResourcePrimKey() != -1) {
-				valuesRPK.add(value.getResourcePrimKey());
-			}
-		}
-
-		String listPK = IndexCheckerUtil.getListValues(valuesPK, maxLength);
-		out.add(
-			entryClassName+"\n\tnumber of primary keys: "+valuesPK.size()+
-			"\n\tprimary keys values: ["+listPK+"]");
-
-		Set<Long> valuesRPKset = new HashSet<Long>(valuesRPK);
-
-		if (valuesRPKset.size()>0) {
-			String listRPK = IndexCheckerUtil.getListValues(valuesRPKset, maxLength);
-			out.add(
-				entryClassName+"\n\tnumber of resource primary keys: "+
-				valuesRPKset.size()+"\n\tresource primary keys values: ["+
-				listRPK+"]");
-		}
-
-		return out;
 	}
 
 }

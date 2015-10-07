@@ -133,8 +133,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			outputScript.addAll(
 				ic.executeScript(
-					outputMaxLength, classNames, executionMode,
-					indexWrapperClass, company));
+					indexWrapperClass, company, classNames, outputMaxLength,
+					executionMode));
 		}
 
 		response.setRenderParameter(
