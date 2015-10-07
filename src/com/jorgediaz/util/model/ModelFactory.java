@@ -56,6 +56,12 @@ public class ModelFactory {
 				attributes = model.getAttributesName();
 			}
 			catch (Exception e) {
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						"ERROR getting model object of " + classname +
+						" EXCEPTION: " + e.getClass().getName() + ": " +
+						e.getMessage());
+				}
 			}
 
 			if ((model != null) && (attributes != null)) {
