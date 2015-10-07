@@ -6,6 +6,7 @@ import com.jorgediaz.indexchecker.index.IndexWrapper;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
 import com.jorgediaz.indexchecker.index.IndexWrapperSearch;
+import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.jorgediaz.util.model.ModelUtil;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -13,6 +14,7 @@ import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -25,6 +27,7 @@ import com.liferay.util.bridges.mvc.MVCPortlet;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -112,7 +115,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
 
-		IndexChecker ic = new IndexChecker();
 		List<String> outputScript = new ArrayList<String>();
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
@@ -142,10 +144,36 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						company.getCompanyId(), QueryUtil.ALL_POS,
 						QueryUtil.ALL_POS);
 
-				outputScript.addAll(
-					ic.executeScript(
+				long startTime = System.currentTimeMillis();
+
+				Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap =
+					IndexChecker.executeScript(
 						indexWrapperClass, company, groups, classNames,
-						outputMaxLength, executionMode));
+						executionMode);
+
+				long endTime = System.currentTimeMillis();
+
+				outputScript.add("COMPANY: "+company);
+
+				if (executionMode.contains(
+						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+					System.out.println("COMPANY: "+company);
+				}
+
+				outputScript.addAll(
+					IndexChecker.executeScriptGetIndexMissingClassNames(
+						indexWrapperClass, company, classNames));
+
+				/* TODO QUITAR EN EL OUTPUT EL CODIGO DE REINDEX!! */
+				outputScript.addAll(
+					IndexChecker.generateOutput(
+						outputMaxLength, executionMode, resultDataMap));
+
+				outputScript.add(
+					"\nProcessed company "+company.getCompanyId()+" in "+
+						(endTime-startTime)+" ms");
+				outputScript.add(StringPool.BLANK);
 			}
 			finally {
 				ShardUtil.popCompanyService();
