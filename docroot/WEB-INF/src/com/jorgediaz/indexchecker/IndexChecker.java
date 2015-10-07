@@ -8,8 +8,6 @@ import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelFactory;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Tuple;
@@ -29,7 +27,7 @@ public class IndexChecker {
 
 	public List<String> executeScript(
 			Class<? extends IndexWrapper> indexWrapperClass, Company company,
-			List<String> classNames, int maxLength,
+			List<Group> groups, List<String> classNames, int maxLength,
 			Set<ExecutionMode> executionMode)
 		throws SystemException {
 
@@ -42,62 +40,49 @@ public class IndexChecker {
 			System.out.println("COMPANY: "+company);
 		}
 
+		IndexWrapper indexWrapper = null;
+		ModelFactory modelFactory = null;
+
 		try {
-			ShardUtil.pushCompanyService(company.getCompanyId());
+			indexWrapper =
+				indexWrapperClass.getDeclaredConstructor(
+					long.class).newInstance(company.getCompanyId());
 
-			IndexWrapper indexWrapper = null;
-			ModelFactory modelFactory = null;
+			out.add("IndexWrapper: "+indexWrapper);
+			out.add("num documents: "+indexWrapper.numDocs());
 
-			try {
-				indexWrapper =
-					indexWrapperClass.getDeclaredConstructor(
-						long.class).newInstance(company.getCompanyId());
-
-				out.add("IndexWrapper: "+indexWrapper);
-				out.add("num documents: "+indexWrapper.numDocs());
-
-				modelFactory = new IndexCheckerModelFactory();
-			}
-			catch (Exception e) {
-				out.add(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				e.printStackTrace();
-				return out;
-			}
-
-			List<Group> groups =
-				GroupLocalServiceUtil.getCompanyGroups(
-					company.getCompanyId(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS);
-
-			Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
-
-			Set<String> classNamesNotAvailable =
-				indexWrapper.getMissingClassNamesAtLiferay(modelMap);
-
-			Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap =
-				getData(
-					out, indexWrapper, company.getCompanyId(), groups, modelMap,
-					executionMode);
-
-			if (classNamesNotAvailable.size() > 0) {
-				out.add("");
-				out.add("---------------");
-				out.add(
-					"classNames at Index, that we are not going to check!!");
-				out.add("---------------");
-
-				for (String className : classNamesNotAvailable) {
-					out.add(className);
-				}
-			}
-
-			out.addAll(dumpData(maxLength, executionMode, resultDataMap));
+			modelFactory = new IndexCheckerModelFactory();
 		}
-		finally {
-			ShardUtil.popCompanyService();
+		catch (Exception e) {
+			out.add(
+				"\t" + "EXCEPTION: " + e.getClass() + " - " +
+					e.getMessage());
+			e.printStackTrace();
+			return out;
 		}
+
+		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
+
+		Set<String> classNamesNotAvailable =
+			indexWrapper.getMissingClassNamesAtLiferay(modelMap);
+
+		Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap =
+			getData(
+				out, indexWrapper, company.getCompanyId(), groups, modelMap,
+				executionMode);
+
+		if (classNamesNotAvailable.size() > 0) {
+			out.add("");
+			out.add("---------------");
+			out.add("classNames at Index, that we are not going to check!!");
+			out.add("---------------");
+
+			for (String className : classNamesNotAvailable) {
+				out.add(className);
+			}
+		}
+
+		out.addAll(dumpData(maxLength, executionMode, resultDataMap));
 
 		long endTime = System.currentTimeMillis();
 		out.add(

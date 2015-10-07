@@ -9,13 +9,16 @@ import com.jorgediaz.indexchecker.index.IndexWrapperSearch;
 import com.jorgediaz.util.model.ModelUtil;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
+import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.CompanyLocalServiceUtil;
+import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
@@ -131,10 +134,22 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				}
 			}
 
-			outputScript.addAll(
-				ic.executeScript(
-					indexWrapperClass, company, classNames, outputMaxLength,
-					executionMode));
+			try {
+				ShardUtil.pushCompanyService(company.getCompanyId());
+
+				List<Group> groups =
+					GroupLocalServiceUtil.getCompanyGroups(
+						company.getCompanyId(), QueryUtil.ALL_POS,
+						QueryUtil.ALL_POS);
+
+				outputScript.addAll(
+					ic.executeScript(
+						indexWrapperClass, company, groups, classNames,
+						outputMaxLength, executionMode));
+			}
+			finally {
+				ShardUtil.popCompanyService();
+			}
 		}
 
 		response.setRenderParameter(
