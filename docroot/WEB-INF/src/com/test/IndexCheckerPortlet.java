@@ -10,6 +10,9 @@ import com.jorgediaz.util.model.ModelUtil;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.CompanyLocalServiceUtil;
@@ -27,6 +30,21 @@ import javax.portlet.ActionResponse;
  * Portlet implementation class IndexCheckerPortlet
  */
 public class IndexCheckerPortlet extends MVCPortlet {
+
+	public static String listStringToString(List<String> out) {
+		if (Validator.isNull(out)) {
+			return null;
+		}
+
+		StringBundler stringBundler = new StringBundler(out.size()*2);
+
+		for (String s : out) {
+			stringBundler.append(s);
+			stringBundler.append(StringPool.NEW_LINE);
+		}
+
+		return stringBundler.toString();
+	}
 
 	public void executeScript(ActionRequest request, ActionResponse response)
 		throws Exception {
@@ -120,7 +138,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		response.setRenderParameter(
-			"outputScript",IndexChecker.listStringToString(outputScript));
+			"outputScript", listStringToString(outputScript));
 	}
 
 }

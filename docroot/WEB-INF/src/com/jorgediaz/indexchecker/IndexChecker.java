@@ -12,9 +12,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
@@ -28,21 +26,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 public class IndexChecker {
-
-	public static String listStringToString(List<String> out) {
-		if (Validator.isNull(out)) {
-			return null;
-		}
-
-		StringBundler stringBundler = new StringBundler(out.size()*2);
-
-		for (String s : out) {
-			stringBundler.append(s);
-			stringBundler.append(StringPool.NEW_LINE);
-		}
-
-		return stringBundler.toString();
-	}
 
 	public List<String> executeScript(
 			int maxLength, List<String> classNames,
