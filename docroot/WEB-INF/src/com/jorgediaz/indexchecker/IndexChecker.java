@@ -155,54 +155,40 @@ public class IndexChecker {
 			Set<ExecutionMode> executionMode)
 		throws Exception {
 
-		if (icModel.hasGroupId()) {
+		if (icModel.hasGroupId() &&
+			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
-			if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			Map<Long, Set<Data>> indexDataMap =
+				indexWrapper.getClassNameDataByGroupId(icModel);
 
-				Map<Long, Set<Data>> indexDataMap =
-					indexWrapper.getClassNameDataByGroupId(icModel);
+			for (Group group : groups) {
+				Set<Data> indexData = indexDataMap.get(group.getGroupId());
 
-				for (Group group : groups) {
-					Set<Data> indexData = indexDataMap.get(group.getGroupId());
-
-					if (indexData == null) {
-						indexData = new HashSet<Data>();
-					}
-
-					List<Group> listGroupAux = new ArrayList<>();
-					listGroupAux.add(group);
-
-					Tuple data =
-						getData(
-							companyId, listGroupAux, icModel, indexData,
-							executionMode);
-
-					if (data != null) {
-						out.add(
-							"***GROUP: "+group.getGroupId() + " - " +
-								group.getName());
-
-						if (executionMode.contains(
-								ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-							System.out.println(
-								"***GROUP: "+group.getGroupId() +
-								" - " + group.getName());
-						}
-
-						out.addAll(
-							dumpData(maxLength, icModel, data, executionMode));
-					}
+				if (indexData == null) {
+					indexData = new HashSet<Data>();
 				}
-			}
-			else {
-				Set<Data> indexData = indexWrapper.getClassNameData(icModel);
+
+				List<Group> listGroupAux = new ArrayList<>();
+				listGroupAux.add(group);
 
 				Tuple data =
 					getData(
-						companyId, groups, icModel, indexData, executionMode);
+						companyId, listGroupAux, icModel, indexData,
+						executionMode);
 
 				if (data != null) {
+					out.add(
+						"***GROUP: "+group.getGroupId() + " - " +
+							group.getName());
+
+					if (executionMode.contains(
+							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+						System.out.println(
+							"***GROUP: "+group.getGroupId() +
+							" - " + group.getName());
+					}
+
 					out.addAll(
 						dumpData(maxLength, icModel, data, executionMode));
 				}
@@ -215,7 +201,8 @@ public class IndexChecker {
 				companyId, groups, icModel, indexData, executionMode);
 
 			if (data != null) {
-				if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+				if (!icModel.hasGroupId() &&
+					executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 					out.add("***GROUP: N/A");
 
 					if (executionMode.contains(
