@@ -6,12 +6,14 @@ import com.jorgediaz.util.model.ModelFactory;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.model.ClassedModel;
 
 import java.lang.reflect.Proxy;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 public class IndexCheckerModelFactory extends ModelFactory {
 
 	public static Class<? extends Model> defaultModelClass =
@@ -57,22 +59,26 @@ public class IndexCheckerModelFactory extends ModelFactory {
 	}
 
 	@Override
-	public Model getModelObject(Class<? extends ClassedModel> clazz) {
+	public Map<String, Model> getModelMap(Collection<String> classNames) {
 
-		Model model = super.getModelObject(clazz);
+		Map<String, Model> originalModelMap = super.getModelMap(classNames);
 
-		if (!model.hasIndexer()) {
-			return null;
+		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
+
+		for (Entry<String, Model> entry : originalModelMap.entrySet()) {
+			Model model = entry.getValue();
+
+			if (model.hasIndexer()) {
+				BaseIndexer baseindexer = IndexCheckerModelFactory.getBaseIndexer(
+					model.getIndexer());
+
+				if ((baseindexer != null) && baseindexer.isIndexerEnabled()) {
+					modelMap.put(entry.getKey(), model);
+				}
+			}
 		}
 
-		BaseIndexer baseindexer = IndexCheckerModelFactory.getBaseIndexer(
-			model.getIndexer());
-
-		if ((baseindexer == null) || !baseindexer.isIndexerEnabled()) {
-			return null;
-		}
-
-		return model;
+		return modelMap;
 	}
 
 	protected static BaseIndexer getBaseIndexer(Indexer indexer) {
