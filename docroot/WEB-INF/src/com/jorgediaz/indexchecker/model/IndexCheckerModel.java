@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -139,6 +140,28 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 	public Conjunction generateQueryFilter() {
 		return RestrictionsFactoryUtil.conjunction();
+	}
+
+	public Criterion getCompanyGroupFilter(long companyId) {
+		return getCompanyGroupFilter(companyId, null);
+	}
+
+	public Criterion getCompanyGroupFilter(
+		long companyId, List<Long> listGroupId) {
+
+		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+
+		if (this.hasAttribute("companyId")) {
+			conjunction.add(
+				PropertyFactoryUtil.forName("companyId").eq(companyId));
+		}
+
+		if (this.hasGroupId()) {
+			conjunction.add(
+				PropertyFactoryUtil.forName("groupId").in(listGroupId));
+		}
+
+		return conjunction;
 	}
 
 	public List<String> getIndexAttributes() {
