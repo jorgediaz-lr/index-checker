@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 public class IndexChecker {
 
 	public List<String> dumpData(
@@ -155,6 +155,8 @@ public class IndexChecker {
 			Set<ExecutionMode> executionMode)
 		throws Exception {
 
+		Map<Long, Tuple> dataMap = new TreeMap<Long, Tuple>();
+
 		if (icModel.hasGroupId() &&
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
@@ -177,20 +179,7 @@ public class IndexChecker {
 						executionMode);
 
 				if (data != null) {
-					out.add(
-						"***GROUP: "+group.getGroupId() + " - " +
-							group.getName());
-
-					if (executionMode.contains(
-							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-						System.out.println(
-							"***GROUP: "+group.getGroupId() +
-							" - " + group.getName());
-					}
-
-					out.addAll(
-						dumpData(maxLength, icModel, data, executionMode));
+					dataMap.put(group.getGroupId(), data);
 				}
 			}
 		}
@@ -201,19 +190,41 @@ public class IndexChecker {
 				companyId, groups, icModel, indexData, executionMode);
 
 			if (data != null) {
-				if (!icModel.hasGroupId() &&
-					executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-					out.add("***GROUP: N/A");
-
-					if (executionMode.contains(
-							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-						System.out.println("***GROUP: N/A");
-					}
-				}
-
-				out.addAll(dumpData(maxLength, icModel, data, executionMode));
+				dataMap.put(0L, data);
 			}
+		}
+
+		for (Entry<Long, Tuple> entry : dataMap.entrySet()) {
+			Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
+
+			String groupTitle;
+
+			if (group == null &&
+				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+				groupTitle = "N/A";
+			}
+			else if (group != null) {
+				groupTitle = group.getGroupId() + " - " +
+					group.getName();
+			}
+			else {
+				groupTitle = null;
+			}
+
+			if (groupTitle != null) {
+				out.add("***GROUP: " + groupTitle);
+
+				if (executionMode.contains(
+						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+					System.out.println("***GROUP: " + groupTitle);
+				}
+			}
+
+			Tuple data = entry.getValue();
+
+			out.addAll(dumpData(maxLength, icModel, data, executionMode));
 		}
 	}
 
@@ -329,8 +340,8 @@ public class IndexChecker {
 		boolean removeOrphan = executionMode.contains(
 			ExecutionMode.REMOVE_ORPHAN);
 
-		Data[] bothArrSetLiferay = getBothDataArray(liferayData, indexData);
-		Data[] bothArrSetIndex = getBothDataArray(indexData, liferayData);
+		Data[] bothArrSetLiferay = IndexCheckerUtil.getBothDataArray(liferayData, indexData);
+		Data[] bothArrSetIndex = IndexCheckerUtil.getBothDataArray(indexData, liferayData);
 
 		Set<Data> exactDataSetIndex = new HashSet<Data>();
 		Set<Data> exactDataSetLiferay = new HashSet<Data>();
@@ -386,33 +397,6 @@ public class IndexChecker {
 		return new Tuple(
 			exactDataSetIndex, exactDataSetLiferay, notExactDataSetIndex,
 			notExactDataSetLiferay, liferayOnlyData, indexOnlyData);
-	}
-
-	protected static Data[] getBothDataArray(Set<Data> set1, Set<Data> set2) {
-		Set<Data> both = new TreeSet<Data>(set1);
-		both.retainAll(set2);
-		return both.toArray(new Data[0]);
-	}
-
-	protected static String getListValues(
-		Collection<Long> values, int maxLength) {
-
-		String list = "";
-
-		for (Long value : values) {
-			if ("".equals(list)) {
-				list = "" + value;
-			}
-			else {
-				list = list + "," + value;
-			}
-		}
-
-		if (list.length()>maxLength && (maxLength > 3)) {
-			list = list.substring(0, maxLength-3) + "...";
-		}
-
-		return list;
 	}
 
 	protected List<String> dumpData(
@@ -493,7 +477,7 @@ public class IndexChecker {
 			}
 		}
 
-		String listPK = getListValues(valuesPK, maxLength);
+		String listPK = IndexCheckerUtil.getListValues(valuesPK, maxLength);
 		out.add(
 			entryClassName+"\n\tnumber of primary keys: "+valuesPK.size()+
 			"\n\tprimary keys values: ["+listPK+"]");
@@ -501,7 +485,7 @@ public class IndexChecker {
 		Set<Long> valuesRPKset = new HashSet<Long>(valuesRPK);
 
 		if (valuesRPKset.size()>0) {
-			String listRPK = getListValues(valuesRPKset, maxLength);
+			String listRPK = IndexCheckerUtil.getListValues(valuesRPKset, maxLength);
 			out.add(
 				entryClassName+"\n\tnumber of resource primary keys: "+
 				valuesRPKset.size()+"\n\tresource primary keys values: ["+
