@@ -20,11 +20,11 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 public class IndexChecker {
 
 	public List<String> executeScript(
@@ -76,6 +76,11 @@ public class IndexChecker {
 			Set<String> classNamesNotAvailable =
 				indexWrapper.getMissingClassNamesAtLiferay(modelMap);
 
+			Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap =
+				getData(
+					out, indexWrapper, company.getCompanyId(), groups, modelMap,
+					executionMode);
+
 			if (classNamesNotAvailable.size() > 0) {
 				out.add("");
 				out.add("---------------");
@@ -88,9 +93,7 @@ public class IndexChecker {
 				}
 			}
 
-			executeScript(
-				out, indexWrapper, company.getCompanyId(), groups, modelMap,
-				classNames, maxLength, executionMode);
+			out.addAll(dumpData(maxLength, executionMode, resultDataMap));
 		}
 		finally {
 			ShardUtil.popCompanyService();
@@ -227,6 +230,66 @@ public class IndexChecker {
 	}
 
 	protected List<String> dumpData(
+			int maxLength, Set<ExecutionMode> executionMode,
+			Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap)
+		throws SystemException {
+
+		List<String> out = new ArrayList<String>();
+
+		int i = 0;
+
+		for (Entry<IndexCheckerModel, Map<Long, Tuple>> entryResultDataMap :
+				resultDataMap.entrySet()) {
+
+			IndexCheckerModel model = entryResultDataMap.getKey();
+
+			out.add("\n---------------");
+			out.add("ClassName["+ i +"]: "+ model.getName());
+			out.add("---------------");
+
+			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+				System.out.println("\n---------------");
+				System.out.println("ClassName["+ i +"]: "+ model.getName());
+				System.out.println("---------------");
+			}
+
+			i++;
+
+			Map<Long, Tuple> modelDataMap = entryResultDataMap.getValue();
+
+			for (Entry<Long, Tuple> entry : modelDataMap.entrySet()) {
+				String groupTitle = null;
+				Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
+
+				if ((group == null) &&
+					executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+					groupTitle = "N/A";
+				}
+				else if (group != null) {
+					groupTitle = group.getGroupId() + " - " + group.getName();
+				}
+
+				if (groupTitle != null) {
+					out.add("***GROUP: " + groupTitle);
+
+					if (executionMode.contains(
+							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+						System.out.println("***GROUP: " + groupTitle);
+					}
+				}
+
+				Tuple data = entry.getValue();
+
+				out.addAll(dumpData(model, data, maxLength, executionMode));
+			}
+		}
+
+		return out;
+	}
+
+	protected List<String> dumpData(
 		String entryClassName, Collection<Data> liferayData, int maxLength) {
 
 		List<String> out = new ArrayList<String>();
@@ -261,106 +324,12 @@ public class IndexChecker {
 		return out;
 	}
 
-	protected List<String> executeScript(
-		List<String> out, IndexWrapper indexWrapper, long companyId,
-		List<Group> groups, Map<String, Model> modelMap,
-		List<String> classNames, int maxLength,
-		Set<ExecutionMode> executionMode) {
-
-		int i = 0;
-
-		for (Model model : modelMap.values()) {
-			try {
-				IndexCheckerModel icModel;
-				try {
-					icModel = (IndexCheckerModel)model;
-				}
-				catch (Exception e) {
-					/* TODO DEBUG */
-					System.err.println(
-						"\t" + "EXCEPTION: " + e.getClass() + " - " +
-							e.getMessage());
-
-					e.printStackTrace();
-					icModel = null;
-				}
-
-				if (icModel == null) {
-					continue;
-				}
-
-				out.add("\n---------------");
-				out.add("ClassName["+ i +"]: "+ icModel.getName());
-				out.add("---------------");
-
-				if (executionMode.contains(
-						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-					System.out.println("\n---------------");
-					System.out.println(
-						"ClassName["+ i +"]: "+ icModel.getName());
-					System.out.println("---------------");
-				}
-
-				i++;
-
-				Map<Long, Tuple> resultMap =
-					getData(
-						indexWrapper, companyId, groups, icModel,
-						executionMode);
-
-				for (Entry<Long, Tuple> entry : resultMap.entrySet()) {
-					Group group = GroupLocalServiceUtil.fetchGroup(
-						entry.getKey());
-
-					String groupTitle = null;
-
-					if ((group == null) &&
-						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-						groupTitle = "N/A";
-					}
-					else if (group != null) {
-						groupTitle =
-							group.getGroupId() + " - " + group.getName();
-					}
-
-					if (groupTitle != null) {
-						out.add("***GROUP: " + groupTitle);
-
-						if (executionMode.contains(
-								ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-							System.out.println("***GROUP: " + groupTitle);
-						}
-					}
-
-					Tuple data = entry.getValue();
-
-					out.addAll(
-						dumpData(icModel, data, maxLength, executionMode));
-				}
-			}
-			catch (Exception e) {
-				out.add(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				System.err.println(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
-				e.printStackTrace();
-			}
-		}
-
-		return out;
-	}
-
 	protected Map<Long, Tuple> getData(
 			IndexWrapper indexWrapper, long companyId, List<Group> groups,
 			IndexCheckerModel icModel, Set<ExecutionMode> executionMode)
 		throws Exception {
 
-		Map<Long, Tuple> dataMap = new TreeMap<Long, Tuple>();
+		Map<Long, Tuple> dataMap = new LinkedHashMap<Long, Tuple>();
 
 		if (icModel.hasGroupId() &&
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
@@ -400,6 +369,55 @@ public class IndexChecker {
 		}
 
 		return dataMap;
+	}
+
+	protected Map<IndexCheckerModel, Map<Long, Tuple>> getData(
+		List<String> out, IndexWrapper indexWrapper, long companyId,
+		List<Group> groups, Map<String, Model> modelMap,
+		Set<ExecutionMode> executionMode) {
+
+		Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap =
+			new LinkedHashMap<>();
+
+		for (Model model : modelMap.values()) {
+			try {
+				IndexCheckerModel icModel;
+				try {
+					icModel = (IndexCheckerModel)model;
+				}
+				catch (Exception e) {
+					/* TODO DEBUG */
+					System.err.println(
+						"Model: " + model.getName() + " EXCEPTION: " +
+							e.getClass() + " - " + e.getMessage());
+
+					e.printStackTrace();
+					icModel = null;
+				}
+
+				if (icModel == null) {
+					continue;
+				}
+
+				Map<Long, Tuple> modelDataMap =
+					getData(
+						indexWrapper, companyId, groups, icModel,
+						executionMode);
+
+				resultDataMap.put(icModel, modelDataMap);
+			}
+			catch (Exception e) {
+				out.add(
+					"Model: " + model.getName() + " EXCEPTION: " +
+						e.getClass() + " - " + e.getMessage());
+				System.err.println(
+					"Model: " + model.getName() + " EXCEPTION: " +
+						e.getClass() + " - " + e.getMessage());
+				e.printStackTrace();
+			}
+		}
+
+		return resultDataMap;
 	}
 
 	protected Tuple getData(
