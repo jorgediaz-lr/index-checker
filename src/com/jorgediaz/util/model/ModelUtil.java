@@ -2,14 +2,12 @@ package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.PortletClassLoaderUtil;
+import com.liferay.portal.kernel.servlet.PluginContextListener;
+import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
-import com.liferay.portal.kernel.util.ClassLoaderPool;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
-import com.liferay.portal.model.Portlet;
-import com.liferay.portal.service.PortletLocalServiceUtil;
 
 import java.lang.reflect.Field;
 
@@ -20,6 +18,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.ServletContext;
 public class ModelUtil {
 
 	public static ClassLoader getClassLoader() {
@@ -35,20 +35,27 @@ public class ModelUtil {
 
 		aggregateClassLoader.addClassLoader(portalClassLoader);
 
-		List<Portlet> portlets = PortletLocalServiceUtil.getPortlets();
+		for (String servletContextName : ServletContextPool.keySet()) {
+			try {
+				ServletContext servletContext = ServletContextPool.get(
+					servletContextName);
 
-		for (Portlet portlet : portlets) {
-			String portletId = portlet.getRootPortletId();
+				ClassLoader classLoader =
+					(ClassLoader)servletContext.getAttribute(
+						PluginContextListener.PLUGIN_CLASS_LOADER);
 
-			ClassLoader classLoader = PortletClassLoaderUtil.getClassLoader(
-				portletId);
+				_log.debug(
+					"Adding " + classLoader + " for " + servletContextName);
 
-			if (classLoader == null) {
-				classLoader = ClassLoaderPool.getClassLoader(portletId);
+				aggregateClassLoader.addClassLoader(classLoader);
 			}
-
-			_log.debug("Adding " + classLoader);
-			aggregateClassLoader.addClassLoader(classLoader);
+			catch (Exception e) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Error adding classLoader for " + servletContextName +
+						": " + e.getMessage(), e);
+				}
+			}
 		}
 
 		return aggregateClassLoader;
