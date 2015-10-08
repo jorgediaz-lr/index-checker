@@ -69,8 +69,8 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			Model model = entry.getValue();
 
 			if (model.hasIndexer()) {
-				BaseIndexer baseindexer = IndexCheckerModelFactory.getBaseIndexer(
-					model.getIndexer());
+				BaseIndexer baseindexer =
+					IndexCheckerModelFactory.getBaseIndexer(model.getIndexer());
 
 				if ((baseindexer != null) && baseindexer.isIndexerEnabled()) {
 					modelMap.put(entry.getKey(), model);

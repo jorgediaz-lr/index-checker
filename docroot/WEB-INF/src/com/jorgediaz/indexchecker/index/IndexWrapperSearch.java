@@ -123,7 +123,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 		// TODO Pendiente
 
 		Set<String> values = new HashSet<String>();
-		values.add("Only implemented for 'Lucene'...");
+		values.add("Only implemented for 'Lucene' index wrapper");
 		return values;
 	}
 

@@ -6,9 +6,9 @@ import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.jorgediaz.indexchecker.model.IndexCheckerModelFactory;
 import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelFactory;
+
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
@@ -23,7 +23,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 public class IndexChecker {
 
-	public static Map<IndexCheckerModel, Map<Long, Tuple>> executeScript(
+	public static Map<Long, List<IndexCheckerResult>>
+		executeScript(
 			Class<? extends IndexWrapper> indexWrapperClass, Company company,
 			List<Group> groups, List<String> classNames,
 			Set<ExecutionMode> executionMode)
@@ -35,9 +36,9 @@ public class IndexChecker {
 
 		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
 
-		Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap =
+		Map<Long, List<IndexCheckerResult>> resultDataMap =
 			new LinkedHashMap<>();
-		
+
 		for (Model model : modelMap.values()) {
 			try {
 				IndexCheckerModel icModel;
@@ -49,21 +50,32 @@ public class IndexChecker {
 					System.err.println(
 						"Model: " + model.getName() + " EXCEPTION: " +
 							e.getClass() + " - " + e.getMessage());
-		
+
 					e.printStackTrace();
 					icModel = null;
 				}
-		
+
 				if (icModel == null) {
 					continue;
 				}
-		
-				Map<Long, Tuple> modelDataMap =
+
+				Map<Long, IndexCheckerResult> modelDataMap =
 					getData(
 						indexWrapper, company.getCompanyId(), groups, icModel,
 						executionMode);
-		
-				resultDataMap.put(icModel, modelDataMap);
+
+				for (
+					Entry<Long, IndexCheckerResult> entry :
+						modelDataMap.entrySet()) {
+
+					if (!resultDataMap.containsKey(entry.getKey())) {
+						resultDataMap.put(
+							entry.getKey(),
+							new ArrayList<IndexCheckerResult>());
+					}
+
+					resultDataMap.get(entry.getKey()).add(entry.getValue());
+				}
 			}
 			catch (Exception e) {
 				System.err.println(
@@ -72,7 +84,7 @@ public class IndexChecker {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return resultDataMap;
 	}
 
@@ -92,15 +104,20 @@ public class IndexChecker {
 		Set<String> classNamesNotAvailable =
 			indexWrapper.getMissingClassNamesAtLiferay(modelMap);
 
-		if (classNamesNotAvailable.size() > 0) {
+		if (classNamesNotAvailable.size() == 0) {
 			out.add("");
-			out.add("---------------");
-			out.add("classNames at Index, that we are not going to check!!");
-			out.add("---------------");
+			out.add("All classNames at Index also exists at Liferay :-)");
 
-			for (String className : classNamesNotAvailable) {
-				out.add(className);
-			}
+			return out;
+		}
+
+		out.add("");
+		out.add("---------------");
+		out.add("The following classNames exists at Index but not at Liferay!");
+		out.add("---------------");
+
+		for (String className : classNamesNotAvailable) {
+			out.add(className);
 		}
 
 		return out;
@@ -108,58 +125,59 @@ public class IndexChecker {
 
 	public static List<String> generateOutput(
 			int maxLength, Set<ExecutionMode> executionMode,
-			Map<IndexCheckerModel, Map<Long, Tuple>> resultDataMap)
+			Map<Long, List<IndexCheckerResult>> resultDataMap)
 		throws SystemException {
 
 		List<String> out = new ArrayList<String>();
 
-		int i = 0;
-
-		for (Entry<IndexCheckerModel, Map<Long, Tuple>> entryResultDataMap :
+		for (
+			Entry<Long, List<IndexCheckerResult>> entry :
 				resultDataMap.entrySet()) {
 
-			IndexCheckerModel model = entryResultDataMap.getKey();
+			String groupTitle = null;
+			Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
 
-			out.add("\n---------------");
-			out.add("ClassName["+ i +"]: "+ model.getName());
-			out.add("---------------");
+			if ((group == null) &&
+				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
-			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-				System.out.println("\n---------------");
-				System.out.println("ClassName["+ i +"]: "+ model.getName());
-				System.out.println("---------------");
+				groupTitle = "N/A";
+			}
+			else if (group != null) {
+				groupTitle = group.getGroupId() + " - " + group.getName();
 			}
 
-			i++;
+			if (groupTitle != null) {
+				out.add("\n---------------");
+				out.add("GROUP: " + groupTitle);
+				out.add("---------------");
 
-			Map<Long, Tuple> modelDataMap = entryResultDataMap.getValue();
+				if (executionMode.contains(
+						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 
-			for (Entry<Long, Tuple> entry : modelDataMap.entrySet()) {
-				String groupTitle = null;
-				Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
-
-				if ((group == null) &&
-					executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-					groupTitle = "N/A";
+					System.out.println("\n---------------");
+					System.out.println("GROUP: " + groupTitle);
+					System.out.println("---------------");
 				}
-				else if (group != null) {
-					groupTitle = group.getGroupId() + " - " + group.getName();
+			}
+
+			List<IndexCheckerResult> resultList = entry.getValue();
+
+			int i = 0;
+
+			for (IndexCheckerResult result : resultList) {
+				IndexCheckerModel model = result.getModel();
+				out.add("*** ClassName["+ i +"]: "+ model.getName());
+
+				if (executionMode.contains(
+						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+					System.out.println(
+						"*** ClassName["+ i +"]: "+ model.getName());
 				}
 
-				if (groupTitle != null) {
-					out.add("***GROUP: " + groupTitle);
+				out.addAll(dumpData(result, maxLength, executionMode));
 
-					if (executionMode.contains(
-							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-						System.out.println("***GROUP: " + groupTitle);
-					}
-				}
-
-				Tuple data = entry.getValue();
-
-				out.addAll(dumpData(model, data, maxLength, executionMode));
+				i++;
 			}
 		}
 
@@ -167,28 +185,18 @@ public class IndexChecker {
 	}
 
 	protected static List<String> dumpData(
-		IndexCheckerModel model, Tuple data, int maxLength,
+		IndexCheckerResult data, int maxLength,
 		Set<ExecutionMode> executionMode) {
 
 		List<String> out = new ArrayList<String>();
 
-		@SuppressWarnings("unchecked")
-		Set<Data> exactDataSetIndex = (Set<Data>)data.getObject(0);
-		@SuppressWarnings("unchecked")
-		Set<Data> exactDataSetLiferay = (Set<Data>)data.getObject(1);
-		@SuppressWarnings("unchecked")
-		Set<Data> notExactDataSetIndex = (Set<Data>)data.getObject(2);
-		@SuppressWarnings("unchecked")
-		Set<Data> notExactDataSetLiferay = (Set<Data>)data.getObject(3);
-		@SuppressWarnings("unchecked")
-		Set<Data> liferayOnlyData = (Set<Data>)data.getObject(4);
-		@SuppressWarnings("unchecked")
-		Set<Data> indexOnlyData = (Set<Data>)data.getObject(5);
-
-		/* TODO Remove reindex logic from dump method */
-		boolean reindex = executionMode.contains(ExecutionMode.REINDEX);
-		boolean removeOrphan = executionMode.contains(
-			ExecutionMode.REMOVE_ORPHAN);
+		IndexCheckerModel model = data.getModel();
+		Set<Data> exactDataSetIndex = data.getIndexExactData();
+		Set<Data> exactDataSetLiferay = data.getLiferayExactData();
+		Set<Data> notExactDataSetIndex = data.getIndexNotExactData();
+		Set<Data> notExactDataSetLiferay = data.getLiferayNotExactData();
+		Set<Data> liferayOnlyData = data.getLiferayOnlyData();
+		Set<Data> indexOnlyData = data.getIndexOnlyData();
 
 		if ((exactDataSetIndex != null) && !exactDataSetIndex.isEmpty()) {
 			out.add("==both-exact==");
@@ -228,16 +236,6 @@ public class IndexChecker {
 					System.out.println(d.getAllData(","));
 				}
 			}
-
-			if (reindex) {
-				Map<Data, String> errors = model.reindex(notExactDataSetIndex);
-
-				for (Entry<Data, String> error : errors.entrySet()) {
-					out.add(
-						"\t" + "ERROR reindexing " + error.getKey() +
-						"EXCEPTION" + error.getValue());
-				}
-			}
 		}
 
 		if ((liferayOnlyData != null) && !liferayOnlyData.isEmpty()) {
@@ -251,16 +249,6 @@ public class IndexChecker {
 					System.out.println(d.getAllData(","));
 				}
 			}
-
-			if (reindex) {
-				Map<Data, String> errors = model.reindex(liferayOnlyData);
-
-				for (Entry<Data, String> error : errors.entrySet()) {
-					out.add(
-						"\t" + "ERROR reindexing " + error.getKey() +
-						"EXCEPTION" + error.getValue());
-				}
-			}
 		}
 
 		if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
@@ -272,16 +260,6 @@ public class IndexChecker {
 
 				for (Data d : indexOnlyData) {
 					System.out.println(d.getAllData(","));
-				}
-			}
-
-			if (removeOrphan) {
-				Map<Data, String> errors = model.deleteAndCheck(indexOnlyData);
-
-				for (Entry<Data, String> error : errors.entrySet()) {
-					out.add(
-						"\tERROR deleting from index " + error.getKey() +
-						"EXCEPTION" + error.getValue());
 				}
 			}
 		}
@@ -307,7 +285,7 @@ public class IndexChecker {
 
 		String listPK = IndexCheckerUtil.getListValues(valuesPK, maxLength);
 		out.add(
-			entryClassName+"\n\tnumber of primary keys: "+valuesPK.size()+
+			"\tnumber of primary keys: "+valuesPK.size()+
 			"\n\tprimary keys values: ["+listPK+"]");
 
 		Set<Long> valuesRPKset = new HashSet<Long>(valuesRPK);
@@ -324,12 +302,13 @@ public class IndexChecker {
 		return out;
 	}
 
-	protected static Map<Long, Tuple> getData(
+	protected static Map<Long, IndexCheckerResult> getData(
 			IndexWrapper indexWrapper, long companyId, List<Group> groups,
 			IndexCheckerModel icModel, Set<ExecutionMode> executionMode)
 		throws Exception {
 
-		Map<Long, Tuple> dataMap = new LinkedHashMap<Long, Tuple>();
+		Map<Long, IndexCheckerResult> dataMap =
+			new LinkedHashMap<Long, IndexCheckerResult>();
 
 		if (icModel.hasGroupId() &&
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
@@ -347,8 +326,8 @@ public class IndexChecker {
 				List<Group> listGroupAux = new ArrayList<>();
 				listGroupAux.add(group);
 
-				Tuple data =
-					getData(
+				IndexCheckerResult data =
+					getIndexCheckResult(
 						companyId, listGroupAux, icModel, indexData,
 						executionMode);
 
@@ -360,7 +339,7 @@ public class IndexChecker {
 		else {
 			Set<Data> indexData = indexWrapper.getClassNameData(icModel);
 
-			Tuple data = getData(
+			IndexCheckerResult data = getIndexCheckResult(
 				companyId, groups, icModel, indexData, executionMode);
 
 			if (data != null) {
@@ -371,7 +350,7 @@ public class IndexChecker {
 		return dataMap;
 	}
 
-	protected static Tuple getData(
+	protected static IndexCheckerResult getIndexCheckResult(
 			long companyId, List<Group> groups, IndexCheckerModel icModel,
 			Set<Data> indexData, Set<ExecutionMode> executionMode)
 		throws Exception {
@@ -388,82 +367,10 @@ public class IndexChecker {
 		Set<Data> liferayData = new HashSet<Data>(
 			icModel.getLiferayData(filter).values());
 
-		Tuple data = null;
-
-		if ((indexData.size() > 0) || (liferayData.size() > 0)) {
-			data = getData(liferayData, indexData, executionMode);
-		}
+		IndexCheckerResult data = IndexCheckerResult.getIndexCheckResult(
+			icModel, liferayData, indexData, executionMode);
 
 		return data;
-	}
-
-	protected static Tuple getData(
-		Set<Data> liferayData, Set<Data> indexData,
-		Set<ExecutionMode> executionMode) {
-
-		boolean reindex = executionMode.contains(ExecutionMode.REINDEX);
-		boolean removeOrphan = executionMode.contains(
-			ExecutionMode.REMOVE_ORPHAN);
-
-		Data[] bothArrSetLiferay = IndexCheckerUtil.getBothDataArray(
-			liferayData, indexData);
-		Data[] bothArrSetIndex = IndexCheckerUtil.getBothDataArray(
-			indexData, liferayData);
-
-		Set<Data> exactDataSetIndex = new HashSet<Data>();
-		Set<Data> exactDataSetLiferay = new HashSet<Data>();
-		Set<Data> notExactDataSetIndex = new HashSet<Data>();
-		Set<Data> notExactDataSetLiferay = new HashSet<Data>();
-
-		if ((executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT) ||
-			 executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT) ||
-			 reindex) && (bothArrSetIndex.length > 0) &&
-			(bothArrSetLiferay.length > 0)) {
-
-			for (int i = 0; i<bothArrSetIndex.length; i++) {
-				Data dataIndex = bothArrSetIndex[i];
-				Data dataLiferay = bothArrSetLiferay[i];
-
-				if (!dataIndex.equals(dataLiferay)) {
-					throw new RuntimeException("Inconsistent data");
-				}
-				else if (dataIndex.exact(dataLiferay)) {
-					if (executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT)) {
-						exactDataSetIndex.add(dataIndex);
-						exactDataSetLiferay.add(dataLiferay);
-					}
-				}
-				else if (executionMode.contains(
-							ExecutionMode.SHOW_BOTH_NOTEXACT)) {
-
-					notExactDataSetIndex.add(dataIndex);
-					notExactDataSetLiferay.add(dataLiferay);
-				}
-			}
-		}
-
-		Set<Data> liferayOnlyData = liferayData;
-		Set<Data> indexOnlyData = indexData;
-		Set<Data> bothDataSet = new HashSet<Data>(indexData);
-		bothDataSet.retainAll(liferayData);
-
-		if (executionMode.contains(ExecutionMode.SHOW_LIFERAY) || reindex) {
-			liferayOnlyData.removeAll(bothDataSet);
-		}
-		else {
-			liferayOnlyData = new HashSet<Data>();
-		}
-
-		if (executionMode.contains(ExecutionMode.SHOW_INDEX) || removeOrphan) {
-			indexOnlyData.removeAll(bothDataSet);
-		}
-		else {
-			indexOnlyData = new HashSet<Data>();
-		}
-
-		return new Tuple(
-			exactDataSetIndex, exactDataSetLiferay, notExactDataSetIndex,
-			notExactDataSetLiferay, liferayOnlyData, indexOnlyData);
 	}
 
 	protected static IndexWrapper getIndexWrapper(

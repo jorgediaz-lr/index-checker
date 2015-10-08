@@ -22,18 +22,26 @@
 <portlet:renderURL var="viewURL" />
 
 <portlet:actionURL name="executeScript" var="executeScriptURL" windowState="normal" />
+<portlet:actionURL name="executeGetIndexMissingClassNames" var="executeGetIndexMissingClassNamesURL" windowState="normal" />
+<portlet:actionURL name="executeReindex" var="executeReindexURL" windowState="normal" />
+<portlet:actionURL name="executeRemoveOrphans" var="executeRemoveOrphansURL" windowState="normal" />
 
 <liferay-ui:header
 	backURL="<%= viewURL %>"
-	title="test"
+	title="index-checker"
 />
 
-This is the <b>Index Checker</b> portlet<br />
-<br />
-<br />
-
-<aui:form action="<%= executeScriptURL %>" method="POST" name="fm">
+<aui:form action="<%= executeScriptURL %>" method="post" name="fm">
 	<aui:fieldset>
+		<aui:column>
+			<aui:input inlineLabel="left" name="outputMaxLength" type="text" value="160" />
+			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
+			<aui:select inlineLabel="left"  name="indexWrapperClassName">
+				<aui:option selected="true" value="Search"><liferay-ui:message key="index-wrapper-class-name-search" /></aui:option>
+				<aui:option value="Lucene"><liferay-ui:message key="index-wrapper-class-name-lucene" /></aui:option>
+				<aui:option value="LuceneJar"><liferay-ui:message key="index-wrapper-class-name-lucene-jar" /></aui:option>
+			</aui:select>
+		</aui:column>
 		<aui:column>
 			<aui:input name="outputBothExact" type="checkbox" value="false" />
 			<aui:input name="outputBothNotExact" type="checkbox" value="true" />
@@ -43,19 +51,14 @@ This is the <b>Index Checker</b> portlet<br />
 		<aui:column>
 			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
-			<aui:input name="reindex" type="checkbox" value="false" />
-			<aui:input name="removeOrphan" type="checkbox" value="false" />
-		</aui:column>
-		<aui:column>
-			<aui:input inlineLabel="left" name="outputMaxLength" type="text" value="160" />
-			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
-			<aui:input inlineLabel="left" name="indexWrapperClassName" type="text" value="Search" />
 		</aui:column>
 	</aui:fieldset>
 
 	<aui:button-row>
 		<aui:button type="submit" value="execute" />
-
+		<aui:button onClick='<%= renderResponse.getNamespace() + "reindex();" %>' type="button" value="reindex" />
+		<aui:button onClick='<%= renderResponse.getNamespace() + "removeOrphans();" %>' type="button" value="remove-orphan-data" />
+		<aui:button onClick='<%= renderResponse.getNamespace() + "removeGetIndexMissingClassNames();" %>' type="button" value="get-index-missing-classnames" />
 		<aui:button onClick="<%= viewURL %>" type="cancel" value="clean" />
 	</aui:button-row>
 </aui:form>
@@ -67,3 +70,23 @@ This is the <b>Index Checker</b> portlet<br />
 <c:if test="<%= Validator.isNotNull(outputScript) %>">
 	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= outputScript %>" />
 </c:if>
+
+<aui:script>
+	function <portlet:namespace />reindex() {
+		document.<portlet:namespace />fm.action = "<%= executeReindexURL %>";
+
+		submitForm(document.<portlet:namespace />fm);
+	}
+
+	function <portlet:namespace />removeOrphans() {
+		document.<portlet:namespace />fm.action = "<%= executeRemoveOrphansURL %>";
+
+		submitForm(document.<portlet:namespace />fm);
+	}
+
+	function <portlet:namespace />removeGetIndexMissingClassNames() {
+		document.<portlet:namespace />fm.action = "<%= executeGetIndexMissingClassNamesURL %>";
+
+		submitForm(document.<portlet:namespace />fm);
+	}
+</aui:script>
