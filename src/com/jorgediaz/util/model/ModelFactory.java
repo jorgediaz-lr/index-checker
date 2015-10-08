@@ -7,6 +7,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.model.ClassedModel;
+import com.liferay.portal.model.PersistedModel;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.lang.reflect.InvocationTargetException;
@@ -53,12 +54,14 @@ public class ModelFactory {
 			String[] attributes = null;
 			try {
 				model = this.getModelObject(classname);
-				attributes = model.getAttributesName();
+				if(model != null) {
+					attributes = model.getAttributesName();
+				}
 			}
 			catch (Exception e) {
 				if (_log.isInfoEnabled()) {
 					_log.info(
-						"ERROR getting model object of " + classname +
+						"Cannot get model object of " + classname +
 						" EXCEPTION: " + e.getClass().getName() + ": " +
 						e.getMessage());
 				}
@@ -74,7 +77,15 @@ public class ModelFactory {
 
 	public Model getModelObject(Class<? extends ClassedModel> clazz) {
 
-		if ((clazz == null) || !ClassedModel.class.isAssignableFrom(clazz)) {
+		if ((clazz == null) || !ClassedModel.class.isAssignableFrom(clazz) ||
+			!PersistedModel.class.isAssignableFrom(clazz)) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Class: " + clazz.getName() + "is null or does not "+
+					"implements ClassedModel or PersistedModel, returning " +
+					"null");
+			}
 			return null;
 		}
 
