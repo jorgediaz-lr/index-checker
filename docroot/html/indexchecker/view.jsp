@@ -37,8 +37,8 @@
 			<aui:input inlineLabel="left" name="outputMaxLength" type="text" value="160" />
 			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
 			<aui:select inlineLabel="left"  name="indexWrapperClassName">
-				<aui:option selected="true" value="Search"><liferay-ui:message key="index-wrapper-class-name-search" /></aui:option>
-				<aui:option value="Lucene"><liferay-ui:message key="index-wrapper-class-name-lucene" /></aui:option>
+				<aui:option value="Search"><liferay-ui:message key="index-wrapper-class-name-search" /></aui:option>
+				<aui:option selected="true" value="Lucene"><liferay-ui:message key="index-wrapper-class-name-lucene" /></aui:option>
 				<aui:option value="LuceneJar"><liferay-ui:message key="index-wrapper-class-name-lucene-jar" /></aui:option>
 			</aui:select>
 		</aui:column>
