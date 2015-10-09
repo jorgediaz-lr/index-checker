@@ -328,7 +328,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
 
-		if(filterClassName != null) {
+		if (filterClassName != null) {
 			filterClassNameArr = filterClassName.split(",");
 		}
 
@@ -345,17 +345,17 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			List<String> classNames = new ArrayList<String>();
 
 			for (String className : allClassName) {
-				if(className==null){
+				if (className == null) {
 					continue;
 				}
 
-				if(filterClassNameArr == null) {
+				if (filterClassNameArr == null) {
 					classNames.add(className);
 					continue;
 				}
 
-				for(int i=0; i<filterClassNameArr.length; i++) {
-					if(className.contains(filterClassNameArr[i])) {
+				for (int i = 0; i<filterClassNameArr.length; i++) {
+					if (className.contains(filterClassNameArr[i])) {
 						classNames.add(className);
 						break;
 					}
