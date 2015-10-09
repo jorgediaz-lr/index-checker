@@ -294,9 +294,8 @@ public class IndexChecker {
 			String listRPK = IndexCheckerUtil.getListValues(
 				valuesRPKset, maxLength);
 			out.add(
-				entryClassName+"\n\tnumber of resource primary keys: "+
-				valuesRPKset.size()+"\n\tresource primary keys values: ["+
-				listRPK+"]");
+				"\tnumber of resource primary keys: "+ valuesRPKset.size()+
+				"\n\tresource primary keys values: ["+listRPK+"]");
 		}
 
 		return out;
