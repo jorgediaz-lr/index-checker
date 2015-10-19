@@ -50,6 +50,8 @@ public interface Model extends Cloneable {
 
 	public boolean hasAttribute(String attribute);
 
+	public boolean hasAttributes(String[] attributes);
+
 	public boolean hasGroupId();
 
 	public boolean hasIndexer();

@@ -212,15 +212,25 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean hasAttribute(String attribute) {
-		Object[][] attributes = getAttributes();
+		Object[][] modelAttributes = getAttributes();
 
-		for (int i = 0; i < attributes.length; i++) {
-			if (((String)attributes[i][0]).equals(attribute)) {
+		for (int i = 0; i < modelAttributes.length; i++) {
+			if (((String)modelAttributes[i][0]).equals(attribute)) {
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	public boolean hasAttributes(String[] attributes) {
+		for (int i = 0; i < attributes.length; i++) {
+			if (!hasAttribute(attributes[i])) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public boolean hasGroupId() {
