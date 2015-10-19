@@ -54,7 +54,8 @@ public class ModelFactory {
 			String[] attributes = null;
 			try {
 				model = this.getModelObject(classname);
-				if(model != null) {
+
+				if (model != null) {
 					attributes = model.getAttributesName();
 				}
 			}
@@ -86,6 +87,7 @@ public class ModelFactory {
 					"implements ClassedModel or PersistedModel, returning " +
 					"null");
 			}
+
 			return null;
 		}
 
