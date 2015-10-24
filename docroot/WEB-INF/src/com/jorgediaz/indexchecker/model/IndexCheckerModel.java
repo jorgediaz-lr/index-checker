@@ -174,11 +174,9 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 		DynamicQuery query = newDynamicQuery();
 
-		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
-
-		for (String attrib : indexedAttributes) {
-			projectionList.add(this.getPropertyProjection(attrib));
-		}
+		ProjectionList projectionList =
+			this.getPropertyProjection(
+				indexedAttributes.toArray(new String[0]));
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 

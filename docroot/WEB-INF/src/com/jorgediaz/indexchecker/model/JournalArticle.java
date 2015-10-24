@@ -26,11 +26,9 @@ public class JournalArticle extends IndexCheckerModel {
 
 		DynamicQuery query = this.newDynamicQuery();
 
-		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
-
-		for (String attrib : getIndexAttributes()) {
-			projectionList.add(this.getPropertyProjection(attrib));
-		}
+		ProjectionList projectionList =
+			this.getPropertyProjection(
+				getIndexAttributes().toArray(new String[0]));
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
