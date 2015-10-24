@@ -4,6 +4,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -210,17 +211,59 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Projection getPropertyProjection(String attribute) {
-		Projection property;
 
-		if (isPartOfPrimaryKeyMultiAttribute(attribute)) {
-			property = ProjectionFactoryUtil.property(
-				"primaryKey." + attribute);
-		}
-		else {
-			property = ProjectionFactoryUtil.property(attribute);
+		String op = null;
+
+		if (attribute.indexOf("(") > 0) {
+			op = attribute.substring(0, attribute.indexOf("("));
+			attribute = attribute.substring(
+				attribute.indexOf("(") + 1, attribute.indexOf(")"));
 		}
 
-		return property;
+		return getPropertyProjection(attribute, op);
+	}
+
+	public ProjectionList getPropertyProjection(String[] attributes) {
+
+		String[] op = new String[attributes.length];
+		String[] attributesAux = new String[attributes.length];
+
+		boolean grouping = false;
+
+		for (int i = 0; i<attributes.length; i++) {
+			String attribute = attributes[i];
+
+			if (attribute.indexOf("(") > 0) {
+				op[i] = attribute.substring(0, attribute.indexOf("("));
+				attributesAux[i] = attribute.substring(
+					attribute.indexOf("(") + 1, attribute.indexOf(")"));
+				grouping = true;
+			}
+			else {
+				op[i] = null;
+				attributesAux[i] = attribute;
+			}
+		}
+
+		if (grouping) {
+			for (int i = 0; i<op.length; i++) {
+				if (op[i] == null) {
+					op[i] = "groupProperty";
+				}
+			}
+		}
+
+		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
+
+		for (int i = 0; i<attributesAux.length; i++) {
+			projectionList.add(getPropertyProjection(attributesAux[i], op[i]));
+		}
+
+		if (attributesAux.length == 1) {
+			projectionList.add(getPropertyProjection(attributes[0], op[0]));
+		}
+
+		return projectionList;
 	}
 
 	public int[] getValidStatuses() {
@@ -323,6 +366,38 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return attributesString;
+	}
+
+	protected Projection getPropertyProjection(String attribute, String op) {
+		Projection property = null;
+
+		if (isPartOfPrimaryKeyMultiAttribute(attribute)) {
+			attribute = "primaryKey." + attribute;
+		}
+
+		if (op == null) {
+			property = ProjectionFactoryUtil.property(attribute);
+		}
+		else if ("count".equals(op)) {
+			property = ProjectionFactoryUtil.count(attribute);
+		}
+		else if ("countDistinct".equals(op)) {
+			property = ProjectionFactoryUtil.countDistinct(attribute);
+		}
+		else if ("groupProperty".equals(op)) {
+			property = ProjectionFactoryUtil.groupProperty(attribute);
+		}
+		else if ("max".equals(op)) {
+			property = ProjectionFactoryUtil.max(attribute);
+		}
+		else if ("min".equals(op)) {
+			property = ProjectionFactoryUtil.min(attribute);
+		}
+		else if ("sum".equals(op)) {
+			property = ProjectionFactoryUtil.sum(attribute);
+		}
+
+		return property;
 	}
 
 	protected Object[][] attributesArray = null;
