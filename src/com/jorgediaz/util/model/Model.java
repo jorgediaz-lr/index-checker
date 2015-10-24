@@ -2,6 +2,7 @@ package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.model.ClassedModel;
 
@@ -46,6 +47,8 @@ public interface Model extends Cloneable {
 
 	public String[] getPrimaryKeyMultiAttribute();
 
+	public Projection getPropertyProjection(String attribute);
+
 	public int[] getValidStatuses();
 
 	public boolean hasAttribute(String attribute);
@@ -59,6 +62,8 @@ public interface Model extends Cloneable {
 	public void init(
 		ModelFactory modelFactory, Class<? extends ClassedModel> modelClass)
 			throws Exception;
+
+	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute);
 
 	public boolean modelExtendsClass(Class<?> clazz);
 

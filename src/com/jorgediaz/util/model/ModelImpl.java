@@ -2,6 +2,8 @@ package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Projection;
+import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -207,6 +209,20 @@ public abstract class ModelImpl implements Model {
 		return primaryKeyMultiAttribute;
 	}
 
+	public Projection getPropertyProjection(String attribute) {
+		Projection property;
+
+		if (isPartOfPrimaryKeyMultiAttribute(attribute)) {
+			property = ProjectionFactoryUtil.property(
+				"primaryKey." + attribute);
+		}
+		else {
+			property = ProjectionFactoryUtil.property(attribute);
+		}
+
+		return property;
+	}
+
 	public int[] getValidStatuses() {
 		return null;
 	}
@@ -248,6 +264,19 @@ public abstract class ModelImpl implements Model {
 
 		this.modelFactory = modelFactory;
 		this.modelClass = modelClass;
+	}
+
+	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
+		boolean isPartOfPrimaryKeyMultiAttribute = false;
+		String[] primaryKeyMultiAttribute = this.getPrimaryKeyMultiAttribute();
+
+		for (int k = 0; k<primaryKeyMultiAttribute.length; k++) {
+			if (primaryKeyMultiAttribute[k].equals(attribute)) {
+				isPartOfPrimaryKeyMultiAttribute = true;
+			}
+		}
+
+		return isPartOfPrimaryKeyMultiAttribute;
 	}
 
 	public boolean modelExtendsClass(Class<?> clazz) {
