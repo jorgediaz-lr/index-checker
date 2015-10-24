@@ -240,8 +240,8 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean hasAttributes(String[] attributes) {
-		for (int i = 0; i < attributes.length; i++) {
-			if (!hasAttribute(attributes[i])) {
+		for (String attribute : attributes) {
+			if (!hasAttribute(attribute)) {
 				return false;
 			}
 		}
@@ -267,16 +267,14 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
-		boolean isPartOfPrimaryKeyMultiAttribute = false;
-		String[] primaryKeyMultiAttribute = this.getPrimaryKeyMultiAttribute();
 
-		for (int k = 0; k<primaryKeyMultiAttribute.length; k++) {
-			if (primaryKeyMultiAttribute[k].equals(attribute)) {
-				isPartOfPrimaryKeyMultiAttribute = true;
+		for (String primaryKeyAttribute : this.getPrimaryKeyMultiAttribute()) {
+			if (primaryKeyAttribute.equals(attribute)) {
+				return true;
 			}
 		}
 
-		return isPartOfPrimaryKeyMultiAttribute;
+		return false;
 	}
 
 	public boolean modelExtendsClass(Class<?> clazz) {
