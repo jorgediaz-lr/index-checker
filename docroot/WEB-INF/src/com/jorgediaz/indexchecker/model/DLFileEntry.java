@@ -20,8 +20,8 @@ public class DLFileEntry extends IndexCheckerModel {
 			DLFileVersion.class);
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
-		projectionList.add(ProjectionFactoryUtil.property("fileEntryId"));
-		projectionList.add(ProjectionFactoryUtil.property("status"));
+		projectionList.add(this.getPropertyProjection("fileEntryId"));
+		projectionList.add(this.getPropertyProjection("status"));
 
 		queryDLFileVersion.setProjection(projectionList);
 

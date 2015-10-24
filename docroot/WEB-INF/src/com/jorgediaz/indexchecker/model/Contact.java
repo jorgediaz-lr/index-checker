@@ -2,7 +2,6 @@ package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
@@ -17,8 +16,7 @@ public class Contact extends IndexCheckerModel {
 
 		DynamicQuery userDynamicQuery = this.newDynamicQuery(User.class);
 
-		userDynamicQuery.setProjection(
-			ProjectionFactoryUtil.property("userId"));
+		userDynamicQuery.setProjection(this.getPropertyProjection("userId"));
 
 		Property propertyDefaultUser = PropertyFactoryUtil.forName(
 			"defaultUser");

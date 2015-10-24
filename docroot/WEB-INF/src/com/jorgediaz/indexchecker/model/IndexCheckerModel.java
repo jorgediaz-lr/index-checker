@@ -177,7 +177,7 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
 
 		for (String attrib : indexedAttributes) {
-			projectionList.add(ProjectionFactoryUtil.property(attrib));
+			projectionList.add(this.getPropertyProjection(attrib));
 		}
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));

@@ -29,7 +29,7 @@ public class JournalArticle extends IndexCheckerModel {
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
 
 		for (String attrib : getIndexAttributes()) {
-			projectionList.add(ProjectionFactoryUtil.property(attrib));
+			projectionList.add(this.getPropertyProjection(attrib));
 		}
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
