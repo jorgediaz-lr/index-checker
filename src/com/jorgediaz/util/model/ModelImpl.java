@@ -118,7 +118,7 @@ public abstract class ModelImpl implements Model {
 		int[] types = new int[values.length];
 
 		for (int i = 0; i < values.length; i++) {
-			types[i] = (int)values[i][1];
+			types[i] = (Integer)values[i][1];
 		}
 
 		return types;
@@ -131,7 +131,7 @@ public abstract class ModelImpl implements Model {
 			return 0;
 		}
 
-		return (int)this.getAttributes()[pos][1];
+		return (Integer)this.getAttributes()[pos][1];
 	}
 
 	public String getClassName() {

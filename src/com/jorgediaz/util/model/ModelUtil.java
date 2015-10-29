@@ -102,7 +102,9 @@ public class ModelUtil {
 				try {
 					aux.put((Integer)field.get(null), field.getName());
 				}
-				catch (IllegalArgumentException | IllegalAccessException e) {
+				catch (IllegalArgumentException e) {
+				}
+				catch (IllegalAccessException e) {
 				}
 			}
 

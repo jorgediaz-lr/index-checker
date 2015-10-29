@@ -2,14 +2,12 @@ package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.model.ClassedModel;
-import com.liferay.portal.service.GroupLocalServiceUtil;
+import com.liferay.portal.model.Group;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.util.Arrays;
@@ -78,7 +76,6 @@ public class ModelFactory {
 	public Model getModelObject(Class<? extends ClassedModel> clazz) {
 
 		if ((clazz == null) || !ClassedModel.class.isAssignableFrom(clazz)) {
-
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Class: " + clazz.getName() + "is null or does not "+
@@ -163,26 +160,20 @@ public class ModelFactory {
 
 			return (List<?>)method.invoke(null, dynamicQuery);
 		}
-		catch (ClassNotFoundException | NoSuchMethodException e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"executeDynamicQuery: dynamicQuery method not found for " +
-					clazz.getName() + " - " + e.getMessage());
-			}
+		catch (Exception e) {
+			if (!clazz.equals(Group.class) &&
+				(e instanceof ClassNotFoundException ||
+				 e instanceof NoSuchMethodException)) {
 
-			try {
-				return (List<?>)GroupLocalServiceUtil.dynamicQuery(
-					dynamicQuery);
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"executeDynamicQuery: dynamicQuery method not found " +
+						"for " + clazz.getName() + " - " + e.getMessage() +
+						" trying with GroupLocalServiceUtil.dynamicQuery");
+				}
+
+				return executeDynamicQuery(Group.class, dynamicQuery);
 			}
-			catch (SystemException se) {
-				throw new RuntimeException(
-					"executeDynamicQuery: error executing " +
-						"GroupLocalServiceUtil.dynamicQuery for " +
-						clazz.getName(), se);
-			}
-		}
-		catch (IllegalAccessException | IllegalArgumentException
-			| InvocationTargetException e) {
 
 			String cause = "";
 			Throwable rootException = e.getCause();
@@ -209,16 +200,17 @@ public class ModelFactory {
 
 			return (ClassedModel)method.invoke(null, primaryKey);
 		}
-		catch (NoSuchMethodException | ClassNotFoundException
-			| SecurityException e) {
-
+		catch (ClassNotFoundException e) {
+			throw new RuntimeException(
+				"fetchObject: class not found exception calling fetch" +
+				clazz.getSimpleName() + " for " + clazz.getName(), e);
+		}
+		catch (NoSuchMethodException e) {
 			throw new RuntimeException(
 				"fetchObject: fetch" + clazz.getSimpleName() +
 				" method not found for " + clazz.getName(), e);
 		}
-		catch (IllegalAccessException | IllegalArgumentException
-			| InvocationTargetException e) {
-
+		catch (Exception e) {
 			String cause = "";
 			Throwable rootException = e.getCause();
 
