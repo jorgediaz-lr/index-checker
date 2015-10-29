@@ -9,6 +9,7 @@ import com.jorgediaz.util.model.ModelFactory;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
@@ -283,7 +284,8 @@ public class IndexChecker {
 			}
 		}
 
-		String listPK = IndexCheckerUtil.getListValues(valuesPK, maxLength);
+		String listPK = StringUtil.shorten(
+			StringUtil.merge(valuesPK), maxLength);
 		out.add(
 			"\tnumber of primary keys: "+valuesPK.size()+
 			"\n\tprimary keys values: ["+listPK+"]");
@@ -291,8 +293,8 @@ public class IndexChecker {
 		Set<Long> valuesRPKset = new HashSet<Long>(valuesRPK);
 
 		if (valuesRPKset.size()>0) {
-			String listRPK = IndexCheckerUtil.getListValues(
-				valuesRPKset, maxLength);
+			String listRPK = StringUtil.shorten(
+				StringUtil.merge(valuesRPKset), maxLength);
 			out.add(
 				"\tnumber of resource primary keys: "+ valuesRPKset.size()+
 				"\n\tresource primary keys values: ["+listRPK+"]");

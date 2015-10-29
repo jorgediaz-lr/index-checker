@@ -9,15 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 public class IndexCheckerResult {
 
 	public static IndexCheckerResult getIndexCheckResult(
 		IndexCheckerModel model, Set<Data> liferayData, Set<Data> indexData,
 		Set<ExecutionMode> executionMode) {
 
-		Data[] bothArrSetLiferay = IndexCheckerUtil.getBothDataArray(
+		Data[] bothArrSetLiferay = IndexCheckerResult.getBothDataArray(
 			liferayData, indexData);
-		Data[] bothArrSetIndex = IndexCheckerUtil.getBothDataArray(
+		Data[] bothArrSetIndex = IndexCheckerResult.getBothDataArray(
 			indexData, liferayData);
 
 		Set<Data> exactDataSetIndex = new HashSet<Data>();
@@ -156,6 +157,12 @@ public class IndexCheckerResult {
 		}
 
 		return out;
+	}
+
+	protected static Data[] getBothDataArray(Set<Data> set1, Set<Data> set2) {
+		Set<Data> both = new TreeSet<Data>(set1);
+		both.retainAll(set2);
+		return both.toArray(new Data[0]);
 	}
 
 	protected IndexCheckerResult(
