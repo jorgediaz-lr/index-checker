@@ -33,8 +33,8 @@ public class DLFileEntry extends IndexCheckerModel {
 				DLFileVersion.class, queryDLFileVersion);
 
 		for (Object[] result : results) {
-			long fileEntryId = (long)result[0];
-			int status = (int)result[1];
+			long fileEntryId = (Long)result[0];
+			int status = (Integer)result[1];
 
 			if ((status == WorkflowConstants.STATUS_APPROVED) ||
 				(status == WorkflowConstants.STATUS_IN_TRASH)) {

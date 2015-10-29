@@ -13,6 +13,10 @@ import jodd.bean.BeanUtil;
 import org.apache.lucene.document.DateTools;
 public class Data implements Comparable<Data> {
 
+	public static int compareLongs(long x, long y) {
+		return (x < y) ? -1 : ((x == y) ? 0 : 1);
+	}
+
 	public static boolean exactIntegers(Integer i1, Integer i2) {
 		if (i1 == null) {
 			return (i2 == null);
@@ -36,10 +40,10 @@ public class Data implements Comparable<Data> {
 	@Override
 	public int compareTo(Data data) {
 		if ((this.primaryKey != -1) && (data.primaryKey != -1)) {
-			return Long.compare(this.primaryKey, data.primaryKey);
+			return compareLongs(this.primaryKey, data.primaryKey);
 		}
 		else if ((this.resourcePrimKey != -1) && (data.resourcePrimKey != -1)) {
-			return Long.compare(this.resourcePrimKey, data.resourcePrimKey);
+			return compareLongs(this.resourcePrimKey, data.resourcePrimKey);
 		}
 		else {
 			return 0;
@@ -167,7 +171,7 @@ public class Data implements Comparable<Data> {
 
 	public void init(Object[] dataArray) {
 
-		this.setPrimaryKey((long)dataArray[0]);
+		this.setPrimaryKey((Long)dataArray[0]);
 
 		int i = 0;
 

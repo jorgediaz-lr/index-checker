@@ -63,7 +63,7 @@ public class JournalArticle extends IndexCheckerModel {
 		indexAllVersions = indexAllVersionsOld;
 
 		for (Object[] result : results) {
-			long pk = (long)result[0];
+			long pk = (Long)result[0];
 
 			if (!dataMap.containsKey(pk)) {
 				Data data = new Data(this);

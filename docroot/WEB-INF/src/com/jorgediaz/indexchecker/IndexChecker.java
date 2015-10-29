@@ -38,7 +38,7 @@ public class IndexChecker {
 		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
 
 		Map<Long, List<IndexCheckerResult>> resultDataMap =
-			new LinkedHashMap<>();
+			new LinkedHashMap<Long, List<IndexCheckerResult>>();
 
 		for (Model model : modelMap.values()) {
 			try {
@@ -324,7 +324,7 @@ public class IndexChecker {
 					indexData = new HashSet<Data>();
 				}
 
-				List<Group> listGroupAux = new ArrayList<>();
+				List<Group> listGroupAux = new ArrayList<Group>();
 				listGroupAux.add(group);
 
 				IndexCheckerResult data =
@@ -356,7 +356,7 @@ public class IndexChecker {
 			Set<Data> indexData, Set<ExecutionMode> executionMode)
 		throws Exception {
 
-		List<Long> listGroupId = new ArrayList<>();
+		List<Long> listGroupId = new ArrayList<Long>();
 
 		for (Group group : groups) {
 			listGroupId.add(group.getGroupId());

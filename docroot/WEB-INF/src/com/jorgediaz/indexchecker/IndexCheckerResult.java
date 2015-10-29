@@ -114,7 +114,7 @@ public class IndexCheckerResult {
 		Set<Data> notExactDataSetIndex = this.getIndexNotExactData();
 		Set<Data> liferayOnlyData = this.getLiferayOnlyData();
 
-		Set<Data> objectsToReindex = new HashSet<>();
+		Set<Data> objectsToReindex = new HashSet<Data>();
 
 		if (exactDataSetIndex != null) {
 			objectsToReindex.addAll(exactDataSetIndex);
