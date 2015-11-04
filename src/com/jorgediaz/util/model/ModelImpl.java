@@ -11,11 +11,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.GroupedModel;
+import com.liferay.portal.security.permission.ResourceActionsUtil;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 public abstract class ModelImpl implements Model {
 
 	public Model clone() {
@@ -136,6 +139,23 @@ public abstract class ModelImpl implements Model {
 
 	public String getClassName() {
 		return modelClass.getName();
+	}
+
+	public String getDisplayName(Locale locale) {
+		String displayName = ResourceActionsUtil.getModelResource(
+			locale, getClassName());
+
+		if (displayName.startsWith(
+				ResourceActionsUtil.getModelResourceNamePrefix())) {
+
+			return StringPool.BLANK;
+		}
+
+		if (Validator.isNull(this.suffix)) {
+			return displayName;
+		}
+
+		return displayName + " (" + suffix + ")";
 	}
 
 	public Criterion getFilter() {
@@ -347,7 +367,8 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public void setNameSuffix(String suffix) {
-		this.name = getClassName() + "_" + suffix;
+		this.suffix = suffix;
+		this.name = getClassName() + "_" + this.suffix;
 	}
 
 	public String toString() {
@@ -430,6 +451,7 @@ public abstract class ModelImpl implements Model {
 	protected String primaryKeyAttribute = null;
 
 	protected String[] primaryKeyMultiAttribute = null;
+	protected String suffix = null;
 
 	private static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 

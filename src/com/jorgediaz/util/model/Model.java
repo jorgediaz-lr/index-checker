@@ -8,6 +8,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.model.ClassedModel;
 
 import java.util.List;
+import java.util.Locale;
 public interface Model extends Cloneable {
 
 	public Model clone();
@@ -35,6 +36,8 @@ public interface Model extends Cloneable {
 	public int getAttributeType(String name);
 
 	public String getClassName();
+
+	public String getDisplayName(Locale locale);
 
 	public Criterion getFilter();
 
