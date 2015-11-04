@@ -3,6 +3,8 @@ package com.jorgediaz.indexchecker.index;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
@@ -57,8 +59,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 			}
 		}
 		catch (Exception e) {
-			System.err.println(
-				"\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+			_log.error("EXCEPTION: " + e.getClass() + " - " + e.getMessage(),e);
 		}
 
 		return indexData;
@@ -110,8 +111,8 @@ public class IndexWrapperSearch extends IndexWrapper {
 			}
 		}
 		catch (Exception e) {
-			System.err.println(
-				"\t" + "EXCEPTION: " + e.getClass() + " - " + e.getMessage());
+			_log.error(
+				"EXCEPTION: " + e.getClass() + " - " + e.getMessage(), e);
 		}
 
 		return indexData;
@@ -131,6 +132,8 @@ public class IndexWrapperSearch extends IndexWrapper {
 	public int numDocs() {
 		return -1;
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(IndexWrapperSearch.class);
 
 	private long companyId;
 

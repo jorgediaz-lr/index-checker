@@ -11,6 +11,8 @@ import com.jorgediaz.util.model.ModelUtil;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -381,15 +383,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				outputScript.add("COMPANY: "+company);
 
-				if (executionMode.contains(
+				if (_log.isInfoEnabled() &&
+					executionMode.contains(
 						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 
-					System.out.println("COMPANY: "+company);
+					_log.info("COMPANY: "+company);
 				}
 
 				outputScript.add(StringPool.BLANK);
 
-				/* TODO QUITAR EN EL OUTPUT EL CODIGO DE REINDEX!! */
 				outputScript.addAll(
 					IndexChecker.generateOutput(
 						outputMaxLength, executionMode, resultDataMap));
@@ -440,5 +442,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		return executionMode;
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
 
 }

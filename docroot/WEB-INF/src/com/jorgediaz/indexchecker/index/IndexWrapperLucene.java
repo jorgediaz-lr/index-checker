@@ -3,6 +3,9 @@ package com.jorgediaz.indexchecker.index;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,8 +34,8 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 				}
 			}
 			catch (Exception e) {
-				System.err.println(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
+				_log.error(
+					"EXCEPTION: " + e.getClass() + " - " +
 						e.getMessage());
 			}
 		}
@@ -73,9 +76,9 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 				}
 			}
 			catch (Exception e) {
-				System.err.println(
-					"\t" + "EXCEPTION: " + e.getClass() + " - " +
-						e.getMessage());
+				_log.error(
+					"EXCEPTION: " + e.getClass() + " - " +
+						e.getMessage(), e);
 			}
 		}
 
@@ -93,5 +96,7 @@ public abstract class IndexWrapperLucene extends IndexWrapper {
 	protected abstract int maxDoc();
 
 	protected Object index = null;
+
+	private static Log _log = LogFactoryUtil.getLog(IndexWrapperLucene.class);
 
 }

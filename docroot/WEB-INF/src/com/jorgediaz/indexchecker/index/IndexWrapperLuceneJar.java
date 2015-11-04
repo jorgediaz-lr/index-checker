@@ -1,5 +1,8 @@
 package com.jorgediaz.indexchecker.index;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +20,7 @@ public class IndexWrapperLuceneJar extends IndexWrapperLucene {
 					companyId);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 
@@ -38,7 +41,7 @@ public class IndexWrapperLuceneJar extends IndexWrapperLucene {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 
@@ -64,7 +67,7 @@ public class IndexWrapperLuceneJar extends IndexWrapperLucene {
 			return new DocumentWrapperLucene(((IndexReader)index).document(i));
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -86,5 +89,8 @@ public class IndexWrapperLuceneJar extends IndexWrapperLucene {
 
 		return ((IndexReader)index).maxDoc();
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(
+		IndexWrapperLuceneJar.class);
 
 }

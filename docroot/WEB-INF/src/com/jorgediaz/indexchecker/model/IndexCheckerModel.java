@@ -12,6 +12,8 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -102,7 +104,7 @@ public abstract class IndexCheckerModel extends ModelImpl {
 			model.indexedAttributes = ListUtil.copy(this.indexedAttributes);
 		}
 		catch (Exception e) {
-			System.err.println("Error executing clone");
+			_log.error("Error executing clone");
 			throw new RuntimeException(e);
 		}
 
@@ -124,7 +126,10 @@ public abstract class IndexCheckerModel extends ModelImpl {
 			}
 			catch (SearchException e) {
 				errors.put(data, e.getClass() + " - " + e.getMessage());
-				e.printStackTrace(); /*TODO Revisar trazas ?debug?*/
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(e.getClass() + " - " + e.getMessage(), e);
+				}
 			}
 
 			/* Reindex object, perhaps we deleted it by error */
@@ -253,7 +258,10 @@ public abstract class IndexCheckerModel extends ModelImpl {
 			}
 			catch (SearchException e) {
 				errors.put(data, e.getClass() + " - " + e.getMessage());
-				e.printStackTrace(); /*TODO Revisar trazas ?debug?*/
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(e.getClass() + " - " + e.getMessage(), e);
+				}
 			}
 		}
 
@@ -293,6 +301,8 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 		indexedAttributes.add(0, col);
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);
 
 	private List<String> indexedAttributes = null;
 

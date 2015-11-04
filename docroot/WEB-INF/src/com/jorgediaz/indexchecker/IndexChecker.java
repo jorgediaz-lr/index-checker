@@ -9,6 +9,8 @@ import com.jorgediaz.util.model.ModelFactory;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -47,12 +49,12 @@ public class IndexChecker {
 					icModel = (IndexCheckerModel)model;
 				}
 				catch (Exception e) {
-					/* TODO DEBUG */
-					System.err.println(
-						"Model: " + model.getName() + " EXCEPTION: " +
-							e.getClass() + " - " + e.getMessage());
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Model: " + model.getName() + " EXCEPTION: " +
+								e.getClass() + " - " + e.getMessage(), e);
+					}
 
-					e.printStackTrace();
 					icModel = null;
 				}
 
@@ -79,10 +81,9 @@ public class IndexChecker {
 				}
 			}
 			catch (Exception e) {
-				System.err.println(
+				_log.error(
 					"Model: " + model.getName() + " EXCEPTION: " +
-						e.getClass() + " - " + e.getMessage());
-				e.printStackTrace();
+						e.getClass() + " - " + e.getMessage(),e);
 			}
 		}
 
@@ -152,12 +153,13 @@ public class IndexChecker {
 				out.add("GROUP: " + groupTitle);
 				out.add("---------------");
 
-				if (executionMode.contains(
+				if (_log.isInfoEnabled() &&
+					executionMode.contains(
 						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 
-					System.out.println("\n---------------");
-					System.out.println("GROUP: " + groupTitle);
-					System.out.println("---------------");
+					_log.info("\n---------------");
+					_log.info("GROUP: " + groupTitle);
+					_log.info("---------------");
 				}
 			}
 
@@ -169,11 +171,11 @@ public class IndexChecker {
 				IndexCheckerModel model = result.getModel();
 				out.add("*** ClassName["+ i +"]: "+ model.getName());
 
-				if (executionMode.contains(
+				if (_log.isInfoEnabled() &&
+					executionMode.contains(
 						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 
-					System.out.println(
-						"*** ClassName["+ i +"]: "+ model.getName());
+					_log.info("*** ClassName["+ i +"]: "+ model.getName());
 				}
 
 				out.addAll(dumpData(result, maxLength, executionMode));
@@ -204,17 +206,20 @@ public class IndexChecker {
 			out.addAll(
 				dumpData(model.getName(), exactDataSetLiferay, maxLength));
 
-			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-				System.out.println("==both-exact(index)==");
+			if (_log.isInfoEnabled() &&
+				executionMode.contains(
+					ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+				_log.info("==both-exact(index)==");
 
 				for (Data d : exactDataSetIndex) {
-					System.out.println(d.getAllData(","));
+					_log.info(d.getAllData(","));
 				}
 
-				System.out.println("==both-exact(liferay)==");
+				_log.info("==both-exact(liferay)==");
 
 				for (Data d : exactDataSetLiferay) {
-					System.out.println(d.getAllData(","));
+					_log.info(d.getAllData(","));
 				}
 			}
 		}
@@ -224,17 +229,20 @@ public class IndexChecker {
 			out.addAll(
 				dumpData(model.getName(), notExactDataSetIndex, maxLength));
 
-			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-				System.out.println("==both-notexact(index)==");
+			if (_log.isInfoEnabled() &&
+				executionMode.contains(
+					ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+				_log.info("==both-notexact(index)==");
 
 				for (Data d : notExactDataSetIndex) {
-					System.out.println(d.getAllData(","));
+					_log.info(d.getAllData(","));
 				}
 
-				System.out.println("==both-notexact(liferay)==");
+				_log.info("==both-notexact(liferay)==");
 
 				for (Data d : notExactDataSetLiferay) {
-					System.out.println(d.getAllData(","));
+					_log.info(d.getAllData(","));
 				}
 			}
 		}
@@ -243,11 +251,14 @@ public class IndexChecker {
 			out.add("==only liferay==");
 			out.addAll(dumpData(model.getName(), liferayOnlyData, maxLength));
 
-			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-				System.out.println("==only liferay==");
+			if (_log.isInfoEnabled() &&
+				executionMode.contains(
+					ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+				_log.info("==only liferay==");
 
 				for (Data d : liferayOnlyData) {
-					System.out.println(d.getAllData(","));
+					_log.info(d.getAllData(","));
 				}
 			}
 		}
@@ -256,11 +267,14 @@ public class IndexChecker {
 			out.add("==only index==");
 			out.addAll(dumpData(model.getName(), indexOnlyData, maxLength));
 
-			if (executionMode.contains(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-				System.out.println("==only index==");
+			if (_log.isInfoEnabled() &&
+				executionMode.contains(
+					ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+				_log.info("==only index==");
 
 				for (Data d : indexOnlyData) {
-					System.out.println(d.getAllData(","));
+					_log.info(d.getAllData(","));
 				}
 			}
 		}
@@ -386,14 +400,15 @@ public class IndexChecker {
 					long.class).newInstance(company.getCompanyId());
 		}
 		catch (Exception e) {
-			System.err.println(
-				"\t" + "EXCEPTION: " + e.getClass() + " - " +
+			_log.error(
+				"EXCEPTION: " + e.getClass() + " - " +
 					e.getMessage());
-			e.printStackTrace();
 			throw new SystemException(e);
 		}
 
 		return indexWrapper;
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(IndexChecker.class);
 
 }

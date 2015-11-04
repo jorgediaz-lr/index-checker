@@ -1,5 +1,7 @@
 package com.jorgediaz.indexchecker.index;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.PortalClassInvoker;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -17,7 +19,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 				companyId);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 
@@ -40,7 +42,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 			document = indexReaderClass.getMethod("document", int.class);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -68,7 +70,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 
@@ -85,7 +87,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 			return (Integer)numDocs.invoke(index);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -118,7 +120,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 				document.invoke(index, i));
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -133,7 +135,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 			return (Boolean)isDeleted.invoke(index, i);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -148,7 +150,7 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 			return (Integer)maxDoc.invoke(index);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			_log.error("Error: " + e.getClass() + " - " + e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -162,5 +164,8 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 	protected Class<?> termClass = null;
 	protected Class<?> termEnumClass = null;
 	protected Method terms = null;
+
+	private static Log _log = LogFactoryUtil.getLog(
+		IndexWrapperLuceneReflection.class);
 
 }
