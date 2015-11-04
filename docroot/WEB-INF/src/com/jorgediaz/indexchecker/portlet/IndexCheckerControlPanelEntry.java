@@ -1,4 +1,4 @@
-package com.test;
+package com.jorgediaz.indexchecker.portlet;
 
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.security.permission.PermissionChecker;

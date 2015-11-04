@@ -1,4 +1,4 @@
-package com.test;
+package com.jorgediaz.indexchecker.portlet;
 
 import com.jorgediaz.indexchecker.ExecutionMode;
 import com.jorgediaz.indexchecker.IndexChecker;

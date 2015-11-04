@@ -4,7 +4,7 @@
 	<portlet>
 		<portlet-name>index_checker</portlet-name>
 		<display-name>Index Checker</display-name>
-		<portlet-class>com.test.IndexCheckerPortlet</portlet-class>
+		<portlet-class>com.jorgediaz.indexchecker.portlet.IndexCheckerPortlet</portlet-class>
 		<init-param>
 			<name>view-template</name>
 			<value>/html/indexchecker/view.jsp</value>
