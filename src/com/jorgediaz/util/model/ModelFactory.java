@@ -369,7 +369,7 @@ public class ModelFactory {
 			SecurityException {
 
 		String key =
-			clazz.getName() + "#" +  methodName + "#" + parameterType.getName();
+			clazz.getName() + "#" + methodName + "#" + parameterType.getName();
 
 		Method method = null;
 
