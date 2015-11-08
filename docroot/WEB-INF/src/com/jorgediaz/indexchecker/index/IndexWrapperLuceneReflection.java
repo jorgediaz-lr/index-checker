@@ -103,9 +103,8 @@ public class IndexWrapperLuceneReflection extends IndexWrapperLucene {
 		Class<?> luceneHelperUtil =
 			PortalClassLoaderUtil.getClassLoader().loadClass(
 				"com.liferay.portal.search.lucene.LuceneHelperUtil");
-		MethodKey getIndexSearcher1 = new MethodKey(
+		MethodKey getIndexSearcher = new MethodKey(
 			luceneHelperUtil,"getIndexSearcher", long.class);
-		MethodKey getIndexSearcher = getIndexSearcher1;
 		return PortalClassInvoker.invoke(false, getIndexSearcher, companyId);
 	}
 
