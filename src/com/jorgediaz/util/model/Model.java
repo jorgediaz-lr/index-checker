@@ -11,7 +11,21 @@ import java.util.List;
 import java.util.Locale;
 public interface Model extends Cloneable {
 
+	public ClassedModel addObject(ClassedModel object);
+
 	public Model clone();
+
+	public ClassedModel createObject(
+		Class<? extends ClassedModel> clazz, long primaryKey);
+
+	public ClassedModel createObject(long primaryKey);
+
+	public ClassedModel deleteObject(
+		Class<? extends ClassedModel> clazz, long primaryKey);
+
+	public ClassedModel deleteObject(ClassedModel object);
+
+	public ClassedModel deleteObject(long primaryKey);
 
 	public List<?> executeDynamicQuery(
 		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery)
@@ -85,5 +99,7 @@ public interface Model extends Cloneable {
 	public void setFilter(Criterion filter);
 
 	public void setNameSuffix(String suffix);
+
+	public ClassedModel updateObject(ClassedModel object);
 
 }

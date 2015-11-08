@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Locale;
 public abstract class ModelImpl implements Model {
 
+	public ClassedModel addObject(ClassedModel object) {
+		return modelFactory.addObject(object);
+	}
+
 	public Model clone() {
 		ModelImpl model;
 		try {
@@ -38,6 +42,30 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return model;
+	}
+
+	public ClassedModel createObject(
+		Class<? extends ClassedModel> clazz, long primaryKey) {
+
+		return modelFactory.createObject(clazz, primaryKey);
+	}
+
+	public ClassedModel createObject(long primaryKey) {
+		return modelFactory.createObject(this.modelClass, primaryKey);
+	}
+
+	public ClassedModel deleteObject(
+		Class<? extends ClassedModel> clazz, long primaryKey) {
+
+		return modelFactory.deleteObject(clazz, primaryKey);
+	}
+
+	public ClassedModel deleteObject(ClassedModel object) {
+		return modelFactory.deleteObject(object);
+	}
+
+	public ClassedModel deleteObject(long primaryKey) {
+		return modelFactory.deleteObject(this.modelClass, primaryKey);
 	}
 
 	public List<?> executeDynamicQuery(
@@ -373,6 +401,10 @@ public abstract class ModelImpl implements Model {
 
 	public String toString() {
 		return getName();
+	}
+
+	public ClassedModel updateObject(ClassedModel object) {
+		return modelFactory.updateObject(object);
 	}
 
 	protected String getCreateTableAttributes() {

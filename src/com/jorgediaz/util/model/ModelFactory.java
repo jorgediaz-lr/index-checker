@@ -42,6 +42,34 @@ public class ModelFactory {
 		this.modelClassMap = modelClassMap;
 	}
 
+	@SuppressWarnings("unchecked")
+	public ClassedModel addObject(ClassedModel object) {
+
+		return executeOperation(
+			(Class<? extends ClassedModel>)object.getModelClass(), "add",
+			object.getModelClass(), object);
+	}
+
+	public ClassedModel createObject(
+		Class<? extends ClassedModel> clazz, long primaryKey) {
+
+		return executeOperation(clazz, "create", long.class, primaryKey);
+	}
+
+	public ClassedModel deleteObject(
+		Class<? extends ClassedModel> clazz, long primaryKey) {
+
+		return executeOperation(clazz, "delete", long.class, primaryKey);
+	}
+
+	@SuppressWarnings("unchecked")
+	public ClassedModel deleteObject(ClassedModel object) {
+
+		return executeOperation(
+			(Class<? extends ClassedModel>)object.getModelClass(), "delete",
+			object.getModelClass(), object);
+	}
+
 	public Map<String, Model> getModelMap(Collection<String> classNames) {
 
 		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
@@ -148,11 +176,20 @@ public class ModelFactory {
 		return getModelObject(clazz);
 	}
 
+	@SuppressWarnings("unchecked")
+	public ClassedModel updateObject(ClassedModel object) {
+
+		return executeOperation(
+			(Class<? extends ClassedModel>)object.getModelClass(), "update",
+			object.getModelClass(), object);
+	}
+
 	protected List<?> executeDynamicQuery(
 		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery) {
 
 		try {
-			Method method = getExecuteDynamicQueryMethod(clazz);
+			Method method = getLocalServiceUtilMethod(
+				clazz, "dynamicQuery", DynamicQuery.class);
 
 			if (method == null) {
 				return null;
@@ -188,26 +225,29 @@ public class ModelFactory {
 		}
 	}
 
-	protected ClassedModel fetchObject(
-		Class<? extends ClassedModel> clazz, long primaryKey) {
+	protected ClassedModel executeOperation(
+		Class<? extends ClassedModel> clazz, String operation,
+		Class<?> parameterType, Object arg) {
 
 		try {
-			Method method = getFetchObjectMethod(clazz);
+			Method method = getLocalServiceUtilMethod(
+				clazz, operation + clazz.getSimpleName(), parameterType);
 
 			if (method == null) {
 				return null;
 			}
 
-			return (ClassedModel)method.invoke(null, primaryKey);
+			return (ClassedModel)method.invoke(null, arg);
 		}
 		catch (ClassNotFoundException e) {
 			throw new RuntimeException(
-				"fetchObject: class not found exception calling fetch" +
-				clazz.getSimpleName() + " for " + clazz.getName(), e);
+				"executeOperation: class not found exception calling " +
+				operation + clazz.getSimpleName() + " for " + clazz.getName(),
+				e);
 		}
 		catch (NoSuchMethodException e) {
 			throw new RuntimeException(
-				"fetchObject: fetch" + clazz.getSimpleName() +
+				"executeOperation: " + operation + clazz.getSimpleName() +
 				" method not found for " + clazz.getName(), e);
 		}
 		catch (Exception e) {
@@ -219,9 +259,15 @@ public class ModelFactory {
 			}
 
 			throw new RuntimeException(
-				"fetchObject: fetch" + clazz.getSimpleName() + " method for " +
-				clazz.getName() + cause, e);
+				"executeOperation: " + operation + clazz.getSimpleName() +
+				" method for " + clazz.getName() + cause, e);
 		}
+	}
+
+	protected ClassedModel fetchObject(
+		Class<? extends ClassedModel> clazz, long primaryKey) {
+
+		return executeOperation(clazz, "fetch", long.class, primaryKey);
 	}
 
 	protected Object[][] getDatabaseAttributesArr(
@@ -316,17 +362,20 @@ public class ModelFactory {
 		return tableAttributes;
 	}
 
-	protected Method getExecuteDynamicQueryMethod(
-		Class<? extends ClassedModel> clazz)
+	protected Method getLocalServiceUtilMethod(
+		Class<? extends ClassedModel> clazz, String methodName,
+		Class <?> parameterType)
 			throws ClassNotFoundException, NoSuchMethodException,
 			SecurityException {
 
+		String key =
+			clazz.getName() + "#" +  methodName + "#" + parameterType.getName();
+
 		Method method = null;
 
-		if (executeDynamicQueryMethods.containsKey(clazz.getName())) {
+		if (localServiceUtilMethods.containsKey(key)) {
 			try {
-				method = executeDynamicQueryMethods.get(
-					clazz.getName()).getMethod();
+				method = localServiceUtilMethods.get(key).getMethod();
 			}
 			catch (NoSuchMethodException e) {
 			}
@@ -340,56 +389,15 @@ public class ModelFactory {
 					javaClasses, classLoader, localServiceUtil);
 
 			if (localServiceUtil != null) {
-				method =
-					classLocalServiceUtil.getMethod(
-						"dynamicQuery", DynamicQuery.class);
+				method = classLocalServiceUtil.getMethod(
+					methodName, parameterType);
 			}
 
 			if (method == null) {
-				executeDynamicQueryMethods.put(
-					clazz.getName(), new MethodKey());
+				localServiceUtilMethods.put(key, new MethodKey());
 			}
 			else {
-				executeDynamicQueryMethods.put(clazz.getName(), new MethodKey(
-					method));
-			}
-		}
-
-		return method;
-	}
-
-	protected Method getFetchObjectMethod(Class<? extends ClassedModel> clazz)
-		throws ClassNotFoundException, NoSuchMethodException,
-		SecurityException {
-
-		Method method = null;
-
-		if (fetchObjectMethods.containsKey(clazz.getName())) {
-			try {
-				method = fetchObjectMethods.get(clazz.getName()).getMethod();
-			}
-			catch (NoSuchMethodException e) {
-			}
-		}
-
-		if (method == null) {
-			String localServiceUtil =
-				ModelUtil.getLiferayLocalServiceUtilClassName(clazz);
-			Class<?> classLocalServiceUtil =
-				ModelUtil.getJavaClass(
-					javaClasses, classLoader, localServiceUtil);
-
-			if (localServiceUtil != null) {
-				method =
-					classLocalServiceUtil.getMethod(
-						"fetch" + clazz.getSimpleName(), long.class);
-			}
-
-			if (method == null) {
-				fetchObjectMethods.put(clazz.getName(), new MethodKey());
-			}
-			else {
-				fetchObjectMethods.put(clazz.getName(), new MethodKey(method));
+				localServiceUtilMethods.put(key, new MethodKey(method));
 			}
 		}
 
@@ -408,11 +416,9 @@ public class ModelFactory {
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 
-	private Map<String, MethodKey> executeDynamicQueryMethods =
-		new ConcurrentHashMap<String, MethodKey>();
-	private Map<String, MethodKey> fetchObjectMethods =
-		new ConcurrentHashMap<String, MethodKey>();
 	private Map<String, Class<?>> javaClasses =
 		new ConcurrentHashMap<String, Class<?>>();
+	private Map<String, MethodKey> localServiceUtilMethods =
+		new ConcurrentHashMap<String, MethodKey>();
 
 }
