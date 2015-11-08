@@ -10,6 +10,7 @@ import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import java.sql.Types;
 
@@ -170,6 +171,27 @@ public class ModelUtil {
 		}
 
 		return data;
+	}
+
+	public static void makeFieldModifiable(Field nameField)
+		throws NoSuchFieldException, SecurityException,
+			IllegalArgumentException, IllegalAccessException {
+
+		nameField.setAccessible(true);
+		int modifiers = nameField.getModifiers();
+		Field modifierField =
+			nameField.getClass().getDeclaredField("modifiers");
+		modifiers = modifiers & ~Modifier.FINAL;
+		modifierField.setAccessible(true);
+		modifierField.setInt(nameField, modifiers);
+	}
+
+	public static void setFieldValue(Object owner, Field field, Object value)
+		throws IllegalArgumentException, IllegalAccessException,
+			NoSuchFieldException, SecurityException {
+
+		makeFieldModifiable(field);
+		field.set(owner, value);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
