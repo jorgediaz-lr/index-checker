@@ -2,6 +2,7 @@ package com.jorgediaz.indexchecker.index;
 
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
+import com.jorgediaz.util.model.ModelUtil;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -12,6 +13,8 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
+import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,10 +39,13 @@ public class IndexWrapperSearch extends IndexWrapper {
 		contextQuery.addRequiredTerm(
 			Field.ENTRY_CLASS_NAME, model.getClassName());
 
-		try {
-			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
+		int indexSearchLimit = -1;
 
-			Document[] docs = hits.getDocs();
+		try {
+			indexSearchLimit = getIndexSearchLimit();
+
+			Document[] docs = executeSearch(
+				searchContext, contextQuery, 1000000);
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
@@ -60,6 +66,20 @@ public class IndexWrapperSearch extends IndexWrapper {
 		}
 		catch (Exception e) {
 			_log.error("EXCEPTION: " + e.getClass() + " - " + e.getMessage(),e);
+		}
+		finally {
+			if (indexSearchLimit != -1) {
+				try {
+					setIndexSearchLimit(indexSearchLimit);
+				}
+				catch (Exception e) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Error restoring INDEX_SEARCH_LIMIT: " +
+								e.getMessage(), e);
+					}
+				}
+			}
 		}
 
 		return indexData;
@@ -130,7 +150,50 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 	@Override
 	public int numDocs() {
+
+		// TODO Pendiente
+
 		return -1;
+	}
+
+	protected Document[] executeSearch(
+			SearchContext searchContext, BooleanQuery contextQuery, int step)
+		throws Exception, SearchException {
+
+		for (int i = 1;; i++) {
+			setIndexSearchLimit(step*i);
+
+			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
+
+			Document[] docs = hits.getDocs();
+
+			if (docs.length < step*i) {
+				return docs;
+			}
+		}
+	}
+
+	protected int getIndexSearchLimit() throws Exception {
+		Class<?> propsValues =
+			PortalClassLoaderUtil.getClassLoader().loadClass(
+				"com.liferay.portal.util.PropsValues");
+
+		java.lang.reflect.Field indexSearchLimitFiled =
+			propsValues.getDeclaredField("INDEX_SEARCH_LIMIT");
+
+		return (Integer)indexSearchLimitFiled.get(null);
+	}
+
+	protected void setIndexSearchLimit(int indexSearchLimit) throws Exception {
+		Class<?> propsValues =
+			PortalClassLoaderUtil.getClassLoader().loadClass(
+				"com.liferay.portal.util.PropsValues");
+
+		/* TODO: Los plugins de SOLR usan otra constante propia!!! */
+
+		java.lang.reflect.Field indexSearchLimitFiled =
+			propsValues.getDeclaredField("INDEX_SEARCH_LIMIT");
+		ModelUtil.setFieldValue(null, indexSearchLimitFiled, indexSearchLimit);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexWrapperSearch.class);
