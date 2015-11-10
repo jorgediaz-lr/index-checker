@@ -119,10 +119,22 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 		Map<Data, String> errors = new HashMap<Data, String>();
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Deleting " + dataCollection.size() + " objects of type " +
+					this.getClassName());
+		}
+
+		int i = 0;
+
 		for (Data data : dataCollection) {
 			/* Delete object from index */
 			try {
 				this.delete(data);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("Deleting " + (i++) + " uid: " + data.getUid());
+				}
 			}
 			catch (SearchException e) {
 				errors.put(data, e.getClass() + " - " + e.getMessage());
@@ -252,9 +264,22 @@ public abstract class IndexCheckerModel extends ModelImpl {
 
 		Map<Data, String> errors = new HashMap<Data, String>();
 
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Reindexing " + dataCollection.size() + " objects of type " +
+					this.getClassName());
+		}
+
+		int i = 0;
+
 		for (Data data : dataCollection) {
 			try {
 				this.reindex(data);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Reindexing " + (i++) + " pk: " + data.getPrimaryKey());
+				}
 			}
 			catch (SearchException e) {
 				errors.put(data, e.getClass() + " - " + e.getMessage());

@@ -63,20 +63,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String indexWrapperClassName = ParamUtil.getString(
 			request, "indexWrapperClassName");
 
-		Class<? extends IndexWrapper> indexWrapperClass;
-
-		if ("LuceneJar".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneJar.class;
-		}
-		else if ("LuceneReflection".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
-		else if ("Search".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperSearch.class;
-		}
-		else {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
+		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
+			indexWrapperClassName);
 
 		List<String> outputScript = new ArrayList<String>();
 
@@ -118,20 +106,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String indexWrapperClassName = ParamUtil.getString(
 			request, "indexWrapperClassName");
 
-		Class<? extends IndexWrapper> indexWrapperClass;
-
-		if ("LuceneJar".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneJar.class;
-		}
-		else if ("LuceneReflection".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
-		else if ("Search".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperSearch.class;
-		}
-		else {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
+		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
+			indexWrapperClassName);
 
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
@@ -172,7 +148,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						indexWrapperClass, company, groups, classNames,
 						executionMode);
 
-				outputScript.add("COMPANY: "+company);
+				outputScript.add("COMPANY: " + company);
 
 				outputScript.add(StringPool.BLANK);
 
@@ -214,20 +190,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String indexWrapperClassName = ParamUtil.getString(
 			request, "indexWrapperClassName");
 
-		Class<? extends IndexWrapper> indexWrapperClass;
-
-		if ("LuceneJar".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneJar.class;
-		}
-		else if ("LuceneReflection".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
-		else if ("Search".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperSearch.class;
-		}
-		else {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
+		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
+			indexWrapperClassName);
 
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
@@ -309,20 +273,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String indexWrapperClassName = ParamUtil.getString(
 			request, "indexWrapperClassName");
 
-		Class<? extends IndexWrapper> indexWrapperClass;
-
-		if ("LuceneJar".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneJar.class;
-		}
-		else if ("LuceneReflection".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
-		else if ("Search".equals(indexWrapperClassName)) {
-			indexWrapperClass = IndexWrapperSearch.class;
-		}
-		else {
-			indexWrapperClass = IndexWrapperLuceneReflection.class;
-		}
+		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
+			indexWrapperClassName);
 
 		int outputMaxLength = ParamUtil.getInteger(request, "outputMaxLength");
 
@@ -441,6 +393,23 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return executionMode;
+	}
+
+	protected Class<? extends IndexWrapper> getIndexWrapper(
+		String indexWrapperClassName) {
+
+		if ("LuceneJar".equals(indexWrapperClassName)) {
+			return IndexWrapperLuceneJar.class;
+		}
+		else if ("LuceneReflection".equals(indexWrapperClassName)) {
+			return IndexWrapperLuceneReflection.class;
+		}
+		else if ("Search".equals(indexWrapperClassName)) {
+			return IndexWrapperSearch.class;
+		}
+		else {
+			return IndexWrapperLuceneReflection.class;
+		}
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
