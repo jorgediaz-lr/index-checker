@@ -45,7 +45,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 			indexSearchLimit = getIndexSearchLimit();
 
 			Document[] docs = executeSearch(
-				searchContext, contextQuery, 1000000);
+				searchContext, contextQuery, 50000, 200000);
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
@@ -157,17 +157,22 @@ public class IndexWrapperSearch extends IndexWrapper {
 	}
 
 	protected Document[] executeSearch(
-			SearchContext searchContext, BooleanQuery contextQuery, int step)
+			SearchContext searchContext, BooleanQuery contextQuery, int start,
+			int step)
 		throws Exception, SearchException {
 
-		for (int i = 1;; i++) {
-			setIndexSearchLimit(step*i);
+		for (int i = 0;; i++) {
+			if (_log.isInfoEnabled()) {
+				_log.info("SetIndexSearchLimit: " + (start + step*i));
+			}
+
+			setIndexSearchLimit(start + step*i);
 
 			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
 
 			Document[] docs = hits.getDocs();
 
-			if (docs.length < step*i) {
+			if (docs.length < (start + step*i)) {
 				return docs;
 			}
 		}
