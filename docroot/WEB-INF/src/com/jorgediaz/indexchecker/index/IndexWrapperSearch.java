@@ -162,8 +162,8 @@ public class IndexWrapperSearch extends IndexWrapper {
 		throws Exception, SearchException {
 
 		for (int i = 0;; i++) {
-			if (_log.isInfoEnabled()) {
-				_log.info("SetIndexSearchLimit: " + (start + step*i));
+			if (_log.isDebugEnabled()) {
+				_log.debug("SetIndexSearchLimit: " + (start + step*i));
 			}
 
 			setIndexSearchLimit(start + step*i);
