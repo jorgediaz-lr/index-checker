@@ -194,11 +194,33 @@ public class IndexWrapperSearch extends IndexWrapper {
 			PortalClassLoaderUtil.getClassLoader().loadClass(
 				"com.liferay.portal.util.PropsValues");
 
-		/* TODO: Los plugins de SOLR usan otra constante propia!!! */
-
-		java.lang.reflect.Field indexSearchLimitFiled =
+		java.lang.reflect.Field indexSearchLimitField =
 			propsValues.getDeclaredField("INDEX_SEARCH_LIMIT");
-		ModelUtil.setFieldValue(null, indexSearchLimitFiled, indexSearchLimit);
+
+		ModelUtil.setFieldValue(null, indexSearchLimitField, indexSearchLimit);
+
+		try {
+			ClassLoader classLoader = ModelUtil.getClassLoader();
+
+			Class<?> solrIndexSearcher = classLoader.loadClass(
+				"com.liferay.portal.search.solr.SolrIndexSearcher");
+
+			if (solrIndexSearcher != null) {
+				java.lang.reflect.Field solrIndexSearchLimitField =
+					solrIndexSearcher.getDeclaredField("INDEX_SEARCH_LIMIT");
+
+				if (solrIndexSearchLimitField != null) {
+					ModelUtil.setFieldValue(
+						null, solrIndexSearchLimitField, indexSearchLimit);
+				}
+			}
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"EXCEPTION: " + e.getClass() + " - " + e.getMessage(), e);
+			}
+		}
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexWrapperSearch.class);
