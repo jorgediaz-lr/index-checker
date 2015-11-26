@@ -30,8 +30,6 @@ public class ModelFactory {
 		Class<? extends Model> defaultModelClass,
 		Map<String, Class<? extends Model>> modelClassMap) {
 
-		this.classLoader = ModelUtil.getClassLoader();
-
 		if (defaultModelClass == null) {
 			this.defaultModelClass = DefaultModel.class;
 		}
@@ -42,35 +40,9 @@ public class ModelFactory {
 		this.modelClassMap = modelClassMap;
 	}
 
-	@SuppressWarnings("unchecked")
-	public ClassedModel addObject(ClassedModel object) {
-
-		return executeOperation(
-			(Class<? extends ClassedModel>)object.getModelClass(), "add",
-			object.getModelClass(), object);
-	}
-
-	public ClassedModel createObject(
-		Class<? extends ClassedModel> clazz, long primaryKey) {
-
-		return executeOperation(clazz, "create", long.class, primaryKey);
-	}
-
-	public ClassedModel deleteObject(
-		Class<? extends ClassedModel> clazz, long primaryKey) {
-
-		return executeOperation(clazz, "delete", long.class, primaryKey);
-	}
-
-	@SuppressWarnings("unchecked")
-	public ClassedModel deleteObject(ClassedModel object) {
-
-		return executeOperation(
-			(Class<? extends ClassedModel>)object.getModelClass(), "delete",
-			object.getModelClass(), object);
-	}
-
 	public Map<String, Model> getModelMap(Collection<String> classNames) {
+
+		ClassLoader classLoader = ModelUtil.getClassLoader();
 
 		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
 
@@ -78,7 +50,7 @@ public class ModelFactory {
 			Model model = null;
 			String[] attributes = null;
 			try {
-				model = this.getModelObject(classname);
+				model = this.getModelObject(classLoader, classname);
 
 				if (model != null) {
 					attributes = model.getAttributesName();
@@ -160,7 +132,8 @@ public class ModelFactory {
 	 */
 
 	@SuppressWarnings("unchecked")
-	public final Model getModelObject(String className) {
+	public final Model getModelObject(
+		ClassLoader classLoader, String className) {
 
 		Class<? extends ClassedModel> clazz;
 		try {
@@ -174,14 +147,6 @@ public class ModelFactory {
 		}
 
 		return getModelObject(clazz);
-	}
-
-	@SuppressWarnings("unchecked")
-	public ClassedModel updateObject(ClassedModel object) {
-
-		return executeOperation(
-			(Class<? extends ClassedModel>)object.getModelClass(), "update",
-			object.getModelClass(), object);
 	}
 
 	protected List<?> executeDynamicQuery(
@@ -264,12 +229,6 @@ public class ModelFactory {
 		}
 	}
 
-	protected ClassedModel fetchObject(
-		Class<? extends ClassedModel> clazz, long primaryKey) {
-
-		return executeOperation(clazz, "fetch", long.class, primaryKey);
-	}
-
 	protected Object[][] getDatabaseAttributesArr(
 		Class<? extends ClassedModel> clazz) {
 
@@ -278,7 +237,7 @@ public class ModelFactory {
 		try {
 			classLiferayModelImpl =
 				ModelUtil.getJavaClass(
-					javaClasses, classLoader, liferayModelImpl);
+					javaClasses, clazz.getClassLoader(), liferayModelImpl);
 		}
 		catch (ClassNotFoundException e) {
 			_log.error("Class not found: " + liferayModelImpl);
@@ -313,7 +272,7 @@ public class ModelFactory {
 		try {
 			classLiferayModelImpl =
 				ModelUtil.getJavaClass(
-					javaClasses, classLoader, liferayModelImpl);
+					javaClasses, clazz.getClassLoader(), liferayModelImpl);
 		}
 		catch (ClassNotFoundException e) {
 			_log.error("Class not found: " + liferayModelImpl);
@@ -386,7 +345,7 @@ public class ModelFactory {
 				ModelUtil.getLiferayLocalServiceUtilClassName(clazz);
 			Class<?> classLocalServiceUtil =
 				ModelUtil.getJavaClass(
-					javaClasses, classLoader, localServiceUtil);
+					javaClasses, clazz.getClassLoader(), localServiceUtil);
 
 			if (localServiceUtil != null) {
 				method = classLocalServiceUtil.getMethod(
@@ -407,10 +366,10 @@ public class ModelFactory {
 	protected DynamicQuery newDynamicQuery(
 		Class<? extends ClassedModel> clazz, String alias) {
 
-		return DynamicQueryFactoryUtil.forClass(clazz, alias, classLoader);
+		return DynamicQueryFactoryUtil.forClass(
+			clazz, alias, clazz.getClassLoader());
 	}
 
-	protected ClassLoader classLoader = null;
 	protected Class<? extends Model> defaultModelClass = null;
 	protected Map<String, Class<? extends Model>> modelClassMap = null;
 

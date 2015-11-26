@@ -21,8 +21,11 @@ import java.util.List;
 import java.util.Locale;
 public abstract class ModelImpl implements Model {
 
+	@SuppressWarnings("unchecked")
 	public ClassedModel addObject(ClassedModel object) {
-		return modelFactory.addObject(object);
+		return modelFactory.executeOperation(
+		(Class<? extends ClassedModel>)object.getModelClass(), "add",
+		object.getModelClass(), object);
 	}
 
 	public Model clone() {
@@ -47,25 +50,30 @@ public abstract class ModelImpl implements Model {
 	public ClassedModel createObject(
 		Class<? extends ClassedModel> clazz, long primaryKey) {
 
-		return modelFactory.createObject(clazz, primaryKey);
+		return modelFactory.executeOperation(
+			clazz, "create", long.class, primaryKey);
 	}
 
 	public ClassedModel createObject(long primaryKey) {
-		return modelFactory.createObject(this.modelClass, primaryKey);
+		return this.createObject(this.modelClass, primaryKey);
 	}
 
 	public ClassedModel deleteObject(
 		Class<? extends ClassedModel> clazz, long primaryKey) {
 
-		return modelFactory.deleteObject(clazz, primaryKey);
+		return modelFactory.executeOperation(
+			clazz, "delete", long.class, primaryKey);
 	}
 
+	@SuppressWarnings("unchecked")
 	public ClassedModel deleteObject(ClassedModel object) {
-		return modelFactory.deleteObject(object);
+		return modelFactory.executeOperation(
+		(Class<? extends ClassedModel>)object.getModelClass(), "delete",
+		object.getModelClass(), object);
 	}
 
 	public ClassedModel deleteObject(long primaryKey) {
-		return modelFactory.deleteObject(this.modelClass, primaryKey);
+		return this.deleteObject(this.modelClass, primaryKey);
 	}
 
 	public List<?> executeDynamicQuery(
@@ -104,11 +112,12 @@ public abstract class ModelImpl implements Model {
 	public ClassedModel fetchObject(
 		Class<? extends ClassedModel> clazz, long primaryKey) {
 
-		return modelFactory.fetchObject(clazz, primaryKey);
+		return modelFactory.executeOperation(
+			clazz, "fetch", long.class, primaryKey);
 	}
 
 	public ClassedModel fetchObject(long primaryKey) {
-		return modelFactory.fetchObject(this.modelClass, primaryKey);
+		return this.fetchObject(this.modelClass, primaryKey);
 	}
 
 	public int getAttributePos(String name) {
@@ -403,8 +412,11 @@ public abstract class ModelImpl implements Model {
 		return getName();
 	}
 
+	@SuppressWarnings("unchecked")
 	public ClassedModel updateObject(ClassedModel object) {
-		return modelFactory.updateObject(object);
+		return modelFactory.executeOperation(
+		(Class<? extends ClassedModel>)object.getModelClass(), "update",
+		object.getModelClass(), object);
 	}
 
 	protected String getCreateTableAttributes() {

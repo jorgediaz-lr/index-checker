@@ -2,7 +2,6 @@ package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.PluginContextListener;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -41,9 +40,7 @@ public class ModelUtil {
 				ServletContext servletContext = ServletContextPool.get(
 					servletContextName);
 
-				ClassLoader classLoader =
-					(ClassLoader)servletContext.getAttribute(
-						PluginContextListener.PLUGIN_CLASS_LOADER);
+				ClassLoader classLoader = servletContext.getClassLoader();
 
 				_log.debug(
 					"Adding " + classLoader + " for " + servletContextName);
@@ -84,10 +81,19 @@ public class ModelUtil {
 			return clazz;
 		}
 
-		clazz = classloader.loadClass(className);
+		try {
+			clazz = PortalClassLoaderUtil.getClassLoader().loadClass(className);
+		}
+		catch (ClassNotFoundException e) {
+		}
+
+		if (clazz == null) {
+			clazz = classloader.loadClass(className);
+		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("loaded class: " + clazz);
+			_log.debug(
+				"loaded class: " + clazz + " from classloader :" + classloader);
 		}
 
 		javaClassesCache.put(className, clazz);
