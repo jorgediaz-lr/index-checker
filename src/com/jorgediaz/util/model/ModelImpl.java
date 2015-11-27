@@ -5,7 +5,6 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Indexer;
@@ -16,7 +15,6 @@ import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.GroupedModel;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 public abstract class ModelImpl implements Model {
@@ -86,18 +84,6 @@ public abstract class ModelImpl implements Model {
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
 		throws Exception {
 
-		int[] statuses = this.getValidStatuses();
-
-		if (statuses != null) {
-			dynamicQuery.add(
-				PropertyFactoryUtil.forName("status").in(statuses));
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"adding filter by status: " + Arrays.toString(statuses));
-			}
-		}
-
 		if (filter != null) {
 			dynamicQuery.add(filter);
 
@@ -118,6 +104,17 @@ public abstract class ModelImpl implements Model {
 
 	public ClassedModel fetchObject(long primaryKey) {
 		return this.fetchObject(this.modelClass, primaryKey);
+	}
+
+	public Criterion generateCriterionFilter(String stringFilter) {
+		Criterion filter =
+			ModelUtil.generateCriterionFilter(this, stringFilter);
+
+		if(filter == null && _log.isInfoEnabled()) {
+			_log.warn("Invalid filter: " + stringFilter + " for " + this);
+		}
+
+		return filter;
 	}
 
 	public int getAttributePos(String name) {
@@ -321,10 +318,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return projectionList;
-	}
-
-	public int[] getValidStatuses() {
-		return null;
 	}
 
 	public boolean hasAttribute(String attribute) {

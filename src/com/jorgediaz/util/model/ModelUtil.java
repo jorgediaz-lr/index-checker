@@ -1,5 +1,8 @@
 package com.jorgediaz.util.model;
 
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
@@ -8,6 +11,7 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -21,6 +25,122 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 public class ModelUtil {
+
+	public static Object castStringToJdbcTypeObject(int type, String value) {
+		Object result = null;
+
+		switch (type) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+				result = value;
+				break;
+
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				result = new java.math.BigDecimal(value);
+				break;
+
+			case Types.BIT:
+				result = Boolean.parseBoolean(value);
+				break;
+
+			case Types.TINYINT:
+				result = Byte.parseByte(value);
+				break;
+
+			case Types.SMALLINT:
+				result = Short.parseShort(value);
+				break;
+
+			case Types.INTEGER:
+				result = Integer.parseInt(value);
+				break;
+
+			case Types.BIGINT:
+				result = Long.parseLong(value);
+				break;
+
+			case Types.REAL:
+			case Types.FLOAT:
+				result = Float.parseFloat(value);
+				break;
+
+			case Types.DOUBLE:
+				result = Double.parseDouble(value);
+				break;
+
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				result = value.getBytes();
+				break;
+
+			case Types.DATE:
+				result = java.sql.Date.valueOf(value);
+				break;
+
+			case Types.TIME:
+				result = java.sql.Time.valueOf(value);
+				break;
+
+			case Types.TIMESTAMP:
+				result = java.sql.Timestamp.valueOf(value);
+				break;
+		}
+
+		return result;
+	}
+
+	public static Criterion generateCriterionFilter(
+		Model model, String stringFilter) {
+
+		String[] allFiltersArr = stringFilter.split(",");
+		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+
+		for (String filter : allFiltersArr) {
+			String[] ops = {"=", "<>", " like ", ">", "<" ,"<=", ">="};
+
+			Criterion criterion = null;
+
+			for (String op : ops) {
+				String[] filterArr = filter.split(op);
+
+				if ((filterArr != null) && (filterArr.length == 2)) {
+					String attrName = filterArr[0];
+
+					if(!model.hasAttribute(attrName)) {
+						return null;
+					}
+
+					Object value =
+						ModelUtil.castStringToJdbcTypeObject(
+							model.getAttributeType(attrName), filterArr[1]);
+
+					try {
+						criterion =
+							(Criterion)contructorCriterionImpl.newInstance(
+								contructorSimpleExpression.newInstance(
+							new Object[] { attrName, value, op}));
+					}
+					catch (Exception e) {
+						throw new RuntimeException(e.getMessage(), e);
+					}
+
+				}
+
+				break;
+			}
+
+			if(criterion == null) {
+				return null;
+			}
+
+			conjuntion.add(criterion);
+		}
+
+		return conjuntion;
+	}
 
 	public static ClassLoader getClassLoader() {
 
@@ -87,7 +207,7 @@ public class ModelUtil {
 		catch (ClassNotFoundException e) {
 		}
 
-		if (clazz == null) {
+		if ((clazz == null) && (classloader != null)) {
 			clazz = classloader.loadClass(className);
 		}
 
@@ -98,6 +218,72 @@ public class ModelUtil {
 
 		javaClassesCache.put(className, clazz);
 		return clazz;
+	}
+
+	public static Class<?> getJdbcTypeClass(int type) {
+		Class<?> result = Object.class;
+
+		switch (type) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+				result = String.class;
+				break;
+
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				result = java.math.BigDecimal.class;
+				break;
+
+			case Types.BIT:
+				result = Boolean.class;
+				break;
+
+			case Types.TINYINT:
+				result = Byte.class;
+				break;
+
+			case Types.SMALLINT:
+				result = Short.class;
+				break;
+
+			case Types.INTEGER:
+				result = Integer.class;
+				break;
+
+			case Types.BIGINT:
+				result = Long.class;
+				break;
+
+			case Types.REAL:
+			case Types.FLOAT:
+				result = Float.class;
+				break;
+
+			case Types.DOUBLE:
+				result = Double.class;
+				break;
+
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				result = Byte[].class;
+				break;
+
+			case Types.DATE:
+				result = java.sql.Date.class;
+				break;
+
+			case Types.TIME:
+				result = java.sql.Time.class;
+				break;
+
+			case Types.TIMESTAMP:
+				result = java.sql.Timestamp.class;
+				break;
+		}
+
+		return result;
 	}
 
 	public static Map<Integer, String> getJdbcTypeNames() {
@@ -202,6 +388,33 @@ public class ModelUtil {
 
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
 
+	private static Constructor<?> contructorCriterionImpl;
+	private static Constructor<?> contructorSimpleExpression;
+
 	private static Map<Integer, String> jdbcTypeNames = null;
+
+	static {
+		try {
+			Class<?> criterion =
+				PortalClassLoaderUtil.getClassLoader().loadClass(
+				"org.hibernate.criterion.Criterion");
+			Class<?> simpleExpression =
+				PortalClassLoaderUtil.getClassLoader().loadClass(
+				"org.hibernate.criterion.SimpleExpression");
+			contructorSimpleExpression =
+				simpleExpression.getDeclaredConstructor(
+					String.class, Object.class, String.class);
+			contructorSimpleExpression.setAccessible(true);
+
+			Class<?> criterionImpl =
+				PortalClassLoaderUtil.getClassLoader().loadClass(
+				"com.liferay.portal.dao.orm.hibernate.CriterionImpl");
+			contructorCriterionImpl = criterionImpl.getDeclaredConstructor(
+				criterion);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
 
 }

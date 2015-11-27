@@ -39,6 +39,8 @@ public interface Model extends Cloneable {
 
 	public ClassedModel fetchObject(long primaryKey);
 
+	public Criterion generateCriterionFilter(String stringFilter);
+
 	public int getAttributePos(String name);
 
 	public Object[][] getAttributes();
@@ -68,8 +70,6 @@ public interface Model extends Cloneable {
 	public Projection getPropertyProjection(String attribute);
 
 	public ProjectionList getPropertyProjection(String[] attributes);
-
-	public int[] getValidStatuses();
 
 	public boolean hasAttribute(String attribute);
 
