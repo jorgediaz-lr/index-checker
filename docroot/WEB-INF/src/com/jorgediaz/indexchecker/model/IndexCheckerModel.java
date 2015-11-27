@@ -26,6 +26,7 @@ import com.liferay.portal.model.StagedModel;
 import com.liferay.portal.model.WorkflowedModel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -155,6 +156,24 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		return errors;
 	}
 
+	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
+		throws Exception {
+
+		int[] statuses = this.getValidStatuses();
+
+		if (statuses != null) {
+			dynamicQuery.add(
+				PropertyFactoryUtil.forName("status").in(statuses));
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"adding filter by status: " + Arrays.toString(statuses));
+			}
+		}
+
+		return super.executeDynamicQuery(dynamicQuery);
+	}
+
 	public Conjunction generateQueryFilter() {
 		return RestrictionsFactoryUtil.conjunction();
 	}
@@ -211,7 +230,6 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		return dataMap;
 	}
 
-	@Override
 	public int[] getValidStatuses() {
 		if (!this.modelExtendsClass(WorkflowedModel.class)) {
 			return null;
