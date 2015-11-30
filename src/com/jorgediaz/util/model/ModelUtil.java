@@ -8,15 +8,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
 import java.sql.Types;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -104,32 +103,51 @@ public class ModelUtil {
 			Criterion criterion = null;
 
 			for (String op : ops) {
+
+				boolean dummyValue = false;
+				if(filter.endsWith(op)) {
+					filter = filter + "DUMMY_TEXT";
+					dummyValue = true; 
+				}
 				String[] filterArr = filter.split(op);
 
 				if ((filterArr != null) && (filterArr.length == 2)) {
 					String attrName = filterArr[0];
+					String attrValue = filterArr[1];
+					if(dummyValue) {
+						attrValue = attrValue.replaceAll(
+							"DUMMY_TEXT", StringPool.BLANK);
+					}
 
 					if(!model.hasAttribute(attrName)) {
 						return null;
 					}
 
-					Object value =
-						ModelUtil.castStringToJdbcTypeObject(
-							model.getAttributeType(attrName), filterArr[1]);
-
 					try {
-						criterion =
-							(Criterion)contructorCriterionImpl.newInstance(
-								contructorSimpleExpression.newInstance(
-							new Object[] { attrName, value, op}));
+						if(model.hasAttribute(attrValue)) {
+							criterion =
+								(Criterion)contructorCriterionImpl.newInstance(
+									contructorPropertyExpression.newInstance(
+								new Object[] { attrName, attrValue, op}));
+						}
+						else {
+							Object value =
+								ModelUtil.castStringToJdbcTypeObject(
+									model.getAttributeType(
+										attrName), attrValue);
+	
+							criterion =
+								(Criterion)contructorCriterionImpl.newInstance(
+									contructorSimpleExpression.newInstance(
+								new Object[] { attrName, value, op}));
+						}
 					}
 					catch (Exception e) {
 						throw new RuntimeException(e.getMessage(), e);
 					}
 
+					break;
 				}
-
-				break;
 			}
 
 			if(criterion == null) {
@@ -390,6 +408,7 @@ public class ModelUtil {
 
 	private static Constructor<?> contructorCriterionImpl;
 	private static Constructor<?> contructorSimpleExpression;
+	private static Constructor<?> contructorPropertyExpression;
 
 	private static Map<Integer, String> jdbcTypeNames = null;
 
@@ -398,6 +417,7 @@ public class ModelUtil {
 			Class<?> criterion =
 				PortalClassLoaderUtil.getClassLoader().loadClass(
 				"org.hibernate.criterion.Criterion");
+
 			Class<?> simpleExpression =
 				PortalClassLoaderUtil.getClassLoader().loadClass(
 				"org.hibernate.criterion.SimpleExpression");
@@ -405,6 +425,14 @@ public class ModelUtil {
 				simpleExpression.getDeclaredConstructor(
 					String.class, Object.class, String.class);
 			contructorSimpleExpression.setAccessible(true);
+
+			Class<?> propertyExpression =
+				PortalClassLoaderUtil.getClassLoader().loadClass(
+				"org.hibernate.criterion.PropertyExpression");
+			contructorPropertyExpression =
+				propertyExpression.getDeclaredConstructor(
+					String.class, String.class, String.class);
+			contructorPropertyExpression.setAccessible(true);
 
 			Class<?> criterionImpl =
 				PortalClassLoaderUtil.getClassLoader().loadClass(

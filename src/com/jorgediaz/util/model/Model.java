@@ -53,6 +53,8 @@ public interface Model extends Cloneable {
 
 	public String getClassName();
 
+	public long getClassNameId();
+
 	public String getDisplayName(Locale locale);
 
 	public Criterion getFilter();

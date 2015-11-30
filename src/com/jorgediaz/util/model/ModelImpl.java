@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.GroupedModel;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
+import com.liferay.portal.util.PortalUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -173,6 +174,10 @@ public abstract class ModelImpl implements Model {
 
 	public String getClassName() {
 		return modelClass.getName();
+	}
+
+	public long getClassNameId() {
+		return PortalUtil.getClassNameId(modelClass);
 	}
 
 	public String getDisplayName(Locale locale) {
