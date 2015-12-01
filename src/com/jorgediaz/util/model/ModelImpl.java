@@ -214,7 +214,7 @@ public abstract class ModelImpl implements Model {
 		if (filter != null) {
 			model = this.clone();
 			model.setFilter(filter);
-			model.setNameSuffix(filters);
+			model.setNameSuffix(nameSufix);
 		}
 
 		return model;
