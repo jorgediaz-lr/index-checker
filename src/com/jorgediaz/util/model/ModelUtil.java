@@ -15,7 +15,9 @@ import com.liferay.portal.model.ClassedModel;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+
 import java.sql.Types;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -89,7 +91,7 @@ public class ModelUtil {
 				break;
 
 			default:
-				throw new RuntimeException("Unsupported conversion for " + 
+				throw new RuntimeException("Unsupported conversion for " +
 					ModelUtil.getJdbcTypeNames().get(type));
 		}
 
@@ -108,28 +110,30 @@ public class ModelUtil {
 			Criterion criterion = null;
 
 			for (String op : ops) {
-
 				boolean dummyValue = false;
-				if(filter.endsWith(op)) {
+
+				if (filter.endsWith(op)) {
 					filter = filter + "DUMMY_TEXT";
-					dummyValue = true; 
+					dummyValue = true;
 				}
+
 				String[] filterArr = filter.split(op);
 
 				if ((filterArr != null) && (filterArr.length == 2)) {
 					String attrName = filterArr[0];
 					String attrValue = filterArr[1];
-					if(dummyValue) {
+
+					if (dummyValue) {
 						attrValue = attrValue.replaceAll(
 							"DUMMY_TEXT", StringPool.BLANK);
 					}
 
-					if(!model.hasAttribute(attrName)) {
+					if (!model.hasAttribute(attrName)) {
 						return null;
 					}
 
 					try {
-						if(model.hasAttribute(attrValue)) {
+						if (model.hasAttribute(attrValue)) {
 							criterion =
 								(Criterion)contructorCriterionImpl.newInstance(
 									contructorPropertyExpression.newInstance(
@@ -140,7 +144,7 @@ public class ModelUtil {
 								ModelUtil.castStringToJdbcTypeObject(
 									model.getAttributeType(
 										attrName), attrValue);
-	
+
 							criterion =
 								(Criterion)contructorCriterionImpl.newInstance(
 									contructorSimpleExpression.newInstance(
@@ -155,7 +159,7 @@ public class ModelUtil {
 				}
 			}
 
-			if(criterion == null) {
+			if (criterion == null) {
 				return null;
 			}
 
@@ -412,9 +416,8 @@ public class ModelUtil {
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
 
 	private static Constructor<?> contructorCriterionImpl;
-	private static Constructor<?> contructorSimpleExpression;
 	private static Constructor<?> contructorPropertyExpression;
-
+	private static Constructor<?> contructorSimpleExpression;
 	private static Map<Integer, String> jdbcTypeNames = null;
 
 	static {

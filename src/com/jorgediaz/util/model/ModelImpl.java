@@ -108,10 +108,10 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
-		Criterion filter =
-			ModelUtil.generateCriterionFilter(this, stringFilter);
+		Criterion filter = ModelUtil.generateCriterionFilter(
+			this, stringFilter);
 
-		if(filter == null && _log.isInfoEnabled()) {
+		if (filter == null && _log.isInfoEnabled()) {
 			_log.warn("Invalid filter: " + stringFilter + " for " + this);
 		}
 
