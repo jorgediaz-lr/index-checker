@@ -41,6 +41,7 @@ public class ModelUtil {
 				break;
 
 			case Types.BIT:
+			case Types.BOOLEAN:
 				result = Boolean.parseBoolean(value);
 				break;
 
@@ -86,6 +87,10 @@ public class ModelUtil {
 			case Types.TIMESTAMP:
 				result = java.sql.Timestamp.valueOf(value);
 				break;
+
+			default:
+				throw new RuntimeException("Unsupported conversion for " + 
+					ModelUtil.getJdbcTypeNames().get(type));
 		}
 
 		return result;
