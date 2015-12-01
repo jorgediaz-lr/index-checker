@@ -2,22 +2,13 @@ package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.util.model.ModelFactory;
 
-import com.liferay.portal.kernel.dao.orm.Conjunction;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.model.ClassedModel;
 public class User extends IndexCheckerModel {
 
 	@Override
-	public Conjunction generateQueryFilter() {
-
-		Conjunction conjunction = super.generateQueryFilter();
-
-		Property property = PropertyFactoryUtil.forName("defaultUser");
-
-		conjunction.add(property.eq(false));
-
-		return conjunction;
+	public Criterion generateQueryFilter() {
+		return this.generateCriterionFilter("defaultUser=false");
 	}
 
 	@Override

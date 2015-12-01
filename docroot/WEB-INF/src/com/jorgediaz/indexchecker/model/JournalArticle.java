@@ -3,12 +3,10 @@ package com.jorgediaz.indexchecker.model;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.util.model.ModelFactory;
 
-import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -74,20 +72,9 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
-	public Conjunction generateQueryFilter() {
+	public Criterion generateQueryFilter() {
 
-		Conjunction conjunction = super.generateQueryFilter();
-
-		Property propertyClassnameid = PropertyFactoryUtil.forName(
-			"classNameId");
-
-		conjunction.add(propertyClassnameid.eq(0L));
-
-		Property propertyIndexable = PropertyFactoryUtil.forName("indexable");
-
-		conjunction.add(propertyIndexable.eq(true));
-
-		return conjunction;
+		return this.generateCriterionFilter("classNameId=0,indexable=true");
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {

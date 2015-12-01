@@ -17,7 +17,7 @@ import java.util.Map.Entry;
 public class IndexCheckerModelFactory extends ModelFactory {
 
 	public static Class<? extends Model> defaultModelClass =
-		DefaultModelIndexChecker.class;
+		IndexCheckerModel.class;
 
 	public static Map<String, Class<? extends Model>> modelClassMap =
 		new HashMap<String, Class<? extends Model>>();

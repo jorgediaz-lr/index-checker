@@ -71,7 +71,7 @@ DLFolder t where t.companyId = ? and (status = 8 or status = 0)
 
 	 */
 
-public abstract class IndexCheckerModel extends ModelImpl {
+public class IndexCheckerModel extends ModelImpl {
 
 	public static Map<Class<?>, String[]> modelInterfaceAttributesMap =
 		new HashMap<Class<?>, String[]>();
@@ -174,8 +174,8 @@ public abstract class IndexCheckerModel extends ModelImpl {
 		return super.executeDynamicQuery(dynamicQuery);
 	}
 
-	public Conjunction generateQueryFilter() {
-		return RestrictionsFactoryUtil.conjunction();
+	public Criterion generateQueryFilter() {
+		return null;
 	}
 
 	public Criterion getCompanyGroupFilter(long companyId) {

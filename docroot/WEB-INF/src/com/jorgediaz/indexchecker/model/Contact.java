@@ -1,6 +1,7 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
@@ -10,9 +11,9 @@ import com.liferay.portal.model.User;
 public class Contact extends IndexCheckerModel {
 
 	@Override
-	public Conjunction generateQueryFilter() {
+	public Criterion generateQueryFilter() {
 
-		Conjunction conjunction = super.generateQueryFilter();
+		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		DynamicQuery userDynamicQuery = this.newDynamicQuery(User.class);
 
