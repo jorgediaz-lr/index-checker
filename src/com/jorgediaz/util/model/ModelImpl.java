@@ -201,6 +201,25 @@ public abstract class ModelImpl implements Model {
 		return filter;
 	}
 
+	public Model getFilteredModel(String filters) {
+		return getFilteredModel(filters, filters);
+	}
+
+	public Model getFilteredModel(String filters, String nameSufix) {
+
+		Model model = null;
+
+		Criterion filter = this.generateCriterionFilter(filters);
+
+		if (filter != null) {
+			model = this.clone();
+			model.setFilter(filter);
+			model.setNameSuffix(filters);
+		}
+
+		return model;
+	}
+
 	public Indexer getIndexer() {
 		return IndexerRegistryUtil.nullSafeGetIndexer(modelClass);
 	}

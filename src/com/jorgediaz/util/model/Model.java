@@ -59,6 +59,10 @@ public interface Model extends Cloneable {
 
 	public Criterion getFilter();
 
+	public Model getFilteredModel(String filters);
+
+	public Model getFilteredModel(String filters, String nameSufix);
+
 	public Indexer getIndexer();
 
 	public Class<?> getModelClass();
