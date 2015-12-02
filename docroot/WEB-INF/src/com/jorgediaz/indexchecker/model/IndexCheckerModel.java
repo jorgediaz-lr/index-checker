@@ -26,14 +26,11 @@ import com.liferay.portal.model.StagedModel;
 import com.liferay.portal.model.WorkflowedModel;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 /*
-
-http://localhost:7080/group/control_panel?refererPlid=10175&p_p_id=indexchecker_WAR_index_checkerportlet&outputBothExact=true&outputBothNotExact=true&outputLiferay=true&outputIndex=true&outputGroupBySite=true
 
 com.liferay.portal.model.Contact NO => user.isDefaultUser() || (user.getStatus() != WorkflowConstants.STATUS_APPROVED)
 com.liferay.portal.model.Organization
@@ -156,26 +153,14 @@ public class IndexCheckerModel extends ModelImpl {
 		return errors;
 	}
 
-	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
-		throws Exception {
-
-		int[] statuses = this.getValidStatuses();
-
-		if (statuses != null) {
-			dynamicQuery.add(
-				PropertyFactoryUtil.forName("status").in(statuses));
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"adding filter by status: " + Arrays.toString(statuses));
-			}
+	public Criterion generateQueryFilter() {
+		if (!this.modelExtendsClass(WorkflowedModel.class)) {
+			return null;
 		}
 
-		return super.executeDynamicQuery(dynamicQuery);
-	}
-
-	public Criterion generateQueryFilter() {
-		return null;
+		return this.generateCriterionFilter(
+			"status=" + WorkflowConstants.STATUS_APPROVED +"+" +
+			"status=" + WorkflowConstants.STATUS_IN_TRASH);
 	}
 
 	public Criterion getCompanyGroupFilter(long companyId) {
@@ -228,18 +213,6 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 
 		return dataMap;
-	}
-
-	public int[] getValidStatuses() {
-		if (!this.modelExtendsClass(WorkflowedModel.class)) {
-			return null;
-		}
-
-		int[] statuses = {
-			WorkflowConstants.STATUS_APPROVED, WorkflowConstants.STATUS_IN_TRASH
-			};
-
-		return statuses;
 	}
 
 	@Override

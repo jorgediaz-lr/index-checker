@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.ClassedModel;
 
 import java.util.List;
@@ -74,7 +75,15 @@ public class JournalArticle extends IndexCheckerModel {
 	@Override
 	public Criterion generateQueryFilter() {
 
-		return this.generateCriterionFilter("classNameId=0,indexable=true");
+		String filter = "classNameId=0,indexable=true";
+
+		if (!indexAllVersions) {
+			filter =
+				filter + ",status=" + WorkflowConstants.STATUS_APPROVED +
+				"+status=" + WorkflowConstants.STATUS_IN_TRASH;
+		}
+
+		return this.generateCriterionFilter(filter);
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
@@ -85,15 +94,6 @@ public class JournalArticle extends IndexCheckerModel {
 		}
 
 		return dataMap;
-	}
-
-	@Override
-	public int[] getValidStatuses() {
-		if (indexAllVersions) {
-			return null;
-		}
-
-		return super.getValidStatuses();
 	}
 
 	@Override

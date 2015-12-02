@@ -35,9 +35,4 @@ public class Contact extends IndexCheckerModel {
 		return conjunction;
 	}
 
-	@Override
-	public int[] getValidStatuses() {
-		return null;
-	}
-
 }
