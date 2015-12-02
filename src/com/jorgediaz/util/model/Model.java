@@ -41,6 +41,13 @@ public interface Model extends Cloneable {
 
 	public Criterion generateCriterionFilter(String stringFilter);
 
+	public Criterion generateDisjunctionCriterion(String[] filters);
+
+	public Criterion generateSingleCriterion(String filter);
+
+	public Criterion generateSingleCriterion(
+		String attrName, String attrValue, String op);
+
 	public int getAttributePos(String name);
 
 	public Object[][] getAttributes();

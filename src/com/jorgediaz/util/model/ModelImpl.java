@@ -1,10 +1,13 @@
 package com.jorgediaz.util.model;
 
+import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Indexer;
@@ -16,6 +19,7 @@ import com.liferay.portal.model.GroupedModel;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.util.PortalUtil;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 public abstract class ModelImpl implements Model {
@@ -108,14 +112,75 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
-		Criterion filter = ModelUtil.generateCriterionFilter(
-			this, stringFilter);
 
-		if (filter == null && _log.isInfoEnabled()) {
+		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+
+		String[] allFiltersArr = stringFilter.split(",");
+
+		for (String filters : allFiltersArr) {
+			Criterion criterion = this.generateDisjunctionCriterion(
+				filters.split("\\+"));
+
+			if (criterion == null) {
+				conjuntion = null;
+
+				break;
+			}
+
+			conjuntion.add(criterion);
+		}
+
+		if ((conjuntion == null) && _log.isWarnEnabled()) {
 			_log.warn("Invalid filter: " + stringFilter + " for " + this);
 		}
 
-		return filter;
+		return conjuntion;
+	}
+
+	public Criterion generateDisjunctionCriterion(String[] filters) {
+
+		Criterion criterion = null;
+
+		if (filters.length == 1) {
+			criterion = this.generateSingleCriterion(filters[0]);
+		}
+		else {
+			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+			for (String singleFilter : filters) {
+				Criterion singleCriterion = this.generateSingleCriterion(
+					singleFilter);
+
+				if (singleCriterion == null) {
+					disjunction = null;
+
+					break;
+				}
+
+				disjunction.add(criterion);
+			}
+
+			criterion = disjunction;
+		}
+
+		if ((criterion == null) && _log.isWarnEnabled()) {
+			_log.warn(
+				"Invalid filters: " + Arrays.toString(filters) + " for " +
+				this);
+		}
+
+		return criterion;
+	}
+
+	public Criterion generateSingleCriterion(String filter) {
+
+		return ModelUtil.generateSingleCriterion(this, filter);
+	}
+
+	public Criterion generateSingleCriterion(
+		String attrName, String attrValue, String op) {
+
+		return ModelUtil.generateSingleCriterion(this, attrName, attrValue, op);
 	}
 
 	public int getAttributePos(String name) {

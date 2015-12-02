@@ -1,14 +1,13 @@
 package com.jorgediaz.util.model;
 
-import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
 
@@ -28,6 +27,8 @@ import javax.servlet.ServletContext;
 public class ModelUtil {
 
 	public static Object castStringToJdbcTypeObject(int type, String value) {
+		value = StringUtil.unquote(value);
+
 		Object result = null;
 
 		switch (type) {
@@ -98,75 +99,73 @@ public class ModelUtil {
 		return result;
 	}
 
-	public static Criterion generateCriterionFilter(
-		Model model, String stringFilter) {
+	public static Criterion generateSingleCriterion(
+		Model model, String filter) {
 
-		String[] allFiltersArr = stringFilter.split(",");
-		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+		String[] ops = {"=", "<>", " like ", ">", "<" ,"<=", ">="};
 
-		for (String filter : allFiltersArr) {
-			String[] ops = {"=", "<>", " like ", ">", "<" ,"<=", ">="};
+		Criterion criterion = null;
 
-			Criterion criterion = null;
+		for (String op : ops) {
+			boolean dummyValue = false;
 
-			for (String op : ops) {
-				boolean dummyValue = false;
+			String filterAux = filter;
 
-				if (filter.endsWith(op)) {
-					filter = filter + "DUMMY_TEXT";
-					dummyValue = true;
-				}
-
-				String[] filterArr = filter.split(op);
-
-				if ((filterArr != null) && (filterArr.length == 2)) {
-					String attrName = filterArr[0];
-					String attrValue = filterArr[1];
-
-					if (dummyValue) {
-						attrValue = attrValue.replaceAll(
-							"DUMMY_TEXT", StringPool.BLANK);
-					}
-
-					if (!model.hasAttribute(attrName)) {
-						return null;
-					}
-
-					try {
-						if (model.hasAttribute(attrValue)) {
-							criterion =
-								(Criterion)contructorCriterionImpl.newInstance(
-									contructorPropertyExpression.newInstance(
-								new Object[] { attrName, attrValue, op}));
-						}
-						else {
-							Object value =
-								ModelUtil.castStringToJdbcTypeObject(
-									model.getAttributeType(
-										attrName), attrValue);
-
-							criterion =
-								(Criterion)contructorCriterionImpl.newInstance(
-									contructorSimpleExpression.newInstance(
-								new Object[] { attrName, value, op}));
-						}
-					}
-					catch (Exception e) {
-						throw new RuntimeException(e.getMessage(), e);
-					}
-
-					break;
-				}
+			if (filterAux.endsWith(op)) {
+				filterAux = filterAux + "DUMMY_TEXT";
+				dummyValue = true;
 			}
 
-			if (criterion == null) {
-				return null;
-			}
+			String[] filterArr = filterAux.split(op);
 
-			conjuntion.add(criterion);
+			if ((filterArr != null) && (filterArr.length == 2)) {
+				String attrName = filterArr[0];
+				String attrValue = filterArr[1];
+
+				if (dummyValue) {
+					attrValue = attrValue.replaceAll(
+						"DUMMY_TEXT", StringPool.BLANK);
+				}
+
+				if (model.hasAttribute(attrName)) {
+					criterion = model.generateSingleCriterion(
+						attrName, attrValue, op);
+				}
+
+				break;
+			}
 		}
 
-		return conjuntion;
+		return criterion;
+	}
+
+	public static Criterion generateSingleCriterion(
+		Model model, String attrName, String attrValue, String op) {
+		Criterion criterion = null;
+
+		try {
+			if (model.hasAttribute(attrValue)) {
+				criterion =
+					(Criterion)contructorCriterionImpl.newInstance(
+						contructorPropertyExpression.newInstance(
+					new Object[] { attrName, attrValue, op}));
+			}
+			else {
+				Object value =
+					ModelUtil.castStringToJdbcTypeObject(
+						model.getAttributeType(attrName), attrValue);
+
+				criterion =
+					(Criterion)contructorCriterionImpl.newInstance(
+						contructorSimpleExpression.newInstance(
+					new Object[] { attrName, value, op}));
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+
+		return criterion;
 	}
 
 	public static ClassLoader getClassLoader() {
