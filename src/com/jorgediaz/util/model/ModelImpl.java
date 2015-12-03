@@ -7,6 +7,8 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -157,7 +159,7 @@ public abstract class ModelImpl implements Model {
 					break;
 				}
 
-				disjunction.add(criterion);
+				disjunction.add(singleCriterion);
 			}
 
 			criterion = disjunction;
@@ -353,6 +355,14 @@ public abstract class ModelImpl implements Model {
 		return primaryKeyMultiAttribute;
 	}
 
+	public Property getProperty(String attribute) {
+		if (isPartOfPrimaryKeyMultiAttribute(attribute)) {
+			attribute = "primaryKey." + attribute;
+		}
+
+		return PropertyFactoryUtil.forName(attribute);
+	}
+
 	public Projection getPropertyProjection(String attribute) {
 
 		String op = null;
@@ -524,6 +534,9 @@ public abstract class ModelImpl implements Model {
 
 		if (op == null) {
 			property = ProjectionFactoryUtil.property(attribute);
+		}
+		else if ("rowCount".equals(op)) {
+			property = ProjectionFactoryUtil.rowCount();
 		}
 		else if ("count".equals(op)) {
 			property = ProjectionFactoryUtil.count(attribute);

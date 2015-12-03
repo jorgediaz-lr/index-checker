@@ -4,6 +4,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.model.ClassedModel;
 
@@ -79,6 +80,8 @@ public interface Model extends Cloneable {
 	public String getPrimaryKeyAttribute();
 
 	public String[] getPrimaryKeyMultiAttribute();
+
+	public Property getProperty(String attribute);
 
 	public Projection getPropertyProjection(String attribute);
 

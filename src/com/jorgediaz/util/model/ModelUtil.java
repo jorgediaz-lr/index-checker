@@ -92,8 +92,9 @@ public class ModelUtil {
 				break;
 
 			default:
-				throw new RuntimeException("Unsupported conversion for " +
-					ModelUtil.getJdbcTypeNames().get(type));
+				throw new RuntimeException(
+					"Unsupported conversion for " +
+						ModelUtil.getJdbcTypeNames().get(type));
 		}
 
 		return result;
@@ -141,7 +142,12 @@ public class ModelUtil {
 
 	public static Criterion generateSingleCriterion(
 		Model model, String attrName, String attrValue, String op) {
+
 		Criterion criterion = null;
+
+		if (model.isPartOfPrimaryKeyMultiAttribute(attrName)) {
+			attrName = "primaryKey." + attrName;
+		}
 
 		try {
 			if (model.hasAttribute(attrValue)) {
