@@ -7,7 +7,6 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
@@ -48,9 +47,7 @@ public class JournalArticle extends IndexCheckerModel {
 			RestrictionsFactoryUtil.eqProperty(
 				"this.resourcePrimKey", "articleVersion.resourcePrimKey"));
 
-		query.add(
-			PropertyFactoryUtil.forName("version").eq(
-				articleVersionDynamicQuery));
+		query.add(getProperty("version").eq(articleVersionDynamicQuery));
 
 		boolean indexAllVersionsOld = indexAllVersions;
 		indexAllVersions = true;

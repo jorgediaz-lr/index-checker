@@ -10,7 +10,6 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -173,13 +172,11 @@ public class IndexCheckerModel extends ModelImpl {
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		if (this.hasAttribute("companyId")) {
-			conjunction.add(
-				PropertyFactoryUtil.forName("companyId").eq(companyId));
+			conjunction.add(getProperty("companyId").eq(companyId));
 		}
 
 		if (this.hasGroupId()) {
-			conjunction.add(
-				PropertyFactoryUtil.forName("groupId").in(listGroupId));
+			conjunction.add(getProperty("groupId").in(listGroupId));
 		}
 
 		return conjunction;
