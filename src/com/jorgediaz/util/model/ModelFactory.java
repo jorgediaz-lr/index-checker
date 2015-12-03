@@ -57,7 +57,10 @@ public class ModelFactory {
 				}
 			}
 			catch (Exception e) {
-				if (_log.isInfoEnabled()) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(e, e);
+				}
+				else if (_log.isInfoEnabled()) {
 					_log.info(
 						"Cannot get model object of " + classname +
 						" EXCEPTION: " + e.getClass().getName() + ": " +
