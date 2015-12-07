@@ -5,6 +5,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MethodKey;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
 
@@ -170,8 +171,8 @@ public class ModelFactory {
 				(e instanceof ClassNotFoundException ||
 				 e instanceof NoSuchMethodException)) {
 
-				if (_log.isWarnEnabled()) {
-					_log.warn(
+				if (_log.isInfoEnabled()) {
+					_log.info(
 						"executeDynamicQuery: dynamicQuery method not found " +
 						"for " + clazz.getName() + " - " + e.getMessage() +
 						" trying with GroupLocalServiceUtil.dynamicQuery");
@@ -180,7 +181,7 @@ public class ModelFactory {
 				return executeDynamicQuery(Group.class, dynamicQuery);
 			}
 
-			String cause = "";
+			String cause = StringPool.BLANK;
 			Throwable rootException = e.getCause();
 
 			if (rootException != null) {
@@ -219,7 +220,7 @@ public class ModelFactory {
 				" method not found for " + clazz.getName(), e);
 		}
 		catch (Exception e) {
-			String cause = "";
+			String cause = StringPool.BLANK;
 			Throwable rootException = e.getCause();
 
 			if (rootException != null) {
