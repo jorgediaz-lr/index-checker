@@ -422,8 +422,21 @@ public abstract class ModelImpl implements Model {
 	public boolean hasAttribute(String attribute) {
 		Object[][] modelAttributes = getAttributes();
 
+		if (attribute.endsWith(StringPool.UNDERLINE)) {
+			attribute = attribute.substring(0, attribute.length() - 1);
+		}
+
+		String attributeWithUnderline = attribute + StringPool.UNDERLINE;
+
 		for (int i = 0; i < modelAttributes.length; i++) {
-			if (((String)modelAttributes[i][0]).equals(attribute)) {
+			if (((String)modelAttributes[i][0]).endsWith(
+					StringPool.UNDERLINE) &&
+				((String)modelAttributes[i][0]).equals(
+					attributeWithUnderline)) {
+
+				return true;
+			}
+			else if (((String)modelAttributes[i][0]).equals(attribute)) {
 				return true;
 			}
 		}
