@@ -17,9 +17,8 @@ public class Contact extends IndexCheckerModel {
 
 		userDynamicQuery.setProjection(getPropertyProjection("userId"));
 
-		userDynamicQuery.add(RestrictionsFactoryUtil.disjunction().add(
-			getProperty("defaultUser").eq(true)).add(
-				getProperty("status").ne(WorkflowConstants.STATUS_APPROVED)));
+		userDynamicQuery.add(generateCriterionFilter(
+			"defaultUser=true+status<>"+WorkflowConstants.STATUS_APPROVED));
 
 		conjunction.add(getProperty("classPK").notIn(userDynamicQuery));
 
