@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -107,13 +108,13 @@ public class IndexChecker {
 			indexWrapper.getMissingClassNamesAtLiferay(modelMap);
 
 		if (classNamesNotAvailable.size() == 0) {
-			out.add("");
+			out.add(StringPool.BLANK);
 			out.add("All classNames at Index also exists at Liferay :-)");
 
 			return out;
 		}
 
-		out.add("");
+		out.add(StringPool.BLANK);
 		out.add("---------------");
 		out.add("The following classNames exists at Index but not at Liferay!");
 		out.add("---------------");
