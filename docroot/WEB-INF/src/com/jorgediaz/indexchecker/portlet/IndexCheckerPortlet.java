@@ -3,12 +3,12 @@ package com.jorgediaz.indexchecker.portlet;
 import com.jorgediaz.indexchecker.ExecutionMode;
 import com.jorgediaz.indexchecker.IndexChecker;
 import com.jorgediaz.indexchecker.IndexCheckerResult;
+import com.jorgediaz.indexchecker.IndexCheckerUtil;
 import com.jorgediaz.indexchecker.index.IndexWrapper;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar;
 import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
 import com.jorgediaz.indexchecker.index.IndexWrapperSearch;
 import com.jorgediaz.util.model.ModelUtil;
-
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -25,6 +25,8 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -170,6 +172,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						(endTime-startTime)+" ms");
 				outputScript.add(StringPool.BLANK);
 			}
+			catch(Exception e) {
+				outputScript.add(
+					"Error during reindex execution: " + e.getMessage());
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				outputScript.add(sw.toString());
+				_log.error(e,e);
+			}
 			finally {
 				ShardUtil.popCompanyService();
 			}
@@ -253,6 +263,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					"Removed orphans of company " + company.getCompanyId() +
 					" in "+ (endTime-startTime)+" ms");
 				outputScript.add(StringPool.BLANK);
+			}
+			catch(Exception e) {
+				outputScript.add(
+					"Error during remove orphan execution: " + e.getMessage());
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				outputScript.add(sw.toString());
+				_log.error(e,e);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -345,13 +363,21 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				outputScript.add(StringPool.BLANK);
 
 				outputScript.addAll(
-					IndexChecker.generateOutput(
+					IndexCheckerUtil.generateOutput(
 						outputMaxLength, executionMode, resultDataMap));
 
 				outputScript.add(
 					"\nProcessed company "+company.getCompanyId()+" in "+
 						(endTime-startTime)+" ms");
 				outputScript.add(StringPool.BLANK);
+			}
+			catch(Exception e) {
+				outputScript.add(
+					"Error during script execution: " + e.getMessage());
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				outputScript.add(sw.toString());
+				_log.error(e,e);
 			}
 			finally {
 				ShardUtil.popCompanyService();

@@ -4,34 +4,7 @@ import com.jorgediaz.indexchecker.index.DocumentWrapper;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.util.Validator;
-
-import java.sql.Timestamp;
-
-import jodd.bean.BeanUtil;
-
-import org.apache.lucene.document.DateTools;
 public class Data implements Comparable<Data> {
-
-	public static int compareLongs(long x, long y) {
-		return (x < y) ? -1 : ((x == y) ? 0 : 1);
-	}
-
-	public static boolean exactIntegers(Integer i1, Integer i2) {
-		if (i1 == null) {
-			return (i2 == null);
-		}
-
-		return i1.equals(i2);
-	}
-
-	public static boolean exactLongs(Long l1, Long l2) {
-		if (l1 == null) {
-			return (l2 == null);
-		}
-
-		return l1.equals(l2);
-	}
 
 	public Data(IndexCheckerModel baseModel) {
 		this.model = baseModel;
@@ -40,10 +13,11 @@ public class Data implements Comparable<Data> {
 	@Override
 	public int compareTo(Data data) {
 		if ((this.primaryKey != -1) && (data.primaryKey != -1)) {
-			return compareLongs(this.primaryKey, data.primaryKey);
+			return DataUtil.compareLongs(this.primaryKey, data.primaryKey);
 		}
 		else if ((this.resourcePrimKey != -1) && (data.resourcePrimKey != -1)) {
-			return compareLongs(this.resourcePrimKey, data.resourcePrimKey);
+			return DataUtil.compareLongs(
+				this.resourcePrimKey, data.resourcePrimKey);
 		}
 		else {
 			return 0;
@@ -77,25 +51,25 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if (!exactLongs(this.companyId, data.companyId)) {
+		if (!DataUtil.exactLongs(this.companyId, data.companyId)) {
 			return false;
 		}
 
 		if (this.model.hasGroupId() &&
-			!exactLongs(this.groupId, data.groupId)) {
+			!DataUtil.exactLongs(this.groupId, data.groupId)) {
 
 			return false;
 		}
 
-		if (!exactLongs(this.createDate, data.createDate)) {
+		if (!DataUtil.exactLongs(this.createDate, data.createDate)) {
 			return false;
 		}
 
-		if (!exactLongs(this.modifiedDate, data.modifiedDate)) {
+		if (!DataUtil.exactLongs(this.modifiedDate, data.modifiedDate)) {
 			return false;
 		}
 
-		if (!exactIntegers(this.status, data.status)) {
+		if (!DataUtil.exactIntegers(this.status, data.status)) {
 			return false;
 		}
 
@@ -165,75 +139,93 @@ public class Data implements Comparable<Data> {
 	public void init(DocumentWrapper doc) {
 
 		for (String attrib : indexAttributes) {
-			BeanUtil.setPropertySilent(this, attrib, doc.get(attrib));
+			setProperty(attrib, doc.get(attrib));
 		}
 	}
 
 	public void init(Object[] dataArray) {
 
-		this.setPrimaryKey((Long)dataArray[0]);
+		this.primaryKey = ((Long)dataArray[0]);
 
 		int i = 0;
 
 		for (String attrib : model.getIndexAttributes()) {
-			BeanUtil.setPropertySilent(this, attrib, dataArray[i++]);
+			setProperty(attrib, dataArray[i++]);
 		}
 	}
 
-	public void setCompanyId(Long companyId) {
-		this.companyId = companyId;
-	}
+	public void setProperty(String attribute, Object value) {
+		if ("companyId".equals(attribute) ||
+			"entryClassPK".equals(attribute) ||
+			"groupId".equals(attribute) ||
+			"resourcePrimKey".equals(attribute)) {
 
-	public void setCreateDate(String createDate) {
-		this.createDate = stringToTime(createDate);
-	}
+			Long longValue = DataUtil.castLong(value);
 
-	public void setEntryClassPK(long entryClassPK) {
-		this.entryClassPK = entryClassPK;
+			if (longValue == null) {
+				return;
+			}
+			else if ("companyId".equals(attribute)) {
+				this.companyId = longValue;
+			}
+			else if ("entryClassPK".equals(attribute)) {
+				this.entryClassPK = longValue;
 
-		if ((primaryKey != -1) && (resourcePrimKey == -1) &&
-			(primaryKey != entryClassPK)) {
+				if ((primaryKey != -1) && (resourcePrimKey == -1) &&
+					(primaryKey != longValue)) {
 
-			this.resourcePrimKey = entryClassPK;
+					this.resourcePrimKey = longValue;
+				}
+			}
+			else if ("groupId".equals(attribute)) {
+				this.groupId = longValue;
+			}
+			else if ("resourcePrimKey".equals(attribute)) {
+				this.resourcePrimKey = longValue;
+			}
+		}
+		else if ("status".equals(attribute)) {
+			Integer intValue = DataUtil.castInt(value);
+
+			if (intValue == null) {
+				return;
+			}
+
+			this.setStatus(intValue);
+		}
+		else if ("createDate".equals(attribute) ||
+				 "modifiedDate".equals(attribute) ||
+				 "modified".equals(attribute) ||
+				 "uid".equals(attribute)) {
+
+			String strValue = DataUtil.castString(value);
+
+			if (strValue == null) {
+				return;
+			}
+
+			if ("createDate".equals(attribute)) {
+				this.createDate = DataUtil.stringToTime(strValue);
+			}
+			else if ("modifiedDate".equals(attribute) ||
+					 "modified".equals(attribute)) {
+
+				this.modifiedDate = DataUtil.stringToTime(strValue);
+			}
+			else if ("uid".equals(attribute)) {
+				this.uid = strValue;
+
+				this.primaryKey = DataUtil.castLong(strValue.split("_")[2]);
+
+				if ((resourcePrimKey == -1) && (primaryKey != entryClassPK)) {
+					this.resourcePrimKey = entryClassPK;
+				}
+			}
 		}
 	}
 
-	public void setGroupId(Long groupId) {
-		this.groupId = groupId;
-	}
-
-	public void setModified(String modifiedDate) {
-		this.setModifiedDate(modifiedDate);
-	}
-
-	public void setModifiedDate(String modifyDate) {
-		this.modifiedDate = stringToTime(modifyDate);
-	}
-
-	public void setPrimaryKey(long primaryKey) {
-		this.primaryKey = primaryKey;
-	}
-
-	public void setResourcePrimKey(long resourcePrimKey) {
-		this.resourcePrimKey = resourcePrimKey;
-	}
-
-	public void setStatus(Integer status) {
+	public void setStatus(int status) {
 		this.status = status;
-	}
-
-	public void setUid(String uid) {
-		this.uid = uid;
-
-		try {
-			this.primaryKey = Long.valueOf(uid.split("_")[2]);
-		}
-		catch (Exception e) {
-		}
-
-		if ((resourcePrimKey == -1) && (primaryKey != entryClassPK)) {
-			this.resourcePrimKey = entryClassPK;
-		}
 	}
 
 	public String toString() {
@@ -241,44 +233,22 @@ public class Data implements Comparable<Data> {
 				primaryKey + " " + resourcePrimKey + " " + uid;
 	}
 
-	protected static Long stringToTime(String dateString) {
-		if (Validator.isNull(dateString)) {
-			return null;
-		}
-
-		try {
-			return (DateTools.stringToTime(dateString))/1000;
-		}
-		catch (Exception e) {}
-
-		try {
-			return (Long.valueOf(dateString))/1000;
-		}
-		catch (Exception e) {}
-
-		try {
-			return (Timestamp.valueOf(dateString).getTime())/1000;
-		}
-		catch (Exception e) {}
-
-		return null;
-	}
-
 	protected static String[] indexAttributes =
 		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
 		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID};
 
+	/* Comun */
 	protected Long companyId = null;
 	protected Long createDate = null;
 	protected long entryClassPK = -1;
 	protected Long groupId = null;
+	protected IndexCheckerModel model = null;
 	protected Long modifiedDate = null;
 	protected long primaryKey = -1;
 	protected long resourcePrimKey = -1;
-	/* Index */
-	protected Integer status = null; protected IndexCheckerModel model = null;
 	/* Liferay */
+	protected Integer status = null;
+	/* Index */
 	protected String uid = null;
-	/* Comun */
 
 }
