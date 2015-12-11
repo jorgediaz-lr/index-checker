@@ -31,7 +31,22 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
+<%@ page import="com.jorgediaz.indexchecker.ExecutionMode" %>
+<%@ page import="com.jorgediaz.indexchecker.IndexCheckerResult" %>
+<%@ page import="com.jorgediaz.indexchecker.IndexCheckerUtil" %>
+<%@ page import="com.jorgediaz.indexchecker.portlet.IndexCheckerPortlet" %>
+
+<%@ page import="com.liferay.portal.kernel.log.Log" %>
+<%@ page import="com.liferay.portal.kernel.util.ParamUtil" %>
+<%@ page import="com.liferay.portal.kernel.util.StringPool" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
+<%@ page import="com.liferay.portal.model.Company" %>
+
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.EnumSet" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.Map.Entry" %>
 
 <portlet:defineObjects />
 
@@ -80,7 +95,69 @@
 </aui:form>
 
 <%
-	String outputScript = (String)renderRequest.getParameter("outputScript");
+	String outputScript = StringPool.BLANK;
+
+	Log _log = IndexCheckerPortlet.getLogger();
+	EnumSet<ExecutionMode> executionMode = (EnumSet<ExecutionMode>) request.getAttribute("executionMode");
+	Map<Company, Long> companyProcessTime = (Map<Company, Long>) request.getAttribute("companyProcessTime");
+	Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap = (Map<Company, Map<Long, List<IndexCheckerResult>>>) request.getAttribute("companyResultDataMap");
+	Map<Company, String> companyError = (Map<Company, String>) request.getAttribute("companyError");
+
+	if ((companyProcessTime != null) && (companyError != null)) {
+		List<String> outList = new ArrayList<String>();
+
+		int outputMaxLength = ParamUtil.getInteger(request, "outputMaxLength");
+
+		for (Entry<Company, Long> entry : companyProcessTime.entrySet()) {
+			Long processTime = entry.getValue();
+
+			outList.add("COMPANY: "+entry.getKey());
+
+			if (_log.isInfoEnabled() &&
+				executionMode.contains(
+					ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+				_log.info("COMPANY: "+entry.getKey());
+			}
+
+			outList.add(StringPool.BLANK);
+
+			if (companyResultDataMap != null) {
+				Map<Long, List<IndexCheckerResult>> resultDataMap =
+					companyResultDataMap.get(entry.getKey());
+
+				outList.addAll(
+					IndexCheckerUtil.generateOutput(
+						outputMaxLength, executionMode, resultDataMap));
+			}
+
+			outList.add(
+				"\nProcessed company "+entry.getKey().getCompanyId()+" in "+
+					processTime +" ms");
+			outList.add(StringPool.BLANK);
+		}
+
+		for (Entry<Company, String> entry : companyError.entrySet()) {
+			if ((companyResultDataMap != null) && companyResultDataMap.containsKey(entry.getKey())) {
+				continue;
+			}
+
+			Long processTime = companyProcessTime.get(entry.getKey());
+
+			outList.add("COMPANY: "+entry.getKey());
+
+			outList.add(StringPool.BLANK);
+
+			outList.add(entry.getValue());
+
+			outList.add(
+				"\nProcessed company "+entry.getKey().getCompanyId()+" in "+
+					processTime +" ms");
+			outList.add(StringPool.BLANK);
+		}
+
+		outputScript = IndexCheckerUtil.listStringToString(outList);
+	}
 %>
 
 <c:if test="<%= Validator.isNotNull(outputScript) %>">

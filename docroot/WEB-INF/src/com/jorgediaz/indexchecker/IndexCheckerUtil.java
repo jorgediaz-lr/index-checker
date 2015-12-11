@@ -20,7 +20,10 @@ import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
@@ -97,6 +100,21 @@ public class IndexCheckerUtil {
 		}
 
 		return out;
+	}
+
+	public static String listStringToString(List<String> out) {
+		if (Validator.isNull(out)) {
+			return null;
+		}
+
+		StringBundler stringBundler = new StringBundler(out.size()*2);
+
+		for (String s : out) {
+			stringBundler.append(s);
+			stringBundler.append(StringPool.NEW_LINE);
+		}
+
+		return stringBundler.toString();
 	}
 
 	protected static List<String> dumpData(

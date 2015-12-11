@@ -29,9 +29,6 @@ import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
@@ -45,6 +42,7 @@ import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -59,19 +57,41 @@ import javax.portlet.ActionResponse;
  */
 public class IndexCheckerPortlet extends MVCPortlet {
 
-	public static String listStringToString(List<String> out) {
-		if (Validator.isNull(out)) {
-			return null;
+	public static EnumSet<ExecutionMode> getExecutionMode(
+		ActionRequest request) {
+
+		EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(
+			ExecutionMode.class);
+
+		if (ParamUtil.getBoolean(request, "outputGroupBySite")) {
+			executionMode.add(ExecutionMode.GROUP_BY_SITE);
 		}
 
-		StringBundler stringBundler = new StringBundler(out.size()*2);
-
-		for (String s : out) {
-			stringBundler.append(s);
-			stringBundler.append(StringPool.NEW_LINE);
+		if (ParamUtil.getBoolean(request, "outputBothExact")) {
+			executionMode.add(ExecutionMode.SHOW_BOTH_EXACT);
 		}
 
-		return stringBundler.toString();
+		if (ParamUtil.getBoolean(request, "outputBothNotExact")) {
+			executionMode.add(ExecutionMode.SHOW_BOTH_NOTEXACT);
+		}
+
+		if (ParamUtil.getBoolean(request, "outputLiferay")) {
+			executionMode.add(ExecutionMode.SHOW_LIFERAY);
+		}
+
+		if (ParamUtil.getBoolean(request, "outputIndex")) {
+			executionMode.add(ExecutionMode.SHOW_INDEX);
+		}
+
+		if (ParamUtil.getBoolean(request, "dumpAllObjectsToLog")) {
+			executionMode.add(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG);
+		}
+
+		return executionMode;
+	}
+
+	public static Log getLogger() {
+		return _log;
 	}
 
 	public void executeGetIndexMissingClassNames(
@@ -80,15 +100,19 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		PortalUtil.copyRequestParameters(request, response);
 
+		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
+
 		String indexWrapperClassName = ParamUtil.getString(
 			request, "indexWrapperClassName");
 
 		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
 			indexWrapperClassName);
 
-		List<String> outputScript = new ArrayList<String>();
-
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+
+		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
 			List<String> classNames =
@@ -99,21 +123,27 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
 
-				outputScript.add("COMPANY: "+company);
+				long startTime = System.currentTimeMillis();
 
-				outputScript.addAll(
-					IndexChecker.executeScriptGetIndexMissingClassNames(
-						indexWrapperClass, company, classNames));
+				String error =
+					IndexCheckerUtil.listStringToString(
+						IndexChecker.executeScriptGetIndexMissingClassNames(
+							indexWrapperClass, company, classNames));
 
-				outputScript.add(StringPool.BLANK);
+				companyError.put(company, error);
+
+				long endTime = System.currentTimeMillis();
+
+				companyProcessTime.put(company, endTime-startTime);
 			}
 			finally {
 				ShardUtil.popCompanyService();
 			}
 		}
 
-		response.setRenderParameter(
-			"outputScript", listStringToString(outputScript));
+		request.setAttribute("executionMode", executionMode);
+		request.setAttribute("companyProcessTime", companyProcessTime);
+		request.setAttribute("companyError", companyError);
 	}
 
 	public void executeReindex(ActionRequest request, ActionResponse response)
@@ -132,9 +162,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
 
-		List<String> outputScript = new ArrayList<String>();
-
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+
+		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
 			List<String> allClassName =
@@ -168,10 +200,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						indexWrapperClass, company, groups, classNames,
 						executionMode);
 
-				outputScript.add("COMPANY: " + company);
-
-				outputScript.add(StringPool.BLANK);
-
 				for (
 					Entry<Long, List<IndexCheckerResult>> entry :
 						resultDataMap.entrySet()) {
@@ -185,17 +213,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
-				outputScript.add(
-					"Reindexed company "+company.getCompanyId()+" in "+
-						(endTime-startTime)+" ms");
-				outputScript.add(StringPool.BLANK);
+				companyProcessTime.put(company, endTime-startTime);
 			}
 			catch (Exception e) {
-				outputScript.add(
-					"Error during reindex execution: " + e.getMessage());
 				StringWriter sw = new StringWriter();
-				e.printStackTrace(new PrintWriter(sw));
-				outputScript.add(sw.toString());
+				PrintWriter pw = new PrintWriter(sw);
+				pw.println("Error during script execution: " + e.getMessage());
+				e.printStackTrace(pw);
+				companyError.put(company, sw.toString());
 				_log.error(e, e);
 			}
 			finally {
@@ -203,8 +228,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
-		response.setRenderParameter(
-			"outputScript", listStringToString(outputScript));
+		request.setAttribute("executionMode", executionMode);
+		request.setAttribute("companyProcessTime", companyProcessTime);
+		request.setAttribute("companyError", companyError);
 	}
 
 	public void executeRemoveOrphans(
@@ -224,9 +250,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
 
-		List<String> outputScript = new ArrayList<String>();
-
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+
+		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
 			List<String> allClassName =
@@ -260,10 +288,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						indexWrapperClass, company, groups, classNames,
 						executionMode);
 
-				outputScript.add("COMPANY: "+company);
-
-				outputScript.add(StringPool.BLANK);
-
 				for (
 					Entry<Long, List<IndexCheckerResult>> entry :
 						resultDataMap.entrySet()) {
@@ -277,17 +301,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
-				outputScript.add(
-					"Removed orphans of company " + company.getCompanyId() +
-					" in "+ (endTime-startTime)+" ms");
-				outputScript.add(StringPool.BLANK);
+				companyProcessTime.put(company, endTime-startTime);
 			}
 			catch (Exception e) {
-				outputScript.add(
-					"Error during remove orphan execution: " + e.getMessage());
 				StringWriter sw = new StringWriter();
-				e.printStackTrace(new PrintWriter(sw));
-				outputScript.add(sw.toString());
+				PrintWriter pw = new PrintWriter(sw);
+				pw.println("Error during script execution: " + e.getMessage());
+				e.printStackTrace(pw);
+				companyError.put(company, sw.toString());
 				_log.error(e, e);
 			}
 			finally {
@@ -295,8 +316,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
-		response.setRenderParameter(
-			"outputScript", listStringToString(outputScript));
+		request.setAttribute("executionMode", executionMode);
+		request.setAttribute("companyProcessTime", companyProcessTime);
+		request.setAttribute("companyError", companyError);
 	}
 
 	public void executeScript(ActionRequest request, ActionResponse response)
@@ -312,8 +334,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
 			indexWrapperClassName);
 
-		int outputMaxLength = ParamUtil.getInteger(request, "outputMaxLength");
-
 		String[] filterClassNameArr = null;
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
@@ -322,9 +342,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			filterClassNameArr = filterClassName.split(",");
 		}
 
-		List<String> outputScript = new ArrayList<String>();
-
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+		Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap =
+			new HashMap<Company, Map<Long, List<IndexCheckerResult>>>();
+
+		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+
+		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
 			List<String> allClassName =
@@ -369,32 +394,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
-				outputScript.add("COMPANY: "+company);
+				companyResultDataMap.put(company, resultDataMap);
 
-				if (_log.isInfoEnabled() &&
-					executionMode.contains(
-						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-					_log.info("COMPANY: "+company);
-				}
-
-				outputScript.add(StringPool.BLANK);
-
-				outputScript.addAll(
-					IndexCheckerUtil.generateOutput(
-						outputMaxLength, executionMode, resultDataMap));
-
-				outputScript.add(
-					"\nProcessed company "+company.getCompanyId()+" in "+
-						(endTime-startTime)+" ms");
-				outputScript.add(StringPool.BLANK);
+				companyProcessTime.put(company, (endTime-startTime));
 			}
 			catch (Exception e) {
-				outputScript.add(
-					"Error during script execution: " + e.getMessage());
 				StringWriter sw = new StringWriter();
-				e.printStackTrace(new PrintWriter(sw));
-				outputScript.add(sw.toString());
+				PrintWriter pw = new PrintWriter(sw);
+				pw.println("Error during script execution: " + e.getMessage());
+				e.printStackTrace(pw);
+				companyError.put(company, sw.toString());
 				_log.error(e, e);
 			}
 			finally {
@@ -402,41 +411,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
-		response.setRenderParameter(
-			"outputScript", listStringToString(outputScript));
-	}
-
-	protected static EnumSet<ExecutionMode> getExecutionMode(
-		ActionRequest request) {
-
-		EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(
-			ExecutionMode.class);
-
-		if (ParamUtil.getBoolean(request, "outputGroupBySite")) {
-			executionMode.add(ExecutionMode.GROUP_BY_SITE);
-		}
-
-		if (ParamUtil.getBoolean(request, "outputBothExact")) {
-			executionMode.add(ExecutionMode.SHOW_BOTH_EXACT);
-		}
-
-		if (ParamUtil.getBoolean(request, "outputBothNotExact")) {
-			executionMode.add(ExecutionMode.SHOW_BOTH_NOTEXACT);
-		}
-
-		if (ParamUtil.getBoolean(request, "outputLiferay")) {
-			executionMode.add(ExecutionMode.SHOW_LIFERAY);
-		}
-
-		if (ParamUtil.getBoolean(request, "outputIndex")) {
-			executionMode.add(ExecutionMode.SHOW_INDEX);
-		}
-
-		if (ParamUtil.getBoolean(request, "dumpAllObjectsToLog")) {
-			executionMode.add(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG);
-		}
-
-		return executionMode;
+		request.setAttribute("executionMode", executionMode);
+		request.setAttribute("companyProcessTime", companyProcessTime);
+		request.setAttribute("companyResultDataMap", companyResultDataMap);
+		request.setAttribute("companyError", companyError);
 	}
 
 	protected Class<? extends IndexWrapper> getIndexWrapper(
