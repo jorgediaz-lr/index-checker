@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.index;
 
 public abstract class DocumentWrapper {

@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.data;
 
 import com.jorgediaz.indexchecker.index.DocumentWrapper;
@@ -238,6 +242,7 @@ public class Data implements Comparable<Data> {
 		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID};
 
 	/* Comun */
+
 	protected Long companyId = null;
 	protected Long createDate = null;
 	protected long entryClassPK = -1;

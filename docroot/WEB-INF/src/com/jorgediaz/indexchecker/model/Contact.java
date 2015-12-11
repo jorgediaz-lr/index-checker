@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;

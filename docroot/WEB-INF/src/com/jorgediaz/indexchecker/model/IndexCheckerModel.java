@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
@@ -29,44 +33,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-/*
-
-com.liferay.portal.model.Contact NO => user.isDefaultUser() || (user.getStatus() != WorkflowConstants.STATUS_APPROVED)
-com.liferay.portal.model.Organization
-com.liferay.portal.model.User NO => user.isDefaultUser()
-com.liferay.portal.model.UserGroup
-com.liferay.portlet.journal.model.JournalArticle NO => !article.isIndexable() || (PortalUtil.getClassNameId(DDMStructure.class) == article.getClassNameId())
-com.liferay.portlet.journal.model.JournalFolder
-com.liferay.portlet.dynamicdatalists.model.DDLRecord NO => !recordVersion.isApproved()
-com.liferay.portlet.messageboards.model.MBMessage NO => (!message.isApproved() && !message.isInTrash()) OR (message.isDiscussion() && message.isRoot())
-com.liferay.portlet.messageboards.model.MBThread
-com.liferay.portlet.bookmarks.model.BookmarksEntry
-com.liferay.portlet.bookmarks.model.BookmarksFolder NO => (!folder.isApproved() && !folder.isInTrash())
-com.liferay.portlet.blogs.model.BlogsEntry NO => (!entry.isApproved() && !entry.isInTrash())
-com.liferay.portlet.wiki.model.WikiNode
-com.liferay.portlet.wiki.model.WikiPage NO => (!page.isHead() || (!page.isApproved() && !page.isInTrash())) OR (Validator.isNotNull(page.getRedirectTitle()))
-com.liferay.portlet.documentlibrary.model.DLFileEntry NO => (!dlFileVersion.isApproved() && !dlFileEntry.isInTrash())
-com.liferay.portlet.documentlibrary.model.DLFolder NO => (!dlFolder.isApproved() && !dlFolder.isInTrash())
-
-Contact_ t where t.companyId = ? and userId not in (select userId from User_ where defaultuser = true or status != 0)
-Organization_ t where t.companyId = ?
-User_ t where t.companyId = ? and defaultuser = false
-UserGroup t where t.companyId = ?
-JournalArticle t where t.companyId = ? and indexable = true and classnameid = 0
-JournalFolder t where t.companyId = ?
-DDLRecordVersion v, DDLRecord t where t.companyId = ? and t.recordId = v.recordId and t.version = v.version and v.status = 0
-MBMessage t where t.companyId = ? and (status = 8 or status = 0)and not (categoryid = -1 and parentmessageid = 0)
-MBThread t where t.companyId = ?
-BookmarksEntry t where t.companyId = ?
-BookmarksFolder t where t.companyId = ? and (status = 8 or status = 0)
-BlogsEntry t where t.companyId = ? and (status = 8 or status = 0)
-WikiNode t where t.companyId = ?
-WikiPage t where t.companyId = ? and head = true and (status = 8 or status = 0)and redirecttitle = ''
-DLFileVersion v, DLFileEntry t where t.companyId = ? and (status = 8 or status = 0)and t.fileentryid = v.fileentryid and t.version = v.version
-DLFolder t where t.companyId = ? and (status = 8 or status = 0)
-
-	 */
-
 public class IndexCheckerModel extends ModelImpl {
 
 	public static Map<Class<?>, String[]> modelInterfaceAttributesMap =

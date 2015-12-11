@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.index;
 
 import com.liferay.portal.kernel.log.Log;

@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;

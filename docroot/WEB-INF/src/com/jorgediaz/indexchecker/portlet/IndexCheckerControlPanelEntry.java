@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.indexchecker.portlet;
 
 import com.liferay.portal.model.Portlet;
