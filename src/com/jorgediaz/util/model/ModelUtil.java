@@ -1,3 +1,7 @@
+/**
+ * Space for Copyright
+ */
+
 package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
