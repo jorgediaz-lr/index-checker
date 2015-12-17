@@ -155,7 +155,7 @@ public class IndexCheckerModel extends ModelImpl {
 			conjunction.add(getProperty("companyId").eq(companyId));
 		}
 
-		if (this.hasGroupId()) {
+		if (this.hasAttribute("groupId")) {
 			conjunction.add(getProperty("groupId").in(listGroupId));
 		}
 

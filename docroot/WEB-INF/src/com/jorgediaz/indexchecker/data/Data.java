@@ -73,7 +73,7 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		if (this.model.hasGroupId() &&
+		if (this.model.hasAttribute("groupId") &&
 			!DataUtil.exactLongs(this.groupId, data.groupId)) {
 
 			return false;

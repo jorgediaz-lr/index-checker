@@ -149,7 +149,7 @@ public class IndexChecker {
 		Map<Long, IndexCheckerResult> dataMap =
 			new LinkedHashMap<Long, IndexCheckerResult>();
 
-		if (icModel.hasGroupId() &&
+		if (icModel.hasAttribute("groupId") &&
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
 			Map<Long, Set<Data>> indexDataMap =
