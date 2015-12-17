@@ -538,12 +538,13 @@ public abstract class ModelImpl implements Model {
 		return false;
 	}
 
-	public boolean modelExtendsClass(Class<?> clazz) { /* TODO quitar referencia a getModelClass */
+	public boolean modelExtendsClass(Class<?> clazz) {
+		/* TODO quitar referencia a getModelClass */
 		return clazz.isAssignableFrom(this.modelClass);
 	}
 
 	public DynamicQuery newDynamicQuery() {
-		if(modelService == null) {
+		if (modelService == null) {
 			return newDynamicQuery(this.modelClass);
 		}
 
