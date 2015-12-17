@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.service.BaseLocalService;
 
 import java.lang.reflect.Method;
 
@@ -174,9 +175,17 @@ public class ModelFactory {
 	protected List<?> executeDynamicQuery(
 		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery) {
 
+		String classPackageName = clazz.getPackage().getName();
+		String classSimpleName = clazz.getSimpleName();
+
+		ClassLoader classLoader = clazz.getClassLoader();
+
+		String classFullName = classPackageName + "." + classSimpleName;
+
 		try {
 			Method method = getLocalServiceUtilMethod(
-				clazz, "dynamicQuery", DynamicQuery.class);
+				classLoader, classPackageName, classSimpleName, "dynamicQuery",
+				DynamicQuery.class);
 
 			if (method == null) {
 				return null;
@@ -185,14 +194,14 @@ public class ModelFactory {
 			return (List<?>)method.invoke(null, dynamicQuery);
 		}
 		catch (Exception e) {
-			if (!clazz.equals(Group.class) &&
+			if (!classFullName.equals(Group.class.getName()) &&
 				(e instanceof ClassNotFoundException ||
 				 e instanceof NoSuchMethodException)) {
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						"executeDynamicQuery: dynamicQuery method not found " +
-						"for " + clazz.getName() + " - " + e.getMessage() +
+						"for " + classFullName + " - " + e.getMessage() +
 						" trying with GroupLocalServiceUtil.dynamicQuery");
 				}
 
@@ -208,34 +217,41 @@ public class ModelFactory {
 
 			throw new RuntimeException(
 				"executeDynamicQuery: error invoking dynamicQuery method for " +
-					clazz.getName() + cause, e);
+					classFullName + ": " + cause, e);
 		}
 	}
 
-	protected ClassedModel executeOperation(
-		Class<? extends ClassedModel> clazz, String operation,
-		Class<?> parameterType, Object arg) {
+	protected Object executeMethod(
+		ClassLoader classLoader, String classPackageName,
+		String classSimpleName, String methodName, Class<?> parameterType,
+		Object arg) {
+
+		String classFullName = classPackageName + "." + classSimpleName;
 
 		try {
 			Method method = getLocalServiceUtilMethod(
-				clazz, operation + clazz.getSimpleName(), parameterType);
+				classLoader, classPackageName, classSimpleName, methodName,
+				parameterType);
 
 			if (method == null) {
 				return null;
 			}
 
-			return (ClassedModel)method.invoke(null, arg);
+			if (arg == null) {
+				return method.invoke(null);
+			}
+
+			return method.invoke(null, arg);
 		}
 		catch (ClassNotFoundException e) {
 			throw new RuntimeException(
-				"executeOperation: class not found exception calling " +
-				operation + clazz.getSimpleName() + " for " + clazz.getName(),
-				e);
+				"executeMethod: class not found exception calling " +
+				methodName + " for " + classFullName, e);
 		}
 		catch (NoSuchMethodException e) {
 			throw new RuntimeException(
-				"executeOperation: " + operation + clazz.getSimpleName() +
-				" method not found for " + clazz.getName(), e);
+				"executeMethod: " + methodName + " method not found for " +
+				classFullName, e);
 		}
 		catch (Exception e) {
 			String cause = StringPool.BLANK;
@@ -246,20 +262,63 @@ public class ModelFactory {
 			}
 
 			throw new RuntimeException(
-				"executeOperation: " + operation + clazz.getSimpleName() +
-				" method for " + clazz.getName() + cause, e);
+				"executeMethod: " + methodName + " method for " +
+				classFullName + ": " + cause, e);
+		}
+	}
+
+	protected Object executeServiceMethod(
+		BaseLocalService service, String methodName, Class<?> parameterType,
+		Object arg) {
+
+		if (service == null) {
+			throw new IllegalArgumentException("service must be not null");
+		}
+
+		try {
+			Method method = getLocalServiceMethod(
+				service, methodName, parameterType);
+
+			if (method == null) {
+				return null;
+			}
+
+			if (arg == null) {
+				return method.invoke(service);
+			}
+
+			return method.invoke(service, arg);
+		}
+		catch (NoSuchMethodException e) {
+			throw new RuntimeException(
+				"executeMethod: " + methodName + " method not found for " +
+				service, e);
+		}
+		catch (Exception e) {
+			String cause = StringPool.BLANK;
+			Throwable rootException = e.getCause();
+
+			if (rootException != null) {
+				cause = " (root cause: " + rootException.getMessage() + ")";
+			}
+
+			throw new RuntimeException(
+				"executeMethod: " + methodName + " method for " +
+				service + ": " + cause, e);
 		}
 	}
 
 	protected Object[][] getDatabaseAttributesArr(
-		Class<? extends ClassedModel> clazz) {
+		ClassLoader classloader, String packageName, String simpleName) {
 
-		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(clazz);
+		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(
+			packageName, simpleName);
+
 		Class<?> classLiferayModelImpl;
 		try {
 			classLiferayModelImpl =
 				ModelUtil.getJavaClass(
-					javaClasses, clazz.getClassLoader(), liferayModelImpl);
+					javaClasses, classloader, liferayModelImpl);
 		}
 		catch (ClassNotFoundException e) {
 			_log.error("Class not found: " + liferayModelImpl);
@@ -279,22 +338,24 @@ public class ModelFactory {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Database attributes array of " + clazz.getName() +
-				": " + Arrays.toString(tableColumns));
+				"Database attributes array of " + packageName + "." +
+				simpleName + ": " + Arrays.toString(tableColumns));
 		}
 
 		return tableColumns;
 	}
 
 	protected String getDatabaseAttributesStr(
-		Class<? extends ClassedModel> clazz) {
+		ClassLoader classloader, String packageName, String simpleName) {
 
-		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(clazz);
+		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(
+			packageName, simpleName);
+
 		Class<?> classLiferayModelImpl;
 		try {
 			classLiferayModelImpl =
 				ModelUtil.getJavaClass(
-					javaClasses, clazz.getClassLoader(), liferayModelImpl);
+					javaClasses, classloader, liferayModelImpl);
 		}
 		catch (ClassNotFoundException e) {
 			_log.error("Class not found: " + liferayModelImpl);
@@ -336,21 +397,80 @@ public class ModelFactory {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Database attributes of " + clazz.getName() + ": " +
-				tableAttributes);
+				"Database attributes of " + packageName + "." + simpleName +
+				": " + tableAttributes);
 		}
 
 		return tableAttributes;
 	}
 
-	protected Method getLocalServiceUtilMethod(
-		Class<? extends ClassedModel> clazz, String methodName,
-		Class <?> parameterType)
-			throws ClassNotFoundException, NoSuchMethodException,
-			SecurityException {
+	protected Method getLocalServiceMethod(
+		BaseLocalService service, String methodName, Class<?> parameterType)
+			throws ClassNotFoundException, NoSuchMethodException {
 
-		String key =
-			clazz.getName() + "#" + methodName + "#" + parameterType.getName();
+		String key = service.getClass().getName() + "#" + methodName;
+
+		if (parameterType != null) {
+			key = key + "#" + parameterType.getName();
+		}
+
+		Method method = null;
+
+		if (localServiceMethods.containsKey(key)) {
+			try {
+				method = localServiceMethods.get(key).getMethod();
+			}
+			catch (NoSuchMethodException e) {
+			}
+		}
+
+		if (method == null) {
+			Class<?> classLocalService = service.getClass();
+
+			for (; classLocalService != null;
+				classLocalService = classLocalService.getSuperclass()) {
+
+				try {
+					if (parameterType != null) {
+						method = classLocalService.getDeclaredMethod(
+							methodName, parameterType);
+					}
+					else {
+						method = classLocalService.getDeclaredMethod(
+							methodName);
+					}
+
+					break;
+				}
+				catch (Exception e) {
+				}
+			}
+
+			if (method == null) {
+				localServiceMethods.put(key, new MethodKey());
+			}
+			else {
+				if (!method.isAccessible()) {
+					method.setAccessible(true);
+				}
+
+				localServiceMethods.put(key, new MethodKey(method));
+			}
+		}
+
+		return method;
+	}
+
+	protected Method getLocalServiceUtilMethod(
+		ClassLoader classLoader, String packageName, String simpleName,
+		String methodName, Class<?> parameterType)
+			throws ClassNotFoundException, NoSuchMethodException {
+
+		String key = packageName + "." + simpleName + "#" + methodName;
+
+		if (parameterType != null) {
+			key = key + "#" + parameterType.getName();
+		}
 
 		Method method = null;
 
@@ -364,14 +484,19 @@ public class ModelFactory {
 
 		if (method == null) {
 			String localServiceUtil =
-				ModelUtil.getLiferayLocalServiceUtilClassName(clazz);
+				ModelUtil.getLiferayLocalServiceUtilClassName(
+					packageName, simpleName);
+
 			Class<?> classLocalServiceUtil =
 				ModelUtil.getJavaClass(
-					javaClasses, clazz.getClassLoader(), localServiceUtil);
+					javaClasses, classLoader, localServiceUtil);
 
-			if (localServiceUtil != null) {
+			if ((localServiceUtil != null) && (parameterType != null)) {
 				method = classLocalServiceUtil.getMethod(
 					methodName, parameterType);
+			}
+			else if (localServiceUtil != null) {
+				method = classLocalServiceUtil.getMethod(methodName);
 			}
 
 			if (method == null) {
@@ -399,6 +524,8 @@ public class ModelFactory {
 
 	private Map<String, Class<?>> javaClasses =
 		new ConcurrentHashMap<String, Class<?>>();
+	private Map<String, MethodKey> localServiceMethods =
+		new ConcurrentHashMap<String, MethodKey>();
 	private Map<String, MethodKey> localServiceUtilMethods =
 		new ConcurrentHashMap<String, MethodKey>();
 

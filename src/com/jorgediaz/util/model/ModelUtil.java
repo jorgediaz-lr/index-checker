@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.ClassName;
-import com.liferay.portal.model.ClassedModel;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -358,11 +357,8 @@ public class ModelUtil {
 	}
 
 	public static String getLiferayLocalServiceUtilClassName(
-		Class<? extends ClassedModel> clazz) {
+		String packageName, String simpleName) {
 
-		Package pkg = clazz.getPackage();
-
-		String packageName = pkg.getName();
 		int pos = packageName.lastIndexOf(".model");
 
 		if (pos > 0) {
@@ -370,27 +366,27 @@ public class ModelUtil {
 		}
 
 		String className =
-			packageName + ".service." + clazz.getSimpleName() +
+			packageName + ".service." + simpleName +
 				"LocalServiceUtil";
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"LocalServiceUtil of " + clazz.getName() + ": " + className);
+				"LocalServiceUtil of " + packageName + "." + simpleName + ": " +
+				className);
 		}
 
 		return className;
 	}
 
 	public static String getLiferayModelImplClassName(
-		Class<? extends ClassedModel> clazz) {
+		String packageName, String simpleName) {
 
-		Package pkg = clazz.getPackage();
-
-		String className =
-			pkg.getName() + ".impl." + clazz.getSimpleName() + "ModelImpl";
+		String className = packageName + ".impl." + simpleName + "ModelImpl";
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("ModelImpl of " + clazz.getName() + ": " + className);
+			_log.debug(
+				"ModelImpl of " + packageName + "." + simpleName + ": " +
+			className);
 		}
 
 		return className;

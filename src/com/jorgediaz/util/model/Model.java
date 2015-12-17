@@ -34,13 +34,7 @@ public interface Model extends Cloneable {
 
 	public Model clone();
 
-	public ClassedModel createObject(
-		Class<? extends ClassedModel> clazz, long primaryKey);
-
 	public ClassedModel createObject(long primaryKey);
-
-	public ClassedModel deleteObject(
-		Class<? extends ClassedModel> clazz, long primaryKey);
 
 	public ClassedModel deleteObject(ClassedModel object);
 
@@ -52,9 +46,6 @@ public interface Model extends Cloneable {
 
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
 		throws Exception;
-
-	public ClassedModel fetchObject(
-		Class<? extends ClassedModel> clazz, long primaryKey);
 
 	public ClassedModel fetchObject(long primaryKey);
 
@@ -91,8 +82,6 @@ public interface Model extends Cloneable {
 
 	public Indexer getIndexer();
 
-	public Class<?> getModelClass();
-
 	public String getName();
 
 	public String getPrimaryKeyAttribute();
@@ -108,8 +97,6 @@ public interface Model extends Cloneable {
 	public boolean hasAttribute(String attribute);
 
 	public boolean hasAttributes(String[] attributes);
-
-	public boolean hasGroupId();
 
 	public boolean hasIndexer();
 
@@ -127,8 +114,6 @@ public interface Model extends Cloneable {
 
 	public DynamicQuery newDynamicQuery(
 		Class<? extends ClassedModel> clazz, String alias);
-
-	public DynamicQuery newDynamicQuery(String alias);
 
 	public void setFilter(Criterion filter);
 
