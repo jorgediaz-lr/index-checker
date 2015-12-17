@@ -51,6 +51,7 @@ public class JournalArticle extends IndexCheckerModel {
 		query.add(filter);
 
 		DynamicQuery articleVersionDynamicQuery = this.newDynamicQuery(
+			com.liferay.portlet.journal.model.JournalArticle.class,
 			"articleVersion");
 
 		articleVersionDynamicQuery.setProjection(
