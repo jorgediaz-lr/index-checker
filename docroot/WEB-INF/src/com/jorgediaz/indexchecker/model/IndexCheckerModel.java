@@ -31,11 +31,6 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.model.AuditedModel;
-import com.liferay.portal.model.GroupedModel;
-import com.liferay.portal.model.ResourcedModel;
-import com.liferay.portal.model.StagedModel;
-import com.liferay.portal.model.WorkflowedModel;
 import com.liferay.portal.service.BaseLocalService;
 
 import java.util.ArrayList;
@@ -49,29 +44,14 @@ import java.util.Map;
  */
 public class IndexCheckerModel extends ModelImpl {
 
-	public static Map<Class<?>, String[]> modelInterfaceAttributesMap =
-		new HashMap<Class<?>, String[]>();
-
-	static {
-		String[] auditedModelAttributes =
-			new String[] { "companyId", "createDate", "modifiedDate"};
-		String[] groupedModelAttributes = new String[] { "groupId" };
-		String[] resourcedModelAttributes = new String[] { "resourcePrimKey" };
-		String[] stagedModelAttributes =
-			new String[] { "companyId", "createDate", "modifiedDate" };
-		String[] workflowModelAttributes = new String[] { "status" };
-
-		modelInterfaceAttributesMap.put(
-			AuditedModel.class, auditedModelAttributes);
-		modelInterfaceAttributesMap.put(
-			GroupedModel.class, groupedModelAttributes);
-		modelInterfaceAttributesMap.put(
-			ResourcedModel.class, resourcedModelAttributes);
-		modelInterfaceAttributesMap.put(
-			StagedModel.class, stagedModelAttributes);
-		modelInterfaceAttributesMap.put(
-			WorkflowedModel.class, workflowModelAttributes);
-	}
+	public static String[] auditedModelAttributes =
+		new String[] { "companyId", "createDate", "modifiedDate"};
+	public static String[] groupedModelAttributes = new String[] { "groupId" };
+	public static String[] resourcedModelAttributes =
+		new String[] { "resourcePrimKey" };
+	public static String[] stagedModelAttributes =
+		new String[] { "companyId", "createDate", "modifiedDate" };
+	public static String[] workflowModelAttributes = new String[] { "status" };
 
 	@Override
 	public Model clone() {
@@ -133,7 +113,7 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public Criterion generateQueryFilter() {
-		if (!this.modelExtendsClass(WorkflowedModel.class)) {
+		if (!this.isWorkflowEnabled()) {
 			return null;
 		}
 
@@ -214,16 +194,24 @@ public class IndexCheckerModel extends ModelImpl {
 			this.addIndexedAttribute("companyId");
 		}
 
-		for (Class<?> modelInterface : modelInterfaceAttributesMap.keySet()) {
-			if (this.modelExtendsClass(modelInterface)) {
-				String[] modelInterfaceAttributes =
-					modelInterfaceAttributesMap.get(modelInterface);
+		if (this.isAuditedModel()) {
+			addIndexedAttributes(auditedModelAttributes);
+		}
 
-				for (int i = 0; i<modelInterfaceAttributes.length; i++)
-				{
-					this.addIndexedAttribute((modelInterfaceAttributes[i]));
-				}
-			}
+		if (this.isGroupedModel()) {
+			addIndexedAttributes(groupedModelAttributes);
+		}
+
+		if (this.isResourcedModel()) {
+			addIndexedAttributes(resourcedModelAttributes);
+		}
+
+		if (this.isStagedModel()) {
+			addIndexedAttributes(stagedModelAttributes);
+		}
+
+		if (this.isWorkflowEnabled()) {
+			addIndexedAttributes(workflowModelAttributes);
 		}
 
 		this.setFilter(this.generateQueryFilter());
@@ -279,6 +267,14 @@ public class IndexCheckerModel extends ModelImpl {
 	protected void addIndexedAttribute(String col) {
 		if (!indexedAttributes.contains(col)) {
 			indexedAttributes.add(col);
+		}
+	}
+
+	protected void addIndexedAttributes(String[] modelAttributes) {
+
+		for (int i = 0; i<modelAttributes.length; i++)
+		{
+			this.addIndexedAttribute((modelAttributes[i]));
 		}
 	}
 

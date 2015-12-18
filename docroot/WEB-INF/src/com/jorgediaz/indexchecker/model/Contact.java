@@ -14,6 +14,8 @@
 
 package com.jorgediaz.indexchecker.model;
 
+import com.jorgediaz.util.model.Model;
+
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -31,12 +33,15 @@ public class Contact extends IndexCheckerModel {
 
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
-		DynamicQuery userDynamicQuery = this.newDynamicQuery(User.class);
+		Model modelUser = this.getModelFactory().getModelObject(
+			User.class.getName());
+
+		DynamicQuery userDynamicQuery = modelUser.newDynamicQuery();
 
 		userDynamicQuery.setProjection(getPropertyProjection("userId"));
 
 		userDynamicQuery.add(
-			generateCriterionFilter(
+			modelUser.generateCriterionFilter(
 				"defaultUser=true+status<>"+WorkflowConstants.STATUS_APPROVED));
 
 		conjunction.add(getProperty("classPK").notIn(userDynamicQuery));

@@ -15,6 +15,7 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
+import com.jorgediaz.util.model.Model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -34,12 +35,15 @@ public class DLFileEntry extends IndexCheckerModel {
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
 		Map<Long, Data> dataMap = super.getLiferayData(filter);
 
-		DynamicQuery queryDLFileVersion = this.newDynamicQuery(
-			DLFileVersion.class);
+		Model modelDLFileVersion = this.getModelFactory().getModelObject(
+			DLFileVersion.class.getName());
+
+		DynamicQuery queryDLFileVersion = modelDLFileVersion.newDynamicQuery();
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
-		projectionList.add(this.getPropertyProjection("fileEntryId"));
-		projectionList.add(this.getPropertyProjection("status"));
+		projectionList.add(
+			modelDLFileVersion.getPropertyProjection("fileEntryId"));
+		projectionList.add(modelDLFileVersion.getPropertyProjection("status"));
 
 		queryDLFileVersion.setProjection(projectionList);
 
@@ -47,8 +51,8 @@ public class DLFileEntry extends IndexCheckerModel {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results =
-			(List<Object[]>)this.executeDynamicQuery(
-				DLFileVersion.class, queryDLFileVersion);
+			(List<Object[]>)modelDLFileVersion.executeDynamicQuery(
+				queryDLFileVersion);
 
 		for (Object[] result : results) {
 			long fileEntryId = (Long)result[0];
