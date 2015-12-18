@@ -34,7 +34,7 @@ public class Contact extends IndexCheckerModel {
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		Model modelUser = this.getModelFactory().getModelObject(
-			User.class.getName());
+			null, User.class.getName());
 
 		DynamicQuery userDynamicQuery = modelUser.newDynamicQuery();
 

@@ -36,7 +36,7 @@ public class DLFileEntry extends IndexCheckerModel {
 		Map<Long, Data> dataMap = super.getLiferayData(filter);
 
 		Model modelDLFileVersion = this.getModelFactory().getModelObject(
-			DLFileVersion.class.getName());
+			null, DLFileVersion.class.getName());
 
 		DynamicQuery queryDLFileVersion = modelDLFileVersion.newDynamicQuery();
 
