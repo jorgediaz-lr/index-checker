@@ -29,7 +29,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+
 import java.sql.Types;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -198,7 +200,10 @@ public class ReflectionUtil {
 				"loaded class: " + clazz + " from classloader :" + classloader);
 		}
 
-		javaClasses.put(className, clazz);
+		if (clazz != null) {
+			javaClasses.put(className, clazz);
+		}
+
 		return clazz;
 	}
 
@@ -229,6 +234,30 @@ public class ReflectionUtil {
 		}
 
 		return classLiferayModelImpl;
+	}
+
+	public BaseLocalService getService(
+		ClassLoader classLoader, String classPackageName,
+		String classSimpleName) {
+
+		try {
+			return (BaseLocalService)executeMethod(
+				classLoader, classPackageName, classSimpleName, "getService",
+				null, null);
+		}
+		catch (Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(e, e);
+			}
+			else if (_log.isInfoEnabled()) {
+				_log.info(
+					"Cannot get service of " + classPackageName + "." +
+					classSimpleName + " EXCEPTION: " + e.getClass().getName() +
+					": " + e.getMessage());
+			}
+
+			return null;
+		}
 	}
 
 	protected List<?> executeDynamicQuery(
@@ -487,29 +516,6 @@ public class ReflectionUtil {
 		}
 
 		return method;
-	}
-
-	public BaseLocalService getService(
-		ClassLoader classLoader, String classPackageName, String classSimpleName) {
-	
-		try {
-			return (BaseLocalService)executeMethod(
-				classLoader, classPackageName, classSimpleName, "getService",
-				null, null);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-			else if (_log.isInfoEnabled()) {
-				_log.info(
-					"Cannot get service of " + classPackageName + "." +
-					classSimpleName + " EXCEPTION: " + e.getClass().getName() +
-					": " + e.getMessage());
-			}
-	
-			return null;
-		}
 	}
 
 	protected Map<String, Class<?>> javaClasses =
