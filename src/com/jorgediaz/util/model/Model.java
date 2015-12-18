@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.model.ClassedModel;
+import com.liferay.portal.service.BaseLocalService;
 
 import java.util.List;
 import java.util.Locale;
@@ -101,8 +102,9 @@ public interface Model extends Cloneable {
 	public boolean hasIndexer();
 
 	public void init(
-		ModelFactory modelFactory, Class<? extends ClassedModel> modelClass)
-			throws Exception;
+			ReflectionUtil reflectionUtil, String classPackageName,
+			String classSimpleName, BaseLocalService service)
+		throws Exception;
 
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute);
 

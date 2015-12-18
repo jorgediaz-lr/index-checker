@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
@@ -48,7 +49,7 @@ public abstract class ModelImpl implements Model {
 	public ClassedModel addObject(ClassedModel object) {
 		String methodName = "add" + object.getModelClass().getSimpleName();
 
-		return (ClassedModel)modelFactory.executeServiceMethod(
+		return (ClassedModel)reflectionUtil.executeServiceMethod(
 			this.modelService, methodName, object.getModelClass(), object);
 	}
 
@@ -57,12 +58,15 @@ public abstract class ModelImpl implements Model {
 		try {
 			model = this.getClass().newInstance();
 			model.name = this.name;
-			model.modelFactory = this.modelFactory;
+			model.reflectionUtil = this.reflectionUtil;
 			model.modelService = this.modelService;
 			model.attributesString = this.attributesString;
 			model.attributesArray = this.attributesArray;
-			model.modelClass = this.modelClass;
 			model.filter = this.filter;
+			model.className = this.className;
+			model.classPackageName = this.classPackageName;
+			model.classSimpleName = this.classSimpleName;
+			model.classModelImpl = this.classModelImpl;
 		}
 		catch (Exception e) {
 			_log.error("Error executing clone");
@@ -73,23 +77,23 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public ClassedModel createObject(long primaryKey) {
-		String methodName = "create" + getClassSimpleName();
+		String methodName = "create" + classSimpleName;
 
-		return (ClassedModel)this.modelFactory.executeServiceMethod(
+		return (ClassedModel)this.reflectionUtil.executeServiceMethod(
 			this.modelService, methodName, long.class, (Object)primaryKey);
 	}
 
 	public ClassedModel deleteObject(ClassedModel object) {
 		String methodName = "delete" + object.getModelClass().getSimpleName();
 
-		return (ClassedModel)modelFactory.executeServiceMethod(
+		return (ClassedModel)reflectionUtil.executeServiceMethod(
 			this.modelService, methodName, object.getModelClass(), object);
 	}
 
 	public ClassedModel deleteObject(long primaryKey) {
-		String methodName = "delete" + getClassSimpleName();
+		String methodName = "delete" + classSimpleName;
 
-		return (ClassedModel)this.modelFactory.executeServiceMethod(
+		return (ClassedModel)this.reflectionUtil.executeServiceMethod(
 			this.modelService, methodName, long.class, (Object)primaryKey);
 	}
 
@@ -97,7 +101,7 @@ public abstract class ModelImpl implements Model {
 		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery)
 			throws Exception {
 
-		return modelFactory.executeDynamicQuery(clazz, dynamicQuery);
+		return reflectionUtil.executeDynamicQuery(clazz, dynamicQuery);
 	}
 
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
@@ -112,17 +116,18 @@ public abstract class ModelImpl implements Model {
 		}
 
 		if (modelService == null) {
-			return modelFactory.executeDynamicQuery(Group.class, dynamicQuery);
+			return reflectionUtil.executeDynamicQuery(
+				Group.class, dynamicQuery);
 		}
 
-		return (List<?>)modelFactory.executeServiceMethod(
+		return (List<?>)reflectionUtil.executeServiceMethod(
 			modelService, "dynamicQuery", DynamicQuery.class, dynamicQuery);
 	}
 
 	public ClassedModel fetchObject(long primaryKey) {
-		String methodName = "fetch" + getClassSimpleName();
+		String methodName = "fetch" + classSimpleName;
 
-		return (ClassedModel)this.modelFactory.executeServiceMethod(
+		return (ClassedModel)this.reflectionUtil.executeServiceMethod(
 			this.modelService, methodName, long.class, (Object)primaryKey);
 	}
 
@@ -195,7 +200,8 @@ public abstract class ModelImpl implements Model {
 	public Criterion generateSingleCriterion(
 		String attrName, String attrValue, String op) {
 
-		return ModelUtil.generateSingleCriterion(this, attrName, attrValue, op);
+		return ReflectionUtil.generateSingleCriterion(
+			this, attrName, attrValue, op);
 	}
 
 	public int getAttributePos(String name) {
@@ -212,9 +218,8 @@ public abstract class ModelImpl implements Model {
 
 	public Object[][] getAttributes() {
 		if (attributesArray == null) {
-			attributesArray = modelFactory.getDatabaseAttributesArr(
-				getClassLoader(), this.getClassPackageName(),
-				this.getClassSimpleName());
+			attributesArray = reflectionUtil.getDatabaseAttributesArr(
+				classModelImpl);
 		}
 
 		return attributesArray;
@@ -255,20 +260,15 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public ClassLoader getClassLoader() {
-		ClassLoader classLoader = null;
-
 		if (modelService != null) {
-			classLoader = modelService.getClass().getClassLoader();
-		}
-		else {
-			classLoader = modelClass.getClassLoader();
+			return modelService.getClass().getClassLoader();
 		}
 
-		return classLoader;
+		return null;
 	}
 
 	public String getClassName() {
-		return modelClass.getName();
+		return className;
 	}
 
 	public long getClassNameId() {
@@ -276,11 +276,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public String getClassPackageName() {
-		return modelClass.getPackage().getName();
+		return classPackageName;
 	}
 
 	public String getClassSimpleName() {
-		return modelClass.getSimpleName();
+		return classSimpleName;
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -368,9 +368,8 @@ public abstract class ModelImpl implements Model {
 
 	public String[] getPrimaryKeyMultiAttribute() {
 		if (primaryKeyMultiAttribute == null) {
-			String aux = modelFactory.getDatabaseAttributesStr(
-				getClassLoader(), this.getClassPackageName(),
-				this.getClassSimpleName());
+			String aux = reflectionUtil.getDatabaseAttributesStr(
+				classModelImpl);
 
 			if (aux.indexOf('#') > 0) {
 				aux = aux.split("#")[1];
@@ -453,32 +452,6 @@ public abstract class ModelImpl implements Model {
 		return projectionList;
 	}
 
-	public BaseLocalService getService() {
-
-		try {
-			String classPackageName = getClassPackageName();
-			String classSimpleName = getClassSimpleName();
-			ClassLoader classLoader = getClassLoader();
-
-			return (BaseLocalService)modelFactory.executeMethod(
-			classLoader, classPackageName, classSimpleName, "getService", null,
-			null);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-			else if (_log.isInfoEnabled()) {
-				_log.info(
-					"Cannot get service of " + modelClass +
-					" EXCEPTION: " + e.getClass().getName() + ": " +
-					e.getMessage());
-			}
-
-			return null;
-		}
-	}
-
 	public boolean hasAttribute(String attribute) {
 		Object[][] modelAttributes = getAttributes();
 
@@ -519,12 +492,21 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public void init(
-		ModelFactory modelFactory, Class<? extends ClassedModel> modelClass)
-			throws Exception {
+			ReflectionUtil reflectionUtil, String classPackageName,
+			String classSimpleName, BaseLocalService service)
+		throws Exception {
 
-		this.modelFactory = modelFactory;
-		this.modelClass = modelClass;
-		this.modelService = getService();
+		this.reflectionUtil = reflectionUtil;
+
+		this.modelService = service;
+
+		this.className = classPackageName + "." + classSimpleName;
+		this.classPackageName = classPackageName;
+		this.classSimpleName = classSimpleName;
+
+		this.classModelImpl =
+			reflectionUtil.getLiferayModelImplClass(
+				getClassLoader(), classPackageName, classSimpleName);
 	}
 
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
@@ -539,27 +521,40 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean modelExtendsClass(Class<?> clazz) {
-		/* TODO quitar referencia a getModelClass */
-		return clazz.isAssignableFrom(this.modelClass);
+		return clazz.isAssignableFrom(classModelImpl);
 	}
 
+	@SuppressWarnings("unchecked")
 	public DynamicQuery newDynamicQuery() {
 		if (modelService == null) {
-			return newDynamicQuery(this.modelClass);
+			Class<? extends ClassedModel> clazz;
+			try {
+				clazz =
+					(Class<? extends ClassedModel>)reflectionUtil.getJavaClass(
+						className);
+			}
+			catch (ClassNotFoundException e) {
+				_log.error("Class not found: " + className);
+				throw new RuntimeException(e);
+			}
+
+			return newDynamicQuery(clazz);
 		}
 
-		return (DynamicQuery)modelFactory.executeServiceMethod(
+		return (DynamicQuery)reflectionUtil.executeServiceMethod(
 			modelService, "dynamicQuery", null, null);
 	}
 
 	public DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz) {
-		return modelFactory.newDynamicQuery(clazz, null);
+		return DynamicQueryFactoryUtil.forClass(
+			clazz, null, clazz.getClassLoader());
 	}
 
 	public DynamicQuery newDynamicQuery(
 		Class<? extends ClassedModel> clazz, String alias) {
 
-		return modelFactory.newDynamicQuery(clazz, alias);
+		return DynamicQueryFactoryUtil.forClass(
+			clazz, alias, clazz.getClassLoader());
 	}
 
 	public void setFilter(Criterion filter) {
@@ -578,16 +573,15 @@ public abstract class ModelImpl implements Model {
 	public ClassedModel updateObject(ClassedModel object) {
 		String methodName = "update" + object.getModelClass().getSimpleName();
 
-		return (ClassedModel)modelFactory.executeServiceMethod(
+		return (ClassedModel)reflectionUtil.executeServiceMethod(
 			this.modelService, methodName, object.getModelClass(), object);
 	}
 
 	protected String getCreateTableAttributes() {
 
 		if (attributesString == null) {
-			String aux = modelFactory.getDatabaseAttributesStr(
-				getClassLoader(), this.getClassPackageName(),
-				this.getClassSimpleName());
+			String aux = reflectionUtil.getDatabaseAttributesStr(
+				classModelImpl);
 
 			if (aux.indexOf('#') > 0) {
 				aux = aux.split("#")[0];
@@ -636,9 +630,11 @@ public abstract class ModelImpl implements Model {
 
 	protected Object[][] attributesArray = null;
 	protected String attributesString = null;
+	protected Class<?> classModelImpl = null;
+	protected String className = null;
+	protected String classPackageName = null;
+	protected String classSimpleName = null;
 	protected Criterion filter = null;
-	protected Class<? extends ClassedModel> modelClass = null;
-	protected ModelFactory modelFactory = null;
 	protected BaseLocalService modelService = null;
 	protected String name = null;
 
@@ -665,6 +661,7 @@ public abstract class ModelImpl implements Model {
 	protected String primaryKeyAttribute = null;
 
 	protected String[] primaryKeyMultiAttribute = null;
+	protected ReflectionUtil reflectionUtil = null;
 	protected String suffix = null;
 
 	private static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
