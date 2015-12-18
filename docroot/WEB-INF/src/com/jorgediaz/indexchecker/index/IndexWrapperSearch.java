@@ -17,6 +17,7 @@ package com.jorgediaz.indexchecker.index;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 import com.jorgediaz.util.model.ModelUtil;
+import com.jorgediaz.util.model.ReflectionUtil;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -215,7 +216,8 @@ public class IndexWrapperSearch extends IndexWrapper {
 		java.lang.reflect.Field indexSearchLimitField =
 			propsValues.getDeclaredField("INDEX_SEARCH_LIMIT");
 
-		ModelUtil.setFieldValue(null, indexSearchLimitField, indexSearchLimit);
+		ReflectionUtil.setFieldValue(
+			null, indexSearchLimitField, indexSearchLimit);
 
 		try {
 			ClassLoader classLoader = ModelUtil.getClassLoader();
@@ -228,7 +230,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 					solrIndexSearcher.getDeclaredField("INDEX_SEARCH_LIMIT");
 
 				if (solrIndexSearchLimitField != null) {
-					ModelUtil.setFieldValue(
+					ReflectionUtil.setFieldValue(
 						null, solrIndexSearchLimitField, indexSearchLimit);
 				}
 			}

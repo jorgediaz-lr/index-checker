@@ -15,7 +15,7 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.util.model.ModelFactory;
+import com.jorgediaz.util.model.ReflectionUtil;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.model.ClassedModel;
+import com.liferay.portal.service.BaseLocalService;
 
 import java.util.List;
 import java.util.Map;
@@ -114,10 +114,11 @@ public class JournalArticle extends IndexCheckerModel {
 
 	@Override
 	public void init(
-			ModelFactory modelUtil, Class<? extends ClassedModel> clazz)
+			ReflectionUtil reflectionUtil, String classPackageName,
+			String classSimpleName, BaseLocalService service)
 		throws Exception {
 
-		super.init(modelUtil, clazz);
+		super.init(reflectionUtil, classPackageName, classSimpleName, service);
 
 		try {
 			indexAllVersions =

@@ -14,10 +14,10 @@
 
 package com.jorgediaz.indexchecker.model;
 
-import com.jorgediaz.util.model.ModelFactory;
+import com.jorgediaz.util.model.ReflectionUtil;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.model.ClassedModel;
+import com.liferay.portal.service.BaseLocalService;
 
 /**
  * @author Jorge Díaz
@@ -29,11 +29,13 @@ public class WikiPage extends IndexCheckerModel {
 		return this.generateCriterionFilter("head=true,redirectTitle=");
 	}
 
+	@Override
 	public void init(
-			ModelFactory modelUtil, Class<? extends ClassedModel> clazz)
+			ReflectionUtil reflectionUtil, String classPackageName,
+			String classSimpleName, BaseLocalService service)
 		throws Exception {
 
-		super.init(modelUtil, clazz);
+		super.init(reflectionUtil, classPackageName, classSimpleName, service);
 
 		this.setIndexPrimaryKey("nodeId");
 	}

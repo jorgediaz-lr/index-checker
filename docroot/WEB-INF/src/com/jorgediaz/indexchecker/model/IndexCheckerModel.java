@@ -16,8 +16,8 @@ package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.util.model.Model;
-import com.jorgediaz.util.model.ModelFactory;
 import com.jorgediaz.util.model.ModelImpl;
+import com.jorgediaz.util.model.ReflectionUtil;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
@@ -32,11 +32,11 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.AuditedModel;
-import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.GroupedModel;
 import com.liferay.portal.model.ResourcedModel;
 import com.liferay.portal.model.StagedModel;
 import com.liferay.portal.model.WorkflowedModel;
+import com.liferay.portal.service.BaseLocalService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -194,10 +194,11 @@ public class IndexCheckerModel extends ModelImpl {
 
 	@Override
 	public void init(
-			ModelFactory modelFactory, Class<? extends ClassedModel> modelClass)
+			ReflectionUtil reflectionUtil, String classPackageName,
+			String classSimpleName, BaseLocalService service)
 		throws Exception {
 
-		super.init(modelFactory, modelClass);
+		super.init(reflectionUtil, classPackageName, classSimpleName, service);
 
 		this.indexedAttributes = new ArrayList<String>();
 
@@ -266,7 +267,7 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public String toString() {
-		String toString = this.modelClass.getSimpleName()+":";
+		String toString = this.getClassSimpleName()+":";
 
 		for (String attr : this.indexedAttributes) {
 			toString += " " + attr;
