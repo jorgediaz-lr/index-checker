@@ -41,10 +41,6 @@ public interface Model extends Cloneable {
 
 	public ClassedModel deleteObject(long primaryKey);
 
-	public List<?> executeDynamicQuery(
-		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery)
-			throws Exception;
-
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
 		throws Exception;
 
@@ -83,6 +79,10 @@ public interface Model extends Cloneable {
 
 	public Indexer getIndexer();
 
+	public void setModelFactory(ModelFactory modelFactory);
+
+	public ModelFactory getModelFactory();
+
 	public String getName();
 
 	public String getPrimaryKeyAttribute();
@@ -106,13 +106,21 @@ public interface Model extends Cloneable {
 			String classSimpleName, BaseLocalService service)
 		throws Exception;
 
+	public boolean isAuditedModel();
+
+	public boolean isGroupedModel();
+
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute);
 
-	public boolean modelExtendsClass(Class<?> clazz);
+	public boolean isResourcedModel();
+
+	public boolean isStagedModel();
+
+	public boolean isWorkflowEnabled();
+
+	public boolean modelEqualsClass(Class<?> clazz);
 
 	public DynamicQuery newDynamicQuery();
-
-	public DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz);
 
 	public DynamicQuery newDynamicQuery(
 		Class<? extends ClassedModel> clazz, String alias);

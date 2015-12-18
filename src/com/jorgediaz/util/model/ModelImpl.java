@@ -97,13 +97,6 @@ public abstract class ModelImpl implements Model {
 			this.modelService, methodName, long.class, (Object)primaryKey);
 	}
 
-	public List<?> executeDynamicQuery(
-		Class<? extends ClassedModel> clazz, DynamicQuery dynamicQuery)
-			throws Exception {
-
-		return reflectionUtil.executeDynamicQuery(clazz, dynamicQuery);
-	}
-
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
 		throws Exception {
 
@@ -509,6 +502,28 @@ public abstract class ModelImpl implements Model {
 				getClassLoader(), classPackageName, classSimpleName);
 	}
 
+	public boolean isAuditedModel() {
+		if (hasAttribute("companyId") && hasAttribute("createDate") &&
+			hasAttribute("modifiedDate") && hasAttribute("userId") &&
+			hasAttribute("userName")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isGroupedModel() {
+		if (isAuditedModel() && hasAttribute("groupId") &&
+			!getPrimaryKeyAttribute().equals("groupId")) {
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
 
 		for (String primaryKeyAttribute : this.getPrimaryKeyMultiAttribute()) {
@@ -520,8 +535,42 @@ public abstract class ModelImpl implements Model {
 		return false;
 	}
 
-	public boolean modelExtendsClass(Class<?> clazz) {
-		return clazz.isAssignableFrom(classModelImpl);
+	public boolean isResourcedModel() {
+		if (hasAttribute("resourcePrimKey") &&
+			!getPrimaryKeyAttribute().equals("resourcePrimKey") &&
+			!isPartOfPrimaryKeyMultiAttribute("resourcePrimKey")) {
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	public boolean isStagedModel() {
+		if (hasAttribute("uuid") && hasAttribute("companyId") &&
+			hasAttribute("createDate") &&
+			hasAttribute("modifiedDate")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isWorkflowEnabled() {
+		if (hasAttribute("status") && hasAttribute("statusByUserId") &&
+			hasAttribute("statusByUserName") && hasAttribute("statusDate")) {
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	public boolean modelEqualsClass(Class<?> clazz) {
+		return this.getClassName().equals(clazz.getName());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -538,16 +587,12 @@ public abstract class ModelImpl implements Model {
 				throw new RuntimeException(e);
 			}
 
-			return newDynamicQuery(clazz);
+			return DynamicQueryFactoryUtil.forClass(
+				clazz, null, clazz.getClassLoader());
 		}
 
 		return (DynamicQuery)reflectionUtil.executeServiceMethod(
 			modelService, "dynamicQuery", null, null);
-	}
-
-	public DynamicQuery newDynamicQuery(Class<? extends ClassedModel> clazz) {
-		return DynamicQueryFactoryUtil.forClass(
-			clazz, null, clazz.getClassLoader());
 	}
 
 	public DynamicQuery newDynamicQuery(
@@ -555,6 +600,14 @@ public abstract class ModelImpl implements Model {
 
 		return DynamicQueryFactoryUtil.forClass(
 			clazz, alias, clazz.getClassLoader());
+	}
+
+	public void setModelFactory(ModelFactory modelFactory) {
+		this.modelFactory = modelFactory;
+	}
+
+	public ModelFactory getModelFactory() {
+		return modelFactory;
 	}
 
 	public void setFilter(Criterion filter) {
@@ -636,6 +689,7 @@ public abstract class ModelImpl implements Model {
 	protected String classSimpleName = null;
 	protected Criterion filter = null;
 	protected BaseLocalService modelService = null;
+	protected ModelFactory modelFactory = null;
 	protected String name = null;
 
 	/**

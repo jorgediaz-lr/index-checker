@@ -22,9 +22,11 @@ import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
 
 import java.sql.Types;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +48,7 @@ public class ModelUtil {
 			case Types.CHAR:
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:
+			case Types.CLOB:
 				result = value;
 				break;
 
@@ -194,7 +197,11 @@ public class ModelUtil {
 		List<String> classNameStr = new ArrayList<String>();
 
 		for (ClassName className : classNames) {
-			classNameStr.add(className.getValue());
+			String value = className.getValue();
+
+			if (Validator.isNotNull(value) && value.contains(".model.")) {
+				classNameStr.add(value);
+			}
 		}
 
 		return classNameStr;
@@ -207,6 +214,7 @@ public class ModelUtil {
 			case Types.CHAR:
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:
+			case Types.CLOB:
 				result = String.class;
 				break;
 
@@ -216,6 +224,7 @@ public class ModelUtil {
 				break;
 
 			case Types.BIT:
+			case Types.BOOLEAN:
 				result = Boolean.class;
 				break;
 

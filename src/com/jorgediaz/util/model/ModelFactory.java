@@ -17,6 +17,7 @@ package com.jorgediaz.util.model;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.BaseLocalService;
 
 import java.util.Collection;
@@ -57,6 +58,10 @@ public class ModelFactory {
 		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
 
 		for (String classname : classNames) {
+			if (Validator.isNull(classname) || !classname.contains(".model.")) {
+				continue;
+			}
+
 			Model model = null;
 			String[] attributes = null;
 			try {
@@ -86,6 +91,10 @@ public class ModelFactory {
 		return modelMap;
 	}
 
+	public final Model getModelObject(String className) {
+		return getModelObject(null, className);
+	}
+
 	public final Model getModelObject(
 		ClassLoader classLoader, String className) {
 
@@ -113,6 +122,8 @@ public class ModelFactory {
 
 			BaseLocalService service = reflectionUtil.getService(
 				classLoader, classPackageName, classSimpleName);
+
+			model.setModelFactory(this);
 
 			model.init(
 				reflectionUtil, classPackageName, classSimpleName, service);
