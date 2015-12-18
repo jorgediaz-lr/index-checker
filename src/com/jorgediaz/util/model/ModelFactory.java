@@ -91,10 +91,6 @@ public class ModelFactory {
 		return modelMap;
 	}
 
-	public final Model getModelObject(String className) {
-		return getModelObject(null, className);
-	}
-
 	public final Model getModelObject(
 		ClassLoader classLoader, String className) {
 
