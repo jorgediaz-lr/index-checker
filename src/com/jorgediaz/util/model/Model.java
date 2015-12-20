@@ -14,16 +14,14 @@
 
 package com.jorgediaz.util.model;
 
+import com.jorgediaz.util.service.Service;
+
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.model.ClassedModel;
-import com.liferay.portal.service.BaseLocalService;
 
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -31,20 +29,7 @@ import java.util.Locale;
  */
 public interface Model extends Cloneable {
 
-	public ClassedModel addObject(ClassedModel object);
-
 	public Model clone();
-
-	public ClassedModel createObject(long primaryKey);
-
-	public ClassedModel deleteObject(ClassedModel object);
-
-	public ClassedModel deleteObject(long primaryKey);
-
-	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
-		throws Exception;
-
-	public ClassedModel fetchObject(long primaryKey);
 
 	public Criterion generateCriterionFilter(String stringFilter);
 
@@ -79,8 +64,6 @@ public interface Model extends Cloneable {
 
 	public Indexer getIndexer();
 
-	public void setModelFactory(ModelFactory modelFactory);
-
 	public ModelFactory getModelFactory();
 
 	public String getName();
@@ -95,6 +78,8 @@ public interface Model extends Cloneable {
 
 	public ProjectionList getPropertyProjection(String[] attributes);
 
+	public Service getService();
+
 	public boolean hasAttribute(String attribute);
 
 	public boolean hasAttributes(String[] attributes);
@@ -102,8 +87,7 @@ public interface Model extends Cloneable {
 	public boolean hasIndexer();
 
 	public void init(
-			ReflectionUtil reflectionUtil, String classPackageName,
-			String classSimpleName, BaseLocalService service)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception;
 
 	public boolean isAuditedModel();
@@ -120,15 +104,10 @@ public interface Model extends Cloneable {
 
 	public boolean modelEqualsClass(Class<?> clazz);
 
-	public DynamicQuery newDynamicQuery();
-
-	public DynamicQuery newDynamicQuery(
-		Class<? extends ClassedModel> clazz, String alias);
-
 	public void setFilter(Criterion filter);
 
-	public void setNameSuffix(String suffix);
+	public void setModelFactory(ModelFactory modelFactory);
 
-	public ClassedModel updateObject(ClassedModel object);
+	public void setNameSuffix(String suffix);
 
 }

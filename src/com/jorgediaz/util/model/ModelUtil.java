@@ -15,6 +15,8 @@
 package com.jorgediaz.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
@@ -24,10 +26,12 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
+import com.liferay.portal.model.ClassedModel;
 
 import java.sql.Types;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -207,6 +211,63 @@ public class ModelUtil {
 		return classNameStr;
 	}
 
+	public static Object[][] getDatabaseAttributesArr(
+		Class<?> classLiferayModelImpl) {
+
+		Object[][] tableColumns =
+			(Object[][])ReflectionUtil.getLiferayModelImplField(
+				classLiferayModelImpl, "TABLE_COLUMNS");
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Database attributes array of " +
+				classLiferayModelImpl.getName() + ": " +
+				Arrays.toString(tableColumns));
+		}
+
+		return tableColumns;
+	}
+
+	public static String getDatabaseAttributesStr(
+		Class<?> classLiferayModelImpl) {
+
+		String tableName =
+			(String)ReflectionUtil.getLiferayModelImplField(
+				classLiferayModelImpl, "TABLE_NAME");
+		String tableSqlCreate =
+			(String)ReflectionUtil.getLiferayModelImplField(
+				classLiferayModelImpl, "TABLE_SQL_CREATE");
+
+		int posTableName = tableSqlCreate.indexOf(tableName);
+
+		if (posTableName <= 0) {
+			_log.error("Error, TABLE_NAME not found at TABLE_SQL_CREATE");
+			return null;
+		}
+
+		posTableName = posTableName + tableName.length() + 2;
+
+		String tableAttributes = tableSqlCreate.substring(
+			posTableName, tableSqlCreate.length() - 1);
+
+		int posPrimaryKeyMultiAttr = tableAttributes.indexOf(",primary key (");
+
+		if (posPrimaryKeyMultiAttr > 0) {
+			tableAttributes = tableAttributes.replaceAll(
+				",primary key \\(", "#");
+			tableAttributes = tableAttributes.substring(
+				0, tableAttributes.length() - 1);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Database attributes of " + classLiferayModelImpl.getClass() +
+				": " + tableAttributes);
+		}
+
+		return tableAttributes;
+	}
+
 	public static Class<?> getJdbcTypeClass(int type) {
 		Class<?> result = Object.class;
 
@@ -313,6 +374,13 @@ public class ModelUtil {
 		}
 
 		return className;
+	}
+
+	public static DynamicQuery newDynamicQuery(
+		Class<? extends ClassedModel> clazz, String alias) {
+
+		return DynamicQueryFactoryUtil.forClass(
+			clazz, alias, clazz.getClassLoader());
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);

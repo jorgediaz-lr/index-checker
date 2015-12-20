@@ -14,11 +14,13 @@
 
 package com.jorgediaz.util.model;
 
+import com.jorgediaz.util.service.Service;
+import com.jorgediaz.util.service.ServiceUtil;
+
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.service.BaseLocalService;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -116,13 +118,12 @@ public class ModelFactory {
 		try {
 			model = (Model)modelClass.newInstance();
 
-			BaseLocalService service = reflectionUtil.getService(
+			Service service = ServiceUtil.getService(
 				classLoader, classPackageName, classSimpleName);
 
 			model.setModelFactory(this);
 
-			model.init(
-				reflectionUtil, classPackageName, classSimpleName, service);
+			model.init(classPackageName, classSimpleName, service);
 		}
 		catch (Exception e) {
 			_log.error(
@@ -136,7 +137,6 @@ public class ModelFactory {
 
 	protected Class<? extends Model> defaultModelClass = null;
 	protected Map<String, Class<? extends Model>> modelClassMap = null;
-	protected ReflectionUtil reflectionUtil = new ReflectionUtil();
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 

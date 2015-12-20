@@ -14,11 +14,11 @@
 
 package com.jorgediaz.util.model;
 
+import com.jorgediaz.util.service.Service;
+
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
@@ -31,38 +31,27 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.ClassedModel;
-import com.liferay.portal.model.Group;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
-import com.liferay.portal.service.BaseLocalService;
 import com.liferay.portal.util.PortalUtil;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Jorge Díaz
  */
 public abstract class ModelImpl implements Model {
 
-	public ClassedModel addObject(ClassedModel object) {
-		String methodName = "add" + object.getModelClass().getSimpleName();
-
-		return (ClassedModel)reflectionUtil.executeServiceMethod(
-			this.modelService, methodName, object.getModelClass(), object);
-	}
-
 	public Model clone() {
 		ModelImpl model;
 		try {
 			model = this.getClass().newInstance();
 			model.name = this.name;
-			model.reflectionUtil = this.reflectionUtil;
-			model.modelService = this.modelService;
+			model.service = this.service.clone();
 			model.attributesString = this.attributesString;
 			model.attributesArray = this.attributesArray;
-			model.filter = this.filter;
 			model.className = this.className;
 			model.classPackageName = this.classPackageName;
 			model.classSimpleName = this.classSimpleName;
@@ -74,54 +63,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return model;
-	}
-
-	public ClassedModel createObject(long primaryKey) {
-		String methodName = "create" + classSimpleName;
-
-		return (ClassedModel)this.reflectionUtil.executeServiceMethod(
-			this.modelService, methodName, long.class, (Object)primaryKey);
-	}
-
-	public ClassedModel deleteObject(ClassedModel object) {
-		String methodName = "delete" + object.getModelClass().getSimpleName();
-
-		return (ClassedModel)reflectionUtil.executeServiceMethod(
-			this.modelService, methodName, object.getModelClass(), object);
-	}
-
-	public ClassedModel deleteObject(long primaryKey) {
-		String methodName = "delete" + classSimpleName;
-
-		return (ClassedModel)this.reflectionUtil.executeServiceMethod(
-			this.modelService, methodName, long.class, (Object)primaryKey);
-	}
-
-	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
-		throws Exception {
-
-		if (filter != null) {
-			dynamicQuery.add(filter);
-
-			if (_log.isDebugEnabled()) {
-				_log.debug("adding custom filter: " + filter);
-			}
-		}
-
-		if (modelService == null) {
-			return reflectionUtil.executeDynamicQuery(
-				Group.class, dynamicQuery);
-		}
-
-		return (List<?>)reflectionUtil.executeServiceMethod(
-			modelService, "dynamicQuery", DynamicQuery.class, dynamicQuery);
-	}
-
-	public ClassedModel fetchObject(long primaryKey) {
-		String methodName = "fetch" + classSimpleName;
-
-		return (ClassedModel)this.reflectionUtil.executeServiceMethod(
-			this.modelService, methodName, long.class, (Object)primaryKey);
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
@@ -211,7 +152,7 @@ public abstract class ModelImpl implements Model {
 
 	public Object[][] getAttributes() {
 		if (attributesArray == null) {
-			attributesArray = reflectionUtil.getDatabaseAttributesArr(
+			attributesArray = ModelUtil.getDatabaseAttributesArr(
 				classModelImpl);
 		}
 
@@ -252,14 +193,6 @@ public abstract class ModelImpl implements Model {
 		return (Integer)this.getAttributes()[pos][1];
 	}
 
-	public ClassLoader getClassLoader() {
-		if (modelService != null) {
-			return modelService.getClass().getClassLoader();
-		}
-
-		return null;
-	}
-
 	public String getClassName() {
 		return className;
 	}
@@ -294,7 +227,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion getFilter() {
-		return filter;
+		return service.getFilter();
 	}
 
 	public Model getFilteredModel(String filters) {
@@ -318,6 +251,10 @@ public abstract class ModelImpl implements Model {
 
 	public Indexer getIndexer() {
 		return IndexerRegistryUtil.nullSafeGetIndexer(getClassName());
+	}
+
+	public ModelFactory getModelFactory() {
+		return modelFactory;
 	}
 
 	public String getName() {
@@ -361,8 +298,7 @@ public abstract class ModelImpl implements Model {
 
 	public String[] getPrimaryKeyMultiAttribute() {
 		if (primaryKeyMultiAttribute == null) {
-			String aux = reflectionUtil.getDatabaseAttributesStr(
-				classModelImpl);
+			String aux = ModelUtil.getDatabaseAttributesStr(classModelImpl);
 
 			if (aux.indexOf('#') > 0) {
 				aux = aux.split("#")[1];
@@ -445,7 +381,16 @@ public abstract class ModelImpl implements Model {
 		return projectionList;
 	}
 
+	public Service getService() {
+		return service;
+	}
+
 	public boolean hasAttribute(String attribute) {
+
+		if (mapHasAttribute.containsKey(attribute)) {
+			return mapHasAttribute.get(attribute);
+		}
+
 		Object[][] modelAttributes = getAttributes();
 
 		if (attribute.endsWith(StringPool.UNDERLINE)) {
@@ -460,13 +405,18 @@ public abstract class ModelImpl implements Model {
 				((String)modelAttributes[i][0]).equals(
 					attributeWithUnderline)) {
 
+				mapHasAttribute.put(attribute, Boolean.TRUE);
+
 				return true;
 			}
 			else if (((String)modelAttributes[i][0]).equals(attribute)) {
+				mapHasAttribute.put(attribute, Boolean.TRUE);
+
 				return true;
 			}
 		}
 
+		mapHasAttribute.put(attribute, Boolean.FALSE);
 		return false;
 	}
 
@@ -485,21 +435,16 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public void init(
-			ReflectionUtil reflectionUtil, String classPackageName,
-			String classSimpleName, BaseLocalService service)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception {
 
-		this.reflectionUtil = reflectionUtil;
-
-		this.modelService = service;
+		this.service = service;
 
 		this.className = classPackageName + "." + classSimpleName;
 		this.classPackageName = classPackageName;
 		this.classSimpleName = classSimpleName;
 
-		this.classModelImpl =
-			reflectionUtil.getLiferayModelImplClass(
-				getClassLoader(), classPackageName, classSimpleName);
+		this.classModelImpl = service.getLiferayModelImplClass();
 	}
 
 	public boolean isAuditedModel() {
@@ -573,45 +518,12 @@ public abstract class ModelImpl implements Model {
 		return this.getClassName().equals(clazz.getName());
 	}
 
-	@SuppressWarnings("unchecked")
-	public DynamicQuery newDynamicQuery() {
-		if (modelService == null) {
-			Class<? extends ClassedModel> clazz;
-			try {
-				clazz =
-					(Class<? extends ClassedModel>)reflectionUtil.getJavaClass(
-						className);
-			}
-			catch (ClassNotFoundException e) {
-				_log.error("Class not found: " + className);
-				throw new RuntimeException(e);
-			}
-
-			return DynamicQueryFactoryUtil.forClass(
-				clazz, null, clazz.getClassLoader());
-		}
-
-		return (DynamicQuery)reflectionUtil.executeServiceMethod(
-			modelService, "dynamicQuery", null, null);
-	}
-
-	public DynamicQuery newDynamicQuery(
-		Class<? extends ClassedModel> clazz, String alias) {
-
-		return DynamicQueryFactoryUtil.forClass(
-			clazz, alias, clazz.getClassLoader());
+	public void setFilter(Criterion filter) {
+		service.setFilter(filter);
 	}
 
 	public void setModelFactory(ModelFactory modelFactory) {
 		this.modelFactory = modelFactory;
-	}
-
-	public ModelFactory getModelFactory() {
-		return modelFactory;
-	}
-
-	public void setFilter(Criterion filter) {
-		this.filter = filter;
 	}
 
 	public void setNameSuffix(String suffix) {
@@ -623,18 +535,10 @@ public abstract class ModelImpl implements Model {
 		return getName();
 	}
 
-	public ClassedModel updateObject(ClassedModel object) {
-		String methodName = "update" + object.getModelClass().getSimpleName();
-
-		return (ClassedModel)reflectionUtil.executeServiceMethod(
-			this.modelService, methodName, object.getModelClass(), object);
-	}
-
 	protected String getCreateTableAttributes() {
 
 		if (attributesString == null) {
-			String aux = reflectionUtil.getDatabaseAttributesStr(
-				classModelImpl);
+			String aux = ModelUtil.getDatabaseAttributesStr(classModelImpl);
 
 			if (aux.indexOf('#') > 0) {
 				aux = aux.split("#")[0];
@@ -687,8 +591,8 @@ public abstract class ModelImpl implements Model {
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
-	protected Criterion filter = null;
-	protected BaseLocalService modelService = null;
+	protected Map<String, Boolean> mapHasAttribute =
+		new HashMap<String, Boolean>();
 	protected ModelFactory modelFactory = null;
 	protected String name = null;
 
@@ -715,9 +619,10 @@ public abstract class ModelImpl implements Model {
 	protected String primaryKeyAttribute = null;
 
 	protected String[] primaryKeyMultiAttribute = null;
-	protected ReflectionUtil reflectionUtil = null;
+	protected Service service = null;
+
 	protected String suffix = null;
 
-	private static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
+	static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
 }
