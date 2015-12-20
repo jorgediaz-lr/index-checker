@@ -17,7 +17,7 @@ package com.jorgediaz.indexchecker.model;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.util.model.Model;
 import com.jorgediaz.util.model.ModelImpl;
-import com.jorgediaz.util.model.ReflectionUtil;
+import com.jorgediaz.util.service.Service;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
@@ -31,7 +31,6 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.service.BaseLocalService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -150,7 +149,7 @@ public class IndexCheckerModel extends ModelImpl {
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
-		DynamicQuery query = newDynamicQuery();
+		DynamicQuery query = service.newDynamicQuery();
 
 		ProjectionList projectionList =
 			this.getPropertyProjection(
@@ -161,7 +160,7 @@ public class IndexCheckerModel extends ModelImpl {
 		query.add(filter);
 
 		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)executeDynamicQuery(query);
+		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(query);
 
 		for (Object[] result : results) {
 			Data data = new Data(this);
@@ -174,11 +173,10 @@ public class IndexCheckerModel extends ModelImpl {
 
 	@Override
 	public void init(
-			ReflectionUtil reflectionUtil, String classPackageName,
-			String classSimpleName, BaseLocalService service)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception {
 
-		super.init(reflectionUtil, classPackageName, classSimpleName, service);
+		super.init(classPackageName, classSimpleName, service);
 
 		this.indexedAttributes = new ArrayList<String>();
 

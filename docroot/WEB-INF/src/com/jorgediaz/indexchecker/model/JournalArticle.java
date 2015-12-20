@@ -15,7 +15,8 @@
 package com.jorgediaz.indexchecker.model;
 
 import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.util.model.ReflectionUtil;
+import com.jorgediaz.util.model.ModelUtil;
+import com.jorgediaz.util.service.Service;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.service.BaseLocalService;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class JournalArticle extends IndexCheckerModel {
 			Criterion filter, Map<Long, Data> dataMap)
 		throws Exception {
 
-		DynamicQuery query = this.newDynamicQuery();
+		DynamicQuery query = service.newDynamicQuery();
 
 		ProjectionList projectionList =
 			this.getPropertyProjection(
@@ -50,7 +50,7 @@ public class JournalArticle extends IndexCheckerModel {
 
 		query.add(filter);
 
-		DynamicQuery articleVersionDynamicQuery = this.newDynamicQuery(
+		DynamicQuery articleVersionDynamicQuery = ModelUtil.newDynamicQuery(
 			com.liferay.portlet.journal.model.JournalArticle.class,
 			"articleVersion");
 
@@ -72,7 +72,7 @@ public class JournalArticle extends IndexCheckerModel {
 		indexAllVersions = true;
 
 		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)this.executeDynamicQuery(
+		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
 			query);
 
 		indexAllVersions = indexAllVersionsOld;
@@ -114,11 +114,10 @@ public class JournalArticle extends IndexCheckerModel {
 
 	@Override
 	public void init(
-			ReflectionUtil reflectionUtil, String classPackageName,
-			String classSimpleName, BaseLocalService service)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception {
 
-		super.init(reflectionUtil, classPackageName, classSimpleName, service);
+		super.init(classPackageName, classSimpleName, service);
 
 		try {
 			indexAllVersions =

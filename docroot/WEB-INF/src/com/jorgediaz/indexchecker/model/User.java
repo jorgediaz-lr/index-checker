@@ -14,10 +14,9 @@
 
 package com.jorgediaz.indexchecker.model;
 
-import com.jorgediaz.util.model.ReflectionUtil;
+import com.jorgediaz.util.service.Service;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.service.BaseLocalService;
 
 /**
  * @author Jorge Díaz
@@ -31,11 +30,10 @@ public class User extends IndexCheckerModel {
 
 	@Override
 	public void init(
-			ReflectionUtil reflectionUtil, String classPackageName,
-			String classSimpleName, BaseLocalService service)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception {
 
-		super.init(reflectionUtil, classPackageName, classSimpleName, service);
+		super.init(classPackageName, classSimpleName, service);
 
 		this.removeIndexedAttribute("createDate");
 		this.addIndexedAttribute("status");
