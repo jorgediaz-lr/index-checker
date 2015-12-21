@@ -14,8 +14,6 @@
 
 package com.jorgediaz.util.service;
 
-import com.jorgediaz.util.model.ModelUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -27,6 +25,35 @@ import java.lang.reflect.Method;
  * @author Jorge Díaz
  */
 public class ServiceUtil {
+
+	public static String getLiferayLocalServiceClassName(
+		String packageName, String simpleName) {
+
+		int pos = packageName.lastIndexOf(".model");
+
+		if (pos > 0) {
+			packageName = packageName.substring(0, pos);
+		}
+
+		String className =
+			packageName + ".service." + simpleName +
+				"LocalService";
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"LocalServiceUtil of " + packageName + "." + simpleName + ": " +
+				className);
+		}
+
+		return className;
+	}
+
+	public static String getLiferayLocalServiceUtilClassName(
+		String packageName, String simpleName) {
+
+		return getLiferayLocalServiceClassName(packageName, simpleName) +
+			"Util";
+	}
 
 	public static Service getService(
 			ClassLoader classLoader, String classPackageName,
@@ -102,7 +129,7 @@ public class ServiceUtil {
 		Method method = null;
 
 		String localServiceUtil =
-			ModelUtil.getLiferayLocalServiceUtilClassName(
+			ServiceUtil.getLiferayLocalServiceUtilClassName(
 				packageName, simpleName);
 
 		Class<?> classLocalServiceUtil = getJavaClass(
@@ -118,6 +145,6 @@ public class ServiceUtil {
 		return method;
 	}
 
-	static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
+	private static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
 
 }

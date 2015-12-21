@@ -12,12 +12,15 @@
  * details.
  */
 
-package com.jorgediaz.util.model;
+package com.jorgediaz.util.reflection;
+
+import com.jorgediaz.util.model.Model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -32,6 +35,81 @@ import java.util.Map;
  * @author Jorge Díaz
  */
 public class ReflectionUtil {
+
+	public static Object castStringToJdbcTypeObject(int type, String value) {
+		value = StringUtil.unquote(value);
+
+		Object result = null;
+
+		switch (type) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.CLOB:
+				result = value;
+				break;
+
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				result = new java.math.BigDecimal(value);
+				break;
+
+			case Types.BIT:
+			case Types.BOOLEAN:
+				result = Boolean.parseBoolean(value);
+				break;
+
+			case Types.TINYINT:
+				result = Byte.parseByte(value);
+				break;
+
+			case Types.SMALLINT:
+				result = Short.parseShort(value);
+				break;
+
+			case Types.INTEGER:
+				result = Integer.parseInt(value);
+				break;
+
+			case Types.BIGINT:
+				result = Long.parseLong(value);
+				break;
+
+			case Types.REAL:
+			case Types.FLOAT:
+				result = Float.parseFloat(value);
+				break;
+
+			case Types.DOUBLE:
+				result = Double.parseDouble(value);
+				break;
+
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				result = value.getBytes();
+				break;
+
+			case Types.DATE:
+				result = java.sql.Date.valueOf(value);
+				break;
+
+			case Types.TIME:
+				result = java.sql.Time.valueOf(value);
+				break;
+
+			case Types.TIMESTAMP:
+				result = java.sql.Timestamp.valueOf(value);
+				break;
+
+			default:
+				throw new RuntimeException(
+					"Unsupported conversion for " +
+						ReflectionUtil.getJdbcTypeNames().get(type));
+		}
+
+		return result;
+	}
 
 	public static Criterion generateSingleCriterion(
 		Model model, String attrName, String attrValue, String op) {
@@ -51,7 +129,7 @@ public class ReflectionUtil {
 			}
 			else {
 				Object value =
-					ModelUtil.castStringToJdbcTypeObject(
+					ReflectionUtil.castStringToJdbcTypeObject(
 						model.getAttributeType(attrName), attrValue);
 
 				criterion =
@@ -65,6 +143,74 @@ public class ReflectionUtil {
 		}
 
 		return criterion;
+	}
+
+	public static Class<?> getJdbcTypeClass(int type) {
+		Class<?> result = Object.class;
+
+		switch (type) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.CLOB:
+				result = String.class;
+				break;
+
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				result = java.math.BigDecimal.class;
+				break;
+
+			case Types.BIT:
+			case Types.BOOLEAN:
+				result = Boolean.class;
+				break;
+
+			case Types.TINYINT:
+				result = Byte.class;
+				break;
+
+			case Types.SMALLINT:
+				result = Short.class;
+				break;
+
+			case Types.INTEGER:
+				result = Integer.class;
+				break;
+
+			case Types.BIGINT:
+				result = Long.class;
+				break;
+
+			case Types.REAL:
+			case Types.FLOAT:
+				result = Float.class;
+				break;
+
+			case Types.DOUBLE:
+				result = Double.class;
+				break;
+
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				result = Byte[].class;
+				break;
+
+			case Types.DATE:
+				result = java.sql.Date.class;
+				break;
+
+			case Types.TIME:
+				result = java.sql.Time.class;
+				break;
+
+			case Types.TIMESTAMP:
+				result = java.sql.Timestamp.class;
+				break;
+		}
+
+		return result;
 	}
 
 	public static Map<Integer, String> getJdbcTypeNames() {

@@ -14,6 +14,7 @@
 
 package com.jorgediaz.util.model;
 
+import com.jorgediaz.util.reflection.ReflectionUtil;
 import com.jorgediaz.util.service.Service;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
