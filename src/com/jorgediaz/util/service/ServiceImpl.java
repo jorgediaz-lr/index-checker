@@ -262,33 +262,17 @@ public class ServiceImpl implements Service {
 		if (method == null) {
 			Class<?> classLocalService = modelService.getClass();
 
-			for (; classLocalService != null;
-				classLocalService = classLocalService.getSuperclass()) {
-
-				try {
-					if (parameterType != null) {
-						method = classLocalService.getDeclaredMethod(
-							methodName, parameterType);
-					}
-					else {
-						method = classLocalService.getDeclaredMethod(
-							methodName);
-					}
-
-					break;
-				}
-				catch (Exception e) {
-				}
+			if (parameterType != null) {
+				method = classLocalService.getMethod(methodName, parameterType);
+			}
+			else {
+				method = classLocalService.getMethod(methodName);
 			}
 
 			if (method == null) {
 				localServiceMethods.put(key, new MethodKey());
 			}
 			else {
-				if (!method.isAccessible()) {
-					method.setAccessible(true);
-				}
-
 				localServiceMethods.put(key, new MethodKey(method));
 			}
 		}
