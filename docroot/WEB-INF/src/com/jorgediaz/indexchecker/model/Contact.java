@@ -36,7 +36,8 @@ public class Contact extends IndexCheckerModel {
 		Model modelUser = this.getModelFactory().getModelObject(
 			null, User.class.getName());
 
-		DynamicQuery userDynamicQuery = modelUser.getService().newDynamicQuery();
+		DynamicQuery userDynamicQuery =
+			modelUser.getService().newDynamicQuery();
 
 		userDynamicQuery.setProjection(getPropertyProjection("userId"));
 

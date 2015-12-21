@@ -38,7 +38,8 @@ public class DLFileEntry extends IndexCheckerModel {
 		Model modelDLFileVersion = this.getModelFactory().getModelObject(
 			null, DLFileVersion.class.getName());
 
-		DynamicQuery queryDLFileVersion = modelDLFileVersion.getService().newDynamicQuery();
+		DynamicQuery queryDLFileVersion =
+			modelDLFileVersion.getService().newDynamicQuery();
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
 		projectionList.add(

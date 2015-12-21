@@ -160,7 +160,8 @@ public class IndexCheckerModel extends ModelImpl {
 		query.add(filter);
 
 		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(query);
+		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
+			query);
 
 		for (Object[] result : results) {
 			Data data = new Data(this);
