@@ -17,6 +17,12 @@ package com.jorgediaz.indexchecker;
 import com.jorgediaz.indexchecker.data.Data;
 import com.jorgediaz.indexchecker.model.IndexCheckerModel;
 
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.model.Group;
+import com.liferay.portal.service.GroupLocalServiceUtil;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +35,41 @@ import java.util.TreeSet;
  * @author Jorge Díaz
  */
 public class IndexCheckerResult {
+
+	public static void dumpToLog(
+			boolean groupBySite,
+			Map<Long, List<IndexCheckerResult>> resultDataMap)
+		throws SystemException {
+
+		if (!_log.isInfoEnabled()) {
+			return;
+		}
+
+		for (Entry<Long, List<IndexCheckerResult>> entry :
+				resultDataMap.entrySet()) {
+
+			String groupTitle = null;
+			Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
+
+			if ((group == null) && groupBySite) {
+				groupTitle = "N/A";
+			}
+			else if (group != null) {
+				groupTitle = group.getGroupId() + " - " + group.getName();
+			}
+
+			if (groupTitle != null) {
+				_log.info("\n---------------");
+				_log.info("GROUP: " + groupTitle);
+				_log.info("---------------");
+			}
+
+			for (IndexCheckerResult result : entry.getValue()) {
+				_log.info("*** ClassName: "+ result.getModel().getName());
+				result.dumpToLog();
+			}
+		}
+	}
 
 	public static IndexCheckerResult getIndexCheckResult(
 		IndexCheckerModel model, Set<Data> liferayData, Set<Data> indexData,
@@ -93,6 +134,57 @@ public class IndexCheckerResult {
 		return new IndexCheckerResult(
 			model, exactDataSetIndex, exactDataSetLiferay, notExactDataSetIndex,
 			notExactDataSetLiferay, liferayOnlyData, indexOnlyData);
+	}
+
+	public void dumpToLog() {
+
+		if (!_log.isInfoEnabled()) {
+			return;
+		}
+
+		if ((indexExactData != null) && !indexExactData.isEmpty()) {
+			_log.info("==both-exact(index)==");
+
+			for (Data d : indexExactData) {
+				_log.info(d.getAllData(","));
+			}
+
+			_log.info("==both-exact(liferay)==");
+
+			for (Data d : liferayExactData) {
+				_log.info(d.getAllData(","));
+			}
+		}
+
+		if ((indexNotExactData != null) && !indexNotExactData.isEmpty()) {
+			_log.info("==both-notexact(index)==");
+
+			for (Data d : indexNotExactData) {
+				_log.info(d.getAllData(","));
+			}
+
+			_log.info("==both-notexact(liferay)==");
+
+			for (Data d : liferayNotExactData) {
+				_log.info(d.getAllData(","));
+			}
+		}
+
+		if ((liferayOnlyData != null) && !liferayOnlyData.isEmpty()) {
+			_log.info("==only liferay==");
+
+			for (Data d : liferayOnlyData) {
+				_log.info(d.getAllData(","));
+			}
+		}
+
+		if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
+			_log.info("==only index==");
+
+			for (Data d : indexOnlyData) {
+				_log.info(d.getAllData(","));
+			}
+		}
 	}
 
 	public Set<Data> getIndexExactData() {
@@ -205,5 +297,7 @@ public class IndexCheckerResult {
 	protected Set<Data> liferayNotExactData;
 	protected Set<Data> liferayOnlyData;
 	protected IndexCheckerModel model;
+
+	private static Log _log = LogFactoryUtil.getLog(IndexCheckerResult.class);
 
 }

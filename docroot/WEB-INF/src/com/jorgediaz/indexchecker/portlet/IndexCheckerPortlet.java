@@ -141,6 +141,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
+		request.setAttribute("title", "Index missing ClassNames");
 		request.setAttribute("executionMode", executionMode);
 		request.setAttribute("companyProcessTime", companyProcessTime);
 		request.setAttribute("companyError", companyError);
@@ -228,6 +229,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
+		request.setAttribute("title", "Reindex");
 		request.setAttribute("executionMode", executionMode);
 		request.setAttribute("companyProcessTime", companyProcessTime);
 		request.setAttribute("companyError", companyError);
@@ -316,6 +318,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
+		request.setAttribute("title", "Remove index orphan");
 		request.setAttribute("executionMode", executionMode);
 		request.setAttribute("companyProcessTime", companyProcessTime);
 		request.setAttribute("companyError", companyError);
@@ -394,6 +397,17 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
+				if (_log.isInfoEnabled() && executionMode.contains(
+						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+					_log.info("COMPANY: " + company);
+
+					boolean groupBySite = executionMode.contains(
+						ExecutionMode.GROUP_BY_SITE);
+
+					IndexCheckerResult.dumpToLog(groupBySite, resultDataMap);
+				}
+
 				companyResultDataMap.put(company, resultDataMap);
 
 				companyProcessTime.put(company, (endTime-startTime));
@@ -411,6 +425,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
+		request.setAttribute("title", "Check Index");
 		request.setAttribute("executionMode", executionMode);
 		request.setAttribute("companyProcessTime", companyProcessTime);
 		request.setAttribute("companyResultDataMap", companyResultDataMap);

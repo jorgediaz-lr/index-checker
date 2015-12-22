@@ -34,19 +34,22 @@
 <%@ page import="com.jorgediaz.indexchecker.ExecutionMode" %>
 <%@ page import="com.jorgediaz.indexchecker.IndexCheckerResult" %>
 <%@ page import="com.jorgediaz.indexchecker.IndexCheckerUtil" %>
+<%@ page import="com.jorgediaz.indexchecker.data.Data" %>
+<%@ page import="com.jorgediaz.indexchecker.model.IndexCheckerModel" %>
 <%@ page import="com.jorgediaz.indexchecker.portlet.IndexCheckerPortlet" %>
 
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
-<%@ page import="com.liferay.portal.kernel.util.ParamUtil" %>
-<%@ page import="com.liferay.portal.kernel.util.StringPool" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.model.Company" %>
+<%@ page import="com.liferay.portal.model.Group" %>
+<%@ page import="com.liferay.portal.service.GroupLocalServiceUtil" %>
 
-<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Arrays" %>
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Map.Entry" %>
+<%@ page import="java.util.Set" %>
 
 <portlet:defineObjects />
 
@@ -62,10 +65,13 @@
 	title="index-checker"
 />
 
-<aui:form action="<%= executeScriptURL %>" method="post" name="fm">
+<aui:form action="<%= executeScriptURL %>" method="POST" name="fm">
 	<aui:fieldset>
 		<aui:column>
-			<aui:input inlineLabel="left" name="outputMaxLength" type="text" value="160" />
+			<aui:select inlineLabel="left"  name="outputFormat">
+				<aui:option selected="true" value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option>
+				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
+			</aui:select>
 			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
 			<aui:select inlineLabel="left"  name="indexWrapperClassName">
 				<aui:option value="Search"><liferay-ui:message key="index-wrapper-class-name-search" /></aui:option>
@@ -95,8 +101,6 @@
 </aui:form>
 
 <%
-	String outputScript = StringPool.BLANK;
-
 	Log _log = IndexCheckerPortlet.getLogger();
 	EnumSet<ExecutionMode> executionMode = (EnumSet<ExecutionMode>) request.getAttribute("executionMode");
 	Map<Company, Long> companyProcessTime = (Map<Company, Long>) request.getAttribute("companyProcessTime");
@@ -104,65 +108,33 @@
 	Map<Company, String> companyError = (Map<Company, String>) request.getAttribute("companyError");
 
 	if ((companyProcessTime != null) && (companyError != null)) {
-		List<String> outList = new ArrayList<String>();
 
-		int outputMaxLength = ParamUtil.getInteger(request, "outputMaxLength");
+		String outputFormat = request.getParameter("outputFormat");
 
-		for (Entry<Company, Long> entry : companyProcessTime.entrySet()) {
-			Long processTime = entry.getValue();
-
-			outList.add("COMPANY: "+entry.getKey());
-
-			if (_log.isInfoEnabled() &&
-				executionMode.contains(
-					ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-				_log.info("COMPANY: "+entry.getKey());
-			}
-
-			outList.add(StringPool.BLANK);
-
-			if (companyResultDataMap != null) {
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
-					companyResultDataMap.get(entry.getKey());
-
-				outList.addAll(
-					IndexCheckerUtil.generateOutput(
-						outputMaxLength, executionMode, resultDataMap));
-			}
-
-			outList.add(
-				"\nProcessed company "+entry.getKey().getCompanyId()+" in "+
-					processTime +" ms");
-			outList.add(StringPool.BLANK);
-		}
-
-		for (Entry<Company, String> entry : companyError.entrySet()) {
-			if ((companyResultDataMap != null) && companyResultDataMap.containsKey(entry.getKey())) {
-				continue;
-			}
-
-			Long processTime = companyProcessTime.get(entry.getKey());
-
-			outList.add("COMPANY: "+entry.getKey());
-
-			outList.add(StringPool.BLANK);
-
-			outList.add(entry.getValue());
-
-			outList.add(
-				"\nProcessed company "+entry.getKey().getCompanyId()+" in "+
-					processTime +" ms");
-			outList.add(StringPool.BLANK);
-		}
-
-		outputScript = IndexCheckerUtil.listStringToString(outList);
-	}
+		if (Validator.isNotNull(outputFormat)) {
+			if (outputFormat.equals("CSV")) {
 %>
 
-<c:if test="<%= Validator.isNotNull(outputScript) %>">
-	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= outputScript %>" />
-</c:if>
+	<%@ include file="/html/indexchecker/output/result_csv.jspf" %>
+
+<%
+			}
+			else if (outputFormat.equals("HumanReadable")) {
+%>
+
+	<%@ include file="/html/indexchecker/output/result_human.jspf" %>
+
+<%
+			}
+			else {
+%>
+
+	<%@ include file="/html/indexchecker/output/result_error.jspf" %>
+
+<%
+			}
+		}
+%>
 
 <aui:script>
 	function <portlet:namespace />reindex() {
