@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.model;
+package jorgediazest.indexchecker.model;
 
-import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.util.model.Model;
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.util.model.Model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;

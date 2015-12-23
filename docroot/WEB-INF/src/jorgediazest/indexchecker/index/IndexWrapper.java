@@ -12,11 +12,11 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.index;
+package jorgediazest.indexchecker.index;
 
-import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.indexchecker.model.IndexCheckerModel;
-import com.jorgediaz.util.model.Model;
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
+import jorgediazest.util.model.Model;
 
 import java.util.HashSet;
 import java.util.Map;

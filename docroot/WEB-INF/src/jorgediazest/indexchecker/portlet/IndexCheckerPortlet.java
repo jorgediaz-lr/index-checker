@@ -12,17 +12,17 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.portlet;
+package jorgediazest.indexchecker.portlet;
 
-import com.jorgediaz.indexchecker.ExecutionMode;
-import com.jorgediaz.indexchecker.IndexChecker;
-import com.jorgediaz.indexchecker.IndexCheckerResult;
-import com.jorgediaz.indexchecker.IndexCheckerUtil;
-import com.jorgediaz.indexchecker.index.IndexWrapper;
-import com.jorgediaz.indexchecker.index.IndexWrapperLuceneJar;
-import com.jorgediaz.indexchecker.index.IndexWrapperLuceneReflection;
-import com.jorgediaz.indexchecker.index.IndexWrapperSearch;
-import com.jorgediaz.util.model.ModelUtil;
+import jorgediazest.indexchecker.ExecutionMode;
+import jorgediazest.indexchecker.IndexChecker;
+import jorgediazest.indexchecker.IndexCheckerResult;
+import jorgediazest.indexchecker.IndexCheckerUtil;
+import jorgediazest.indexchecker.index.IndexWrapper;
+import jorgediazest.indexchecker.index.IndexWrapperLuceneJar;
+import jorgediazest.indexchecker.index.IndexWrapperLuceneReflection;
+import jorgediazest.indexchecker.index.IndexWrapperSearch;
+import jorgediazest.util.model.ModelUtil;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;

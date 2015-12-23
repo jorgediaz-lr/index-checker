@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.data;
+package jorgediazest.indexchecker.data;
 
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;

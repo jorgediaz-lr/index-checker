@@ -31,12 +31,12 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
-<%@ page import="com.jorgediaz.indexchecker.ExecutionMode" %>
-<%@ page import="com.jorgediaz.indexchecker.IndexCheckerResult" %>
-<%@ page import="com.jorgediaz.indexchecker.IndexCheckerUtil" %>
-<%@ page import="com.jorgediaz.indexchecker.data.Data" %>
-<%@ page import="com.jorgediaz.indexchecker.model.IndexCheckerModel" %>
-<%@ page import="com.jorgediaz.indexchecker.portlet.IndexCheckerPortlet" %>
+<%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
+<%@ page import="jorgediazest.indexchecker.IndexCheckerResult" %>
+<%@ page import="jorgediazest.indexchecker.IndexCheckerUtil" %>
+<%@ page import="jorgediazest.indexchecker.data.Data" %>
+<%@ page import="jorgediazest.indexchecker.model.IndexCheckerModel" %>
+<%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>

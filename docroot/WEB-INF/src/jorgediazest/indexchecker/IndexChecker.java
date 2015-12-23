@@ -12,14 +12,14 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker;
+package jorgediazest.indexchecker;
 
-import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.indexchecker.index.IndexWrapper;
-import com.jorgediaz.indexchecker.model.IndexCheckerModel;
-import com.jorgediaz.indexchecker.model.IndexCheckerModelFactory;
-import com.jorgediaz.util.model.Model;
-import com.jorgediaz.util.model.ModelFactory;
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.index.IndexWrapper;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
+import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
+import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;

@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker;
+package jorgediazest.indexchecker;
 
 /**
  * @author Jorge Díaz

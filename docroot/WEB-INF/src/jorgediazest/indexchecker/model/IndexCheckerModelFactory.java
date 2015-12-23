@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.model;
+package jorgediazest.indexchecker.model;
 
-import com.jorgediaz.util.model.Model;
-import com.jorgediaz.util.model.ModelFactory;
+import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.search.BaseIndexer;

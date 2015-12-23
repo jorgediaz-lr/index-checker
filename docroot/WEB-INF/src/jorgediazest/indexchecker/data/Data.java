@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.data;
+package jorgediazest.indexchecker.data;
 
-import com.jorgediaz.indexchecker.index.DocumentWrapper;
-import com.jorgediaz.indexchecker.model.IndexCheckerModel;
+import jorgediazest.indexchecker.index.DocumentWrapper;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 import com.liferay.portal.kernel.search.Field;
 

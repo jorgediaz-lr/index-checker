@@ -12,9 +12,9 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.model;
+package jorgediazest.indexchecker.model;
 
-import com.jorgediaz.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.Data;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 

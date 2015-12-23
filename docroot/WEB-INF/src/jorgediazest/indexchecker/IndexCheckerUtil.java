@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker;
+package jorgediazest.indexchecker;
 
-import com.jorgediaz.indexchecker.data.Data;
-import com.jorgediaz.indexchecker.model.IndexCheckerModel;
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;

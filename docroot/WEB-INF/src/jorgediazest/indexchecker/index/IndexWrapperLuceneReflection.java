@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.jorgediaz.indexchecker.index;
+package jorgediazest.indexchecker.index;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
