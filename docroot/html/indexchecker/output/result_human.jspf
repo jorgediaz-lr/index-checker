@@ -1,0 +1,125 @@
+<%--
+/**
+ * Copyright (c) 2015-present Jorge Díaz All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+--%>
+
+<h2><b><%= request.getAttribute("title") %></b></h2>
+
+<%
+		for (Entry<Company, Long> companyEntry : companyProcessTime.entrySet()) {
+			Long processTime = companyEntry.getValue();
+			%>
+
+			<h3>Company: <%= companyEntry.getKey().getCompanyId() %> - <%= companyEntry.getKey().getWebId() %></h3>
+
+			<%
+			if (companyResultDataMap != null) {
+				Map<Long, List<IndexCheckerResult>> resultDataMap =
+					companyResultDataMap.get(companyEntry.getKey());
+
+				for (Entry<Long, List<IndexCheckerResult>> entry : resultDataMap.entrySet()) {
+
+					boolean printHeaderGroup = executionMode.contains(ExecutionMode.GROUP_BY_SITE);
+
+					for (IndexCheckerResult result : entry.getValue()) {
+
+						Set<Data> exactDataSetIndex = result.getIndexExactData();
+						Set<Data> exactDataSetLiferay = result.getLiferayExactData();
+						Set<Data> notExactDataSetIndex = result.getIndexNotExactData();
+						Set<Data> liferayOnlyData = result.getLiferayOnlyData();
+						Set<Data> indexOnlyData = result.getIndexOnlyData();
+
+						if (((exactDataSetIndex == null) || exactDataSetIndex.isEmpty()) &&
+							((notExactDataSetIndex == null) || notExactDataSetIndex.isEmpty()) &&
+							((liferayOnlyData == null) || liferayOnlyData.isEmpty()) &&
+							((indexOnlyData == null) || indexOnlyData.isEmpty())) {
+							continue;
+						}
+
+						if (printHeaderGroup) {
+							Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
+
+							if (group == null) {
+								 %><h4>GROUP: N/A</h4><%
+							}
+							else {
+								%><h4>GROUP: <%= group.getGroupId() + " - " + group.getName() %></h4><%
+							}
+
+							printHeaderGroup = false;
+						}
+
+						IndexCheckerModel model = result.getModel();
+						%><font size="3.5"><%= model.getName() %></font><br /><ul><%
+
+						if ((exactDataSetIndex != null) &&
+							!exactDataSetIndex.isEmpty()) {
+
+							String valuesPK = Arrays.toString(
+								IndexCheckerUtil.getListPK(exactDataSetLiferay));
+%>
+
+<li><u>both-exact</u>:<ul><li>count: <%= exactDataSetLiferay.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
+
+<%
+						}
+
+						if ((notExactDataSetIndex != null) &&
+							!notExactDataSetIndex.isEmpty()) {
+
+							String valuesPK = Arrays.toString(
+								IndexCheckerUtil.getListPK(notExactDataSetIndex));
+%>
+
+<li><u>both-notexact</u>:<ul><li>count: <%= notExactDataSetIndex.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
+
+<%
+						}
+
+						if ((liferayOnlyData != null) && !liferayOnlyData.isEmpty()) {
+
+							String valuesPK = Arrays.toString(
+								IndexCheckerUtil.getListPK(liferayOnlyData));
+%>
+
+<li><u>only liferay</u>:<ul><li>count: <%= liferayOnlyData.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
+
+<%
+						}
+
+						if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
+
+						String valuesPK = Arrays.toString(
+							IndexCheckerUtil.getListPK(indexOnlyData));
+%>
+
+<li><u>only index</u>:<ul><li>count: <%= indexOnlyData.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
+<% }
+						 %></ul><%
+					}
+				}
+			}
+
+		String errorMessage = companyError.get(companyEntry.getKey());
+%>
+
+<c:if test="<%= Validator.isNotNull(errorMessage) %>">
+	<pre><%= errorMessage %></pre>
+</c:if>
+
+<i>Executed <b/><%= request.getAttribute("title") %></b> for company <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms<i/><br />
+<% }
+
+	}
+%>
