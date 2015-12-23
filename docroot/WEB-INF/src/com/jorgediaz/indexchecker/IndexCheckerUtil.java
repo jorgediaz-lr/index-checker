@@ -140,24 +140,12 @@ public class IndexCheckerUtil {
 								IndexCheckerUtil.getListPK(
 									exactDataSetLiferay));
 
-							String line = StringPool.BLANK;
-							line = IndexCheckerUtil.addCell(
-								line, companyOutput);
-
-							if (groupIdOutput != null) {
-								line = IndexCheckerUtil.addCell(
-									line, groupIdOutput);
-								line = IndexCheckerUtil.addCell(
-									line, groupNameOutput);
-							}
-
-							line = IndexCheckerUtil.addCell(line, modelOutput);
-							line = IndexCheckerUtil.addCell(
-								line, modelDisplayNameOutput);
-							line = IndexCheckerUtil.addCell(line, "both-exact");
-							line = IndexCheckerUtil.addCell(
-								line, "" + exactDataSetLiferay.size());
-							line = IndexCheckerUtil.addCell(line, valuesPK);
+							String line =
+								generateLine(
+									companyOutput, groupIdOutput,
+									groupNameOutput, modelOutput,
+									modelDisplayNameOutput, "both-exact",
+									exactDataSetLiferay.size(), valuesPK);
 
 							out.add(line);
 						}
@@ -169,25 +157,12 @@ public class IndexCheckerUtil {
 								IndexCheckerUtil.getListPK(
 									notExactDataSetIndex));
 
-							String line = StringPool.BLANK;
-							line = IndexCheckerUtil.addCell(
-								line, companyOutput);
-
-							if (groupIdOutput != null) {
-								line = IndexCheckerUtil.addCell(
-									line, groupIdOutput);
-								line = IndexCheckerUtil.addCell(
-									line, groupNameOutput);
-							}
-
-							line = IndexCheckerUtil.addCell(line, modelOutput);
-							line = IndexCheckerUtil.addCell(
-								line, modelDisplayNameOutput);
-							line = IndexCheckerUtil.addCell(
-								line, "both-notexact");
-							line = IndexCheckerUtil.addCell(
-								line, "" + exactDataSetLiferay.size());
-							line = IndexCheckerUtil.addCell(line, valuesPK);
+							String line =
+								generateLine(
+									companyOutput, groupIdOutput,
+									groupNameOutput, modelOutput,
+									modelDisplayNameOutput, "both-notexact",
+									notExactDataSetIndex.size(), valuesPK);
 
 							out.add(line);
 						}
@@ -198,25 +173,12 @@ public class IndexCheckerUtil {
 							String valuesPK = Arrays.toString(
 								IndexCheckerUtil.getListPK(liferayOnlyData));
 
-							String line = StringPool.BLANK;
-							line = IndexCheckerUtil.addCell(
-								line, companyOutput);
-
-							if (groupIdOutput != null) {
-								line = IndexCheckerUtil.addCell(
-									line, groupIdOutput);
-								line = IndexCheckerUtil.addCell(
-									line, groupNameOutput);
-							}
-
-							line = IndexCheckerUtil.addCell(line, modelOutput);
-							line = IndexCheckerUtil.addCell(
-								line, modelDisplayNameOutput);
-							line = IndexCheckerUtil.addCell(
-								line, "only liferay");
-							line = IndexCheckerUtil.addCell(
-								line, "" + exactDataSetLiferay.size());
-							line = IndexCheckerUtil.addCell(line, valuesPK);
+							String line =
+								generateLine(
+									companyOutput, groupIdOutput,
+									groupNameOutput, modelOutput,
+									modelDisplayNameOutput, "only liferay",
+									liferayOnlyData.size(), valuesPK);
 
 							out.add(line);
 						}
@@ -227,25 +189,12 @@ public class IndexCheckerUtil {
 							String valuesPK = Arrays.toString(
 								IndexCheckerUtil.getListPK(indexOnlyData));
 
-							String line = StringPool.BLANK;
-							line = IndexCheckerUtil.addCell(
-								line, companyOutput);
-
-							if (groupIdOutput != null) {
-								line = IndexCheckerUtil.addCell(
-									line, groupIdOutput);
-								line = IndexCheckerUtil.addCell(
-									line, groupNameOutput);
-							}
-
-							line = IndexCheckerUtil.addCell(line, modelOutput);
-							line = IndexCheckerUtil.addCell(
-								line, modelDisplayNameOutput);
-							line = IndexCheckerUtil.addCell(
-								line, "only liferay");
-							line = IndexCheckerUtil.addCell(
-								line, "" + exactDataSetLiferay.size());
-							line = IndexCheckerUtil.addCell(line, valuesPK);
+							String line =
+								generateLine(
+									companyOutput, groupIdOutput,
+									groupNameOutput, modelOutput,
+									modelDisplayNameOutput, "only liferay",
+									indexOnlyData.size(), valuesPK);
 
 							out.add(line);
 						}
@@ -314,6 +263,27 @@ public class IndexCheckerUtil {
 			line += StringPool.COMMA + cell;
 		}
 
+		return line;
+	}
+
+	protected static String generateLine(
+		String companyOutput, String groupIdOutput, String groupNameOutput,
+		String modelOutput, String modelDisplayNameOutput, String type,
+		long size, String valuesPK) {
+
+		String line = StringPool.BLANK;
+		line = IndexCheckerUtil.addCell(line, companyOutput);
+
+		if (groupIdOutput != null) {
+			line = IndexCheckerUtil.addCell(line, groupIdOutput);
+			line = IndexCheckerUtil.addCell(line, groupNameOutput);
+		}
+
+		line = IndexCheckerUtil.addCell(line, modelOutput);
+		line = IndexCheckerUtil.addCell(line, modelDisplayNameOutput);
+		line = IndexCheckerUtil.addCell(line, type);
+		line = IndexCheckerUtil.addCell(line, "" + size);
+		line = IndexCheckerUtil.addCell(line, valuesPK);
 		return line;
 	}
 
