@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.jorgediaz.util.model;
+package jorgediazest.util.model;
 
-import com.jorgediaz.util.service.Service;
-import com.jorgediaz.util.service.ServiceUtil;
+import jorgediazest.util.service.Service;
+import jorgediazest.util.service.ServiceUtil;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;

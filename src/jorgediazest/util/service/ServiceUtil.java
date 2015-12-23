@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.jorgediaz.util.service;
+package jorgediazest.util.service;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;

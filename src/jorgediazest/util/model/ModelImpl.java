@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.jorgediaz.util.model;
+package jorgediazest.util.model;
 
-import com.jorgediaz.util.reflection.ReflectionUtil;
-import com.jorgediaz.util.service.Service;
+import jorgediazest.util.reflection.ReflectionUtil;
+import jorgediazest.util.service.Service;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;

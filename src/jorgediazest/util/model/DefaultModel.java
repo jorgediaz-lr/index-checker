@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.jorgediaz.util.model;
+package jorgediazest.util.model;
 
 /**
  * @author Jorge Díaz

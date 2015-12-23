@@ -12,9 +12,9 @@
  * details.
  */
 
-package com.jorgediaz.util.model;
+package jorgediazest.util.model;
 
-import com.jorgediaz.util.reflection.ReflectionUtil;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
