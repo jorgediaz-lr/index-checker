@@ -14,9 +14,6 @@
 
 package jorgediazest.indexchecker;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -34,6 +31,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 /**
  * @author Jorge Díaz

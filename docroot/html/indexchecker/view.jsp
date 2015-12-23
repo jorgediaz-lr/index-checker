@@ -31,13 +31,6 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
-<%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
-<%@ page import="jorgediazest.indexchecker.IndexCheckerResult" %>
-<%@ page import="jorgediazest.indexchecker.IndexCheckerUtil" %>
-<%@ page import="jorgediazest.indexchecker.data.Data" %>
-<%@ page import="jorgediazest.indexchecker.model.IndexCheckerModel" %>
-<%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
-
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.model.Company" %>
@@ -50,6 +43,13 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Map.Entry" %>
 <%@ page import="java.util.Set" %>
+
+<%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
+<%@ page import="jorgediazest.indexchecker.IndexCheckerResult" %>
+<%@ page import="jorgediazest.indexchecker.IndexCheckerUtil" %>
+<%@ page import="jorgediazest.indexchecker.data.Data" %>
+<%@ page import="jorgediazest.indexchecker.model.IndexCheckerModel" %>
+<%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
 <portlet:defineObjects />
 

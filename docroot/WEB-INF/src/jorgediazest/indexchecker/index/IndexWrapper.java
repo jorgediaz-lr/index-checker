@@ -14,13 +14,14 @@
 
 package jorgediazest.indexchecker.index;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
-import jorgediazest.util.model.Model;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
+
+import jorgediazest.util.model.Model;
 
 /**
  * @author Jorge Díaz

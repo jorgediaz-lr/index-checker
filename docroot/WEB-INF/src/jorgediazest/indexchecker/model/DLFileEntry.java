@@ -14,9 +14,6 @@
 
 package jorgediazest.indexchecker.model;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.util.model.Model;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
@@ -26,6 +23,10 @@ import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 
 import java.util.List;
 import java.util.Map;
+
+import jorgediazest.indexchecker.data.Data;
+
+import jorgediazest.util.model.Model;
 
 /**
  * @author Jorge Díaz

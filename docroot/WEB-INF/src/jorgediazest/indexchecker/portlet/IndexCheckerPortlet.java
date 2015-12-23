@@ -14,16 +14,6 @@
 
 package jorgediazest.indexchecker.portlet;
 
-import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.IndexChecker;
-import jorgediazest.indexchecker.IndexCheckerResult;
-import jorgediazest.indexchecker.IndexCheckerUtil;
-import jorgediazest.indexchecker.index.IndexWrapper;
-import jorgediazest.indexchecker.index.IndexWrapperLuceneJar;
-import jorgediazest.indexchecker.index.IndexWrapperLuceneReflection;
-import jorgediazest.indexchecker.index.IndexWrapperSearch;
-import jorgediazest.util.model.ModelUtil;
-
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -49,6 +39,17 @@ import java.util.Map.Entry;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+
+import jorgediazest.indexchecker.ExecutionMode;
+import jorgediazest.indexchecker.IndexChecker;
+import jorgediazest.indexchecker.IndexCheckerResult;
+import jorgediazest.indexchecker.IndexCheckerUtil;
+import jorgediazest.indexchecker.index.IndexWrapper;
+import jorgediazest.indexchecker.index.IndexWrapperLuceneJar;
+import jorgediazest.indexchecker.index.IndexWrapperLuceneReflection;
+import jorgediazest.indexchecker.index.IndexWrapperSearch;
+
+import jorgediazest.util.model.ModelUtil;
 
 /**
  * Portlet implementation class IndexCheckerPortlet

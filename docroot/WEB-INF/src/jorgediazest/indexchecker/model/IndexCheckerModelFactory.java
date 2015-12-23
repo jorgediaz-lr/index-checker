@@ -14,9 +14,6 @@
 
 package jorgediazest.indexchecker.model;
 
-import jorgediazest.util.model.Model;
-import jorgediazest.util.model.ModelFactory;
-
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Indexer;
@@ -28,6 +25,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 
 /**
  * @author Jorge Díaz

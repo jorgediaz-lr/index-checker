@@ -14,11 +14,6 @@
 
 package jorgediazest.indexchecker.index;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
-import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.reflection.ReflectionUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
@@ -35,6 +30,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
+
+import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz

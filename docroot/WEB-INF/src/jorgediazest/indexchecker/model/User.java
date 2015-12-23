@@ -14,9 +14,9 @@
 
 package jorgediazest.indexchecker.model;
 
-import jorgediazest.util.service.Service;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
+
+import jorgediazest.util.service.Service;
 
 /**
  * @author Jorge Díaz

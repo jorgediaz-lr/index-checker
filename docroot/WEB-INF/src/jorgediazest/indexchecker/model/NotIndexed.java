@@ -14,12 +14,12 @@
 
 package jorgediazest.indexchecker.model;
 
-import jorgediazest.indexchecker.data.Data;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import jorgediazest.indexchecker.data.Data;
 
 /**
  * @author Jorge Díaz

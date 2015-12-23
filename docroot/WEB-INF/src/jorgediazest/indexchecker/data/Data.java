@@ -14,10 +14,10 @@
 
 package jorgediazest.indexchecker.data;
 
+import com.liferay.portal.kernel.search.Field;
+
 import jorgediazest.indexchecker.index.DocumentWrapper;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
-
-import com.liferay.portal.kernel.search.Field;
 
 /**
  * @author Jorge Díaz

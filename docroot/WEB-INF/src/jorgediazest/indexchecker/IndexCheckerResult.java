@@ -14,9 +14,6 @@
 
 package jorgediazest.indexchecker;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
-
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,6 +27,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 /**
  * @author Jorge Díaz

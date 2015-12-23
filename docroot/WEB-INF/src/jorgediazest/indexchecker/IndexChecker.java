@@ -14,13 +14,6 @@
 
 package jorgediazest.indexchecker;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.index.IndexWrapper;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
-import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
-import jorgediazest.util.model.Model;
-import jorgediazest.util.model.ModelFactory;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -36,6 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.index.IndexWrapper;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
+import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
+
+import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 
 /**
  * @author Jorge Díaz
