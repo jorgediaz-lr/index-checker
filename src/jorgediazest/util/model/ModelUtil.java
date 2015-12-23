@@ -14,8 +14,6 @@
 
 package jorgediazest.util.model;
 
-import jorgediazest.util.reflection.ReflectionUtil;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -35,6 +33,8 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.ServletContext;
+
+import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz

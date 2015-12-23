@@ -14,9 +14,6 @@
 
 package jorgediazest.util.model;
 
-import jorgediazest.util.service.Service;
-import jorgediazest.util.service.ServiceUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -25,6 +22,9 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import jorgediazest.util.service.Service;
+import jorgediazest.util.service.ServiceUtil;
 
 /**
  * @author Jorge Díaz

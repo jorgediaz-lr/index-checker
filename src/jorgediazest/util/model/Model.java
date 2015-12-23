@@ -14,8 +14,6 @@
 
 package jorgediazest.util.model;
 
-import jorgediazest.util.service.Service;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
@@ -23,6 +21,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.search.Indexer;
 
 import java.util.Locale;
+
+import jorgediazest.util.service.Service;
 
 /**
  * @author Jorge Díaz

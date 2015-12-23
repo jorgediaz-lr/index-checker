@@ -14,9 +14,6 @@
 
 package jorgediazest.util.model;
 
-import jorgediazest.util.reflection.ReflectionUtil;
-import jorgediazest.util.service.Service;
-
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
@@ -39,6 +36,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import jorgediazest.util.reflection.ReflectionUtil;
+import jorgediazest.util.service.Service;
 
 /**
  * @author Jorge Díaz

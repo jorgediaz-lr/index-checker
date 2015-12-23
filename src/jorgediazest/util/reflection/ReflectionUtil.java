@@ -14,8 +14,6 @@
 
 package jorgediazest.util.reflection;
 
-import jorgediazest.util.model.Model;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,6 +28,8 @@ import java.sql.Types;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import jorgediazest.util.model.Model;
 
 /**
  * @author Jorge Díaz

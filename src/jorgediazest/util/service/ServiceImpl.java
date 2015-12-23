@@ -14,8 +14,6 @@
 
 package jorgediazest.util.service;
 
-import jorgediazest.util.model.ModelUtil;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -33,6 +31,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import jorgediazest.util.model.ModelUtil;
 
 /**
  * @author Jorge Díaz
