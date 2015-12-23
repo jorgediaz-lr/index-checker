@@ -397,8 +397,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
-				if (_log.isInfoEnabled() && executionMode.contains(
-						ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+				if (_log.isInfoEnabled() &&
+					executionMode.contains(
+							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 
 					_log.info("COMPANY: " + company);
 
