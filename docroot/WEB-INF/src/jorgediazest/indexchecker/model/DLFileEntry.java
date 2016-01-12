@@ -23,8 +23,10 @@ import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.DataUtil;
 
 import jorgediazest.util.model.Model;
 
@@ -46,6 +48,7 @@ public class DLFileEntry extends IndexCheckerModel {
 		projectionList.add(
 			modelDLFileVersion.getPropertyProjection("fileEntryId"));
 		projectionList.add(modelDLFileVersion.getPropertyProjection("status"));
+		projectionList.add(modelDLFileVersion.getPropertyProjection("version"));
 
 		queryDLFileVersion.setProjection(projectionList);
 
@@ -59,14 +62,26 @@ public class DLFileEntry extends IndexCheckerModel {
 		for (Object[] result : results) {
 			long fileEntryId = (Long)result[0];
 			int status = (Integer)result[1];
+			String version = (String)result[2];
+
+			Data data = dataMap.get(fileEntryId);
+
+			if ((data == null) ||
+				!DataUtil.exactStrings(version, data.getVersion())) {
+
+				continue;
+			}
 
 			if ((status == WorkflowConstants.STATUS_APPROVED) ||
 				(status == WorkflowConstants.STATUS_IN_TRASH)) {
 
-				dataMap.get(fileEntryId).setStatus(status);
+				data.setStatus(status);
 			}
-			else {
-				dataMap.remove(fileEntryId);
+		}
+
+		for (Entry<Long, Data> entry : dataMap.entrySet()) {
+			if (entry.getValue().getStatus() == null) {
+				dataMap.remove(entry.getKey());
 			}
 		}
 
