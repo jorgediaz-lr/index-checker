@@ -80,8 +80,9 @@ public class IndexCheckerUtil {
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					companyResultDataMap.get(companyEntry.getKey());
 
-				for (Map.Entry<Long, List<IndexCheckerResult>> entry :
-					resultDataMap.entrySet()) {
+				for (
+					Map.Entry<Long, List<IndexCheckerResult>> entry :
+						resultDataMap.entrySet()) {
 
 					String groupIdOutput = null;
 					String groupNameOutput = null;
