@@ -26,6 +26,30 @@ import java.sql.Timestamp;
  */
 public class DataUtil {
 
+	public static Double castDouble(Object value) {
+		if (value == null) {
+			return null;
+		}
+
+		if (value instanceof Double) {
+			return (Double)value;
+		}
+
+		if (value instanceof Number) {
+			return ((Number)value).doubleValue();
+		}
+
+		if (value instanceof String) {
+			try {
+				return Double.parseDouble((String)value);
+			}
+			catch (Exception e) {
+			}
+		}
+
+		return null;
+	}
+
 	public static Integer castInt(Object value) {
 		if (value == null) {
 			return null;
@@ -105,6 +129,14 @@ public class DataUtil {
 		}
 
 		return l1.equals(l2);
+	}
+
+	public static boolean exactStrings(String s1, String s2) {
+		if (s1 == null) {
+			return (s2 == null);
+		}
+
+		return s1.equals(s2);
 	}
 
 	public static Long stringToTime(String dateString) {

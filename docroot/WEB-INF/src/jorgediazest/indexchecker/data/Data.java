@@ -15,6 +15,7 @@
 package jorgediazest.indexchecker.data;
 
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.Validator;
 
 import jorgediazest.indexchecker.index.DocumentWrapper;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
@@ -91,13 +92,20 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
+		if (Validator.isNotNull(this.version) &&
+			Validator.isNotNull(data.version)) {
+
+			return this.version.equals(data.version);
+		}
+
 		return true;
 	}
 
 	public String getAllData(String sep) {
 		return this.getEntryClassName() + sep + companyId + sep + groupId +
 			sep + entryClassPK + sep + primaryKey + sep + resourcePrimKey +
-			sep + uid + sep + createDate + sep + modifiedDate + sep + status;
+			sep + uid + sep + createDate + sep + modifiedDate + sep + status +
+			sep + version;
 	}
 
 	public Long getCompanyId() {
@@ -138,6 +146,10 @@ public class Data implements Comparable<Data> {
 
 	public String getUid() {
 		return uid;
+	}
+
+	public String getVersion() {
+		return version;
 	}
 
 	public int hashCode() {
@@ -211,6 +223,19 @@ public class Data implements Comparable<Data> {
 
 			this.setStatus(intValue);
 		}
+		else if ("version".equals(attribute)) {
+			String doubleString = null;
+			Double doubleValue = DataUtil.castDouble(value);
+
+			if (doubleValue != null) {
+				doubleString = doubleValue.toString().replace(',', '.');
+			}
+			else {
+				doubleString = DataUtil.castString(value);
+			}
+
+			this.setVersion(doubleString);
+		}
 		else if ("createDate".equals(attribute) ||
 				 "modifiedDate".equals(attribute) ||
 				 "modified".equals(attribute) ||
@@ -246,6 +271,10 @@ public class Data implements Comparable<Data> {
 		this.status = status;
 	}
 
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 	public String toString() {
 		return this.getEntryClassName() + " " + entryClassPK + " " +
 				primaryKey + " " + resourcePrimKey + " " + uid;
@@ -253,7 +282,8 @@ public class Data implements Comparable<Data> {
 
 	protected static String[] indexAttributes =
 		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
-		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID};
+		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID,
+		Field.VERSION};
 
 	/* Comun */
 
@@ -264,10 +294,9 @@ public class Data implements Comparable<Data> {
 	protected IndexCheckerModel model = null;
 	protected Long modifiedDate = null;
 	protected long primaryKey = -1;
-	protected long resourcePrimKey = -1;
-	/* Liferay */
+	protected long resourcePrimKey = -1; /* only Liferay */
 	protected Integer status = null;
-	/* Index */
-	protected String uid = null;
+	protected String uid = null; /* only Index */
+	protected String version = null;
 
 }

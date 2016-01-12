@@ -214,6 +214,10 @@ public class IndexCheckerModel extends ModelImpl {
 			addIndexedAttributes(workflowModelAttributes);
 		}
 
+		if (this.hasAttribute("version")) {
+			this.addIndexedAttribute("version");
+		}
+
 		this.setFilter(this.generateQueryFilter());
 	}
 
