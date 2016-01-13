@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.DataUtil;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelImpl;
@@ -66,6 +67,22 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 
 		return model;
+	}
+
+	public int compareTo(Data data1, Data data2) {
+		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1)) {
+			return DataUtil.compareLongs(
+				data1.getPrimaryKey(), data2.getPrimaryKey());
+		}
+		else if ((data1.getResourcePrimKey() != -1) &&
+				 (data2.getResourcePrimKey() != -1)) {
+
+			return DataUtil.compareLongs(
+				data1.getResourcePrimKey(), data2.getResourcePrimKey());
+		}
+		else {
+			return 0;
+		}
 	}
 
 	public void delete(Data value) throws SearchException {
@@ -110,6 +127,61 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 
 		return errors;
+	}
+
+	public boolean equals(Data data1, Data data2) {
+		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1)) {
+			return (data1.getPrimaryKey() == data2.getPrimaryKey());
+		}
+		else if ((data1.getResourcePrimKey() != -1) &&
+				 (data2.getResourcePrimKey() != -1)) {
+
+			return (data1.getResourcePrimKey() == data2.getResourcePrimKey());
+		}
+		else {
+			return false;
+		}
+	}
+
+	public boolean exact(Data data1, Data data2) {
+		if (!data1.equals(data2)) {
+			return false;
+		}
+
+		if (!DataUtil.exactLongs(data1.getCompanyId(), data2.getCompanyId())) {
+			return false;
+		}
+
+		if (this.hasAttribute("groupId") &&
+			!DataUtil.exactLongs(data1.getGroupId(), data2.getGroupId())) {
+
+			return false;
+		}
+
+		if (!DataUtil.exactLongs(
+				data1.getCreateDate(), data2.getCreateDate())) {
+
+			return false;
+		}
+
+		if (!DataUtil.exactLongs(
+				data1.getModifiedDate(), data2.getModifiedDate())) {
+
+			return false;
+		}
+
+		if (!DataUtil.exactIntegers(data1.getStatus(), data2.getStatus())) {
+			return false;
+		}
+
+		if (this.hasAttribute("version") &&
+			Validator.isNotNull(data1.getVersion()) &&
+			Validator.isNotNull(data2.getVersion())) {
+
+			return data1.getVersion().equals(data2.getVersion());
+		}
+
+		return true;
 	}
 
 	public Criterion generateQueryFilter() {
@@ -171,6 +243,19 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 
 		return dataMap;
+	}
+
+	public Integer hashCode(Data data) {
+		if (data.getPrimaryKey() != -1) {
+			return data.getEntryClassName().hashCode() *
+				Long.valueOf(data.getPrimaryKey()).hashCode();
+		}
+		else if (data.getResourcePrimKey() != -1) {
+			return -1 * data.getEntryClassName().hashCode() *
+				Long.valueOf(data.getResourcePrimKey()).hashCode();
+		}
+
+		return null;
 	}
 
 	@Override

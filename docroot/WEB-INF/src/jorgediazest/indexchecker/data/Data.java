@@ -15,7 +15,6 @@
 package jorgediazest.indexchecker.data;
 
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.util.Validator;
 
 import jorgediazest.indexchecker.index.DocumentWrapper;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
@@ -31,16 +30,7 @@ public class Data implements Comparable<Data> {
 
 	@Override
 	public int compareTo(Data data) {
-		if ((this.primaryKey != -1) && (data.primaryKey != -1)) {
-			return DataUtil.compareLongs(this.primaryKey, data.primaryKey);
-		}
-		else if ((this.resourcePrimKey != -1) && (data.resourcePrimKey != -1)) {
-			return DataUtil.compareLongs(
-				this.resourcePrimKey, data.resourcePrimKey);
-		}
-		else {
-			return 0;
-		}
+		return model.compareTo(this, data);
 	}
 
 	public boolean equals(Object obj) {
@@ -48,57 +38,22 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		Data data =(Data)obj;
+		Data data = ((Data)obj);
+
+		if (this == obj) {
+			return true;
+		}
 
 		if (this.model != data.model) {
 			return false;
 		}
 
-		if ((this.primaryKey != -1) && (data.primaryKey != -1)) {
-			return (this.primaryKey == data.primaryKey);
-		}
-		else if ((this.resourcePrimKey != -1) && (data.resourcePrimKey != -1)) {
-			return (this.resourcePrimKey == data.resourcePrimKey);
-		}
-		else {
-			return super.equals(obj);
-		}
+		return model.equals(this, data);
 	}
 
 	public boolean exact(Data data) {
-		if (!this.equals(data)) {
-			return false;
-		}
 
-		if (!DataUtil.exactLongs(this.companyId, data.companyId)) {
-			return false;
-		}
-
-		if (this.model.hasAttribute("groupId") &&
-			!DataUtil.exactLongs(this.groupId, data.groupId)) {
-
-			return false;
-		}
-
-		if (!DataUtil.exactLongs(this.createDate, data.createDate)) {
-			return false;
-		}
-
-		if (!DataUtil.exactLongs(this.modifiedDate, data.modifiedDate)) {
-			return false;
-		}
-
-		if (!DataUtil.exactIntegers(this.status, data.status)) {
-			return false;
-		}
-
-		if (Validator.isNotNull(this.version) &&
-			Validator.isNotNull(data.version)) {
-
-			return this.version.equals(data.version);
-		}
-
-		return true;
+		return model.exact(this, data);
 	}
 
 	public String getAllData(String sep) {
@@ -128,6 +83,28 @@ public class Data implements Comparable<Data> {
 		return groupId;
 	}
 
+	public long getIdFromUID(String strValue) {
+		long id = -1;
+		String[] uidArr = strValue.split("_");
+
+		if ((uidArr != null) && (uidArr.length >= 3)) {
+			int pos = uidArr.length-2;
+			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
+				pos = pos - 2;
+			}
+
+			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
+				id = DataUtil.castLong(uidArr[pos+1]);
+			}
+		}
+
+		return id;
+	}
+
+	public IndexCheckerModel getModel() {
+		return model;
+	}
+
 	public Long getModifiedDate() {
 		return modifiedDate;
 	}
@@ -153,13 +130,10 @@ public class Data implements Comparable<Data> {
 	}
 
 	public int hashCode() {
-		if (this.primaryKey != -1) {
-			return this.getEntryClassName().hashCode() *
-				Long.valueOf(this.primaryKey).hashCode();
-		}
-		else if (this.resourcePrimKey != -1) {
-			return -1 * this.getEntryClassName().hashCode() *
-				Long.valueOf(this.resourcePrimKey).hashCode();
+		Integer hashCode = model.hashCode(this);
+
+		if (hashCode != null) {
+			return hashCode;
 		}
 		else {
 			return super.hashCode();
@@ -188,6 +162,7 @@ public class Data implements Comparable<Data> {
 		if ("companyId".equals(attribute) ||
 			"entryClassPK".equals(attribute) ||
 			"groupId".equals(attribute) ||
+			"scopeGroupId".equals(attribute) ||
 			"resourcePrimKey".equals(attribute)) {
 
 			Long longValue = DataUtil.castLong(value);
@@ -201,13 +176,16 @@ public class Data implements Comparable<Data> {
 			else if ("entryClassPK".equals(attribute)) {
 				this.entryClassPK = longValue;
 
-				if ((primaryKey != -1) && (resourcePrimKey == -1) &&
-					(primaryKey != longValue)) {
-
+				if (this.model.isResourcedModel()) {
 					this.resourcePrimKey = longValue;
 				}
+				else {
+					this.primaryKey = longValue;
+				}
 			}
-			else if ("groupId".equals(attribute)) {
+			else if ("groupId".equals(attribute) ||
+					 "scopeGroupId".equals(attribute)) {
+
 				this.groupId = longValue;
 			}
 			else if ("resourcePrimKey".equals(attribute)) {
@@ -258,10 +236,12 @@ public class Data implements Comparable<Data> {
 			else if ("uid".equals(attribute)) {
 				this.uid = strValue;
 
-				this.primaryKey = DataUtil.castLong(strValue.split("_")[2]);
+				if (this.primaryKey == -1) {
+					long id = getIdFromUID(strValue);
 
-				if ((resourcePrimKey == -1) && (primaryKey != entryClassPK)) {
-					this.resourcePrimKey = entryClassPK;
+					if (id != -1) {
+						this.primaryKey = id;
+					}
 				}
 			}
 		}
@@ -282,8 +262,8 @@ public class Data implements Comparable<Data> {
 
 	protected static String[] indexAttributes =
 		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
-		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID, Field.GROUP_ID,
-		Field.VERSION};
+		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID,
+		Field.SCOPE_GROUP_ID, Field.VERSION};
 
 	/* Comun */
 

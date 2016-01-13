@@ -16,7 +16,8 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 
-import jorgediazest.util.service.Service;
+import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.DataUtil;
 
 /**
  * @author Jorge Díaz
@@ -24,18 +25,43 @@ import jorgediazest.util.service.Service;
 public class WikiPage extends IndexCheckerModel {
 
 	@Override
+	public int compareTo(Data data1, Data data2) {
+		if ((data1.getResourcePrimKey() != -1) &&
+			(data2.getResourcePrimKey() != -1)) {
+
+			return DataUtil.compareLongs(
+				data1.getResourcePrimKey(), data2.getResourcePrimKey());
+		}
+		else {
+			return 0;
+		}
+	}
+
+	@Override
+	public boolean equals(Data data1, Data data2) {
+		if ((data1.getResourcePrimKey() != -1) &&
+			(data2.getResourcePrimKey() != -1)) {
+
+			return (data1.getResourcePrimKey() == data2.getResourcePrimKey());
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
 	public Criterion generateQueryFilter() {
 		return this.generateCriterionFilter("head=true,redirectTitle=");
 	}
 
 	@Override
-	public void init(
-			String classPackageName, String classSimpleName, Service service)
-		throws Exception {
+	public Integer hashCode(Data data) {
+		if (data.getResourcePrimKey() != -1) {
+			return -1 * data.getEntryClassName().hashCode() *
+				Long.valueOf(data.getResourcePrimKey()).hashCode();
+		}
 
-		super.init(classPackageName, classSimpleName, service);
-
-		this.setIndexPrimaryKey("nodeId");
+		return null;
 	}
 
 }
