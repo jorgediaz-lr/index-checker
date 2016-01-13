@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,7 +37,7 @@ import jorgediazest.util.model.Model;
 public class DLFileEntry extends IndexCheckerModel {
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
-		Map<Long, Data> dataMap = super.getLiferayData(filter);
+		Map<Long, Data> dataMapAux = super.getLiferayData(filter);
 
 		Model modelDLFileVersion = this.getModelFactory().getModelObject(
 			null, DLFileVersion.class.getName());
@@ -64,7 +65,7 @@ public class DLFileEntry extends IndexCheckerModel {
 			int status = (Integer)result[1];
 			String version = (String)result[2];
 
-			Data data = dataMap.get(fileEntryId);
+			Data data = dataMapAux.get(fileEntryId);
 
 			if ((data == null) ||
 				!DataUtil.exactStrings(version, data.getVersion())) {
@@ -79,9 +80,11 @@ public class DLFileEntry extends IndexCheckerModel {
 			}
 		}
 
-		for (Entry<Long, Data> entry : dataMap.entrySet()) {
-			if (entry.getValue().getStatus() == null) {
-				dataMap.remove(entry.getKey());
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		for (Entry<Long, Data> entry : dataMapAux.entrySet()) {
+			if (entry.getValue().getStatus() != null) {
+				dataMap.put(entry.getKey(), entry.getValue());
 			}
 		}
 
