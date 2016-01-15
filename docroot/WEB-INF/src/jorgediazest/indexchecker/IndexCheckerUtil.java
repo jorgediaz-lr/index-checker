@@ -112,15 +112,15 @@ public class IndexCheckerUtil {
 							result.getIndexExactData();
 						Set<Data> exactDataSetLiferay =
 							result.getLiferayExactData();
-						Set<Data> notExactDataSetIndex =
-							result.getIndexNotExactData();
+						Set<Data> notExactDataSetLiferay =
+							result.getLiferayNotExactData();
 						Set<Data> liferayOnlyData = result.getLiferayOnlyData();
 						Set<Data> indexOnlyData = result.getIndexOnlyData();
 
 						if (((exactDataSetIndex == null) ||
 							 exactDataSetIndex.isEmpty()) &&
-							((notExactDataSetIndex == null) ||
-							 notExactDataSetIndex.isEmpty()) &&
+							((notExactDataSetLiferay == null) ||
+							 notExactDataSetLiferay.isEmpty()) &&
 							((liferayOnlyData == null) ||
 							 liferayOnlyData.isEmpty()) &&
 							((indexOnlyData == null) ||
@@ -151,19 +151,19 @@ public class IndexCheckerUtil {
 							out.add(line);
 						}
 
-						if ((notExactDataSetIndex != null) &&
-							!notExactDataSetIndex.isEmpty()) {
+						if ((notExactDataSetLiferay != null) &&
+							!notExactDataSetLiferay.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
 								IndexCheckerUtil.getListPK(
-									notExactDataSetIndex));
+									notExactDataSetLiferay));
 
 							String line =
 								generateLine(
 									companyOutput, groupIdOutput,
 									groupNameOutput, modelOutput,
 									modelDisplayNameOutput, "both-notexact",
-									notExactDataSetIndex.size(), valuesPK);
+									notExactDataSetLiferay.size(), valuesPK);
 
 							out.add(line);
 						}
@@ -188,7 +188,7 @@ public class IndexCheckerUtil {
 							!indexOnlyData.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(indexOnlyData));
+								IndexCheckerUtil.getListUid(indexOnlyData));
 
 							String line =
 								generateLine(
@@ -228,6 +228,18 @@ public class IndexCheckerUtil {
 
 		for (Data value : data) {
 			valuesPK[i++] = value.getPrimaryKey();
+		}
+
+		return valuesPK;
+	}
+
+	public static String[] getListUid(Collection<Data> data) {
+		String[] valuesPK = new String[data.size()];
+
+		int i = 0;
+
+		for (Data value : data) {
+			valuesPK[i++] = value.getUid();
 		}
 
 		return valuesPK;
