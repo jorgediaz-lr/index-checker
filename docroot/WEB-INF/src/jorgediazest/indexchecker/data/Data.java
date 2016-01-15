@@ -14,9 +14,6 @@
 
 package jorgediazest.indexchecker.data;
 
-import com.liferay.portal.kernel.search.Field;
-
-import jorgediazest.indexchecker.index.DocumentWrapper;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 /**
@@ -58,9 +55,8 @@ public class Data implements Comparable<Data> {
 
 	public String getAllData(String sep) {
 		return this.getEntryClassName() + sep + companyId + sep + groupId +
-			sep + entryClassPK + sep + primaryKey + sep + resourcePrimKey +
-			sep + uid + sep + createDate + sep + modifiedDate + sep + status +
-			sep + version;
+			sep + primaryKey + sep + resourcePrimKey + sep + uid + sep +
+			createDate + sep + modifiedDate + sep + status + sep + version;
 	}
 
 	public Long getCompanyId() {
@@ -75,30 +71,8 @@ public class Data implements Comparable<Data> {
 		return model.getClassName();
 	}
 
-	public long getEntryClassPK() {
-		return entryClassPK;
-	}
-
 	public Long getGroupId() {
 		return groupId;
-	}
-
-	public long getIdFromUID(String strValue) {
-		long id = -1;
-		String[] uidArr = strValue.split("_");
-
-		if ((uidArr != null) && (uidArr.length >= 3)) {
-			int pos = uidArr.length-2;
-			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
-				pos = pos - 2;
-			}
-
-			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
-				id = DataUtil.castLong(uidArr[pos+1]);
-			}
-		}
-
-		return id;
 	}
 
 	public IndexCheckerModel getModel() {
@@ -140,22 +114,24 @@ public class Data implements Comparable<Data> {
 		}
 	}
 
-	public void init(DocumentWrapper doc) {
-
-		for (String attrib : indexAttributes) {
-			setProperty(attrib, doc.get(attrib));
-		}
+	public void setCompanyId(Long companyId) {
+		this.companyId = companyId;
 	}
 
-	public void init(Object[] dataArray) {
+	public void setCreateDate(Long createDate) {
+		this.createDate = createDate;
+	}
 
-		this.primaryKey = ((Long)dataArray[0]);
+	public void setGroupId(Long groupId) {
+		this.groupId = groupId;
+	}
 
-		int i = 0;
+	public void setModifiedDate(Long modifiedDate) {
+		this.modifiedDate = modifiedDate;
+	}
 
-		for (String attrib : model.getIndexAttributes()) {
-			setProperty(attrib, dataArray[i++]);
-		}
+	public void setPrimaryKey(long primaryKey) {
+		this.primaryKey = primaryKey;
 	}
 
 	public void setProperty(String attribute, Object value) {
@@ -171,25 +147,23 @@ public class Data implements Comparable<Data> {
 				return;
 			}
 			else if ("companyId".equals(attribute)) {
-				this.companyId = longValue;
+				setCompanyId(longValue);
 			}
 			else if ("entryClassPK".equals(attribute)) {
-				this.entryClassPK = longValue;
-
-				if (this.model.isResourcedModel()) {
-					this.resourcePrimKey = longValue;
+				if (model.isResourcedModel()) {
+					setResourcePrimKey(longValue);
 				}
 				else {
-					this.primaryKey = longValue;
+					setPrimaryKey(longValue);
 				}
 			}
 			else if ("groupId".equals(attribute) ||
 					 "scopeGroupId".equals(attribute)) {
 
-				this.groupId = longValue;
+				setGroupId(longValue);
 			}
 			else if ("resourcePrimKey".equals(attribute)) {
-				this.resourcePrimKey = longValue;
+				setResourcePrimKey(longValue);
 			}
 		}
 		else if ("status".equals(attribute)) {
@@ -199,7 +173,7 @@ public class Data implements Comparable<Data> {
 				return;
 			}
 
-			this.setStatus(intValue);
+			setStatus(intValue);
 		}
 		else if ("version".equals(attribute)) {
 			String doubleString = null;
@@ -212,7 +186,7 @@ public class Data implements Comparable<Data> {
 				doubleString = DataUtil.castString(value);
 			}
 
-			this.setVersion(doubleString);
+			setVersion(doubleString);
 		}
 		else if ("createDate".equals(attribute) ||
 				 "modifiedDate".equals(attribute) ||
@@ -226,29 +200,33 @@ public class Data implements Comparable<Data> {
 			}
 
 			if ("createDate".equals(attribute)) {
-				this.createDate = DataUtil.stringToTime(strValue);
+				setCreateDate(DataUtil.stringToTime(strValue));
 			}
 			else if ("modifiedDate".equals(attribute) ||
 					 "modified".equals(attribute)) {
 
-				this.modifiedDate = DataUtil.stringToTime(strValue);
+				setModifiedDate(DataUtil.stringToTime(strValue));
 			}
 			else if ("uid".equals(attribute)) {
-				this.uid = strValue;
-
-				if (this.primaryKey == -1) {
-					long id = getIdFromUID(strValue);
-
-					if (id != -1) {
-						this.primaryKey = id;
-					}
-				}
+				setUid(strValue);
 			}
 		}
 	}
 
+	public void setResourcePrimKey(long resourcePrimKey) {
+		this.resourcePrimKey = resourcePrimKey;
+	}
+
 	public void setStatus(int status) {
 		this.status = status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	public void setUid(String uid) {
+		this.uid = uid;
 	}
 
 	public void setVersion(String version) {
@@ -256,20 +234,12 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String toString() {
-		return this.getEntryClassName() + " " + entryClassPK + " " +
+		return this.getEntryClassName() + " " +
 				primaryKey + " " + resourcePrimKey + " " + uid;
 	}
 
-	protected static String[] indexAttributes =
-		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
-		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID,
-		Field.SCOPE_GROUP_ID, Field.VERSION};
-
-	/* Comun */
-
 	protected Long companyId = null;
 	protected Long createDate = null;
-	protected long entryClassPK = -1;
 	protected Long groupId = null;
 	protected IndexCheckerModel model = null;
 	protected Long modifiedDate = null;

@@ -139,6 +139,24 @@ public class DataUtil {
 		return s1.equals(s2);
 	}
 
+	public static long getIdFromUID(String strValue) {
+		long id = -1;
+		String[] uidArr = strValue.split("_");
+
+		if ((uidArr != null) && (uidArr.length >= 3)) {
+			int pos = uidArr.length-2;
+			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
+				pos = pos - 2;
+			}
+
+			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
+				id = DataUtil.castLong(uidArr[pos+1]);
+			}
+		}
+
+		return id;
+	}
+
 	public static Long stringToTime(String dateString) {
 		if (Validator.isNull(dateString)) {
 			return null;

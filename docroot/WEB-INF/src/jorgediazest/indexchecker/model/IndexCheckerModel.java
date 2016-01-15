@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -35,6 +36,7 @@ import java.util.Map;
 
 import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.data.DataUtil;
+import jorgediazest.indexchecker.index.DocumentWrapper;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelImpl;
@@ -59,7 +61,8 @@ public class IndexCheckerModel extends ModelImpl {
 		IndexCheckerModel model;
 		try {
 			model = (IndexCheckerModel)super.clone();
-			model.indexedAttributes = ListUtil.copy(this.indexedAttributes);
+			model.liferayIndexedAttributes = ListUtil.copy(
+				this.liferayIndexedAttributes);
 		}
 		catch (Exception e) {
 			_log.error("Error executing clone");
@@ -70,7 +73,9 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public int compareTo(Data data1, Data data2) {
-		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1)) {
+		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
+			!this.isResourcedModel()) {
+
 			return DataUtil.compareLongs(
 				data1.getPrimaryKey(), data2.getPrimaryKey());
 		}
@@ -83,6 +88,29 @@ public class IndexCheckerModel extends ModelImpl {
 		else {
 			return 0;
 		}
+	}
+
+	public Data createDataObject(DocumentWrapper doc) {
+		Data data = new Data(this);
+
+		for (String attrib : this.getIndexAttributes()) {
+			data.setProperty(attrib, doc.get(attrib));
+		}
+
+		return data;
+	}
+
+	public Data createDataObject(Object[] result) {
+		Data data = new Data(this);
+		data.setPrimaryKey((Long)result[0]);
+
+		int i = 0;
+
+		for (String attrib : this.getLiferayIndexedAttributes()) {
+			data.setProperty(attrib, result[i++]);
+		}
+
+		return data;
 	}
 
 	public void delete(Data value) throws SearchException {
@@ -130,7 +158,9 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public boolean equals(Data data1, Data data2) {
-		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1)) {
+		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
+			!this.isResourcedModel()) {
+
 			return (data1.getPrimaryKey() == data2.getPrimaryKey());
 		}
 		else if ((data1.getResourcePrimKey() != -1) &&
@@ -214,8 +244,8 @@ public class IndexCheckerModel extends ModelImpl {
 		return conjunction;
 	}
 
-	public List<String> getIndexAttributes() {
-		return indexedAttributes;
+	public String[] getIndexAttributes() {
+		return indexAttributes;
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
@@ -226,7 +256,7 @@ public class IndexCheckerModel extends ModelImpl {
 
 		ProjectionList projectionList =
 			this.getPropertyProjection(
-				indexedAttributes.toArray(new String[0]));
+				liferayIndexedAttributes.toArray(new String[0]));
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
@@ -237,16 +267,19 @@ public class IndexCheckerModel extends ModelImpl {
 			query);
 
 		for (Object[] result : results) {
-			Data data = new Data(this);
-			data.init(result);
+			Data data = createDataObject(result);
 			dataMap.put(data.getPrimaryKey(), data);
 		}
 
 		return dataMap;
 	}
 
+	public List<String> getLiferayIndexedAttributes() {
+		return liferayIndexedAttributes;
+	}
+
 	public Integer hashCode(Data data) {
-		if (data.getPrimaryKey() != -1) {
+		if ((data.getPrimaryKey() != -1) && !this.isResourcedModel()) {
 			return data.getEntryClassName().hashCode() *
 				Long.valueOf(data.getPrimaryKey()).hashCode();
 		}
@@ -265,7 +298,7 @@ public class IndexCheckerModel extends ModelImpl {
 
 		super.init(classPackageName, classSimpleName, service);
 
-		this.indexedAttributes = new ArrayList<String>();
+		this.liferayIndexedAttributes = new ArrayList<String>();
 
 		String primaryKey = this.getPrimaryKeyAttribute();
 
@@ -346,7 +379,7 @@ public class IndexCheckerModel extends ModelImpl {
 	public String toString() {
 		String toString = this.getClassSimpleName()+":";
 
-		for (String attr : this.indexedAttributes) {
+		for (String attr : this.liferayIndexedAttributes) {
 			toString += " " + attr;
 		}
 
@@ -354,8 +387,8 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	protected void addIndexedAttribute(String col) {
-		if (!indexedAttributes.contains(col)) {
-			indexedAttributes.add(col);
+		if (!liferayIndexedAttributes.contains(col)) {
+			liferayIndexedAttributes.add(col);
 		}
 	}
 
@@ -368,21 +401,26 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	protected void removeIndexedAttribute(String col) {
-		while (indexedAttributes.contains(col)) {
-			indexedAttributes.remove(col);
+		while (liferayIndexedAttributes.contains(col)) {
+			liferayIndexedAttributes.remove(col);
 		}
 	}
 
 	protected void setIndexPrimaryKey(String col) {
-		if (indexedAttributes.contains(col)) {
-			indexedAttributes.remove(col);
+		if (liferayIndexedAttributes.contains(col)) {
+			liferayIndexedAttributes.remove(col);
 		}
 
-		indexedAttributes.add(0, col);
+		liferayIndexedAttributes.add(0, col);
 	}
+
+	protected static String[] indexAttributes =
+		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
+		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID,
+		Field.SCOPE_GROUP_ID, Field.VERSION};
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);
 
-	private List<String> indexedAttributes = null;
+	private List<String> liferayIndexedAttributes = null;
 
 }

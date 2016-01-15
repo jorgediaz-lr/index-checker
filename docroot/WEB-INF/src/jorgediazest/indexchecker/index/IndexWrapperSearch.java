@@ -76,8 +76,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 					if ((entryClassName != null) &&
 						entryClassName.equals(model.getClassName())) {
 
-						Data data = new Data(model);
-						data.init(doc);
+						Data data = model.createDataObject(doc);
 
 						indexData.add(data);
 					}
@@ -133,8 +132,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 					if ((entryClassName != null) &&
 						entryClassName.equals(model.getClassName())) {
 
-						Data data = new Data(model);
-						data.init(doc);
+						Data data = model.createDataObject(doc);
 
 						Long groupId = data.getGroupId();
 
