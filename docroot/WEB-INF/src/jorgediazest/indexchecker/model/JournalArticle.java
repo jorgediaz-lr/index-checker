@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.DataUtil;
+import jorgediazest.indexchecker.index.DocumentWrapper;
 
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.service.Service;
@@ -45,7 +48,7 @@ public class JournalArticle extends IndexCheckerModel {
 
 		ProjectionList projectionList =
 			this.getPropertyProjection(
-				getIndexAttributes().toArray(new String[0]));
+				getLiferayIndexedAttributes().toArray(new String[0]));
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
@@ -82,10 +85,57 @@ public class JournalArticle extends IndexCheckerModel {
 			long pk = (Long)result[0];
 
 			if (!dataMap.containsKey(pk)) {
-				Data data = new Data(this);
-				data.init(result);
+				Data data = createDataObject(result);
 				dataMap.put(data.getPrimaryKey(), data);
 			}
+		}
+	}
+
+	@Override
+	public int compareTo(Data data1, Data data2) {
+		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
+			indexAllVersions) {
+
+			return DataUtil.compareLongs(
+				data1.getPrimaryKey(), data2.getPrimaryKey());
+		}
+		else if ((data1.getResourcePrimKey() != -1) &&
+				 (data2.getResourcePrimKey() != -1)) {
+
+			return DataUtil.compareLongs(
+				data1.getResourcePrimKey(), data2.getResourcePrimKey());
+		}
+		else {
+			return 0;
+		}
+	}
+
+	@Override
+	public Data createDataObject(DocumentWrapper doc) {
+		Data data = super.createDataObject(doc);
+
+		if (indexAllVersions) {
+			long id = DataUtil.getIdFromUID(doc.get(Field.UID));
+			data.setPrimaryKey(id);
+		}
+
+		return data;
+	}
+
+	@Override
+	public boolean equals(Data data1, Data data2) {
+		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
+			indexAllVersions) {
+
+			return (data1.getPrimaryKey() == data2.getPrimaryKey());
+		}
+		else if ((data1.getResourcePrimKey() != -1) &&
+				 (data2.getResourcePrimKey() != -1)) {
+
+			return (data1.getResourcePrimKey() == data2.getResourcePrimKey());
+		}
+		else {
+			return false;
 		}
 	}
 
@@ -113,6 +163,19 @@ public class JournalArticle extends IndexCheckerModel {
 		return dataMap;
 	}
 
+	public Integer hashCode(Data data) {
+		if ((data.getPrimaryKey() != -1) && indexAllVersions) {
+			return data.getEntryClassName().hashCode() *
+				Long.valueOf(data.getPrimaryKey()).hashCode();
+		}
+		else if (data.getResourcePrimKey() != -1) {
+			return -1 * data.getEntryClassName().hashCode() *
+				Long.valueOf(data.getResourcePrimKey()).hashCode();
+		}
+
+		return null;
+	}
+
 	@Override
 	public void init(
 			String classPackageName, String classSimpleName, Service service)
@@ -127,11 +190,6 @@ public class JournalArticle extends IndexCheckerModel {
 		}
 		catch (SystemException e) {
 			throw new RuntimeException(e);
-		}
-
-		if (!indexAllVersions) {
-			this.removeIndexedAttribute("id");
-			this.setIndexPrimaryKey("resourcePrimKey");
 		}
 	}
 
