@@ -29,7 +29,6 @@ import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -43,12 +42,6 @@ import javax.portlet.ActionResponse;
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.IndexChecker;
 import jorgediazest.indexchecker.IndexCheckerResult;
-import jorgediazest.indexchecker.IndexCheckerUtil;
-import jorgediazest.indexchecker.index.IndexWrapper;
-import jorgediazest.indexchecker.index.IndexWrapperLuceneJar;
-import jorgediazest.indexchecker.index.IndexWrapperLuceneReflection;
-import jorgediazest.indexchecker.index.IndexWrapperSearch;
-
 import jorgediazest.util.model.ModelUtil;
 
 /**
@@ -95,71 +88,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return _log;
 	}
 
-	public void executeGetIndexMissingClassNames(
-			ActionRequest request, ActionResponse response)
-		throws Exception {
-
-		PortalUtil.copyRequestParameters(request, response);
-
-		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
-
-		String indexWrapperClassName = ParamUtil.getString(
-			request, "indexWrapperClassName");
-
-		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
-			indexWrapperClassName);
-
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
-
-		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
-
-		Map<Company, String> companyError = new HashMap<Company, String>();
-
-		for (Company company : companies) {
-			List<String> classNames =
-				ModelUtil.getClassNameValues(
-					ClassNameLocalServiceUtil.getClassNames(
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
-				long startTime = System.currentTimeMillis();
-
-				String error =
-					IndexCheckerUtil.listStringToString(
-						IndexChecker.executeScriptGetIndexMissingClassNames(
-							indexWrapperClass, company, classNames));
-
-				companyError.put(company, error);
-
-				long endTime = System.currentTimeMillis();
-
-				companyProcessTime.put(company, endTime-startTime);
-			}
-			finally {
-				ShardUtil.popCompanyService();
-			}
-		}
-
-		request.setAttribute("title", "Index missing ClassNames");
-		request.setAttribute("executionMode", executionMode);
-		request.setAttribute("companyProcessTime", companyProcessTime);
-		request.setAttribute("companyError", companyError);
-	}
-
 	public void executeReindex(ActionRequest request, ActionResponse response)
 		throws Exception {
 
 		PortalUtil.copyRequestParameters(request, response);
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
-
-		String indexWrapperClassName = ParamUtil.getString(
-			request, "indexWrapperClassName");
-
-		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
-			indexWrapperClassName);
 
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
@@ -199,7 +133,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						indexWrapperClass, company, groups, classNames,
+						company, groups, classNames,
 						executionMode);
 
 				for (
@@ -244,12 +178,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
 
-		String indexWrapperClassName = ParamUtil.getString(
-			request, "indexWrapperClassName");
-
-		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
-			indexWrapperClassName);
-
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
 
@@ -288,7 +216,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						indexWrapperClass, company, groups, classNames,
+						company, groups, classNames,
 						executionMode);
 
 				for (
@@ -331,12 +259,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		PortalUtil.copyRequestParameters(request, response);
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
-
-		String indexWrapperClassName = ParamUtil.getString(
-			request, "indexWrapperClassName");
-
-		Class<? extends IndexWrapper> indexWrapperClass = getIndexWrapper(
-			indexWrapperClassName);
 
 		String[] filterClassNameArr = null;
 		String filterClassName = ParamUtil.getString(
@@ -393,7 +315,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						indexWrapperClass, company, groups, classNames,
+						company, groups, classNames,
 						executionMode);
 
 				long endTime = System.currentTimeMillis();
@@ -432,23 +354,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute("companyProcessTime", companyProcessTime);
 		request.setAttribute("companyResultDataMap", companyResultDataMap);
 		request.setAttribute("companyError", companyError);
-	}
-
-	protected Class<? extends IndexWrapper> getIndexWrapper(
-		String indexWrapperClassName) {
-
-		if ("LuceneJar".equals(indexWrapperClassName)) {
-			return IndexWrapperLuceneJar.class;
-		}
-		else if ("LuceneReflection".equals(indexWrapperClassName)) {
-			return IndexWrapperLuceneReflection.class;
-		}
-		else if ("Search".equals(indexWrapperClassName)) {
-			return IndexWrapperSearch.class;
-		}
-		else {
-			return IndexWrapperLuceneReflection.class;
-		}
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);

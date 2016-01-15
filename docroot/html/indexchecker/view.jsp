@@ -56,7 +56,6 @@
 <portlet:renderURL var="viewURL" />
 
 <portlet:actionURL name="executeScript" var="executeScriptURL" windowState="normal" />
-<portlet:actionURL name="executeGetIndexMissingClassNames" var="executeGetIndexMissingClassNamesURL" windowState="normal" />
 <portlet:actionURL name="executeReindex" var="executeReindexURL" windowState="normal" />
 <portlet:actionURL name="executeRemoveOrphans" var="executeRemoveOrphansURL" windowState="normal" />
 
@@ -73,11 +72,6 @@
 				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
 			</aui:select>
 			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
-			<aui:select inlineLabel="left"  name="indexWrapperClassName">
-				<aui:option value="Search"><liferay-ui:message key="index-wrapper-class-name-search" /></aui:option>
-				<aui:option selected="true" value="Lucene"><liferay-ui:message key="index-wrapper-class-name-lucene" /></aui:option>
-				<aui:option value="LuceneJar"><liferay-ui:message key="index-wrapper-class-name-lucene-jar" /></aui:option>
-			</aui:select>
 		</aui:column>
 		<aui:column>
 			<aui:input name="outputBothExact" type="checkbox" value="false" />
@@ -95,7 +89,6 @@
 		<aui:button type="submit" value="execute" />
 		<aui:button onClick='<%= renderResponse.getNamespace() + "reindex();" %>' type="button" value="reindex" />
 		<aui:button onClick='<%= renderResponse.getNamespace() + "removeOrphans();" %>' type="button" value="remove-orphan-data" />
-		<aui:button onClick='<%= renderResponse.getNamespace() + "removeGetIndexMissingClassNames();" %>' type="button" value="get-index-missing-classnames" />
 		<aui:button onClick="<%= viewURL %>" type="cancel" value="clean" />
 	</aui:button-row>
 </aui:form>
@@ -145,12 +138,6 @@
 
 	function <portlet:namespace />removeOrphans() {
 		document.<portlet:namespace />fm.action = "<%= executeRemoveOrphansURL %>";
-
-		submitForm(document.<portlet:namespace />fm);
-	}
-
-	function <portlet:namespace />removeGetIndexMissingClassNames() {
-		document.<portlet:namespace />fm.action = "<%= executeGetIndexMissingClassNamesURL %>";
 
 		submitForm(document.<portlet:namespace />fm);
 	}

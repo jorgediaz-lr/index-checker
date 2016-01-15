@@ -40,14 +40,9 @@ import jorgediazest.util.reflection.ReflectionUtil;
 /**
  * @author Jorge Díaz
  */
-public class IndexWrapperSearch extends IndexWrapper {
+public class IndexWrapperSearch  {
 
-	public IndexWrapperSearch(long companyId) {
-		this.companyId = companyId;
-	}
-
-	@Override
-	public Set<Data> getClassNameData(IndexCheckerModel model) {
+	public static Set<Data> getClassNameData(long companyId, IndexCheckerModel model) {
 
 		Set<Data> indexData = new HashSet<Data>();
 
@@ -69,14 +64,12 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
-					DocumentWrapper doc = new DocumentWrapperSearch(docs[i]);
-
-					String entryClassName = doc.getEntryClassName();
+					String entryClassName = docs[i].get("entryClassName");
 
 					if ((entryClassName != null) &&
 						entryClassName.equals(model.getClassName())) {
 
-						Data data = model.createDataObject(doc);
+						Data data = model.createDataObject(docs[i]);
 
 						indexData.add(data);
 					}
@@ -104,9 +97,8 @@ public class IndexWrapperSearch extends IndexWrapper {
 		return indexData;
 	}
 
-	@Override
-	public Map<Long, Set<Data>> getClassNameDataByGroupId(
-		IndexCheckerModel model) {
+	public static Map<Long, Set<Data>> getClassNameDataByGroupId(
+		long companyId, IndexCheckerModel model) {
 
 		Map<Long, Set<Data>> indexData = new HashMap<Long, Set<Data>>();
 
@@ -125,14 +117,12 @@ public class IndexWrapperSearch extends IndexWrapper {
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
-					DocumentWrapper doc = new DocumentWrapperSearch(docs[i]);
-
-					String entryClassName = doc.getEntryClassName();
+					String entryClassName = docs[i].get("entryClassName");
 
 					if ((entryClassName != null) &&
 						entryClassName.equals(model.getClassName())) {
 
-						Data data = model.createDataObject(doc);
+						Data data = model.createDataObject(docs[i]);
 
 						Long groupId = data.getGroupId();
 
@@ -156,25 +146,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 		return indexData;
 	}
 
-	@Override
-	public Set<String> getTermValues(String term) {
-
-		// TODO Pendiente
-
-		Set<String> values = new HashSet<String>();
-		values.add("Only implemented for 'Lucene' index wrapper");
-		return values;
-	}
-
-	@Override
-	public int numDocs() {
-
-		// TODO Pendiente
-
-		return -1;
-	}
-
-	protected Document[] executeSearch(
+	protected static Document[] executeSearch(
 			SearchContext searchContext, BooleanQuery contextQuery, int start,
 			int step)
 		throws Exception, SearchException {
@@ -196,7 +168,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 		}
 	}
 
-	protected int getIndexSearchLimit() throws Exception {
+	protected static int getIndexSearchLimit() throws Exception {
 		Class<?> propsValues =
 			PortalClassLoaderUtil.getClassLoader().loadClass(
 				"com.liferay.portal.util.PropsValues");
@@ -207,7 +179,7 @@ public class IndexWrapperSearch extends IndexWrapper {
 		return (Integer)indexSearchLimitFiled.get(null);
 	}
 
-	protected void setIndexSearchLimit(int indexSearchLimit) throws Exception {
+	protected static void setIndexSearchLimit(int indexSearchLimit) throws Exception {
 		Class<?> propsValues =
 			PortalClassLoaderUtil.getClassLoader().loadClass(
 				"com.liferay.portal.util.PropsValues");
@@ -243,7 +215,5 @@ public class IndexWrapperSearch extends IndexWrapper {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexWrapperSearch.class);
-
-	private long companyId;
 
 }

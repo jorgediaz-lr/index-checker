@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 
@@ -31,10 +30,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.index.IndexWrapper;
+import jorgediazest.indexchecker.index.IndexWrapperSearch;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
-
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 
@@ -45,12 +43,9 @@ public class IndexChecker {
 
 	public static Map<Long, List<IndexCheckerResult>>
 		executeScript(
-			Class<? extends IndexWrapper> indexWrapperClass, Company company,
-			List<Group> groups, List<String> classNames,
+			Company company, List<Group> groups, List<String> classNames,
 			Set<ExecutionMode> executionMode)
 		throws SystemException {
-
-		IndexWrapper indexWrapper = getIndexWrapper(indexWrapperClass, company);
 
 		ModelFactory modelFactory = new IndexCheckerModelFactory();
 
@@ -81,7 +76,7 @@ public class IndexChecker {
 
 				Map<Long, IndexCheckerResult> modelDataMap =
 					getData(
-						indexWrapper, company.getCompanyId(), groups, icModel,
+						company.getCompanyId(), groups, icModel,
 						executionMode);
 
 				for (
@@ -107,43 +102,8 @@ public class IndexChecker {
 		return resultDataMap;
 	}
 
-	public static List<String> executeScriptGetIndexMissingClassNames(
-		Class<? extends IndexWrapper> indexWrapperClass, Company company,
-		List<String> classNames)
-	throws SystemException {
-
-		List<String> out = new ArrayList<String>();
-
-		IndexWrapper indexWrapper = getIndexWrapper(indexWrapperClass, company);
-
-		ModelFactory modelFactory = new IndexCheckerModelFactory();
-
-		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
-
-		Set<String> classNamesNotAvailable =
-			indexWrapper.getMissingClassNamesAtLiferay(modelMap);
-
-		if (classNamesNotAvailable.size() == 0) {
-			out.add(StringPool.BLANK);
-			out.add("All classNames at Index also exists at Liferay :-)");
-
-			return out;
-		}
-
-		out.add(StringPool.BLANK);
-		out.add("---------------");
-		out.add("The following classNames exists at Index but not at Liferay!");
-		out.add("---------------");
-
-		for (String className : classNamesNotAvailable) {
-			out.add(className);
-		}
-
-		return out;
-	}
-
 	protected static Map<Long, IndexCheckerResult> getData(
-			IndexWrapper indexWrapper, long companyId, List<Group> groups,
+		long companyId, List<Group> groups,
 			IndexCheckerModel icModel, Set<ExecutionMode> executionMode)
 		throws Exception {
 
@@ -154,7 +114,7 @@ public class IndexChecker {
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
 			Map<Long, Set<Data>> indexDataMap =
-				indexWrapper.getClassNameDataByGroupId(icModel);
+				IndexWrapperSearch.getClassNameDataByGroupId(companyId, icModel);
 
 			for (Group group : groups) {
 				Set<Data> indexData = indexDataMap.get(group.getGroupId());
@@ -177,7 +137,7 @@ public class IndexChecker {
 			}
 		}
 		else {
-			Set<Data> indexData = indexWrapper.getClassNameData(icModel);
+			Set<Data> indexData = IndexWrapperSearch.getClassNameData(companyId, icModel);
 
 			IndexCheckerResult data = getIndexCheckResult(
 				companyId, groups, icModel, indexData, executionMode);
@@ -211,27 +171,6 @@ public class IndexChecker {
 			icModel, liferayData, indexData, executionMode);
 
 		return data;
-	}
-
-	protected static IndexWrapper getIndexWrapper(
-			Class<? extends IndexWrapper> indexWrapperClass, Company company)
-		throws SystemException {
-
-		IndexWrapper indexWrapper;
-
-		try {
-			indexWrapper =
-				indexWrapperClass.getDeclaredConstructor(
-					long.class).newInstance(company.getCompanyId());
-		}
-		catch (Exception e) {
-			_log.error(
-				"EXCEPTION: " + e.getClass() + " - " +
-					e.getMessage());
-			throw new SystemException(e);
-		}
-
-		return indexWrapper;
 	}
 
 	static Log _log = LogFactoryUtil.getLog(IndexChecker.class);

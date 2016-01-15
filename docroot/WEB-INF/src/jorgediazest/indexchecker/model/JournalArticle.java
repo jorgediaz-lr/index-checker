@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -31,8 +32,6 @@ import java.util.Map;
 
 import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.data.DataUtil;
-import jorgediazest.indexchecker.index.DocumentWrapper;
-
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.service.Service;
 
@@ -110,7 +109,7 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
-	public Data createDataObject(DocumentWrapper doc) {
+	public Data createDataObject(Document doc) {
 		Data data = super.createDataObject(doc);
 
 		if (indexAllVersions) {
