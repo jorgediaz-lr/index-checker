@@ -32,6 +32,7 @@ import java.util.Map;
 
 import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.data.DataUtil;
+
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.service.Service;
 

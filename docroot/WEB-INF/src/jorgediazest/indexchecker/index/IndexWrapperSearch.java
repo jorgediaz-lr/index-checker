@@ -40,9 +40,10 @@ import jorgediazest.util.reflection.ReflectionUtil;
 /**
  * @author Jorge Díaz
  */
-public class IndexWrapperSearch  {
+public class IndexWrapperSearch {
 
-	public static Set<Data> getClassNameData(long companyId, IndexCheckerModel model) {
+	public static Set<Data> getClassNameData(
+		long companyId, IndexCheckerModel model) {
 
 		Set<Data> indexData = new HashSet<Data>();
 
@@ -196,7 +197,9 @@ public class IndexWrapperSearch  {
 		return (Integer)indexSearchLimitFiled.get(null);
 	}
 
-	protected static void setIndexSearchLimit(int indexSearchLimit) throws Exception {
+	protected static void setIndexSearchLimit(int indexSearchLimit)
+		throws Exception {
+
 		Class<?> propsValues =
 			PortalClassLoaderUtil.getClassLoader().loadClass(
 				"com.liferay.portal.util.PropsValues");

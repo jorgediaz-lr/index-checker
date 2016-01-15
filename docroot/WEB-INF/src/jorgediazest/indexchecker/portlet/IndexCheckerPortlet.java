@@ -29,6 +29,7 @@ import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import javax.portlet.ActionResponse;
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.IndexChecker;
 import jorgediazest.indexchecker.IndexCheckerResult;
+
 import jorgediazest.util.model.ModelUtil;
 
 /**
@@ -133,8 +135,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						company, groups, classNames,
-						executionMode);
+						company, groups, classNames, executionMode);
 
 				for (
 					Entry<Long, List<IndexCheckerResult>> entry :
@@ -216,8 +217,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						company, groups, classNames,
-						executionMode);
+						company, groups, classNames, executionMode);
 
 				for (
 					Entry<Long, List<IndexCheckerResult>> entry :
@@ -315,8 +315,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						company, groups, classNames,
-						executionMode);
+						company, groups, classNames, executionMode);
 
 				long endTime = System.currentTimeMillis();
 

@@ -33,6 +33,7 @@ import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.index.IndexWrapperSearch;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
+
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 
@@ -76,8 +77,7 @@ public class IndexChecker {
 
 				Map<Long, IndexCheckerResult> modelDataMap =
 					getData(
-						company.getCompanyId(), groups, icModel,
-						executionMode);
+						company.getCompanyId(), groups, icModel, executionMode);
 
 				for (
 					Entry<Long, IndexCheckerResult> entry :
@@ -114,7 +114,8 @@ public class IndexChecker {
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
 			Map<Long, Set<Data>> indexDataMap =
-				IndexWrapperSearch.getClassNameDataByGroupId(companyId, icModel);
+				IndexWrapperSearch.getClassNameDataByGroupId(
+					companyId, icModel);
 
 			for (Group group : groups) {
 				Set<Data> indexData = indexDataMap.get(group.getGroupId());
@@ -137,7 +138,8 @@ public class IndexChecker {
 			}
 		}
 		else {
-			Set<Data> indexData = IndexWrapperSearch.getClassNameData(companyId, icModel);
+			Set<Data> indexData = IndexWrapperSearch.getClassNameData(
+				companyId, icModel);
 
 			IndexCheckerResult data = getIndexCheckResult(
 				companyId, groups, icModel, indexData, executionMode);
