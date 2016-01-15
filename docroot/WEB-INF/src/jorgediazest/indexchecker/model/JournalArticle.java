@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ import jorgediazest.util.service.Service;
 public class JournalArticle extends IndexCheckerModel {
 
 	public void addMissingJournalArticles(
-			Criterion filter, Map<Long, Data> dataMap)
+			Criterion filter, Criterion filterStatus, Map<Long, Data> dataMap)
 		throws Exception {
 
 		DynamicQuery query = service.newDynamicQuery();
@@ -70,23 +71,21 @@ public class JournalArticle extends IndexCheckerModel {
 			RestrictionsFactoryUtil.eqProperty(
 				"this.resourcePrimKey", "articleVersion.resourcePrimKey"));
 
+		articleVersionDynamicQuery.add(filterStatus);
+
 		query.add(getProperty("version").eq(articleVersionDynamicQuery));
 
-		boolean indexAllVersionsOld = indexAllVersions;
-		indexAllVersions = true;
+		query.add(filterStatus);
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
 			query);
 
-		indexAllVersions = indexAllVersionsOld;
-
 		for (Object[] result : results) {
-			long pk = (Long)result[0];
+			Data data = createDataObject(result);
 
-			if (!dataMap.containsKey(pk)) {
-				Data data = createDataObject(result);
-				dataMap.put(data.getPrimaryKey(), data);
+			if (!dataMap.containsKey(data.getResourcePrimKey())) {
+				dataMap.put(data.getResourcePrimKey(), data);
 			}
 		}
 	}
@@ -142,23 +141,27 @@ public class JournalArticle extends IndexCheckerModel {
 	@Override
 	public Criterion generateQueryFilter() {
 
-		String filter = "classNameId=0,indexable=true";
-
-		if (!indexAllVersions) {
-			filter =
-				filter + ",status=" + WorkflowConstants.STATUS_APPROVED +
-				"+status=" + WorkflowConstants.STATUS_IN_TRASH;
-		}
-
-		return this.generateCriterionFilter(filter);
+		return this.generateCriterionFilter("classNameId=0,indexable=true");
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
-		Map<Long, Data> dataMap = super.getLiferayData(filter);
-
-		if (!indexAllVersions) {
-			addMissingJournalArticles(filter, dataMap);
+		if (indexAllVersions) {
+			return super.getLiferayData(filter);
 		}
+
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		Criterion filterStatusApproved = this.generateCriterionFilter(
+			"status=" + WorkflowConstants.STATUS_APPROVED + "+status=" +
+				WorkflowConstants.STATUS_IN_TRASH);
+
+		addMissingJournalArticles(filter, filterStatusApproved, dataMap);
+
+		Criterion filterStatusNotApproved = this.generateCriterionFilter(
+			"status<>" + WorkflowConstants.STATUS_APPROVED + ",status<>" +
+				WorkflowConstants.STATUS_IN_TRASH);
+
+		addMissingJournalArticles(filter, filterStatusNotApproved, dataMap);
 
 		return dataMap;
 	}
