@@ -110,10 +110,13 @@ public class IndexWrapperSearch  {
 		contextQuery.addRequiredTerm(
 			Field.ENTRY_CLASS_NAME, model.getClassName());
 
-		try {
-			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
+		int indexSearchLimit = -1;
 
-			Document[] docs = hits.getDocs();
+		try {
+			indexSearchLimit = getIndexSearchLimit();
+
+			Document[] docs = executeSearch(
+				searchContext, contextQuery, 50000, 200000);
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
@@ -141,6 +144,20 @@ public class IndexWrapperSearch  {
 		catch (Exception e) {
 			_log.error(
 				"EXCEPTION: " + e.getClass() + " - " + e.getMessage(), e);
+		}
+		finally {
+			if (indexSearchLimit != -1) {
+				try {
+					setIndexSearchLimit(indexSearchLimit);
+				}
+				catch (Exception e) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Error restoring INDEX_SEARCH_LIMIT: " +
+								e.getMessage(), e);
+					}
+				}
+			}
 		}
 
 		return indexData;
