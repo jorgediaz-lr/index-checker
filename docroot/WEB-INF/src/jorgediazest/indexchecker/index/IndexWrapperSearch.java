@@ -65,15 +65,9 @@ public class IndexWrapperSearch {
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
-					String entryClassName = docs[i].get("entryClassName");
+					Data data = model.createDataObject(docs[i]);
 
-					if ((entryClassName != null) &&
-						entryClassName.equals(model.getClassName())) {
-
-						Data data = model.createDataObject(docs[i]);
-
-						indexData.add(data);
-					}
+					indexData.add(data);
 				}
 			}
 		}
@@ -121,24 +115,18 @@ public class IndexWrapperSearch {
 
 			if (docs != null) {
 				for (int i = 0; i < docs.length; i++) {
-					String entryClassName = docs[i].get("entryClassName");
+					Data data = model.createDataObject(docs[i]);
 
-					if ((entryClassName != null) &&
-						entryClassName.equals(model.getClassName())) {
+					Long groupId = data.getGroupId();
 
-						Data data = model.createDataObject(docs[i]);
+					Set<Data> indexDataSet = indexData.get(groupId);
 
-						Long groupId = data.getGroupId();
-
-						Set<Data> indexDataSet = indexData.get(groupId);
-
-						if (indexDataSet == null) {
-							indexDataSet = new HashSet<Data>();
-							indexData.put(groupId, indexDataSet);
-						}
-
-						indexDataSet.add(data);
+					if (indexDataSet == null) {
+						indexDataSet = new HashSet<Data>();
+						indexData.put(groupId, indexDataSet);
 					}
+
+					indexDataSet.add(data);
 				}
 			}
 		}
