@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 
@@ -102,6 +103,18 @@ public class IndexChecker {
 		return resultDataMap;
 	}
 
+	public static long[] getGroupIdsArray(List<Group> groups) {
+		long[] groupIds = new long[groups.size()];
+
+		int i = 0;
+
+		for (Group group : groups) {
+			groupIds[i++] = group.getGroupId();
+		}
+
+		return groupIds;
+	}
+
 	protected static Map<Long, IndexCheckerResult> getData(
 		long companyId, List<Group> groups,
 			IndexCheckerModel icModel, Set<ExecutionMode> executionMode)
@@ -113,16 +126,9 @@ public class IndexChecker {
 		if (icModel.hasAttribute("groupId") &&
 			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
-			Map<Long, Set<Data>> indexDataMap =
-				IndexWrapperSearch.getClassNameDataByGroupId(
-					companyId, icModel);
-
 			for (Group group : groups) {
-				Set<Data> indexData = indexDataMap.get(group.getGroupId());
-
-				if (indexData == null) {
-					indexData = new HashSet<Data>();
-				}
+				Set<Data> indexData = IndexWrapperSearch.getClassNameData(
+					companyId, group.getGroupId(), icModel);
 
 				List<Group> listGroupAux = new ArrayList<Group>();
 				listGroupAux.add(group);
@@ -157,14 +163,8 @@ public class IndexChecker {
 			Set<Data> indexData, Set<ExecutionMode> executionMode)
 		throws Exception {
 
-		List<Long> listGroupId = new ArrayList<Long>();
-
-		for (Group group : groups) {
-			listGroupId.add(group.getGroupId());
-		}
-
-		Criterion filter = icModel.getCompanyGroupFilter(
-			companyId, listGroupId);
+		List<Long> groupIds = ListUtil.toList(getGroupIdsArray(groups));
+		Criterion filter = icModel.getCompanyGroupFilter(companyId, groupIds);
 
 		Set<Data> liferayData = new HashSet<Data>(
 			icModel.getLiferayData(filter).values());

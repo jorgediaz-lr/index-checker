@@ -26,9 +26,7 @@ import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.indexchecker.data.Data;
@@ -44,16 +42,25 @@ public class IndexWrapperSearch {
 
 	public static Set<Data> getClassNameData(
 		long companyId, IndexCheckerModel model) {
+		return getClassNameData(companyId, null, model);
+	}
+
+	public static Set<Data> getClassNameData(
+		long companyId, Long groupId, IndexCheckerModel model) {
 
 		Set<Data> indexData = new HashSet<Data>();
-
 		SearchContext searchContext = new SearchContext();
 		searchContext.setCompanyId(companyId);
+		searchContext.setEntryClassNames(new String[] {model.getClassName()});
+
 		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
 			searchContext);
-		contextQuery.addRequiredTerm(Field.COMPANY_ID, companyId);
 		contextQuery.addRequiredTerm(
 			Field.ENTRY_CLASS_NAME, model.getClassName());
+
+		if (groupId != null) {
+			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
+		}
 
 		int indexSearchLimit = -1;
 
@@ -73,66 +80,6 @@ public class IndexWrapperSearch {
 		}
 		catch (Exception e) {
 			_log.error("EXCEPTION: " + e.getClass() + " - " + e.getMessage(),e);
-		}
-		finally {
-			if (indexSearchLimit != -1) {
-				try {
-					setIndexSearchLimit(indexSearchLimit);
-				}
-				catch (Exception e) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Error restoring INDEX_SEARCH_LIMIT: " +
-								e.getMessage(), e);
-					}
-				}
-			}
-		}
-
-		return indexData;
-	}
-
-	public static Map<Long, Set<Data>> getClassNameDataByGroupId(
-		long companyId, IndexCheckerModel model) {
-
-		Map<Long, Set<Data>> indexData = new HashMap<Long, Set<Data>>();
-
-		SearchContext searchContext = new SearchContext();
-		searchContext.setCompanyId(companyId);
-		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
-			searchContext);
-		contextQuery.addRequiredTerm(Field.COMPANY_ID, companyId);
-		contextQuery.addRequiredTerm(
-			Field.ENTRY_CLASS_NAME, model.getClassName());
-
-		int indexSearchLimit = -1;
-
-		try {
-			indexSearchLimit = getIndexSearchLimit();
-
-			Document[] docs = executeSearch(
-				searchContext, contextQuery, 50000, 200000);
-
-			if (docs != null) {
-				for (int i = 0; i < docs.length; i++) {
-					Data data = model.createDataObject(docs[i]);
-
-					Long groupId = data.getGroupId();
-
-					Set<Data> indexDataSet = indexData.get(groupId);
-
-					if (indexDataSet == null) {
-						indexDataSet = new HashSet<Data>();
-						indexData.put(groupId, indexDataSet);
-					}
-
-					indexDataSet.add(data);
-				}
-			}
-		}
-		catch (Exception e) {
-			_log.error(
-				"EXCEPTION: " + e.getClass() + " - " + e.getMessage(), e);
 		}
 		finally {
 			if (indexSearchLimit != -1) {
