@@ -77,7 +77,7 @@
 			<aui:input name="outputBothExact" type="checkbox" value="false" />
 			<aui:input name="outputBothNotExact" type="checkbox" value="true" />
 			<aui:input name="outputLiferay" type="checkbox" value="true" />
-			<aui:input name="outputIndex" type="checkbox" value="true" />
+			<aui:input name="outputIndex" type="checkbox" value="false" />
 		</aui:column>
 		<aui:column>
 			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
