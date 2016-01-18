@@ -17,20 +17,12 @@ package jorgediazest.indexchecker.index;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.reflection.ReflectionUtil;
@@ -38,63 +30,9 @@ import jorgediazest.util.reflection.ReflectionUtil;
 /**
  * @author Jorge Díaz
  */
-public class IndexWrapperSearch {
+public class IndexSearchUtil {
 
-	public static Set<Data> getClassNameData(
-		long companyId, long groupId, IndexCheckerModel model) {
-
-		Set<Data> indexData = new HashSet<Data>();
-		SearchContext searchContext = new SearchContext();
-		searchContext.setCompanyId(companyId);
-		searchContext.setEntryClassNames(new String[] {model.getClassName()});
-
-		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
-			searchContext);
-		contextQuery.addRequiredTerm(
-			Field.ENTRY_CLASS_NAME, model.getClassName());
-
-		if (groupId != 0) {
-			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
-		}
-
-		int indexSearchLimit = -1;
-
-		try {
-			indexSearchLimit = getIndexSearchLimit();
-
-			Document[] docs = executeSearch(
-				searchContext, contextQuery, 50000, 200000);
-
-			if (docs != null) {
-				for (int i = 0; i < docs.length; i++) {
-					Data data = model.createDataObject(docs[i]);
-
-					indexData.add(data);
-				}
-			}
-		}
-		catch (Exception e) {
-			_log.error("EXCEPTION: " + e.getClass() + " - " + e.getMessage(),e);
-		}
-		finally {
-			if (indexSearchLimit != -1) {
-				try {
-					setIndexSearchLimit(indexSearchLimit);
-				}
-				catch (Exception e) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Error restoring INDEX_SEARCH_LIMIT: " +
-								e.getMessage(), e);
-					}
-				}
-			}
-		}
-
-		return indexData;
-	}
-
-	protected static Document[] executeSearch(
+	public static Document[] executeSearch(
 			SearchContext searchContext, BooleanQuery contextQuery, int start,
 			int step)
 		throws Exception, SearchException {
@@ -116,7 +54,7 @@ public class IndexWrapperSearch {
 		}
 	}
 
-	protected static int getIndexSearchLimit() throws Exception {
+	public static int getIndexSearchLimit() throws Exception {
 		Class<?> propsValues =
 			PortalClassLoaderUtil.getClassLoader().loadClass(
 				"com.liferay.portal.util.PropsValues");
@@ -127,7 +65,7 @@ public class IndexWrapperSearch {
 		return (Integer)indexSearchLimitFiled.get(null);
 	}
 
-	protected static void setIndexSearchLimit(int indexSearchLimit)
+	public static void setIndexSearchLimit(int indexSearchLimit)
 		throws Exception {
 
 		Class<?> propsValues =
@@ -164,6 +102,6 @@ public class IndexWrapperSearch {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(IndexWrapperSearch.class);
+	private static Log _log = LogFactoryUtil.getLog(IndexSearchUtil.class);
 
 }

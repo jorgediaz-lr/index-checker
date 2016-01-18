@@ -22,8 +22,11 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanQuery;
+import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -32,11 +35,14 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.data.DataUtil;
+import jorgediazest.indexchecker.index.IndexSearchUtil;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelImpl;
@@ -244,6 +250,59 @@ public class IndexCheckerModel extends ModelImpl {
 
 	public String[] getIndexAttributes() {
 		return indexAttributes;
+	}
+
+	public Set<Data> getIndexData(long companyId, long groupId) {
+
+		Set<Data> indexData = new HashSet<Data>();
+		SearchContext searchContext = new SearchContext();
+		searchContext.setCompanyId(companyId);
+		searchContext.setEntryClassNames(new String[] {this.getClassName()});
+
+		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
+			searchContext);
+		contextQuery.addRequiredTerm(
+			Field.ENTRY_CLASS_NAME, this.getClassName());
+
+		if (groupId != 0) {
+			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
+		}
+
+		int indexSearchLimit = -1;
+
+		try {
+			indexSearchLimit = IndexSearchUtil.getIndexSearchLimit();
+
+			Document[] docs = IndexSearchUtil.executeSearch(
+				searchContext, contextQuery, 50000, 200000);
+
+			if (docs != null) {
+				for (int i = 0; i < docs.length; i++) {
+					Data data = this.createDataObject(docs[i]);
+
+					indexData.add(data);
+				}
+			}
+		}
+		catch (Exception e) {
+			_log.error("EXCEPTION: " + e.getClass() + " - " + e.getMessage(),e);
+		}
+		finally {
+			if (indexSearchLimit != -1) {
+				try {
+					IndexSearchUtil.setIndexSearchLimit(indexSearchLimit);
+				}
+				catch (Exception e) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Error restoring INDEX_SEARCH_LIMIT: " +
+								e.getMessage(), e);
+					}
+				}
+			}
+		}
+
+		return indexData;
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {

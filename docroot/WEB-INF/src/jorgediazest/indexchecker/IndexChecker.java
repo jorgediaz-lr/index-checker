@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.index.IndexWrapperSearch;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 
@@ -96,17 +95,42 @@ public class IndexChecker {
 
 			for (IndexCheckerModel icModel : modelList) {
 				try {
-					if ((groupId == 0L) ||
-						icModel.hasAttribute("groupId") ||
-						!executionMode.contains(
-							ExecutionMode.GROUP_BY_SITE)) {
+					if ((groupId == 0L) &&
+						icModel.hasAttribute("groupId") &&
+						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
-						IndexCheckerResult data =
-							getIndexCheckResult(
-								companyId, groupId, icModel, executionMode);
-
-						resultList.add(data);
+						continue;
 					}
+
+					if ((groupId != 0L) &&
+						!icModel.hasAttribute("groupId") &&
+						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+						continue;
+					}
+
+					Criterion filter = icModel.getCompanyGroupFilter(
+						companyId, groupId);
+
+					Set<Data> liferayData = new HashSet<Data>(
+						icModel.getLiferayData(filter).values());
+
+					Set<Data> indexData;
+
+					if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
+						!liferayData.isEmpty()) {
+
+						indexData = icModel.getIndexData(companyId, groupId);
+					}
+					else {
+						indexData = new HashSet<Data>();
+					}
+
+					IndexCheckerResult data =
+						IndexCheckerResult.getIndexCheckResult(
+							icModel, liferayData, indexData, executionMode);
+
+					resultList.add(data);
 				}
 				catch (Exception e) {
 					_log.error(
@@ -119,31 +143,6 @@ public class IndexChecker {
 		}
 
 		return resultDataMap;
-	}
-
-	public static IndexCheckerResult getIndexCheckResult(
-		long companyId, long groupId, IndexCheckerModel icModel,
-		Set<ExecutionMode> executionMode) throws Exception {
-
-		Criterion filter = icModel.getCompanyGroupFilter(companyId, groupId);
-
-		Set<Data> liferayData = new HashSet<Data>(
-			icModel.getLiferayData(filter).values());
-
-		Set<Data> indexData;
-
-		if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-			!liferayData.isEmpty()) {
-
-			indexData = IndexWrapperSearch.getClassNameData(
-				companyId, groupId, icModel);
-		}
-		else {
-			indexData = new HashSet<Data>();
-		}
-
-		return IndexCheckerResult.getIndexCheckResult(
-			icModel, liferayData, indexData, executionMode);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexChecker.class);
