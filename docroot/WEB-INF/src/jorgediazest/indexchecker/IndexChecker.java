@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 
@@ -27,7 +26,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import jorgediazest.indexchecker.data.Data;
@@ -43,6 +41,24 @@ import jorgediazest.util.model.ModelFactory;
  */
 public class IndexChecker {
 
+	public static IndexCheckerModel castModel(Model model) {
+		IndexCheckerModel icModel;
+		try {
+			icModel = (IndexCheckerModel)model;
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Model: " + model.getName() + " EXCEPTION: " +
+						e.getClass() + " - " + e.getMessage(), e);
+			}
+
+			icModel = null;
+		}
+
+		return icModel;
+	}
+
 	public static Map<Long, List<IndexCheckerResult>>
 		executeScript(
 			Company company, List<Group> groups, List<String> classNames,
@@ -53,128 +69,83 @@ public class IndexChecker {
 
 		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
 
+		List<IndexCheckerModel> modelList = new ArrayList<IndexCheckerModel>();
+
+		for (Model model : modelMap.values()) {
+			IndexCheckerModel icModel = castModel(model);
+			modelList.add(icModel);
+		}
+
 		Map<Long, List<IndexCheckerResult>> resultDataMap =
 			new LinkedHashMap<Long, List<IndexCheckerResult>>();
 
-		for (Model model : modelMap.values()) {
-			try {
-				IndexCheckerModel icModel;
+		long companyId = company.getCompanyId();
+
+		List<Long> groupIds = new ArrayList<Long>();
+		groupIds.add(0L);
+
+		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			for (Group group : groups) {
+				groupIds.add(group.getGroupId());
+			}
+		}
+
+		for (long groupId : groupIds) {
+			List<IndexCheckerResult> resultList =
+				new ArrayList<IndexCheckerResult>();
+
+			for (IndexCheckerModel icModel : modelList) {
 				try {
-					icModel = (IndexCheckerModel)model;
+					if ((groupId == 0L) ||
+						icModel.hasAttribute("groupId") ||
+						!executionMode.contains(
+							ExecutionMode.GROUP_BY_SITE)) {
+
+						IndexCheckerResult data =
+							getIndexCheckResult(
+								companyId, groupId, icModel, executionMode);
+
+						resultList.add(data);
+					}
 				}
 				catch (Exception e) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Model: " + model.getName() + " EXCEPTION: " +
-								e.getClass() + " - " + e.getMessage(), e);
-					}
-
-					icModel = null;
-				}
-
-				if (icModel == null) {
-					continue;
-				}
-
-				Map<Long, IndexCheckerResult> modelDataMap =
-					getData(
-						company.getCompanyId(), groups, icModel, executionMode);
-
-				for (
-					Entry<Long, IndexCheckerResult> entry :
-						modelDataMap.entrySet()) {
-
-					if (!resultDataMap.containsKey(entry.getKey())) {
-						resultDataMap.put(
-							entry.getKey(),
-							new ArrayList<IndexCheckerResult>());
-					}
-
-					resultDataMap.get(entry.getKey()).add(entry.getValue());
+					_log.error(
+						"Model: " + icModel.getName() + " EXCEPTION: " +
+							e.getClass() + " - " + e.getMessage(),e);
 				}
 			}
-			catch (Exception e) {
-				_log.error(
-					"Model: " + model.getName() + " EXCEPTION: " +
-						e.getClass() + " - " + e.getMessage(),e);
-			}
+
+			resultDataMap.put(groupId, resultList);
 		}
 
 		return resultDataMap;
 	}
 
-	public static long[] getGroupIdsArray(List<Group> groups) {
-		long[] groupIds = new long[groups.size()];
+	public static IndexCheckerResult getIndexCheckResult(
+		long companyId, long groupId, IndexCheckerModel icModel,
+		Set<ExecutionMode> executionMode) throws Exception {
 
-		int i = 0;
-
-		for (Group group : groups) {
-			groupIds[i++] = group.getGroupId();
-		}
-
-		return groupIds;
-	}
-
-	protected static Map<Long, IndexCheckerResult> getData(
-		long companyId, List<Group> groups,
-			IndexCheckerModel icModel, Set<ExecutionMode> executionMode)
-		throws Exception {
-
-		Map<Long, IndexCheckerResult> dataMap =
-			new LinkedHashMap<Long, IndexCheckerResult>();
-
-		if (icModel.hasAttribute("groupId") &&
-			executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-			for (Group group : groups) {
-				Set<Data> indexData = IndexWrapperSearch.getClassNameData(
-					companyId, group.getGroupId(), icModel);
-
-				List<Group> listGroupAux = new ArrayList<Group>();
-				listGroupAux.add(group);
-
-				IndexCheckerResult data =
-					getIndexCheckResult(
-						companyId, listGroupAux, icModel, indexData,
-						executionMode);
-
-				if (data != null) {
-					dataMap.put(group.getGroupId(), data);
-				}
-			}
-		}
-		else {
-			Set<Data> indexData = IndexWrapperSearch.getClassNameData(
-				companyId, icModel);
-
-			IndexCheckerResult data = getIndexCheckResult(
-				companyId, groups, icModel, indexData, executionMode);
-
-			if (data != null) {
-				dataMap.put(0L, data);
-			}
-		}
-
-		return dataMap;
-	}
-
-	protected static IndexCheckerResult getIndexCheckResult(
-			long companyId, List<Group> groups, IndexCheckerModel icModel,
-			Set<Data> indexData, Set<ExecutionMode> executionMode)
-		throws Exception {
-
-		List<Long> groupIds = ListUtil.toList(getGroupIdsArray(groups));
-		Criterion filter = icModel.getCompanyGroupFilter(companyId, groupIds);
+		Criterion filter = icModel.getCompanyGroupFilter(companyId, groupId);
 
 		Set<Data> liferayData = new HashSet<Data>(
 			icModel.getLiferayData(filter).values());
 
-		IndexCheckerResult data = IndexCheckerResult.getIndexCheckResult(
-			icModel, liferayData, indexData, executionMode);
+		Set<Data> indexData;
 
-		return data;
+		if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
+			!liferayData.isEmpty()) {
+
+			indexData = IndexWrapperSearch.getClassNameData(
+				companyId, groupId, icModel);
+		}
+		else {
+			indexData = new HashSet<Data>();
+		}
+
+		return IndexCheckerResult.getIndexCheckResult(
+			icModel, liferayData, indexData, executionMode);
 	}
 
-	static Log _log = LogFactoryUtil.getLog(IndexChecker.class);
+	private static Log _log = LogFactoryUtil.getLog(IndexChecker.class);
 
 }

@@ -225,20 +225,18 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public Criterion getCompanyGroupFilter(long companyId) {
-		return getCompanyGroupFilter(companyId, null);
+		return getCompanyGroupFilter(companyId, 0);
 	}
 
-	public Criterion getCompanyGroupFilter(
-		long companyId, List<Long> listGroupId) {
-
+	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		if (this.hasAttribute("companyId")) {
 			conjunction.add(getProperty("companyId").eq(companyId));
 		}
 
-		if (this.hasAttribute("groupId")) {
-			conjunction.add(getProperty("groupId").in(listGroupId));
+		if (this.hasAttribute("groupId") && (groupId != 0)) {
+			conjunction.add(getProperty("groupId").eq(groupId));
 		}
 
 		return conjunction;

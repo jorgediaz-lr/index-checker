@@ -41,12 +41,7 @@ import jorgediazest.util.reflection.ReflectionUtil;
 public class IndexWrapperSearch {
 
 	public static Set<Data> getClassNameData(
-		long companyId, IndexCheckerModel model) {
-		return getClassNameData(companyId, null, model);
-	}
-
-	public static Set<Data> getClassNameData(
-		long companyId, Long groupId, IndexCheckerModel model) {
+		long companyId, long groupId, IndexCheckerModel model) {
 
 		Set<Data> indexData = new HashSet<Data>();
 		SearchContext searchContext = new SearchContext();
@@ -58,7 +53,7 @@ public class IndexWrapperSearch {
 		contextQuery.addRequiredTerm(
 			Field.ENTRY_CLASS_NAME, model.getClassName());
 
-		if (groupId != null) {
+		if (groupId != 0) {
 			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
 		}
 
