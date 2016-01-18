@@ -1,5 +1,0 @@
-Copy lucene-core.jar file to tomcat lib/ext directory
-
-Liferay IDE will use it to compile project.
-
-During execution, it is not used unless you select option Lucene (JAR)
