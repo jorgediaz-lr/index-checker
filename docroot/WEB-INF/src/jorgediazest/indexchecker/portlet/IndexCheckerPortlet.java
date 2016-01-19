@@ -43,6 +43,7 @@ import javax.portlet.ActionResponse;
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.IndexChecker;
 import jorgediazest.indexchecker.IndexCheckerResult;
+import jorgediazest.indexchecker.data.Data;
 
 import jorgediazest.util.model.ModelUtil;
 
@@ -107,6 +108,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
+			StringWriter sw = new StringWriter();
+
+			PrintWriter pw = new PrintWriter(sw);
+
 			List<String> allClassName =
 				ModelUtil.getClassNameValues(
 					ClassNameLocalServiceUtil.getClassNames(
@@ -144,7 +149,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					List<IndexCheckerResult> resultList = entry.getValue();
 
 					for (IndexCheckerResult result : resultList) {
-						result.reindex();
+						Map<Data, String> errors = result.reindex();
+/* TODO Mover todo esto al JSP */
+						if ((errors!= null) && (errors.size() > 0)) {
+							pw.println();
+							pw.println("----");
+							pw.println(result.getModel().getName());
+							pw.println("----");
+
+							for (Entry<Data, String> e : errors.entrySet()) {
+								pw.println(
+									" * " + e.getKey() + " - Exception: " +
+										e.getValue());
+							}
+						}
 					}
 				}
 
@@ -153,16 +171,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyProcessTime.put(company, endTime-startTime);
 			}
 			catch (Exception e) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
 				pw.println("Error during script execution: " + e.getMessage());
 				e.printStackTrace(pw);
-				companyError.put(company, sw.toString());
 				_log.error(e, e);
 			}
 			finally {
 				ShardUtil.popCompanyService();
 			}
+
+			companyError.put(company, sw.toString());
 		}
 
 		request.setAttribute("title", "Reindex");
@@ -189,6 +206,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
+			StringWriter sw = new StringWriter();
+
+			PrintWriter pw = new PrintWriter(sw);
+
 			List<String> allClassName =
 				ModelUtil.getClassNameValues(
 					ClassNameLocalServiceUtil.getClassNames(
@@ -226,7 +247,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					List<IndexCheckerResult> resultList = entry.getValue();
 
 					for (IndexCheckerResult result : resultList) {
-						result.removeIndexOrphans();
+						Map<Data, String> errors = result.removeIndexOrphans();
+/* TODO Mover todo esto al JSP */
+						if ((errors!= null) && (errors.size() > 0)) {
+							pw.println();
+							pw.println("----");
+							pw.println(result.getModel().getName());
+							pw.println("----");
+
+							for (Entry<Data, String> e : errors.entrySet()) {
+								pw.println(
+									" * " + e.getKey() + " - Exception: " +
+										e.getValue());
+							}
+						}
 					}
 				}
 
@@ -235,16 +269,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyProcessTime.put(company, endTime-startTime);
 			}
 			catch (Exception e) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
 				pw.println("Error during script execution: " + e.getMessage());
 				e.printStackTrace(pw);
-				companyError.put(company, sw.toString());
 				_log.error(e, e);
 			}
 			finally {
 				ShardUtil.popCompanyService();
 			}
+
+			companyError.put(company, sw.toString());
 		}
 
 		request.setAttribute("title", "Remove index orphan");
