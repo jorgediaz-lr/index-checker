@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -197,14 +198,20 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
+	public Map<Data, String> reindex(Collection<Data> dataCollection) {
+
+		Map<Long, Data> articles = new HashMap<Long, Data>();
+
+		for (Data data : dataCollection) {
+			articles.put(data.getResourcePrimKey(), data);
+		}
+
+		return super.reindex(articles.values());
+	}
+
+	@Override
 	public void reindex(Data value) throws SearchException {
-		if (indexAllVersions) {
-			super.reindex(value);
-		}
-		else {
-			getIndexer().reindex(
-				this.getClassName(), value.getResourcePrimKey());
-		}
+		getIndexer().reindex(this.getClassName(), value.getResourcePrimKey());
 	}
 
 	protected boolean indexAllVersions;
