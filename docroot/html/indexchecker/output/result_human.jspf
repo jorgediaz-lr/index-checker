@@ -34,13 +34,12 @@
 
 					for (IndexCheckerResult result : entry.getValue()) {
 
-						Set<Data> exactDataSetIndex = result.getIndexExactData();
-						Set<Data> exactDataSetLiferay = result.getLiferayExactData();
-						Set<Data> notExactDataSetLiferay = result.getLiferayNotExactData();
-						Set<Data> liferayOnlyData = result.getLiferayOnlyData();
-						Set<Data> indexOnlyData = result.getIndexOnlyData();
+						Set<Data> exactDataSetLiferay = result.getData("both-exact-liferay");
+						Set<Data> notExactDataSetLiferay = result.getData("both-notexact-liferay");
+						Set<Data> liferayOnlyData = result.getData("only-liferay");
+						Set<Data> indexOnlyData = result.getData("only-index");
 
-						if (((exactDataSetIndex == null) || exactDataSetIndex.isEmpty()) &&
+						if (((exactDataSetLiferay == null) || exactDataSetLiferay.isEmpty()) &&
 							((notExactDataSetLiferay == null) || notExactDataSetLiferay.isEmpty()) &&
 							((liferayOnlyData == null) || liferayOnlyData.isEmpty()) &&
 							((indexOnlyData == null) || indexOnlyData.isEmpty())) {
@@ -63,8 +62,8 @@
 						IndexCheckerModel model = result.getModel();
 						%><font size="3.5"><%= model.getName() %></font><br /><ul><%
 
-						if ((exactDataSetIndex != null) &&
-							!exactDataSetIndex.isEmpty()) {
+						if ((exactDataSetLiferay != null) &&
+							!exactDataSetLiferay.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
 								IndexCheckerUtil.getListPK(exactDataSetLiferay));

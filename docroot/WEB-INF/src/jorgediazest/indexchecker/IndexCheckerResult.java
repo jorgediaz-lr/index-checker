@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,6 @@ public class IndexCheckerResult {
 			}
 
 			for (IndexCheckerResult result : entry.getValue()) {
-				_log.info("*** ClassName: "+ result.getModel().getName());
 				result.dumpToLog();
 			}
 		}
@@ -141,46 +141,12 @@ public class IndexCheckerResult {
 			return;
 		}
 
-		if ((indexExactData != null) && !indexExactData.isEmpty()) {
-			_log.info("==both-exact(index)==");
+		_log.info("*** ClassName: "+ model.getName());
 
-			for (Data d : indexExactData) {
-				_log.info(d.getAllData(","));
-			}
+		for (Entry<String, Set<Data>> entry : data.entrySet()) {
+			_log.info("==" + entry.getKey() + "==");
 
-			_log.info("==both-exact(liferay)==");
-
-			for (Data d : liferayExactData) {
-				_log.info(d.getAllData(","));
-			}
-		}
-
-		if ((indexNotExactData != null) && !indexNotExactData.isEmpty()) {
-			_log.info("==both-notexact(index)==");
-
-			for (Data d : indexNotExactData) {
-				_log.info(d.getAllData(","));
-			}
-
-			_log.info("==both-notexact(liferay)==");
-
-			for (Data d : liferayNotExactData) {
-				_log.info(d.getAllData(","));
-			}
-		}
-
-		if ((liferayOnlyData != null) && !liferayOnlyData.isEmpty()) {
-			_log.info("==only liferay==");
-
-			for (Data d : liferayOnlyData) {
-				_log.info(d.getAllData(","));
-			}
-		}
-
-		if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
-			_log.info("==only index==");
-
-			for (Data d : indexOnlyData) {
+			for (Data d : entry.getValue()) {
 				_log.info(d.getAllData(","));
 			}
 		}
@@ -188,47 +154,13 @@ public class IndexCheckerResult {
 
 	public Set<Data> getData(String type) {
 		if ("both-exact".equals(type)) {
-			return this.getLiferayExactData();
+			type = "both-exact-liferay";
 		}
-		else if ("both-notexact-liferay".equals(type) ||
-				 "both-notexact".equals(type)) {
-			return this.getLiferayNotExactData();
-		}
-		else if ("both-notexact-index".equals(type)) {
-			return this.getIndexNotExactData();
-		}
-		else if ("only-liferay".equals(type)) {
-			return this.getLiferayOnlyData();
-		}
-		else if ("only-index".equals(type)) {
-			return this.getIndexOnlyData();
+		else if ("both-notexact".equals(type)) {
+			type = "both-notexact-liferay";
 		}
 
-		return null;
-	}
-
-	public Set<Data> getIndexExactData() {
-		return indexExactData;
-	}
-
-	public Set<Data> getIndexNotExactData() {
-		return indexNotExactData;
-	}
-
-	public Set<Data> getIndexOnlyData() {
-		return indexOnlyData;
-	}
-
-	public Set<Data> getLiferayExactData() {
-		return liferayExactData;
-	}
-
-	public Set<Data> getLiferayNotExactData() {
-		return liferayNotExactData;
-	}
-
-	public Set<Data> getLiferayOnlyData() {
-		return liferayOnlyData;
+		return data.get(type);
 	}
 
 	public IndexCheckerModel getModel() {
@@ -237,9 +169,9 @@ public class IndexCheckerResult {
 
 	public Map<Data, String> reindex() {
 		IndexCheckerModel model = this.getModel();
-		Set<Data> exactDataSetIndex = this.getIndexExactData();
-		Set<Data> notExactDataSetIndex = this.getIndexNotExactData();
-		Set<Data> liferayOnlyData = this.getLiferayOnlyData();
+		Set<Data> exactDataSetIndex = this.getData("both-exact-index");
+		Set<Data> notExactDataSetIndex = this.getData("both-notexact-index");
+		Set<Data> liferayOnlyData = this.getData("only-liferay");
 
 		Set<Data> objectsToReindex = new HashSet<Data>();
 
@@ -260,7 +192,7 @@ public class IndexCheckerResult {
 
 	public Map<Data, String> removeIndexOrphans() {
 		IndexCheckerModel model = this.getModel();
-		Set<Data> indexOnlyData = this.getIndexOnlyData();
+		Set<Data> indexOnlyData = this.getData("only-index");
 
 		if ((indexOnlyData == null) || indexOnlyData.isEmpty()) {
 			return null;
@@ -281,23 +213,20 @@ public class IndexCheckerResult {
 		Set<Data> liferayNotExactData, Set<Data> liferayOnlyData,
 		Set<Data> indexOnlyData) {
 
+		data = new HashMap<String, Set<Data>>();
+		data.put("both-exact-liferay", liferayExactData);
+		data.put("both-exact-index", indexExactData);
+		data.put("both-notexact-liferay", liferayNotExactData);
+		data.put("both-notexact-index", indexNotExactData);
+		data.put("only-liferay", liferayOnlyData);
+		data.put("only-index", indexOnlyData);
+
 		this.model = model;
-		this.indexExactData = indexExactData;
-		this.indexNotExactData = indexNotExactData;
-		this.indexOnlyData = indexOnlyData;
-		this.liferayExactData = liferayExactData;
-		this.liferayNotExactData = liferayNotExactData;
-		this.liferayOnlyData = liferayOnlyData;
 	}
 
-	protected Set<Data> indexExactData;
-	protected Set<Data> indexNotExactData;
-	protected Set<Data> indexOnlyData;
-	protected Set<Data> liferayExactData;
-	protected Set<Data> liferayNotExactData;
-	protected Set<Data> liferayOnlyData;
-	protected IndexCheckerModel model;
-
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerResult.class);
+
+	private Map<String, Set<Data>> data;
+	private IndexCheckerModel model;
 
 }

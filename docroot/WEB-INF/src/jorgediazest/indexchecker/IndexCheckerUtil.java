@@ -117,96 +117,14 @@ public class IndexCheckerUtil {
 					}
 
 					for (IndexCheckerResult result : entry.getValue()) {
-						Set<Data> exactDataSetIndex =
-							result.getIndexExactData();
-						Set<Data> exactDataSetLiferay =
-							result.getLiferayExactData();
-						Set<Data> notExactDataSetLiferay =
-							result.getLiferayNotExactData();
-						Set<Data> liferayOnlyData = result.getLiferayOnlyData();
-						Set<Data> indexOnlyData = result.getIndexOnlyData();
+						for (String type : outputTypes) {
+							String line = generateLine(
+									result, companyOutput, groupIdOutput,
+									groupNameOutput, type, locale);
 
-						if (((exactDataSetIndex == null) ||
-							 exactDataSetIndex.isEmpty()) &&
-							((notExactDataSetLiferay == null) ||
-							 notExactDataSetLiferay.isEmpty()) &&
-							((liferayOnlyData == null) ||
-							 liferayOnlyData.isEmpty()) &&
-							((indexOnlyData == null) ||
-							 indexOnlyData.isEmpty())) {
-
-							continue;
-						}
-
-						IndexCheckerModel model = result.getModel();
-						String modelOutput = model.getName();
-						String modelDisplayNameOutput = model.getDisplayName(
-							locale);
-
-						if ((exactDataSetIndex != null) &&
-							!exactDataSetIndex.isEmpty()) {
-
-							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(
-									exactDataSetLiferay));
-
-							String line =
-								generateLine(
-									companyOutput, groupIdOutput,
-									groupNameOutput, modelOutput,
-									modelDisplayNameOutput, "both-exact",
-									exactDataSetLiferay.size(), valuesPK);
-
-							out.add(line);
-						}
-
-						if ((notExactDataSetLiferay != null) &&
-							!notExactDataSetLiferay.isEmpty()) {
-
-							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(
-									notExactDataSetLiferay));
-
-							String line =
-								generateLine(
-									companyOutput, groupIdOutput,
-									groupNameOutput, modelOutput,
-									modelDisplayNameOutput, "both-notexact",
-									notExactDataSetLiferay.size(), valuesPK);
-
-							out.add(line);
-						}
-
-						if ((liferayOnlyData != null) &&
-							!liferayOnlyData.isEmpty()) {
-
-							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(liferayOnlyData));
-
-							String line =
-								generateLine(
-									companyOutput, groupIdOutput,
-									groupNameOutput, modelOutput,
-									modelDisplayNameOutput, "only liferay",
-									liferayOnlyData.size(), valuesPK);
-
-							out.add(line);
-						}
-
-						if ((indexOnlyData != null) &&
-							!indexOnlyData.isEmpty()) {
-
-							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListUid(indexOnlyData));
-
-							String line =
-								generateLine(
-									companyOutput, groupIdOutput,
-									groupNameOutput, modelOutput,
-									modelDisplayNameOutput, "only liferay",
-									indexOnlyData.size(), valuesPK);
-
-							out.add(line);
+							if (line != null) {
+								out.add(line);
+							}
 						}
 					}
 				}
@@ -231,9 +149,8 @@ public class IndexCheckerUtil {
 	}
 
 	public static ResultRow generateRow(
-			String type, int j, long groupId, RenderRequest renderRequest,
-			IndexCheckerResult result, EnumSet<ExecutionMode> executionMode)
-		throws SystemException {
+		IndexCheckerResult result, String groupIdOutput, String groupNameOutput,
+		String type, Locale locale, int j) {
 
 		Set<Data> data = result.getData(type);
 
@@ -241,44 +158,15 @@ public class IndexCheckerUtil {
 			return null;
 		}
 
-		String valuesPK = null;
-
-		if (type.contains("index")) {
-			valuesPK = Arrays.toString(IndexCheckerUtil.getListUid(data));
-		}
-		else {
-			valuesPK = Arrays.toString(IndexCheckerUtil.getListPK(data));
-		}
-
-		if (valuesPK.length() <= 1) {
-			valuesPK = StringPool.BLANK;
-		}
-		else {
-			valuesPK = valuesPK.substring(1, valuesPK.length()-1);
-		}
+		String valuesPK = getValuesPKText(type, data);
 
 		ResultRow row = new ResultRow(result, type, j);
 		IndexCheckerModel model = result.getModel();
 
 		String modelOutput = model.getName();
-		String modelDisplayNameOutput = model.getDisplayName(
-			renderRequest.getLocale());
+		String modelDisplayNameOutput = model.getDisplayName(locale);
 
-		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-			Group group = GroupLocalServiceUtil.fetchGroup(groupId);
-
-			String groupIdOutput = null;
-			String groupNameOutput = null;
-
-			if (group == null) {
-				groupIdOutput = "N/A";
-				groupNameOutput = "(Not Applicable)";
-			}
-			else {
-				groupIdOutput = "" + group.getGroupId();
-				groupNameOutput = group.getName();
-			}
-
+		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
 			row.addText(groupIdOutput);
 			row.addText(groupNameOutput);
 		}
@@ -312,13 +200,28 @@ public class IndexCheckerUtil {
 		SearchContainer<IndexCheckerResult> searchContainer =
 			new SearchContainer<IndexCheckerResult>(
 				renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
-				SearchContainer.DEFAULT_DELTA, serverURL, headerNames, null);
+				SearchContainer.MAX_DELTA, serverURL, headerNames, null);
 
 		for (
 			Entry<Long, List<IndexCheckerResult>> entry :
 				resultDataMap.entrySet()) {
 
-			long groupId = entry.getKey();
+			String groupIdOutput = null;
+			String groupNameOutput = null;
+
+			if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+				Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
+
+				if (group == null) {
+					groupIdOutput = "N/A";
+					groupNameOutput = "(Not Applicable)";
+				}
+				else {
+					groupIdOutput = "" + group.getGroupId();
+					groupNameOutput = group.getName();
+				}
+			}
+
 			List<IndexCheckerResult> results = entry.getValue();
 
 			searchContainer.setTotal(results.size());
@@ -333,42 +236,15 @@ public class IndexCheckerUtil {
 			int j = 0;
 
 			for (IndexCheckerResult result : results) {
-				ResultRow row = null;
+				for (String type : outputTypes) {
+					ResultRow row = generateRow(
+						result, groupIdOutput, groupNameOutput, type,
+						renderRequest.getLocale(), j);
 
-				row = generateRow(
-					"both-exact", j, groupId, renderRequest, result,
-					executionMode);
-
-				if (row != null) {
-					j++;
-					resultRows.add(row);
-				}
-
-				row = generateRow(
-					"both-notexact", j, groupId, renderRequest, result,
-					executionMode);
-
-				if (row != null) {
-					j++;
-					resultRows.add(row);
-				}
-
-				row = generateRow(
-					"only-liferay", j, groupId, renderRequest, result,
-					executionMode);
-
-				if (row != null) {
-					j++;
-					resultRows.add(row);
-				}
-
-				row = generateRow(
-					"only-index", j, groupId, renderRequest, result,
-					executionMode);
-
-				if (row != null) {
-					j++;
-					resultRows.add(row);
+					if (row != null) {
+						j++;
+						resultRows.add(row);
+					}
 				}
 			}
 		}
@@ -401,6 +277,26 @@ public class IndexCheckerUtil {
 	}
 
 	static Log _log = LogFactoryUtil.getLog(IndexCheckerUtil.class);
+
+	public static String getValuesPKText(String type, Set<Data> data) {
+		String valuesPK = null;
+
+		if (type.contains("index")) {
+			valuesPK = Arrays.toString(IndexCheckerUtil.getListUid(data));
+		}
+		else {
+			valuesPK = Arrays.toString(IndexCheckerUtil.getListPK(data));
+		}
+
+		if (valuesPK.length() <= 1) {
+			valuesPK = StringPool.BLANK;
+		}
+		else {
+			valuesPK = valuesPK.substring(1, valuesPK.length()-1);
+		}
+
+		return valuesPK;
+	}
 
 	public static String listStringToString(List<String> out) {
 		if (Validator.isNull(out)) {
@@ -435,9 +331,21 @@ public class IndexCheckerUtil {
 	}
 
 	protected static String generateLine(
-		String companyOutput, String groupIdOutput, String groupNameOutput,
-		String modelOutput, String modelDisplayNameOutput, String type,
-		long size, String valuesPK) {
+		IndexCheckerResult result, String companyOutput, String groupIdOutput,
+		String groupNameOutput, String type, Locale locale) {
+
+		Set<Data> data = result.getData(type);
+
+		if ((data == null) || data.isEmpty()) {
+			return null;
+		}
+
+		IndexCheckerModel model = result.getModel();
+
+		String modelOutput = model.getName();
+		String modelDisplayNameOutput = model.getDisplayName(locale);
+
+		String valuesPK = getValuesPKText(type, data);
 
 		String line = StringPool.BLANK;
 		line = IndexCheckerUtil.addCell(line, companyOutput);
@@ -450,9 +358,12 @@ public class IndexCheckerUtil {
 		line = IndexCheckerUtil.addCell(line, modelOutput);
 		line = IndexCheckerUtil.addCell(line, modelDisplayNameOutput);
 		line = IndexCheckerUtil.addCell(line, type);
-		line = IndexCheckerUtil.addCell(line, "" + size);
+		line = IndexCheckerUtil.addCell(line, "" + data.size());
 		line = IndexCheckerUtil.addCell(line, valuesPK);
 		return line;
 	}
+
+	private static String[] outputTypes = {
+		"both-exact", "both-notexact", "only-liferay", "only-index"};
 
 }
