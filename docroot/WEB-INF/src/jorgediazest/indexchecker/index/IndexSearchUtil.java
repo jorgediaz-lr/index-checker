@@ -97,7 +97,7 @@ public class IndexSearchUtil {
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"EXCEPTION: " + e.getClass() + " - " + e.getMessage(), e);
+					"EXCEPTION: " + e.getClass() + " - " + e.getMessage());
 			}
 		}
 	}
