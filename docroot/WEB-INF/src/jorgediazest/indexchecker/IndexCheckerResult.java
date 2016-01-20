@@ -143,10 +143,12 @@ public class IndexCheckerResult {
 		_log.info("*** ClassName: "+ model.getName());
 
 		for (Entry<String, Set<Data>> entry : data.entrySet()) {
-			_log.info("==" + entry.getKey() + "==");
+			if (entry.getValue().size() != 0) {
+				_log.info("==" + entry.getKey() + "==");
 
-			for (Data d : entry.getValue()) {
-				_log.info(d.getAllData(","));
+				for (Data d : entry.getValue()) {
+					_log.info(d.getAllData(","));
+				}
 			}
 		}
 	}

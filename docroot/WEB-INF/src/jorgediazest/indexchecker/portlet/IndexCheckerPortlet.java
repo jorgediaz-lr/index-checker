@@ -16,9 +16,11 @@ package jorgediazest.indexchecker.portlet;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
@@ -98,8 +100,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
 
+		String[] filterClassNameArr = null;
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
+
+		if (Validator.isNotNull(filterClassName)) {
+			filterClassNameArr = filterClassName.split(",");
+		}
+
+		String[] filterGroupIdArr = null;
+		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+
+		if (Validator.isNotNull(filterGroupId)) {
+			filterGroupIdArr = filterGroupId.split(",");
+		}
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
@@ -112,35 +126,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			PrintWriter pw = new PrintWriter(sw);
 
-			List<String> allClassName =
-				ModelUtil.getClassNameValues(
-					ClassNameLocalServiceUtil.getClassNames(
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-			List<String> classNames = new ArrayList<String>();
-
-			for (String className : allClassName) {
-				if ((className != null) &&
-					((filterClassName == null) ||
-					 className.contains(filterClassName))) {
-
-					classNames.add(className);
-				}
-			}
-
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
 
-				List<Group> groups =
-					GroupLocalServiceUtil.getCompanyGroups(
-						company.getCompanyId(), QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS);
+				List<String> classNames = getClassNames(filterClassNameArr);
+
+				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
 
 				long startTime = System.currentTimeMillis();
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						company, groups, classNames, executionMode);
+						company, groupIds, classNames, executionMode);
 
 				for (
 					Entry<Long, List<IndexCheckerResult>> entry :
@@ -196,8 +193,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
 
+		String[] filterClassNameArr = null;
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
+
+		if (Validator.isNotNull(filterClassName)) {
+			filterClassNameArr = filterClassName.split(",");
+		}
+
+		String[] filterGroupIdArr = null;
+		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+
+		if (Validator.isNotNull(filterGroupId)) {
+			filterGroupIdArr = filterGroupId.split(",");
+		}
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
@@ -210,35 +219,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			PrintWriter pw = new PrintWriter(sw);
 
-			List<String> allClassName =
-				ModelUtil.getClassNameValues(
-					ClassNameLocalServiceUtil.getClassNames(
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-			List<String> classNames = new ArrayList<String>();
-
-			for (String className : allClassName) {
-				if ((className != null) &&
-					((filterClassName == null) ||
-					 className.contains(filterClassName))) {
-
-					classNames.add(className);
-				}
-			}
-
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
 
-				List<Group> groups =
-					GroupLocalServiceUtil.getCompanyGroups(
-						company.getCompanyId(), QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS);
+				List<String> classNames = getClassNames(filterClassNameArr);
+
+				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
 
 				long startTime = System.currentTimeMillis();
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						company, groups, classNames, executionMode);
+						company, groupIds, classNames, executionMode);
 
 				for (
 					Entry<Long, List<IndexCheckerResult>> entry :
@@ -297,8 +289,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String filterClassName = ParamUtil.getString(
 			request, "filterClassName");
 
-		if (filterClassName != null) {
+		if (Validator.isNotNull(filterClassName)) {
 			filterClassNameArr = filterClassName.split(",");
+		}
+
+		String[] filterGroupIdArr = null;
+		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+
+		if (Validator.isNotNull(filterGroupId)) {
+			filterGroupIdArr = filterGroupId.split(",");
 		}
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
@@ -311,44 +310,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Map<Company, String> companyError = new HashMap<Company, String>();
 
 		for (Company company : companies) {
-			List<String> allClassName =
-				ModelUtil.getClassNameValues(
-					ClassNameLocalServiceUtil.getClassNames(
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-			List<String> classNames = new ArrayList<String>();
-
-			for (String className : allClassName) {
-				if (className == null) {
-					continue;
-				}
-
-				if (filterClassNameArr == null) {
-					classNames.add(className);
-					continue;
-				}
-
-				for (int i = 0; i<filterClassNameArr.length; i++) {
-					if (className.contains(filterClassNameArr[i])) {
-						classNames.add(className);
-						break;
-					}
-				}
-			}
-
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
 
-				List<Group> groups =
-					GroupLocalServiceUtil.getCompanyGroups(
-						company.getCompanyId(), QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS);
+				List<String> classNames = getClassNames(filterClassNameArr);
+
+				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
 
 				long startTime = System.currentTimeMillis();
 
 				Map<Long, List<IndexCheckerResult>> resultDataMap =
 					IndexChecker.executeScript(
-						company, groups, classNames, executionMode);
+						company, groupIds, classNames, executionMode);
 
 				long endTime = System.currentTimeMillis();
 
@@ -386,6 +359,63 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute("companyProcessTime", companyProcessTime);
 		request.setAttribute("companyResultDataMap", companyResultDataMap);
 		request.setAttribute("companyError", companyError);
+	}
+
+	public List<String> getClassNames(String[] filterClassNameArr)
+		throws SystemException {
+		List<String> allClassName =
+			ModelUtil.getClassNameValues(
+				ClassNameLocalServiceUtil.getClassNames(
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS));
+
+		List<String> classNames = new ArrayList<String>();
+
+		for (String className : allClassName) {
+			if (className == null) {
+				continue;
+			}
+
+			if (filterClassNameArr == null) {
+				classNames.add(className);
+				continue;
+			}
+
+			for (int i = 0; i<filterClassNameArr.length; i++) {
+				if (className.contains(filterClassNameArr[i])) {
+					classNames.add(className);
+					break;
+				}
+			}
+		}
+
+		return classNames;
+	}
+
+	public List<Long> getGroupIds(Company company, String[] filterGroupIdArr)
+		throws SystemException {
+		List<Group> groups =
+			GroupLocalServiceUtil.getCompanyGroups(
+				company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		List<Long> groupIds = new ArrayList<Long>();
+
+		for (Group group : groups) {
+			if (filterGroupIdArr == null) {
+				groupIds.add(group.getGroupId());
+				continue;
+			}
+
+			String groupIdStr = "" + group.getGroupId();
+
+			for (int i = 0; i<filterGroupIdArr.length; i++) {
+				if (groupIdStr.equals(filterGroupIdArr[i])) {
+					groupIds.add(group.getGroupId());
+					break;
+				}
+			}
+		}
+
+		return groupIds;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);

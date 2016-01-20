@@ -33,6 +33,7 @@
 
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
+<%@ page import="com.liferay.portal.kernel.util.ParamUtil" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.model.Company" %>
 <%@ page import="com.liferay.portal.model.Group" %>
@@ -76,6 +77,9 @@
 				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
 			</aui:select>
 			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
+			<span class="<%= (ParamUtil.getBoolean(request, "outputGroupBySite") ? "" : "hide") %>" id="filterGroupId">
+			<aui:input inlineLabel="left" name="filterGroupId" type="text" value="" />
+			</span>
 		</aui:column>
 		<aui:column>
 			<aui:input name="outputBothExact" type="checkbox" value="false" />
@@ -84,7 +88,7 @@
 			<aui:input name="outputIndex" type="checkbox" value="false" />
 		</aui:column>
 		<aui:column>
-			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
+			<aui:input name="outputGroupBySite" onClick='<%= renderResponse.getNamespace() + "toogleFilterGroupId(this);" %>' type="checkbox" value="false" />
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
 		</aui:column>
 	</aui:fieldset>
@@ -142,6 +146,17 @@
 %>
 
 <aui:script>
+	function <portlet:namespace />toogleFilterGroupId(event) {
+		var filterGroupId = document.getElementById("filterGroupId");
+
+		if (event.checked) {
+			filterGroupId.className = '';
+		}
+		else {
+			filterGroupId.className = 'hide';
+		}
+	}
+
 	function <portlet:namespace />reindex() {
 		document.<portlet:namespace />fm.action = "<%= executeReindexURL %>";
 

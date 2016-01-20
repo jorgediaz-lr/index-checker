@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.Company;
-import com.liferay.portal.model.Group;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -60,7 +59,7 @@ public class IndexChecker {
 
 	public static Map<Long, List<IndexCheckerResult>>
 		executeScript(
-			Company company, List<Group> groups, List<String> classNames,
+			Company company, List<Long> groupIds, List<String> classNames,
 			Set<ExecutionMode> executionMode)
 		throws SystemException {
 
@@ -80,16 +79,14 @@ public class IndexChecker {
 
 		long companyId = company.getCompanyId();
 
-		List<Long> groupIds = new ArrayList<Long>();
-		groupIds.add(0L);
+		List<Long> groupIdsFor = new ArrayList<Long>();
+		groupIdsFor.add(0L);
 
 		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-			for (Group group : groups) {
-				groupIds.add(group.getGroupId());
-			}
+			groupIdsFor.addAll(groupIds);
 		}
 
-		for (long groupId : groupIds) {
+		for (long groupId : groupIdsFor) {
 			List<IndexCheckerResult> resultList =
 				new ArrayList<IndexCheckerResult>();
 
@@ -126,11 +123,11 @@ public class IndexChecker {
 						indexData = new HashSet<Data>();
 					}
 
-					IndexCheckerResult data =
+					IndexCheckerResult result =
 						IndexCheckerResult.getIndexCheckResult(
 							icModel, liferayData, indexData, executionMode);
 
-					resultList.add(data);
+					resultList.add(result);
 				}
 				catch (Exception e) {
 					_log.error(
