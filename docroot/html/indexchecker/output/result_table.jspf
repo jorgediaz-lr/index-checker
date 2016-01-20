@@ -33,7 +33,7 @@
 				SearchContainer searchContainer = IndexCheckerUtil.generateSearchContainer(renderRequest, executionMode, resultDataMap, serverURL);
 				%>
 
-				<liferay-ui:search-iterator searchContainer="<%= searchContainer %>" />
+				<liferay-ui:search-iterator paginate="false" searchContainer="<%= searchContainer %>" />
 
 				<%
 			}
