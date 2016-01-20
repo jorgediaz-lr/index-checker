@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -187,6 +186,27 @@ public class IndexCheckerResult {
 		}
 	}
 
+	public Set<Data> getData(String type) {
+		if ("both-exact".equals(type)) {
+			return this.getLiferayExactData();
+		}
+		else if ("both-notexact-liferay".equals(type) ||
+				 "both-notexact".equals(type)) {
+			return this.getLiferayNotExactData();
+		}
+		else if ("both-notexact-index".equals(type)) {
+			return this.getIndexNotExactData();
+		}
+		else if ("only-liferay".equals(type)) {
+			return this.getLiferayOnlyData();
+		}
+		else if ("only-index".equals(type)) {
+			return this.getIndexOnlyData();
+		}
+
+		return null;
+	}
+
 	public Set<Data> getIndexExactData() {
 		return indexExactData;
 	}
@@ -215,10 +235,7 @@ public class IndexCheckerResult {
 		return model;
 	}
 
-	public List<String> reindex() {
-
-		List<String> out = new ArrayList<String>();
-
+	public Map<Data, String> reindex() {
 		IndexCheckerModel model = this.getModel();
 		Set<Data> exactDataSetIndex = this.getIndexExactData();
 		Set<Data> notExactDataSetIndex = this.getIndexNotExactData();
@@ -238,35 +255,18 @@ public class IndexCheckerResult {
 			objectsToReindex.addAll(liferayOnlyData);
 		}
 
-		Map<Data, String> errors = model.reindex(objectsToReindex);
-
-		for (Entry<Data, String> error : errors.entrySet()) {
-			out.add(
-				"Error reindexing " + error.getKey() +
-				"EXCEPTION" + error.getValue());
-		}
-
-		return out;
+		return model.reindex(objectsToReindex);
 	}
 
-	public List<String> removeIndexOrphans() {
-
-		List<String> out = new ArrayList<String>();
-
+	public Map<Data, String> removeIndexOrphans() {
 		IndexCheckerModel model = this.getModel();
 		Set<Data> indexOnlyData = this.getIndexOnlyData();
 
-		if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
-			Map<Data, String> errors = model.deleteAndCheck(indexOnlyData);
-
-			for (Entry<Data, String> error : errors.entrySet()) {
-				out.add(
-					"Error deleting from index " + error.getKey() +
-					"EXCEPTION" + error.getValue());
-			}
+		if ((indexOnlyData == null) || indexOnlyData.isEmpty()) {
+			return null;
 		}
 
-		return out;
+		return model.deleteAndCheck(indexOnlyData);
 	}
 
 	protected static Data[] getBothDataArray(Set<Data> set1, Set<Data> set2) {

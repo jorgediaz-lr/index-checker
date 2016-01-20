@@ -31,6 +31,7 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
+<%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.model.Company" %>
@@ -43,6 +44,8 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Map.Entry" %>
 <%@ page import="java.util.Set" %>
+
+<%@ page import="javax.portlet.PortletURL" %>
 
 <%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
 <%@ page import="jorgediazest.indexchecker.IndexCheckerResult" %>
@@ -69,6 +72,7 @@
 		<aui:column>
 			<aui:select inlineLabel="left"  name="outputFormat">
 				<aui:option selected="true" value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option>
+				<aui:option value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
 				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
 			</aui:select>
 			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
@@ -119,6 +123,13 @@
 
 <%
 			}
+			else if (outputFormat.equals("Table")) {
+%>
+
+	<%@ include file="/html/indexchecker/output/result_table.jspf" %>
+
+<%
+			}
 			else {
 %>
 
@@ -127,6 +138,7 @@
 <%
 			}
 		}
+	}
 %>
 
 <aui:script>

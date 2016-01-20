@@ -14,8 +14,13 @@
 
 package jorgediazest.indexchecker;
 
+import com.liferay.portal.kernel.dao.search.ResultRow;
+import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -30,7 +35,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.portlet.PortletURL;
+import javax.portlet.RenderRequest;
 
 import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
@@ -219,6 +228,152 @@ public class IndexCheckerUtil {
 		}
 
 		return out;
+	}
+
+	public static ResultRow generateRow(
+			String type, int j, long groupId, RenderRequest renderRequest,
+			IndexCheckerResult result, EnumSet<ExecutionMode> executionMode)
+		throws SystemException {
+
+		Set<Data> data = result.getData(type);
+
+		if ((data == null) || data.isEmpty()) {
+			return null;
+		}
+
+		String valuesPK = null;
+
+		if (type.contains("index")) {
+			valuesPK = Arrays.toString(IndexCheckerUtil.getListUid(data));
+		}
+		else {
+			valuesPK = Arrays.toString(IndexCheckerUtil.getListPK(data));
+		}
+
+		if (valuesPK.length() <= 1) {
+			valuesPK = StringPool.BLANK;
+		}
+		else {
+			valuesPK = valuesPK.substring(1, valuesPK.length()-1);
+		}
+
+		ResultRow row = new ResultRow(result, type, j);
+		IndexCheckerModel model = result.getModel();
+
+		String modelOutput = model.getName();
+		String modelDisplayNameOutput = model.getDisplayName(
+			renderRequest.getLocale());
+
+		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+			String groupIdOutput = null;
+			String groupNameOutput = null;
+
+			if (group == null) {
+				groupIdOutput = "N/A";
+				groupNameOutput = "(Not Applicable)";
+			}
+			else {
+				groupIdOutput = "" + group.getGroupId();
+				groupNameOutput = group.getName();
+			}
+
+			row.addText(groupIdOutput);
+			row.addText(groupNameOutput);
+		}
+
+		row.addText(HtmlUtil.escape(modelOutput));
+		row.addText(HtmlUtil.escape(modelDisplayNameOutput));
+		row.addText(HtmlUtil.escape(type));
+		row.addText(HtmlUtil.escape(""+data.size()));
+		row.addText(HtmlUtil.escape(valuesPK));
+		return row;
+	}
+
+	public static SearchContainer<IndexCheckerResult> generateSearchContainer(
+		RenderRequest renderRequest, EnumSet<ExecutionMode> executionMode,
+		Map<Long, List<IndexCheckerResult>> resultDataMap,
+		PortletURL serverURL) throws SystemException {
+
+		List<String> headerNames = new ArrayList<String>();
+
+		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			headerNames.add("GroupId");
+			headerNames.add("Group name");
+		}
+
+		headerNames.add("Entity class");
+		headerNames.add("Entity name");
+		headerNames.add("Type");
+		headerNames.add("Count");
+		headerNames.add("Primary keys");
+
+		SearchContainer<IndexCheckerResult> searchContainer =
+			new SearchContainer<IndexCheckerResult>(
+				renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
+				SearchContainer.DEFAULT_DELTA, serverURL, headerNames, null);
+
+		for (
+			Entry<Long, List<IndexCheckerResult>> entry :
+				resultDataMap.entrySet()) {
+
+			long groupId = entry.getKey();
+			List<IndexCheckerResult> results = entry.getValue();
+
+			searchContainer.setTotal(results.size());
+
+			results = ListUtil.subList(
+				results, searchContainer.getStart(), searchContainer.getEnd());
+
+			searchContainer.setResults(results);
+
+			List<ResultRow> resultRows = searchContainer.getResultRows();
+
+			int j = 0;
+
+			for (IndexCheckerResult result : results) {
+				ResultRow row = null;
+
+				row = generateRow(
+					"both-exact", j, groupId, renderRequest, result,
+					executionMode);
+
+				if (row != null) {
+					j++;
+					resultRows.add(row);
+				}
+
+				row = generateRow(
+					"both-notexact", j, groupId, renderRequest, result,
+					executionMode);
+
+				if (row != null) {
+					j++;
+					resultRows.add(row);
+				}
+
+				row = generateRow(
+					"only-liferay", j, groupId, renderRequest, result,
+					executionMode);
+
+				if (row != null) {
+					j++;
+					resultRows.add(row);
+				}
+
+				row = generateRow(
+					"only-index", j, groupId, renderRequest, result,
+					executionMode);
+
+				if (row != null) {
+					j++;
+					resultRows.add(row);
+				}
+			}
+		}
+
+		return searchContainer;
 	}
 
 	public static Long[] getListPK(Collection<Data> data) {
