@@ -394,7 +394,9 @@ public class IndexCheckerUtil {
 		row.addText(HtmlUtil.escape(modelDisplayNameOutput));
 		row.addText(
 			HtmlUtil.escape(
-				LanguageUtil.get(portletConfig, locale, "output." + type)));
+				LanguageUtil.get(
+					portletConfig, locale, "output." + type)).replace(
+						" ", "&nbsp;"));
 		row.addText(HtmlUtil.escape(""+data.size()));
 		row.addText(HtmlUtil.escape(valuesPK));
 		return row;
