@@ -30,7 +30,7 @@
 
 				PortletURL serverURL = renderResponse.createRenderURL();
 
-				SearchContainer searchContainer = IndexCheckerUtil.generateSearchContainer(renderRequest, executionMode, resultDataMap, serverURL);
+				SearchContainer searchContainer = IndexCheckerUtil.generateSearchContainer(portletConfig, renderRequest, executionMode, resultDataMap, serverURL);
 				%>
 
 				<liferay-ui:search-iterator paginate="false" searchContainer="<%= searchContainer %>" />
@@ -44,7 +44,7 @@
 	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= errorMessage %>" />
 </c:if>
 
-<i>Executed <b/><%= request.getAttribute("title") %></b> for company <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms<i/><br />
+<i>Executed <b><%= request.getAttribute("title") %></b> for company <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms</i><br />
 
 <%
 		}

@@ -15,7 +15,7 @@
 --%>
 
 <%
-			List<String> outputList = IndexCheckerUtil.generateOutputCSV((String)request.getAttribute("title"),request.getLocale(), executionMode, companyProcessTime, companyResultDataMap, companyError);
+			List<String> outputList = IndexCheckerUtil.generateOutputCSV(portletConfig, (String)request.getAttribute("title"),request.getLocale(), executionMode, companyProcessTime, companyResultDataMap, companyError);
 
 			String outputScript = IndexCheckerUtil.listStringToString(outputList);
 %>

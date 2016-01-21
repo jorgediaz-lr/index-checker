@@ -363,6 +363,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	public List<String> getClassNames(String[] filterClassNameArr)
 		throws SystemException {
+
 		List<String> allClassName =
 			ModelUtil.getClassNameValues(
 				ClassNameLocalServiceUtil.getClassNames(
@@ -393,6 +394,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	public List<Long> getGroupIds(Company company, String[] filterGroupIdArr)
 		throws SystemException {
+
 		List<Group> groups =
 			GroupLocalServiceUtil.getCompanyGroups(
 				company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);

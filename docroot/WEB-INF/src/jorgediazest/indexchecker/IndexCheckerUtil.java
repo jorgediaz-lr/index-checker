@@ -17,6 +17,7 @@ package jorgediazest.indexchecker;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.portlet.PortletConfig;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 
@@ -50,7 +52,8 @@ import jorgediazest.indexchecker.model.IndexCheckerModel;
 public class IndexCheckerUtil {
 
 	public static List<String> generateOutputCSV(
-		String title, Locale locale, EnumSet<ExecutionMode> executionMode,
+		PortletConfig portletConfig, String title, Locale locale,
+		EnumSet<ExecutionMode> executionMode,
 		Map<Company, Long> companyProcessTime,
 		Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap,
 		Map<Company, String> companyError) {
@@ -103,8 +106,10 @@ public class IndexCheckerUtil {
 									entry.getKey());
 
 							if (group == null) {
-								groupIdOutput = "N/A";
-								groupNameOutput = "(Not Applicable)";
+								groupIdOutput = LanguageUtil.get(
+									locale, "output.not-applicable-groupid");
+								groupNameOutput = LanguageUtil.get(
+									locale, "output.not-applicable-groupname");
 							}
 							else {
 								groupIdOutput = "" + group.getGroupId();
@@ -119,8 +124,9 @@ public class IndexCheckerUtil {
 					for (IndexCheckerResult result : entry.getValue()) {
 						for (String type : outputTypes) {
 							String line = generateLine(
-									result, companyOutput, groupIdOutput,
-									groupNameOutput, type, locale);
+									portletConfig, result, companyOutput,
+									groupIdOutput, groupNameOutput, type,
+									locale);
 
 							if (line != null) {
 								out.add(line);
@@ -148,39 +154,9 @@ public class IndexCheckerUtil {
 		return out;
 	}
 
-	public static ResultRow generateRow(
-		IndexCheckerResult result, String groupIdOutput, String groupNameOutput,
-		String type, Locale locale, int j) {
-
-		Set<Data> data = result.getData(type);
-
-		if ((data == null) || data.isEmpty()) {
-			return null;
-		}
-
-		String valuesPK = getValuesPKText(type, data);
-
-		ResultRow row = new ResultRow(result, type, j);
-		IndexCheckerModel model = result.getModel();
-
-		String modelOutput = model.getName();
-		String modelDisplayNameOutput = model.getDisplayName(locale);
-
-		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
-			row.addText(groupIdOutput);
-			row.addText(groupNameOutput);
-		}
-
-		row.addText(HtmlUtil.escape(modelOutput));
-		row.addText(HtmlUtil.escape(modelDisplayNameOutput));
-		row.addText(HtmlUtil.escape(type));
-		row.addText(HtmlUtil.escape(""+data.size()));
-		row.addText(HtmlUtil.escape(valuesPK));
-		return row;
-	}
-
 	public static SearchContainer<IndexCheckerResult> generateSearchContainer(
-		RenderRequest renderRequest, EnumSet<ExecutionMode> executionMode,
+		PortletConfig portletConfig, RenderRequest renderRequest,
+		EnumSet<ExecutionMode> executionMode,
 		Map<Long, List<IndexCheckerResult>> resultDataMap,
 		PortletURL serverURL) throws SystemException {
 
@@ -213,8 +189,12 @@ public class IndexCheckerUtil {
 				Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
 
 				if (group == null) {
-					groupIdOutput = "N/A";
-					groupNameOutput = "(Not Applicable)";
+					groupIdOutput = LanguageUtil.get(
+						portletConfig, renderRequest.getLocale(),
+						"output.not-applicable-groupid");
+					groupNameOutput = LanguageUtil.get(
+						portletConfig, renderRequest.getLocale(),
+						"output.not-applicable-groupname");
 				}
 				else {
 					groupIdOutput = "" + group.getGroupId();
@@ -238,8 +218,8 @@ public class IndexCheckerUtil {
 			for (IndexCheckerResult result : results) {
 				for (String type : outputTypes) {
 					ResultRow row = generateRow(
-						result, groupIdOutput, groupNameOutput, type,
-						renderRequest.getLocale(), j);
+						portletConfig, result, groupIdOutput, groupNameOutput,
+						type, renderRequest.getLocale(), j);
 
 					if (row != null) {
 						j++;
@@ -331,8 +311,9 @@ public class IndexCheckerUtil {
 	}
 
 	protected static String generateLine(
-		IndexCheckerResult result, String companyOutput, String groupIdOutput,
-		String groupNameOutput, String type, Locale locale) {
+		PortletConfig portletConfig, IndexCheckerResult result,
+		String companyOutput, String groupIdOutput, String groupNameOutput,
+		String type, Locale locale) {
 
 		Set<Data> data = result.getData(type);
 
@@ -357,10 +338,45 @@ public class IndexCheckerUtil {
 
 		line = IndexCheckerUtil.addCell(line, modelOutput);
 		line = IndexCheckerUtil.addCell(line, modelDisplayNameOutput);
-		line = IndexCheckerUtil.addCell(line, type);
+		line = IndexCheckerUtil.addCell(
+			line, LanguageUtil.get(portletConfig, locale, "output." + type));
 		line = IndexCheckerUtil.addCell(line, "" + data.size());
 		line = IndexCheckerUtil.addCell(line, valuesPK);
 		return line;
+	}
+
+	protected static ResultRow generateRow(
+		PortletConfig portletConfig, IndexCheckerResult result,
+		String groupIdOutput, String groupNameOutput, String type,
+		Locale locale, int j) {
+
+		Set<Data> data = result.getData(type);
+
+		if ((data == null) || data.isEmpty()) {
+			return null;
+		}
+
+		String valuesPK = getValuesPKText(type, data);
+
+		ResultRow row = new ResultRow(result, type, j);
+		IndexCheckerModel model = result.getModel();
+
+		String modelOutput = model.getName();
+		String modelDisplayNameOutput = model.getDisplayName(locale);
+
+		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
+			row.addText(groupIdOutput);
+			row.addText(groupNameOutput);
+		}
+
+		row.addText(HtmlUtil.escape(modelOutput));
+		row.addText(HtmlUtil.escape(modelDisplayNameOutput));
+		row.addText(
+			HtmlUtil.escape(
+				LanguageUtil.get(portletConfig, locale, "output." + type)));
+		row.addText(HtmlUtil.escape(""+data.size()));
+		row.addText(HtmlUtil.escape(valuesPK));
+		return row;
 	}
 
 	private static String[] outputTypes = {
