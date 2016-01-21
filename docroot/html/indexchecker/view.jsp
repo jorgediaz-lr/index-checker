@@ -72,8 +72,8 @@
 	<aui:fieldset>
 		<aui:column>
 			<aui:select inlineLabel="left"  name="outputFormat">
-				<aui:option selected="true" value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option>
-				<aui:option value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
+				<aui:option value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option>
+				<aui:option selected="true" value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
 				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
 			</aui:select>
 			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
