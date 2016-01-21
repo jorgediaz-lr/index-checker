@@ -62,18 +62,29 @@ public class IndexCheckerUtil {
 
 		if (companyResultDataMap != null) {
 			String header = StringPool.BLANK;
-			header = IndexCheckerUtil.addCell(header, "Company");
+			String aux = null;
+
+			aux = LanguageUtil.get(portletConfig, locale, "output.company");
+			header = IndexCheckerUtil.addCell(header, aux);
 
 			if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-				header = IndexCheckerUtil.addCell(header, "GroupId");
-				header = IndexCheckerUtil.addCell(header, "Group name");
+				aux = LanguageUtil.get(portletConfig, locale, "output.groupid");
+				header = IndexCheckerUtil.addCell(header, aux);
+				aux = LanguageUtil.get(
+					portletConfig, locale, "output.groupname");
+				header = IndexCheckerUtil.addCell(header, aux);
 			}
 
-			header = IndexCheckerUtil.addCell(header, "Entity class");
-			header = IndexCheckerUtil.addCell(header, "Entity name");
-			header = IndexCheckerUtil.addCell(header, "Type");
-			header = IndexCheckerUtil.addCell(header, "Count");
-			header = IndexCheckerUtil.addCell(header, "Primary keys");
+			aux = LanguageUtil.get(portletConfig, locale, "output.entityclass");
+			header = IndexCheckerUtil.addCell(header, aux);
+			aux = LanguageUtil.get(portletConfig, locale, "output.entityname");
+			header = IndexCheckerUtil.addCell(header, aux);
+			aux = LanguageUtil.get(portletConfig, locale, "output.errortype");
+			header = IndexCheckerUtil.addCell(header, aux);
+			aux = LanguageUtil.get(portletConfig, locale, "output.count");
+			header = IndexCheckerUtil.addCell(header, aux);
+			aux = LanguageUtil.get(portletConfig, locale, "output.primarykeys");
+			header = IndexCheckerUtil.addCell(header, aux);
 
 			out.add(header);
 		}
@@ -160,18 +171,29 @@ public class IndexCheckerUtil {
 		Map<Long, List<IndexCheckerResult>> resultDataMap,
 		PortletURL serverURL) throws SystemException {
 
+		Locale locale = renderRequest.getLocale();
+
 		List<String> headerNames = new ArrayList<String>();
 
+		String aux = null;
+
 		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-			headerNames.add("GroupId");
-			headerNames.add("Group name");
+			aux = LanguageUtil.get(portletConfig, locale, "output.groupid");
+			headerNames.add(aux);
+			aux = LanguageUtil.get(portletConfig, locale, "output.groupname");
+			headerNames.add(aux);
 		}
 
-		headerNames.add("Entity class");
-		headerNames.add("Entity name");
-		headerNames.add("Type");
-		headerNames.add("Count");
-		headerNames.add("Primary keys");
+		aux = LanguageUtil.get(portletConfig, locale, "output.entityclass");
+		headerNames.add(aux);
+		aux = LanguageUtil.get(portletConfig, locale, "output.entityname");
+		headerNames.add(aux);
+		aux = LanguageUtil.get(portletConfig, locale, "output.errortype");
+		headerNames.add(aux);
+		aux = LanguageUtil.get(portletConfig, locale, "output.count");
+		headerNames.add(aux);
+		aux = LanguageUtil.get(portletConfig, locale, "output.primarykeys");
+		headerNames.add(aux);
 
 		SearchContainer<IndexCheckerResult> searchContainer =
 			new SearchContainer<IndexCheckerResult>(
@@ -190,10 +212,9 @@ public class IndexCheckerUtil {
 
 				if (group == null) {
 					groupIdOutput = LanguageUtil.get(
-						portletConfig, renderRequest.getLocale(),
-						"output.not-applicable-groupid");
+						portletConfig, locale, "output.not-applicable-groupid");
 					groupNameOutput = LanguageUtil.get(
-						portletConfig, renderRequest.getLocale(),
+						portletConfig, locale,
 						"output.not-applicable-groupname");
 				}
 				else {
@@ -219,7 +240,7 @@ public class IndexCheckerUtil {
 				for (String type : outputTypes) {
 					ResultRow row = generateRow(
 						portletConfig, result, groupIdOutput, groupNameOutput,
-						type, renderRequest.getLocale(), j);
+						type, locale, j);
 
 					if (row != null) {
 						j++;
