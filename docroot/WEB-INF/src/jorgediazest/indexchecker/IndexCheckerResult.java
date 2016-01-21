@@ -59,7 +59,8 @@ public class IndexCheckerResult {
 			}
 
 			if (groupTitle != null) {
-				_log.info("\n---------------");
+				_log.info("");
+				_log.info("---------------");
 				_log.info("GROUP: " + groupTitle);
 				_log.info("---------------");
 			}
