@@ -142,8 +142,19 @@ public abstract class ModelImpl implements Model {
 	public int getAttributePos(String name) {
 		Object[][] values = this.getAttributes();
 
+		if (name.endsWith(StringPool.UNDERLINE)) {
+			name = name.substring(0, name.length() - 1);
+		}
+
+		String nameWithUnderline = name + StringPool.UNDERLINE;
+
 		for (int i = 0; i < values.length; i++) {
-			if (values[i][0].equals(name)) {
+			if (((String)values[i][0]).endsWith(StringPool.UNDERLINE) &&
+				((String)values[i][0]).equals(nameWithUnderline)) {
+
+				return i;
+			}
+			else if (((String)values[i][0]).equals(name)) {
 				return i;
 			}
 		}
