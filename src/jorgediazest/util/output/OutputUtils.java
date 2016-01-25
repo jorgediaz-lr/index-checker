@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.PortletConfig;
-public class CommonOutputUtils {
+public class OutputUtils {
 
 	public static String getCSVRow(List<String> rowData) {
 		return getCSVRow(rowData, StringPool.COMMA);
@@ -38,7 +38,7 @@ public class CommonOutputUtils {
 		String row = StringPool.BLANK;
 
 		for (String aux : rowData) {
-			row = CommonOutputUtils.addCell(row, aux, sep);
+			row = OutputUtils.addCell(row, aux, sep);
 		}
 
 		return row;
