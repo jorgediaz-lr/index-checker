@@ -68,46 +68,71 @@
 	title="index-checker"
 />
 
-<aui:form action="<%= executeScriptURL %>" method="POST" name="fm">
-	<aui:fieldset>
-		<aui:column>
-			<aui:select inlineLabel="left"  name="outputFormat">
-<%--				<aui:option value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option> --%>
-				<aui:option selected="true" value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
-				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
-			</aui:select>
-			<aui:input inlineLabel="left" name="filterClassName" type="text" value="" />
-			<span class="<%= (ParamUtil.getBoolean(request, "outputGroupBySite") ? "" : "hide") %>" id="filterGroupId">
-			<aui:input inlineLabel="left" name="filterGroupId" type="text" value="" />
-			</span>
-		</aui:column>
-		<aui:column>
-			<aui:input name="outputBothExact" type="checkbox" value="false" />
-			<aui:input name="outputBothNotExact" type="checkbox" value="true" />
-			<aui:input name="outputLiferay" type="checkbox" value="true" />
-			<aui:input name="outputIndex" type="checkbox" value="false" />
-		</aui:column>
-		<aui:column>
-			<aui:input name="outputGroupBySite" onClick='<%= renderResponse.getNamespace() + "toogleFilterGroupId(this);" %>' type="checkbox" value="false" />
-			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
-		</aui:column>
-	</aui:fieldset>
-
-	<aui:button-row>
-		<aui:button type="submit" value="execute" />
-		<aui:button onClick='<%= renderResponse.getNamespace() + "reindex();" %>' type="button" value="reindex" />
-		<aui:button onClick='<%= renderResponse.getNamespace() + "removeOrphans();" %>' type="button" value="remove-orphan-data" />
-		<aui:button onClick="<%= viewURL %>" type="cancel" value="clean" />
-	</aui:button-row>
-</aui:form>
-
 <%
 	Log _log = IndexCheckerPortlet.getLogger();
 	EnumSet<ExecutionMode> executionMode = (EnumSet<ExecutionMode>) request.getAttribute("executionMode");
 	Map<Company, Long> companyProcessTime = (Map<Company, Long>) request.getAttribute("companyProcessTime");
 	Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap = (Map<Company, Map<Long, List<IndexCheckerResult>>>) request.getAttribute("companyResultDataMap");
 	Map<Company, String> companyError = (Map<Company, String>) request.getAttribute("companyError");
+%>
 
+<aui:form action="<%= executeScriptURL %>" method="POST" name="fm">
+	<aui:fieldset>
+		<aui:column>
+			<aui:select name="outputFormat">
+<%-- <aui:option value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option> --%>
+				<aui:option selected="true" value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
+				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
+			</aui:select>
+			<aui:input helpMessage="filter-class-name-help" name="filterClassName" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value="" />
+		</aui:column>
+		<aui:column>
+			<aui:input helpMessage="output-both-exact-help" name="outputBothExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
+			<aui:input helpMessage="output-both-not-exact-help" name="outputBothNotExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
+			<aui:input helpMessage="output-liferay-help" name="outputLiferay" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
+			<aui:input helpMessage="output-index-help" name="outputIndex" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
+		</aui:column>
+		<aui:column>
+			<aui:input name="outputGroupBySite" onClick='<%= renderResponse.getNamespace() + "toogleFilterGroupId(this);" %>' type="checkbox" value="false" />
+			<span class="<%= (ParamUtil.getBoolean(request, "outputGroupBySite") ? "" : "hide") %>" id="filterGroupIdSpan">
+			<aui:input helpMessage="filter-group-id-help" name="filterGroupId" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value="" />
+			</span>
+			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
+		</aui:column>
+	</aui:fieldset>
+
+	<aui:button-row>
+		<aui:button type="submit" value="check-index" />
+
+<%
+	if ((companyResultDataMap != null) && (companyResultDataMap.size() > 0)) {
+		if (executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT) ||
+			executionMode.contains(ExecutionMode.SHOW_BOTH_NOTEXACT) ||
+			executionMode.contains(ExecutionMode.SHOW_LIFERAY)) {
+%>
+
+			<span id="reindexButtonSpan">
+			<aui:button onClick='<%= renderResponse.getNamespace() + "reindex();" %>' type="button" value="reindex" />
+			</span>
+<% }
+
+		if (executionMode.contains(ExecutionMode.SHOW_INDEX)) {
+%>
+
+			<span id="removeOrphansSpan">
+			<aui:button onClick='<%= renderResponse.getNamespace() + "removeOrphans();" %>' type="button" value="remove-orphan-data" />
+			</span>
+
+<%
+		}
+	}
+%>
+
+		<aui:button onClick="<%= viewURL %>" type="cancel" value="clean" />
+	</aui:button-row>
+</aui:form>
+
+<%
 	if ((companyProcessTime != null) && (companyError != null)) {
 
 		String outputFormat = request.getParameter("outputFormat");
@@ -146,8 +171,21 @@
 %>
 
 <aui:script>
+	function <portlet:namespace />disableReindexAndRemoveOrphansButtons(event) {
+		var reindexButton = document.getElementById("reindexButtonSpan");
+		var removeOrphansButton = document.getElementById("removeOrphansSpan");
+
+		if (reindexButton != null) {
+			reindexButton.className = 'hide';
+		}
+
+		if (removeOrphansButton != null) {
+			removeOrphansButton.className = 'hide';
+		}
+	}
+
 	function <portlet:namespace />toogleFilterGroupId(event) {
-		var filterGroupId = document.getElementById("filterGroupId");
+		var filterGroupId = document.getElementById("filterGroupIdSpan");
 
 		if (event.checked) {
 			filterGroupId.className = '';
