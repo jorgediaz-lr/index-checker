@@ -15,9 +15,9 @@
 --%>
 
 <%
-			List<String> outputList = OutputUtils.generateOutputCSV(portletConfig, (String)request.getAttribute("title"),request.getLocale(), executionMode, companyProcessTime, companyResultDataMap, companyError);
+			List<String> outputList = OutputUtils.generateCSVOutput(portletConfig, (String)request.getAttribute("title"),request.getLocale(), executionMode, companyProcessTime, companyResultDataMap, companyError);
 
-			String outputScript = OutputUtils.listStringToString(outputList);
+			String outputScript = CommonOutputUtils.listStringToString(outputList);
 %>
 
 	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= outputScript %>" />

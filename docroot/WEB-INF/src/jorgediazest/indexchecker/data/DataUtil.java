@@ -15,11 +15,16 @@
 package jorgediazest.indexchecker.data;
 
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.lang.reflect.Method;
 
 import java.sql.Timestamp;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author Jorge Díaz
@@ -155,6 +160,50 @@ public class DataUtil {
 		}
 
 		return id;
+	}
+
+	public static Long[] getListPK(Collection<Data> data) {
+		Long[] valuesPK = new Long[data.size()];
+
+		int i = 0;
+
+		for (Data value : data) {
+			valuesPK[i++] = value.getPrimaryKey();
+		}
+
+		return valuesPK;
+	}
+
+	public static String[] getListUid(Collection<Data> data) {
+		String[] valuesPK = new String[data.size()];
+
+		int i = 0;
+
+		for (Data value : data) {
+			valuesPK[i++] = value.getUid();
+		}
+
+		return valuesPK;
+	}
+
+	public static String getValuesPKText(String type, Set<Data> data) {
+		String valuesPK = null;
+
+		if (type.contains("index")) {
+			valuesPK = Arrays.toString(getListUid(data));
+		}
+		else {
+			valuesPK = Arrays.toString(getListPK(data));
+		}
+
+		if (valuesPK.length() <= 1) {
+			valuesPK = StringPool.BLANK;
+		}
+		else {
+			valuesPK = valuesPK.substring(1, valuesPK.length()-1);
+		}
+
+		return valuesPK;
 	}
 
 	public static Long stringToTime(String dateString) {

@@ -66,7 +66,7 @@
 							!exactDataSetLiferay.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								OutputUtils.getListPK(exactDataSetLiferay));
+								DataUtil.getListPK(exactDataSetLiferay));
 %>
 
 <li><u>both-exact</u>:<ul><li>count: <%= exactDataSetLiferay.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
@@ -78,7 +78,7 @@
 							!notExactDataSetLiferay.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								OutputUtils.getListPK(notExactDataSetLiferay));
+								DataUtil.getListPK(notExactDataSetLiferay));
 %>
 
 <li><u>both-notexact</u>:<ul><li>count: <%= notExactDataSetLiferay.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
@@ -89,7 +89,7 @@
 						if ((liferayOnlyData != null) && !liferayOnlyData.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								OutputUtils.getListPK(liferayOnlyData));
+								DataUtil.getListPK(liferayOnlyData));
 %>
 
 <li><u>only liferay</u>:<ul><li>count: <%= liferayOnlyData.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
@@ -100,7 +100,7 @@
 						if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
 
 						String valuesPK = Arrays.toString(
-							OutputUtils.getListUid(indexOnlyData));
+							DataUtil.getListUid(indexOnlyData));
 %>
 
 <li><u>only index</u>:<ul><li>count: <%= indexOnlyData.size() %></li><li>uids: <%= valuesPK %></li></ul></li>

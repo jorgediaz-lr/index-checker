@@ -2,6 +2,6 @@
 <!DOCTYPE project>
 
 <project name="index_checker-portlet" basedir="." default="deploy">
-	<property name="import.shared" value="servicebuilder-reflection-shared" />
+	<property name="import.shared" value="servicebuilder-reflection-shared,output-utils-shared" />
 	<import file="D:/LRDevStudioWorkspace2/liferay-plugins-sdk-6.2-ee-sp8/portlets/build-common-portlet.xml" />
 </project>

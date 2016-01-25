@@ -19,5 +19,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/servicebuilder-reflection-shared"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/output-utils-shared"/>
 	<classpathentry kind="output" path="docroot/WEB-INF/classes"/>
 </classpath>

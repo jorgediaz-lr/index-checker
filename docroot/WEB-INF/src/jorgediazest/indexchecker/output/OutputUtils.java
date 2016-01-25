@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
@@ -30,8 +29,6 @@ import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -45,15 +42,18 @@ import javax.portlet.RenderRequest;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.DataUtil;
 import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
+
+import jorgediazest.util.output.CommonOutputUtils;
 
 /**
  * @author Jorge Díaz
  */
 public class OutputUtils {
 
-	public static List<String> generateOutputCSV(
+	public static List<String> generateCSVOutput(
 		PortletConfig portletConfig, String title, Locale locale,
 		EnumSet<ExecutionMode> executionMode,
 		Map<Company, Long> companyProcessTime,
@@ -63,32 +63,24 @@ public class OutputUtils {
 		List<String> out = new ArrayList<String>();
 
 		if (companyResultDataMap != null) {
-			String header = StringPool.BLANK;
-			String aux = null;
-
-			aux = LanguageUtil.get(portletConfig, locale, "output.company");
-			header = OutputUtils.addCell(header, aux);
+			String[] headerKeys;
 
 			if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-				aux = LanguageUtil.get(portletConfig, locale, "output.groupid");
-				header = OutputUtils.addCell(header, aux);
-				aux = LanguageUtil.get(
-					portletConfig, locale, "output.groupname");
-				header = OutputUtils.addCell(header, aux);
+				headerKeys = new String[] {
+					"output.company", "output.groupid", "output.groupname",
+					"output.entityclass", "output.entityname",
+					"output.errortype", "output.count", "output.primarykeys"};
+			}
+			else {
+				headerKeys = new String[] {
+					"output.company", "output.entityclass", "output.entityname",
+					"output.errortype", "output.count", "output.primarykeys"};
 			}
 
-			aux = LanguageUtil.get(portletConfig, locale, "output.entityclass");
-			header = OutputUtils.addCell(header, aux);
-			aux = LanguageUtil.get(portletConfig, locale, "output.entityname");
-			header = OutputUtils.addCell(header, aux);
-			aux = LanguageUtil.get(portletConfig, locale, "output.errortype");
-			header = OutputUtils.addCell(header, aux);
-			aux = LanguageUtil.get(portletConfig, locale, "output.count");
-			header = OutputUtils.addCell(header, aux);
-			aux = LanguageUtil.get(portletConfig, locale, "output.primarykeys");
-			header = OutputUtils.addCell(header, aux);
+			List<String> headers = CommonOutputUtils.getHeaders(
+				portletConfig, locale, headerKeys);
 
-			out.add(header);
+			out.add(CommonOutputUtils.getCSVRow(headers));
 		}
 
 		for (
@@ -122,9 +114,11 @@ public class OutputUtils {
 
 							if (group == null) {
 								groupIdOutput = LanguageUtil.get(
-									locale, "output.not-applicable-groupid");
+									portletConfig, locale,
+									"output.not-applicable-groupid");
 								groupNameOutput = LanguageUtil.get(
-									locale, "output.not-applicable-groupname");
+									portletConfig, locale,
+									"output.not-applicable-groupname");
 							}
 							else {
 								groupIdOutput = "" + group.getGroupId();
@@ -138,7 +132,7 @@ public class OutputUtils {
 
 					for (Results result : entry.getValue()) {
 						for (String type : outputTypes) {
-							String line = generateLine(
+							String line = generateCSVRow(
 									portletConfig, result, companyOutput,
 									groupIdOutput, groupNameOutput, type,
 									locale);
@@ -153,7 +147,8 @@ public class OutputUtils {
 
 				if (numberOfRows == 0) {
 					out.add(StringPool.BLANK);
-					out.add("No results found: your system is ok or perhaps " +
+					out.add(
+						"No results found: your system is ok or perhaps " +
 						"you have to change some filters");
 				}
 			}
@@ -185,32 +180,29 @@ public class OutputUtils {
 
 		Locale locale = renderRequest.getLocale();
 
-		List<String> headerNames = new ArrayList<String>();
-
-		String aux = null;
+		String[] headerKeys;
 
 		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-			aux = LanguageUtil.get(portletConfig, locale, "output.groupid");
-			headerNames.add(aux);
-			aux = LanguageUtil.get(portletConfig, locale, "output.groupname");
-			headerNames.add(aux);
+			headerKeys = new String[] {
+				"output.groupid", "output.groupname", "output.entityclass",
+				"output.entityname", "output.errortype", "output.count",
+				"output.primarykeys"};
+		}
+		else {
+			headerKeys = new String[] {
+				"output.entityclass", "output.entityname", "output.errortype",
+				"output.count", "output.primarykeys"};
 		}
 
-		aux = LanguageUtil.get(portletConfig, locale, "output.entityclass");
-		headerNames.add(aux);
-		aux = LanguageUtil.get(portletConfig, locale, "output.entityname");
-		headerNames.add(aux);
-		aux = LanguageUtil.get(portletConfig, locale, "output.errortype");
-		headerNames.add(aux);
-		aux = LanguageUtil.get(portletConfig, locale, "output.count");
-		headerNames.add(aux);
-		aux = LanguageUtil.get(portletConfig, locale, "output.primarykeys");
-		headerNames.add(aux);
+		List<String> headerNames = CommonOutputUtils.getHeaders(
+			portletConfig, locale, headerKeys);
 
 		SearchContainer<Results> searchContainer =
 			new SearchContainer<Results>(
 				renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
 				SearchContainer.MAX_DELTA, serverURL, headerNames, null);
+
+		int numberOfRows = 0;
 
 		for (
 			Entry<Long, List<Results>> entry :
@@ -235,7 +227,9 @@ public class OutputUtils {
 				}
 			}
 
-			List<Results> results = entry.getValue();
+			List<Results> results = searchContainer.getResults();
+
+			results.addAll(entry.getValue());
 
 			results = ListUtil.subList(
 				results, searchContainer.getStart(), searchContainer.getEnd());
@@ -244,11 +238,9 @@ public class OutputUtils {
 
 			List<ResultRow> resultRows = searchContainer.getResultRows();
 
-			int numberOfRows = 0;
-
 			for (Results result : results) {
 				for (String type : outputTypes) {
-					ResultRow row = generateRow(
+					ResultRow row = generateSearchContainerRow(
 						portletConfig, result, groupIdOutput, groupNameOutput,
 						type, locale, numberOfRows);
 
@@ -258,92 +250,16 @@ public class OutputUtils {
 					}
 				}
 			}
-
-			searchContainer.setTotal(numberOfRows);
 		}
+
+		searchContainer.setTotal(numberOfRows);
 
 		return searchContainer;
 	}
 
-	public static Long[] getListPK(Collection<Data> data) {
-		Long[] valuesPK = new Long[data.size()];
-
-		int i = 0;
-
-		for (Data value : data) {
-			valuesPK[i++] = value.getPrimaryKey();
-		}
-
-		return valuesPK;
-	}
-
-	public static String[] getListUid(Collection<Data> data) {
-		String[] valuesPK = new String[data.size()];
-
-		int i = 0;
-
-		for (Data value : data) {
-			valuesPK[i++] = value.getUid();
-		}
-
-		return valuesPK;
-	}
-
 	static Log _log = LogFactoryUtil.getLog(OutputUtils.class);
 
-	public static String getValuesPKText(String type, Set<Data> data) {
-		String valuesPK = null;
-
-		if (type.contains("index")) {
-			valuesPK = Arrays.toString(OutputUtils.getListUid(data));
-		}
-		else {
-			valuesPK = Arrays.toString(OutputUtils.getListPK(data));
-		}
-
-		if (valuesPK.length() <= 1) {
-			valuesPK = StringPool.BLANK;
-		}
-		else {
-			valuesPK = valuesPK.substring(1, valuesPK.length()-1);
-		}
-
-		return valuesPK;
-	}
-
-	public static String listStringToString(List<String> out) {
-		if (Validator.isNull(out)) {
-			return null;
-		}
-
-		StringBundler stringBundler = new StringBundler(out.size()*2);
-
-		for (String s : out) {
-			stringBundler.append(s);
-			stringBundler.append(StringPool.NEW_LINE);
-		}
-
-		return stringBundler.toString();
-	}
-
-	protected static String addCell(String line, String cell) {
-		if (cell.contains(StringPool.SPACE) ||
-			cell.contains(StringPool.COMMA)) {
-
-			cell = StringPool.QUOTE + cell + StringPool.QUOTE;
-		}
-
-		if (Validator.isNull(line)) {
-			line = cell;
-		}
-		else {
-			line += StringPool.COMMA + cell;
-		}
-
-		return line;
-	}
-
-	protected static String generateLine(
+	protected static String generateCSVRow(
 		PortletConfig portletConfig, Results result, String companyOutput,
 		String groupIdOutput, String groupNameOutput, String type,
 		Locale locale) {
@@ -359,26 +275,25 @@ public class OutputUtils {
 		String modelOutput = model.getName();
 		String modelDisplayNameOutput = model.getDisplayName(locale);
 
-		String valuesPK = getValuesPKText(type, data);
+		String valuesPK = DataUtil.getValuesPKText(type, data);
 
-		String line = StringPool.BLANK;
-		line = OutputUtils.addCell(line, companyOutput);
+		List<String> line = new ArrayList<String>();
+		line.add(companyOutput);
 
 		if (groupIdOutput != null) {
-			line = OutputUtils.addCell(line, groupIdOutput);
-			line = OutputUtils.addCell(line, groupNameOutput);
+			line.add(groupIdOutput);
+			line.add(groupNameOutput);
 		}
 
-		line = OutputUtils.addCell(line, modelOutput);
-		line = OutputUtils.addCell(line, modelDisplayNameOutput);
-		line = OutputUtils.addCell(
-			line, LanguageUtil.get(portletConfig, locale, "output." + type));
-		line = OutputUtils.addCell(line, "" + data.size());
-		line = OutputUtils.addCell(line, valuesPK);
-		return line;
+		line.add(modelOutput);
+		line.add(modelDisplayNameOutput);
+		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
+		line.add("" + data.size());
+		line.add(valuesPK);
+		return CommonOutputUtils.getCSVRow(line);
 	}
 
-	protected static ResultRow generateRow(
+	protected static ResultRow generateSearchContainerRow(
 		PortletConfig portletConfig, Results result, String groupIdOutput,
 		String groupNameOutput, String type, Locale locale, int numberOfRows) {
 
@@ -388,7 +303,7 @@ public class OutputUtils {
 			return null;
 		}
 
-		String valuesPK = getValuesPKText(type, data);
+		String valuesPK = DataUtil.getValuesPKText(type, data);
 
 		ResultRow row = new ResultRow(result, type, numberOfRows);
 		IndexCheckerModel model = result.getModel();
