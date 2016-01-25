@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+
+<project name="output-utils-shared" basedir="." default="deploy">
+	<property name="plugin.version" value="1" />
+	<import file="D:/LRDevStudioWorkspace2/liferay-plugins-sdk-6.2-ee-sp8/shared/build-common-shared.xml" />
+</project>
