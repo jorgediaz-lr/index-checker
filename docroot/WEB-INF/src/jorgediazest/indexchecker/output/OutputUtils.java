@@ -227,8 +227,6 @@ public class OutputUtils {
 
 			List<Results> results = entry.getValue();
 
-			searchContainer.setTotal(results.size());
-
 			results = ListUtil.subList(
 				results, searchContainer.getStart(), searchContainer.getEnd());
 
@@ -236,20 +234,22 @@ public class OutputUtils {
 
 			List<ResultRow> resultRows = searchContainer.getResultRows();
 
-			int j = 0;
+			int numberOfRows = 0;
 
 			for (Results result : results) {
 				for (String type : outputTypes) {
 					ResultRow row = generateRow(
 						portletConfig, result, groupIdOutput, groupNameOutput,
-						type, locale, j);
+						type, locale, numberOfRows);
 
 					if (row != null) {
-						j++;
+						numberOfRows++;
 						resultRows.add(row);
 					}
 				}
 			}
+
+			searchContainer.setTotal(numberOfRows);
 		}
 
 		return searchContainer;
@@ -370,7 +370,7 @@ public class OutputUtils {
 
 	protected static ResultRow generateRow(
 		PortletConfig portletConfig, Results result, String groupIdOutput,
-		String groupNameOutput, String type, Locale locale, int j) {
+		String groupNameOutput, String type, Locale locale, int numberOfRows) {
 
 		Set<Data> data = result.getData(type);
 
@@ -380,7 +380,7 @@ public class OutputUtils {
 
 		String valuesPK = getValuesPKText(type, data);
 
-		ResultRow row = new ResultRow(result, type, j);
+		ResultRow row = new ResultRow(result, type, numberOfRows);
 		IndexCheckerModel model = result.getModel();
 
 		String modelOutput = model.getName();
