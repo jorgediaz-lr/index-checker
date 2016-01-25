@@ -49,10 +49,10 @@
 <%@ page import="javax.portlet.PortletURL" %>
 
 <%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
-<%@ page import="jorgediazest.indexchecker.IndexCheckerResult" %>
-<%@ page import="jorgediazest.indexchecker.IndexCheckerUtil" %>
 <%@ page import="jorgediazest.indexchecker.data.Data" %>
+<%@ page import="jorgediazest.indexchecker.data.Results" %>
 <%@ page import="jorgediazest.indexchecker.model.IndexCheckerModel" %>
+<%@ page import="jorgediazest.indexchecker.output.OutputUtils" %>
 <%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
 <portlet:defineObjects />
@@ -72,7 +72,7 @@
 	Log _log = IndexCheckerPortlet.getLogger();
 	EnumSet<ExecutionMode> executionMode = (EnumSet<ExecutionMode>) request.getAttribute("executionMode");
 	Map<Company, Long> companyProcessTime = (Map<Company, Long>) request.getAttribute("companyProcessTime");
-	Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap = (Map<Company, Map<Long, List<IndexCheckerResult>>>) request.getAttribute("companyResultDataMap");
+	Map<Company, Map<Long, List<Results>>> companyResultDataMap = (Map<Company, Map<Long, List<Results>>>) request.getAttribute("companyResultDataMap");
 	Map<Company, String> companyError = (Map<Company, String>) request.getAttribute("companyError");
 %>
 

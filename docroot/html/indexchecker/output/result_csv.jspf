@@ -15,9 +15,9 @@
 --%>
 
 <%
-			List<String> outputList = IndexCheckerUtil.generateOutputCSV(portletConfig, (String)request.getAttribute("title"),request.getLocale(), executionMode, companyProcessTime, companyResultDataMap, companyError);
+			List<String> outputList = OutputUtils.generateOutputCSV(portletConfig, (String)request.getAttribute("title"),request.getLocale(), executionMode, companyProcessTime, companyResultDataMap, companyError);
 
-			String outputScript = IndexCheckerUtil.listStringToString(outputList);
+			String outputScript = OutputUtils.listStringToString(outputList);
 %>
 
 	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= outputScript %>" />

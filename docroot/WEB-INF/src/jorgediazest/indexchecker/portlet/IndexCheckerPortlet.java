@@ -14,6 +14,7 @@
 
 package jorgediazest.indexchecker.portlet;
 
+import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -35,18 +36,24 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.IndexChecker;
-import jorgediazest.indexchecker.IndexCheckerResult;
 import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.Results;
+import jorgediazest.indexchecker.model.IndexCheckerModel;
+import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 
+import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
 
 /**
@@ -55,6 +62,108 @@ import jorgediazest.util.model.ModelUtil;
  * @author Jorge Díaz
  */
 public class IndexCheckerPortlet extends MVCPortlet {
+
+	public static IndexCheckerModel castModel(Model model) {
+		IndexCheckerModel icModel;
+		try {
+			icModel = (IndexCheckerModel)model;
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Model: " + model.getName() + " EXCEPTION: " +
+						e.getClass() + " - " + e.getMessage(), e);
+			}
+
+			icModel = null;
+		}
+
+		return icModel;
+	}
+
+	public static Map<Long, List<Results>>
+		executeScript(
+			Company company, List<Long> groupIds, List<String> classNames,
+			Set<ExecutionMode> executionMode)
+		throws SystemException {
+
+		ModelFactory modelFactory = new IndexCheckerModelFactory();
+
+		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
+
+		List<IndexCheckerModel> modelList = new ArrayList<IndexCheckerModel>();
+
+		for (Model model : modelMap.values()) {
+			IndexCheckerModel icModel = castModel(model);
+			modelList.add(icModel);
+		}
+
+		Map<Long, List<Results>> resultDataMap =
+			new LinkedHashMap<Long, List<Results>>();
+
+		long companyId = company.getCompanyId();
+
+		List<Long> groupIdsFor = new ArrayList<Long>();
+		groupIdsFor.add(0L);
+
+		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			groupIdsFor.addAll(groupIds);
+		}
+
+		for (long groupId : groupIdsFor) {
+			List<Results> resultList = new ArrayList<Results>();
+
+			for (IndexCheckerModel icModel : modelList) {
+				try {
+					if ((groupId == 0L) &&
+						icModel.hasAttribute("groupId") &&
+						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+						continue;
+					}
+
+					if ((groupId != 0L) &&
+						!icModel.hasAttribute("groupId") &&
+						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+						continue;
+					}
+
+					Criterion filter = icModel.getCompanyGroupFilter(
+						companyId, groupId);
+
+					Set<Data> liferayData = new HashSet<Data>(
+						icModel.getLiferayData(filter).values());
+
+					Set<Data> indexData;
+
+					if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
+						!liferayData.isEmpty()) {
+
+						indexData = icModel.getIndexData(companyId, groupId);
+					}
+					else {
+						indexData = new HashSet<Data>();
+					}
+
+					Results result =
+						Results.getIndexCheckResult(
+							icModel, liferayData, indexData, executionMode);
+
+					resultList.add(result);
+				}
+				catch (Exception e) {
+					_log.error(
+						"Model: " + icModel.getName() + " EXCEPTION: " +
+							e.getClass() + " - " + e.getMessage(),e);
+				}
+			}
+
+			resultDataMap.put(groupId, resultList);
+		}
+
+		return resultDataMap;
+	}
 
 	public static EnumSet<ExecutionMode> getExecutionMode(
 		ActionRequest request) {
@@ -135,17 +244,17 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
-					IndexChecker.executeScript(
+				Map<Long, List<Results>> resultDataMap =
+					IndexCheckerPortlet.executeScript(
 						company, groupIds, classNames, executionMode);
 
 				for (
-					Entry<Long, List<IndexCheckerResult>> entry :
+					Entry<Long, List<Results>> entry :
 						resultDataMap.entrySet()) {
 
-					List<IndexCheckerResult> resultList = entry.getValue();
+					List<Results> resultList = entry.getValue();
 
-					for (IndexCheckerResult result : resultList) {
+					for (Results result : resultList) {
 						Map<Data, String> errors = result.reindex();
 /* TODO Mover todo esto al JSP */
 						if ((errors!= null) && (errors.size() > 0)) {
@@ -228,17 +337,17 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
-					IndexChecker.executeScript(
+				Map<Long, List<Results>> resultDataMap =
+					IndexCheckerPortlet.executeScript(
 						company, groupIds, classNames, executionMode);
 
 				for (
-					Entry<Long, List<IndexCheckerResult>> entry :
+					Entry<Long, List<Results>> entry :
 						resultDataMap.entrySet()) {
 
-					List<IndexCheckerResult> resultList = entry.getValue();
+					List<Results> resultList = entry.getValue();
 
-					for (IndexCheckerResult result : resultList) {
+					for (Results result : resultList) {
 						Map<Data, String> errors = result.removeIndexOrphans();
 /* TODO Mover todo esto al JSP */
 						if ((errors!= null) && (errors.size() > 0)) {
@@ -302,8 +411,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
-		Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap =
-			new HashMap<Company, Map<Long, List<IndexCheckerResult>>>();
+		Map<Company, Map<Long, List<Results>>> companyResultDataMap =
+			new HashMap<Company, Map<Long, List<Results>>>();
 
 		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
 
@@ -319,8 +428,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
-					IndexChecker.executeScript(
+				Map<Long, List<Results>> resultDataMap =
+					IndexCheckerPortlet.executeScript(
 						company, groupIds, classNames, executionMode);
 
 				long endTime = System.currentTimeMillis();
@@ -334,7 +443,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					boolean groupBySite = executionMode.contains(
 						ExecutionMode.GROUP_BY_SITE);
 
-					IndexCheckerResult.dumpToLog(groupBySite, resultDataMap);
+					Results.dumpToLog(groupBySite, resultDataMap);
 				}
 
 				companyResultDataMap.put(company, resultDataMap);

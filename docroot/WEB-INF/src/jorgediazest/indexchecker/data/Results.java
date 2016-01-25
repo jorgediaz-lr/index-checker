@@ -12,7 +12,7 @@
  * details.
  */
 
-package jorgediazest.indexchecker;
+package jorgediazest.indexchecker.data;
 
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -28,26 +28,24 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 /**
  * @author Jorge Díaz
  */
-public class IndexCheckerResult {
+public class Results {
 
 	public static void dumpToLog(
 			boolean groupBySite,
-			Map<Long, List<IndexCheckerResult>> resultDataMap)
+			Map<Long, List<Results>> resultDataMap)
 		throws SystemException {
 
 		if (!_log.isInfoEnabled()) {
 			return;
 		}
 
-		for (Entry<Long, List<IndexCheckerResult>> entry :
-				resultDataMap.entrySet()) {
-
+		for (Entry<Long, List<Results>> entry : resultDataMap.entrySet()) {
 			String groupTitle = null;
 			Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
 
@@ -65,13 +63,13 @@ public class IndexCheckerResult {
 				_log.info("---------------");
 			}
 
-			for (IndexCheckerResult result : entry.getValue()) {
+			for (Results result : entry.getValue()) {
 				result.dumpToLog();
 			}
 		}
 	}
 
-	public static IndexCheckerResult getIndexCheckResult(
+	public static Results getIndexCheckResult(
 		IndexCheckerModel model, Set<Data> liferayData, Set<Data> indexData,
 		Set<ExecutionMode> executionMode) {
 
@@ -87,9 +85,9 @@ public class IndexCheckerResult {
 			data.put("both-notexact-index", new HashSet<Data>());
 		}
 
-		Data[] bothArrSetLiferay = IndexCheckerResult.getBothDataArray(
+		Data[] bothArrSetLiferay = Results.getBothDataArray(
 			liferayData, indexData);
-		Data[] bothArrSetIndex = IndexCheckerResult.getBothDataArray(
+		Data[] bothArrSetIndex = Results.getBothDataArray(
 			indexData, liferayData);
 
 		if (executionMode.contains(ExecutionMode.SHOW_BOTH_EXACT) ||
@@ -132,7 +130,7 @@ public class IndexCheckerResult {
 			data.put("only-index", indexOnlyData);
 		}
 
-		return new IndexCheckerResult(model, data);
+		return new Results(model, data);
 	}
 
 	public void dumpToLog() {
@@ -204,14 +202,12 @@ public class IndexCheckerResult {
 		return both.toArray(new Data[0]);
 	}
 
-	protected IndexCheckerResult(
-		IndexCheckerModel model, Map<String, Set<Data>> data) {
-
+	protected Results(IndexCheckerModel model, Map<String, Set<Data>> data) {
 		this.data = data;
 		this.model = model;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(IndexCheckerResult.class);
+	private static Log _log = LogFactoryUtil.getLog(Results.class);
 
 	private Map<String, Set<Data>> data;
 	private IndexCheckerModel model;

@@ -25,14 +25,14 @@
 
 			<%
 			if (companyResultDataMap != null) {
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
+				Map<Long, List<Results>> resultDataMap =
 					companyResultDataMap.get(companyEntry.getKey());
 
-				for (Entry<Long, List<IndexCheckerResult>> entry : resultDataMap.entrySet()) {
+				for (Entry<Long, List<Results>> entry : resultDataMap.entrySet()) {
 
 					boolean printHeaderGroup = executionMode.contains(ExecutionMode.GROUP_BY_SITE);
 
-					for (IndexCheckerResult result : entry.getValue()) {
+					for (Results result : entry.getValue()) {
 
 						Set<Data> exactDataSetLiferay = result.getData("both-exact-liferay");
 						Set<Data> notExactDataSetLiferay = result.getData("both-notexact-liferay");
@@ -66,7 +66,7 @@
 							!exactDataSetLiferay.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(exactDataSetLiferay));
+								OutputUtils.getListPK(exactDataSetLiferay));
 %>
 
 <li><u>both-exact</u>:<ul><li>count: <%= exactDataSetLiferay.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
@@ -78,7 +78,7 @@
 							!notExactDataSetLiferay.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(notExactDataSetLiferay));
+								OutputUtils.getListPK(notExactDataSetLiferay));
 %>
 
 <li><u>both-notexact</u>:<ul><li>count: <%= notExactDataSetLiferay.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
@@ -89,7 +89,7 @@
 						if ((liferayOnlyData != null) && !liferayOnlyData.isEmpty()) {
 
 							String valuesPK = Arrays.toString(
-								IndexCheckerUtil.getListPK(liferayOnlyData));
+								OutputUtils.getListPK(liferayOnlyData));
 %>
 
 <li><u>only liferay</u>:<ul><li>count: <%= liferayOnlyData.size() %></li><li>pks: <%= valuesPK %></li></ul></li>
@@ -100,7 +100,7 @@
 						if ((indexOnlyData != null) && !indexOnlyData.isEmpty()) {
 
 						String valuesPK = Arrays.toString(
-							IndexCheckerUtil.getListUid(indexOnlyData));
+							OutputUtils.getListUid(indexOnlyData));
 %>
 
 <li><u>only index</u>:<ul><li>count: <%= indexOnlyData.size() %></li><li>uids: <%= valuesPK %></li></ul></li>

@@ -12,7 +12,7 @@
  * details.
  */
 
-package jorgediazest.indexchecker;
+package jorgediazest.indexchecker.output;
 
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -43,19 +43,21 @@ import javax.portlet.PortletConfig;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 
+import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.Data;
+import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 
 /**
  * @author Jorge Díaz
  */
-public class IndexCheckerUtil {
+public class OutputUtils {
 
 	public static List<String> generateOutputCSV(
 		PortletConfig portletConfig, String title, Locale locale,
 		EnumSet<ExecutionMode> executionMode,
 		Map<Company, Long> companyProcessTime,
-		Map<Company, Map<Long, List<IndexCheckerResult>>> companyResultDataMap,
+		Map<Company, Map<Long, List<Results>>> companyResultDataMap,
 		Map<Company, String> companyError) {
 
 		List<String> out = new ArrayList<String>();
@@ -65,26 +67,26 @@ public class IndexCheckerUtil {
 			String aux = null;
 
 			aux = LanguageUtil.get(portletConfig, locale, "output.company");
-			header = IndexCheckerUtil.addCell(header, aux);
+			header = OutputUtils.addCell(header, aux);
 
 			if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 				aux = LanguageUtil.get(portletConfig, locale, "output.groupid");
-				header = IndexCheckerUtil.addCell(header, aux);
+				header = OutputUtils.addCell(header, aux);
 				aux = LanguageUtil.get(
 					portletConfig, locale, "output.groupname");
-				header = IndexCheckerUtil.addCell(header, aux);
+				header = OutputUtils.addCell(header, aux);
 			}
 
 			aux = LanguageUtil.get(portletConfig, locale, "output.entityclass");
-			header = IndexCheckerUtil.addCell(header, aux);
+			header = OutputUtils.addCell(header, aux);
 			aux = LanguageUtil.get(portletConfig, locale, "output.entityname");
-			header = IndexCheckerUtil.addCell(header, aux);
+			header = OutputUtils.addCell(header, aux);
 			aux = LanguageUtil.get(portletConfig, locale, "output.errortype");
-			header = IndexCheckerUtil.addCell(header, aux);
+			header = OutputUtils.addCell(header, aux);
 			aux = LanguageUtil.get(portletConfig, locale, "output.count");
-			header = IndexCheckerUtil.addCell(header, aux);
+			header = OutputUtils.addCell(header, aux);
 			aux = LanguageUtil.get(portletConfig, locale, "output.primarykeys");
-			header = IndexCheckerUtil.addCell(header, aux);
+			header = OutputUtils.addCell(header, aux);
 
 			out.add(header);
 		}
@@ -100,11 +102,11 @@ public class IndexCheckerUtil {
 				companyEntry.getKey().getWebId();
 
 			if (companyResultDataMap != null) {
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
+				Map<Long, List<Results>> resultDataMap =
 					companyResultDataMap.get(companyEntry.getKey());
 
 				for (
-					Map.Entry<Long, List<IndexCheckerResult>> entry :
+					Map.Entry<Long, List<Results>> entry :
 						resultDataMap.entrySet()) {
 
 					String groupIdOutput = null;
@@ -132,7 +134,7 @@ public class IndexCheckerUtil {
 						}
 					}
 
-					for (IndexCheckerResult result : entry.getValue()) {
+					for (Results result : entry.getValue()) {
 						for (String type : outputTypes) {
 							String line = generateLine(
 									portletConfig, result, companyOutput,
@@ -165,10 +167,10 @@ public class IndexCheckerUtil {
 		return out;
 	}
 
-	public static SearchContainer<IndexCheckerResult> generateSearchContainer(
+	public static SearchContainer<Results> generateSearchContainer(
 		PortletConfig portletConfig, RenderRequest renderRequest,
 		EnumSet<ExecutionMode> executionMode,
-		Map<Long, List<IndexCheckerResult>> resultDataMap,
+		Map<Long, List<Results>> resultDataMap,
 		PortletURL serverURL) throws SystemException {
 
 		Locale locale = renderRequest.getLocale();
@@ -195,13 +197,13 @@ public class IndexCheckerUtil {
 		aux = LanguageUtil.get(portletConfig, locale, "output.primarykeys");
 		headerNames.add(aux);
 
-		SearchContainer<IndexCheckerResult> searchContainer =
-			new SearchContainer<IndexCheckerResult>(
+		SearchContainer<Results> searchContainer =
+			new SearchContainer<Results>(
 				renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
 				SearchContainer.MAX_DELTA, serverURL, headerNames, null);
 
 		for (
-			Entry<Long, List<IndexCheckerResult>> entry :
+			Entry<Long, List<Results>> entry :
 				resultDataMap.entrySet()) {
 
 			String groupIdOutput = null;
@@ -223,7 +225,7 @@ public class IndexCheckerUtil {
 				}
 			}
 
-			List<IndexCheckerResult> results = entry.getValue();
+			List<Results> results = entry.getValue();
 
 			searchContainer.setTotal(results.size());
 
@@ -236,7 +238,7 @@ public class IndexCheckerUtil {
 
 			int j = 0;
 
-			for (IndexCheckerResult result : results) {
+			for (Results result : results) {
 				for (String type : outputTypes) {
 					ResultRow row = generateRow(
 						portletConfig, result, groupIdOutput, groupNameOutput,
@@ -277,16 +279,16 @@ public class IndexCheckerUtil {
 		return valuesPK;
 	}
 
-	static Log _log = LogFactoryUtil.getLog(IndexCheckerUtil.class);
+	static Log _log = LogFactoryUtil.getLog(OutputUtils.class);
 
 	public static String getValuesPKText(String type, Set<Data> data) {
 		String valuesPK = null;
 
 		if (type.contains("index")) {
-			valuesPK = Arrays.toString(IndexCheckerUtil.getListUid(data));
+			valuesPK = Arrays.toString(OutputUtils.getListUid(data));
 		}
 		else {
-			valuesPK = Arrays.toString(IndexCheckerUtil.getListPK(data));
+			valuesPK = Arrays.toString(OutputUtils.getListPK(data));
 		}
 
 		if (valuesPK.length() <= 1) {
@@ -332,9 +334,9 @@ public class IndexCheckerUtil {
 	}
 
 	protected static String generateLine(
-		PortletConfig portletConfig, IndexCheckerResult result,
-		String companyOutput, String groupIdOutput, String groupNameOutput,
-		String type, Locale locale) {
+		PortletConfig portletConfig, Results result, String companyOutput,
+		String groupIdOutput, String groupNameOutput, String type,
+		Locale locale) {
 
 		Set<Data> data = result.getData(type);
 
@@ -350,26 +352,25 @@ public class IndexCheckerUtil {
 		String valuesPK = getValuesPKText(type, data);
 
 		String line = StringPool.BLANK;
-		line = IndexCheckerUtil.addCell(line, companyOutput);
+		line = OutputUtils.addCell(line, companyOutput);
 
 		if (groupIdOutput != null) {
-			line = IndexCheckerUtil.addCell(line, groupIdOutput);
-			line = IndexCheckerUtil.addCell(line, groupNameOutput);
+			line = OutputUtils.addCell(line, groupIdOutput);
+			line = OutputUtils.addCell(line, groupNameOutput);
 		}
 
-		line = IndexCheckerUtil.addCell(line, modelOutput);
-		line = IndexCheckerUtil.addCell(line, modelDisplayNameOutput);
-		line = IndexCheckerUtil.addCell(
+		line = OutputUtils.addCell(line, modelOutput);
+		line = OutputUtils.addCell(line, modelDisplayNameOutput);
+		line = OutputUtils.addCell(
 			line, LanguageUtil.get(portletConfig, locale, "output." + type));
-		line = IndexCheckerUtil.addCell(line, "" + data.size());
-		line = IndexCheckerUtil.addCell(line, valuesPK);
+		line = OutputUtils.addCell(line, "" + data.size());
+		line = OutputUtils.addCell(line, valuesPK);
 		return line;
 	}
 
 	protected static ResultRow generateRow(
-		PortletConfig portletConfig, IndexCheckerResult result,
-		String groupIdOutput, String groupNameOutput, String type,
-		Locale locale, int j) {
+		PortletConfig portletConfig, Results result, String groupIdOutput,
+		String groupNameOutput, String type, Locale locale, int j) {
 
 		Set<Data> data = result.getData(type);
 

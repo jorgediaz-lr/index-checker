@@ -25,12 +25,12 @@
 
 			<%
 			if (companyResultDataMap != null) {
-				Map<Long, List<IndexCheckerResult>> resultDataMap =
+				Map<Long, List<Results>> resultDataMap =
 					companyResultDataMap.get(companyEntry.getKey());
 
 				PortletURL serverURL = renderResponse.createRenderURL();
 
-				SearchContainer searchContainer = IndexCheckerUtil.generateSearchContainer(portletConfig, renderRequest, executionMode, resultDataMap, serverURL);
+				SearchContainer searchContainer = OutputUtils.generateSearchContainer(portletConfig, renderRequest, executionMode, resultDataMap, serverURL);
 				%>
 
 				<liferay-ui:search-iterator paginate="false" searchContainer="<%= searchContainer %>" />
