@@ -31,11 +31,21 @@
 				PortletURL serverURL = renderResponse.createRenderURL();
 
 				SearchContainer searchContainer = OutputUtils.generateSearchContainer(portletConfig, renderRequest, executionMode, resultDataMap, serverURL);
+
+				if (searchContainer.getTotal() > 0) {
 				%>
 
 				<liferay-ui:search-iterator paginate="false" searchContainer="<%= searchContainer %>" />
 
 				<%
+				}
+				else {
+				%>
+
+				<b>No results found:</b> your system is ok or perhaps you have to change some filters<br /><br />
+
+				<%
+				}
 			}
 			String errorMessage = companyError.get(companyEntry.getKey());
 %>

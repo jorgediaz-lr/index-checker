@@ -105,6 +105,8 @@ public class OutputUtils {
 				Map<Long, List<Results>> resultDataMap =
 					companyResultDataMap.get(companyEntry.getKey());
 
+				int numberOfRows = 0;
+
 				for (
 					Map.Entry<Long, List<Results>> entry :
 						resultDataMap.entrySet()) {
@@ -142,10 +144,17 @@ public class OutputUtils {
 									locale);
 
 							if (line != null) {
+								numberOfRows++;
 								out.add(line);
 							}
 						}
 					}
+				}
+
+				if (numberOfRows == 0) {
+					out.add(StringPool.BLANK);
+					out.add("No results found: your system is ok or perhaps " +
+						"you have to change some filters");
 				}
 			}
 
@@ -158,8 +167,9 @@ public class OutputUtils {
 				out.add(errorMessage);
 			}
 
+			out.add(StringPool.BLANK);
 			out.add(
-				"\nExecuted " + title + " for company " +
+				"Executed " + title + " for company " +
 				companyEntry.getKey().getCompanyId() + " in " + processTime +
 				" ms");
 		}
