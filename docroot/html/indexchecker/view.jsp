@@ -53,10 +53,10 @@
 <%@ page import="jorgediazest.indexchecker.data.DataUtil" %>
 <%@ page import="jorgediazest.indexchecker.data.Results" %>
 <%@ page import="jorgediazest.indexchecker.model.IndexCheckerModel" %>
-<%@ page import="jorgediazest.indexchecker.output.OutputUtils" %>
+<%@ page import="jorgediazest.indexchecker.output.IndexCheckerOutput" %>
 <%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
-<%@ page import="jorgediazest.util.output.CommonOutputUtils" %>
+<%@ page import="jorgediazest.util.output.OutputUtils" %>
 
 <portlet:defineObjects />
 

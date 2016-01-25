@@ -46,12 +46,12 @@ import jorgediazest.indexchecker.data.DataUtil;
 import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 
-import jorgediazest.util.output.CommonOutputUtils;
+import jorgediazest.util.output.OutputUtils;
 
 /**
  * @author Jorge Díaz
  */
-public class OutputUtils {
+public class IndexCheckerOutput {
 
 	public static List<String> generateCSVOutput(
 		PortletConfig portletConfig, String title, Locale locale,
@@ -77,10 +77,10 @@ public class OutputUtils {
 					"output.errortype", "output.count", "output.primarykeys"};
 			}
 
-			List<String> headers = CommonOutputUtils.getHeaders(
+			List<String> headers = OutputUtils.getHeaders(
 				portletConfig, locale, headerKeys);
 
-			out.add(CommonOutputUtils.getCSVRow(headers));
+			out.add(OutputUtils.getCSVRow(headers));
 		}
 
 		for (
@@ -194,7 +194,7 @@ public class OutputUtils {
 				"output.count", "output.primarykeys"};
 		}
 
-		List<String> headerNames = CommonOutputUtils.getHeaders(
+		List<String> headerNames = OutputUtils.getHeaders(
 			portletConfig, locale, headerKeys);
 
 		SearchContainer<Results> searchContainer =
@@ -257,7 +257,7 @@ public class OutputUtils {
 		return searchContainer;
 	}
 
-	static Log _log = LogFactoryUtil.getLog(OutputUtils.class);
+	static Log _log = LogFactoryUtil.getLog(IndexCheckerOutput.class);
 
 	protected static String generateCSVRow(
 		PortletConfig portletConfig, Results result, String companyOutput,
@@ -290,7 +290,7 @@ public class OutputUtils {
 		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
 		line.add("" + data.size());
 		line.add(valuesPK);
-		return CommonOutputUtils.getCSVRow(line);
+		return OutputUtils.getCSVRow(line);
 	}
 
 	protected static ResultRow generateSearchContainerRow(
