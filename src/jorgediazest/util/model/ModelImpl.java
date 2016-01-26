@@ -66,6 +66,10 @@ public abstract class ModelImpl implements Model {
 		return model;
 	}
 
+	public int compareTo(Model o) {
+		return this.getClassName().compareTo(o.getClassName());
+	}
+
 	public Criterion generateCriterionFilter(String stringFilter) {
 
 		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();

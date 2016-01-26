@@ -27,7 +27,7 @@ import jorgediazest.util.service.Service;
 /**
  * @author Jorge Díaz
  */
-public interface Model extends Cloneable {
+public interface Model extends Cloneable, Comparable<Model> {
 
 	public Model clone();
 
