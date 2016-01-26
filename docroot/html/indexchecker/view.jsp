@@ -36,23 +36,16 @@
 <%@ page import="com.liferay.portal.kernel.util.ParamUtil" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.model.Company" %>
-<%@ page import="com.liferay.portal.model.Group" %>
-<%@ page import="com.liferay.portal.service.GroupLocalServiceUtil" %>
 
-<%@ page import="java.util.Arrays" %>
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Map.Entry" %>
-<%@ page import="java.util.Set" %>
 
 <%@ page import="javax.portlet.PortletURL" %>
 
 <%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
-<%@ page import="jorgediazest.indexchecker.data.Data" %>
-<%@ page import="jorgediazest.indexchecker.data.DataUtil" %>
 <%@ page import="jorgediazest.indexchecker.data.Results" %>
-<%@ page import="jorgediazest.indexchecker.model.IndexCheckerModel" %>
 <%@ page import="jorgediazest.indexchecker.output.IndexCheckerOutput" %>
 <%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
@@ -83,7 +76,6 @@
 	<aui:fieldset>
 		<aui:column>
 			<aui:select name="outputFormat">
-<%-- <aui:option value="HumanReadable"><liferay-ui:message key="output-format-human-readable" /></aui:option> --%>
 				<aui:option selected="true" value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
 				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
 			</aui:select>
@@ -145,13 +137,6 @@
 %>
 
 	<%@ include file="/html/indexchecker/output/result_csv.jspf" %>
-
-<%
-			}
-			else if (outputFormat.equals("HumanReadable")) {
-%>
-
-	<%@ include file="/html/indexchecker/output/result_human.jspf" %>
 
 <%
 			}
