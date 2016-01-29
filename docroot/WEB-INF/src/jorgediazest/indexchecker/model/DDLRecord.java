@@ -15,7 +15,7 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portlet.documentlibrary.model.DLFileVersion;
+import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
 
 import java.util.Map;
 
@@ -24,11 +24,11 @@ import jorgediazest.indexchecker.data.Data;
 /**
  * @author Jorge Díaz
  */
-public class DLFileEntry extends AbstractVersionedEntry {
+public class DDLRecord extends AbstractVersionedEntry {
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
 
-		return getLiferayData(filter, DLFileVersion.class.getName());
+		return getLiferayData(filter, DDLRecordVersion.class.getName());
 	}
 
 }
