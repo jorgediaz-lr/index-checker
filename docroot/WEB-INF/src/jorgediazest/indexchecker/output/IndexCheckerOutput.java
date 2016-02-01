@@ -229,6 +229,10 @@ public class IndexCheckerOutput {
 
 			List<Results> results = searchContainer.getResults();
 
+			if (results == null || results.size() == 0) {
+				results = new ArrayList<Results>();
+			}
+
 			results.addAll(entry.getValue());
 
 			results = ListUtil.subList(
@@ -238,7 +242,7 @@ public class IndexCheckerOutput {
 
 			List<ResultRow> resultRows = searchContainer.getResultRows();
 
-			for (Results result : results) {
+			for (Results result : entry.getValue()) {
 				for (String type : outputTypes) {
 					ResultRow row = generateSearchContainerRow(
 						portletConfig, result, groupIdOutput, groupNameOutput,
