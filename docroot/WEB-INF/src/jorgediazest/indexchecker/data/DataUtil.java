@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * @author Jorge Díaz
@@ -222,7 +223,9 @@ public class DataUtil {
 		catch (Exception e) {}
 
 		try {
-			return (Timestamp.valueOf(dateString).getTime())/1000;
+			long rawOffset = TimeZone.getDefault().getRawOffset() / 1000L;
+
+			return ((Timestamp.valueOf(dateString).getTime())/1000) + rawOffset;
 		}
 		catch (Exception e) {}
 
