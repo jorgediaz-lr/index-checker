@@ -229,7 +229,7 @@ public class IndexCheckerOutput {
 
 			List<Results> results = searchContainer.getResults();
 
-			if (results == null || results.size() == 0) {
+			if ((results == null) || (results.size() == 0)) {
 				results = new ArrayList<Results>();
 			}
 
