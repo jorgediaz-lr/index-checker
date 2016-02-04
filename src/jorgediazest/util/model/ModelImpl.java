@@ -140,7 +140,7 @@ public abstract class ModelImpl implements Model {
 	public Criterion generateInCriteria(String property, List<Long> list) {
 		int size = MAX_NUMBER_OF_CLAUSES;
 
-		if (list.size() > 0) {
+		if (list.size() <= size) {
 			return getProperty(property).in(list);
 		}
 
