@@ -36,6 +36,7 @@ import com.liferay.portal.util.PortalUtil;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -46,6 +47,9 @@ import jorgediazest.util.service.Service;
  * @author Jorge Díaz
  */
 public abstract class ModelImpl implements Model {
+
+	/* Oracle limitation */
+	public static final int MAX_NUMBER_OF_CLAUSES = 1000;
 
 	public Model clone() {
 		ModelImpl model;
@@ -131,6 +135,25 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return criterion;
+	}
+
+	public Criterion generateInCriteria(String property, List<Long> list) {
+		int size = MAX_NUMBER_OF_CLAUSES;
+
+		if (list.size() > 0) {
+			return getProperty(property).in(list);
+		}
+
+		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+		for (int i = 0; i<((list.size() + size - 1) / size); i++) {
+			int start = i * size;
+			int end = Math.min(start + size, list.size());
+			List<Long> listAux = list.subList(start, end);
+			disjunction.add(this.getProperty(property).in(listAux));
+		}
+
+		return disjunction;
 	}
 
 	public Criterion generateSingleCriterion(String filter) {
@@ -609,6 +632,8 @@ public abstract class ModelImpl implements Model {
 		return property;
 	}
 
+	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
+
 	protected Object[][] attributesArray = null;
 	protected String attributesString = null;
 	protected Class<?> classModelImpl = null;
@@ -644,9 +669,6 @@ public abstract class ModelImpl implements Model {
 
 	protected String[] primaryKeyMultiAttribute = null;
 	protected Service service = null;
-
 	protected String suffix = null;
-
-	static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
 }

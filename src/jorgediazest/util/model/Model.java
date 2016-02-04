@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.trash.TrashHandler;
 
+import java.util.List;
 import java.util.Locale;
 
 import jorgediazest.util.service.Service;
@@ -35,6 +36,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public Criterion generateCriterionFilter(String stringFilter);
 
 	public Criterion generateDisjunctionCriterion(String[] filters);
+
+	public Criterion generateInCriteria(String property, List<Long> list);
 
 	public Criterion generateSingleCriterion(String filter);
 
