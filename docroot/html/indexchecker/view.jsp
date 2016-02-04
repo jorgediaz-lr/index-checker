@@ -55,7 +55,7 @@
 
 <portlet:renderURL var="viewURL" />
 
-<portlet:actionURL name="executeScript" var="executeScriptURL" windowState="normal" />
+<portlet:actionURL name="executeCheck" var="executeCheckURL" windowState="normal" />
 <portlet:actionURL name="executeReindex" var="executeReindexURL" windowState="normal" />
 <portlet:actionURL name="executeRemoveOrphans" var="executeRemoveOrphansURL" windowState="normal" />
 
@@ -72,7 +72,7 @@
 	Map<Company, String> companyError = (Map<Company, String>) request.getAttribute("companyError");
 %>
 
-<aui:form action="<%= executeScriptURL %>" method="POST" name="fm">
+<aui:form action="<%= executeCheckURL %>" method="POST" name="fm">
 	<aui:fieldset>
 		<aui:column>
 			<aui:select name="outputFormat">

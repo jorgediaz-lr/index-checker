@@ -82,7 +82,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public static Map<Long, List<Results>>
-		executeScript(
+		executeCheck(
 			Company company, List<Long> groupIds, List<String> classNames,
 			Set<ExecutionMode> executionMode)
 		throws SystemException {
@@ -202,6 +202,89 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return _log;
 	}
 
+	public void executeCheck(ActionRequest request, ActionResponse response)
+		throws Exception {
+
+		PortalUtil.copyRequestParameters(request, response);
+
+		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
+
+		String[] filterClassNameArr = null;
+		String filterClassName = ParamUtil.getString(
+			request, "filterClassName");
+
+		if (Validator.isNotNull(filterClassName)) {
+			filterClassNameArr = filterClassName.split(",");
+		}
+
+		String[] filterGroupIdArr = null;
+		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+
+		if (Validator.isNotNull(filterGroupId)) {
+			filterGroupIdArr = filterGroupId.split(",");
+		}
+
+		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+		Map<Company, Map<Long, List<Results>>> companyResultDataMap =
+			new HashMap<Company, Map<Long, List<Results>>>();
+
+		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+
+		Map<Company, String> companyError = new HashMap<Company, String>();
+
+		for (Company company : companies) {
+			try {
+				ShardUtil.pushCompanyService(company.getCompanyId());
+
+				List<String> classNames = getClassNames(filterClassNameArr);
+
+				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
+
+				long startTime = System.currentTimeMillis();
+
+				Map<Long, List<Results>> resultDataMap =
+					IndexCheckerPortlet.executeCheck(
+						company, groupIds, classNames, executionMode);
+
+				long endTime = System.currentTimeMillis();
+
+				if (_log.isInfoEnabled() &&
+					executionMode.contains(
+							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
+
+					_log.info("COMPANY: " + company);
+
+					boolean groupBySite = executionMode.contains(
+						ExecutionMode.GROUP_BY_SITE);
+
+					Results.dumpToLog(groupBySite, resultDataMap);
+				}
+
+				companyResultDataMap.put(company, resultDataMap);
+
+				companyProcessTime.put(company, (endTime-startTime));
+			}
+			catch (Exception e) {
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				pw.println("Error during script execution: " + e.getMessage());
+				e.printStackTrace(pw);
+				companyError.put(company, sw.toString());
+				_log.error(e, e);
+			}
+			finally {
+				ShardUtil.popCompanyService();
+			}
+		}
+
+		request.setAttribute("title", "Check Index");
+		request.setAttribute("executionMode", executionMode);
+		request.setAttribute("companyProcessTime", companyProcessTime);
+		request.setAttribute("companyResultDataMap", companyResultDataMap);
+		request.setAttribute("companyError", companyError);
+	}
+
 	public void executeReindex(ActionRequest request, ActionResponse response)
 		throws Exception {
 
@@ -245,7 +328,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				long startTime = System.currentTimeMillis();
 
 				Map<Long, List<Results>> resultDataMap =
-					IndexCheckerPortlet.executeScript(
+					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode);
 
 				for (
@@ -338,7 +421,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				long startTime = System.currentTimeMillis();
 
 				Map<Long, List<Results>> resultDataMap =
-					IndexCheckerPortlet.executeScript(
+					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode);
 
 				for (
@@ -384,89 +467,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute("title", "Remove index orphan");
 		request.setAttribute("executionMode", executionMode);
 		request.setAttribute("companyProcessTime", companyProcessTime);
-		request.setAttribute("companyError", companyError);
-	}
-
-	public void executeScript(ActionRequest request, ActionResponse response)
-		throws Exception {
-
-		PortalUtil.copyRequestParameters(request, response);
-
-		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
-
-		String[] filterClassNameArr = null;
-		String filterClassName = ParamUtil.getString(
-			request, "filterClassName");
-
-		if (Validator.isNotNull(filterClassName)) {
-			filterClassNameArr = filterClassName.split(",");
-		}
-
-		String[] filterGroupIdArr = null;
-		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
-
-		if (Validator.isNotNull(filterGroupId)) {
-			filterGroupIdArr = filterGroupId.split(",");
-		}
-
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
-
-		Map<Company, Map<Long, List<Results>>> companyResultDataMap =
-			new HashMap<Company, Map<Long, List<Results>>>();
-
-		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
-
-		Map<Company, String> companyError = new HashMap<Company, String>();
-
-		for (Company company : companies) {
-			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
-				List<String> classNames = getClassNames(filterClassNameArr);
-
-				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
-
-				long startTime = System.currentTimeMillis();
-
-				Map<Long, List<Results>> resultDataMap =
-					IndexCheckerPortlet.executeScript(
-						company, groupIds, classNames, executionMode);
-
-				long endTime = System.currentTimeMillis();
-
-				if (_log.isInfoEnabled() &&
-					executionMode.contains(
-							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
-
-					_log.info("COMPANY: " + company);
-
-					boolean groupBySite = executionMode.contains(
-						ExecutionMode.GROUP_BY_SITE);
-
-					Results.dumpToLog(groupBySite, resultDataMap);
-				}
-
-				companyResultDataMap.put(company, resultDataMap);
-
-				companyProcessTime.put(company, (endTime-startTime));
-			}
-			catch (Exception e) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				pw.println("Error during script execution: " + e.getMessage());
-				e.printStackTrace(pw);
-				companyError.put(company, sw.toString());
-				_log.error(e, e);
-			}
-			finally {
-				ShardUtil.popCompanyService();
-			}
-		}
-
-		request.setAttribute("title", "Check Index");
-		request.setAttribute("executionMode", executionMode);
-		request.setAttribute("companyProcessTime", companyProcessTime);
-		request.setAttribute("companyResultDataMap", companyResultDataMap);
 		request.setAttribute("companyError", companyError);
 	}
 
