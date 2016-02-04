@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.trash.TrashHandler;
 
 import java.util.Locale;
 
@@ -80,6 +81,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public Service getService();
 
+	public TrashHandler getTrashHandler();
+
 	public boolean hasAttribute(String attribute);
 
 	public boolean hasAttributes(String[] attributes);
@@ -99,6 +102,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public boolean isResourcedModel();
 
 	public boolean isStagedModel();
+
+	public boolean isTrashEnabled();
 
 	public boolean isWorkflowEnabled();
 
