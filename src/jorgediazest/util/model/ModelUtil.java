@@ -184,7 +184,7 @@ public class ModelUtil {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Database attributes of " + classLiferayModelImpl.getClass() +
+				"Database attributes of " + classLiferayModelImpl.getName() +
 				": " + tableAttributes);
 		}
 
