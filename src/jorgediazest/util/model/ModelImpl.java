@@ -17,6 +17,7 @@ package jorgediazest.util.model;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
@@ -74,6 +75,33 @@ public abstract class ModelImpl implements Model {
 
 	public int compareTo(Model o) {
 		return this.getClassName().compareTo(o.getClassName());
+	}
+
+	public long count() {
+		return count(null);
+	}
+
+	public long count(Criterion condition) {
+		DynamicQuery dynamicQuery = this.getService().newDynamicQuery();
+		dynamicQuery.setProjection(ProjectionFactoryUtil.rowCount());
+
+		if (condition != null) {
+			dynamicQuery.add(condition);
+		}
+
+		try {
+			List<?> list = this.getService().executeDynamicQuery(dynamicQuery);
+
+			if (list != null) {
+				return (Long)list.get(0);
+			}
+		}
+		catch (Exception e) {
+			_log.error("Error executing count");
+			throw new RuntimeException(e);
+		}
+
+		return -1;
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {

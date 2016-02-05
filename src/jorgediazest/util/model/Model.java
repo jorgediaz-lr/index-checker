@@ -33,6 +33,10 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public Model clone();
 
+	public long count();
+
+	public long count(Criterion condition);
+
 	public Criterion generateCriterionFilter(String stringFilter);
 
 	public Criterion generateDisjunctionCriterion(String[] filters);
