@@ -23,9 +23,9 @@ public class MBMessage extends IndexCheckerModel {
 
 	@Override
 	public Criterion generateQueryFilter() {
-
-		return this.generateCriterionFilter(
-			"categoryId<>-1+parentMessageId<>0");
+		return IndexCheckerModel.generateConjunctionQueryFilter(
+			super.generateQueryFilter(),
+			this.generateCriterionFilter("categoryId<>-1+parentMessageId<>0"));
 	}
 
 }

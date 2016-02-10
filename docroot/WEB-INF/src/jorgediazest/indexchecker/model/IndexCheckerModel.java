@@ -445,6 +445,19 @@ public class IndexCheckerModel extends ModelImpl {
 		return toString;
 	}
 
+	protected static Criterion generateConjunctionQueryFilter(
+		Criterion criterion1, Criterion criterion2) {
+
+		if (criterion1 == null) {
+			return criterion2;
+		}
+
+		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+		conjuntion.add(criterion1);
+		conjuntion.add(criterion2);
+		return conjuntion;
+	}
+
 	protected void addIndexedAttribute(String col) {
 		if (!liferayIndexedAttributes.contains(col)) {
 			liferayIndexedAttributes.add(col);

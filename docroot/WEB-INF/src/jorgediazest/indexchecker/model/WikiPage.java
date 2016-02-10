@@ -23,7 +23,9 @@ public class WikiPage extends IndexCheckerModel {
 
 	@Override
 	public Criterion generateQueryFilter() {
-		return this.generateCriterionFilter("head=true,redirectTitle=");
+		return IndexCheckerModel.generateConjunctionQueryFilter(
+			super.generateQueryFilter(),
+			this.generateCriterionFilter("head=true,redirectTitle="));
 	}
 
 }
