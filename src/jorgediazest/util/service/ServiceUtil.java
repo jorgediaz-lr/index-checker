@@ -85,7 +85,7 @@ public class ServiceUtil {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"loaded class: " + clazz + " from classloader :" + classloader);
+				"loaded class: " + clazz + " from classloader: " + classloader);
 		}
 
 		return clazz;
