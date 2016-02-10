@@ -37,12 +37,14 @@ public class IndexSearchUtil {
 			int step)
 		throws Exception, SearchException {
 
+		searchContext.setStart(0);
+
 		for (int i = 0;; i++) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("SetIndexSearchLimit: " + (start + step*i));
+				_log.debug("searchContext.setEnd: " + (start + step*i));
 			}
 
-			setIndexSearchLimit(start + step*i);
+			searchContext.setEnd(start + step*i);
 
 			if (_log.isDebugEnabled()) {
 				_log.debug("Executing search: " + contextQuery);
@@ -75,6 +77,10 @@ public class IndexSearchUtil {
 
 	public static void setIndexSearchLimit(int indexSearchLimit)
 		throws Exception {
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("SetIndexSearchLimit: " + indexSearchLimit);
+		}
 
 		Class<?> propsValues =
 			PortalClassLoaderUtil.getClassLoader().loadClass(

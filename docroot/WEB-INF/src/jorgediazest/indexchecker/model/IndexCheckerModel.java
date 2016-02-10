@@ -273,6 +273,8 @@ public class IndexCheckerModel extends ModelImpl {
 		try {
 			indexSearchLimit = IndexSearchUtil.getIndexSearchLimit();
 
+			IndexSearchUtil.setIndexSearchLimit(Integer.MAX_VALUE);
+
 			Document[] docs = IndexSearchUtil.executeSearch(
 				searchContext, contextQuery, 50000, 200000);
 
