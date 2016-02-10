@@ -44,9 +44,17 @@ public class IndexSearchUtil {
 
 			setIndexSearchLimit(start + step*i);
 
+			if (_log.isDebugEnabled()) {
+				_log.debug("Executing search: " + contextQuery);
+			}
+
 			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
 
 			Document[] docs = hits.getDocs();
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(docs.length + " hits returned");
+			}
 
 			if (docs.length < (start + step*i)) {
 				return docs;

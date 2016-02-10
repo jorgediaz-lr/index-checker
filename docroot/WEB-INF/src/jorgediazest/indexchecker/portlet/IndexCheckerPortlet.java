@@ -113,34 +113,40 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		for (long groupId : groupIdsFor) {
 			List<Results> resultList = new ArrayList<Results>();
 
-			for (IndexCheckerModel icModel : modelList) {
+			for (IndexCheckerModel model : modelList) {
 				try {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							"Model: " + model.getName() + " - GroupId: " +
+							groupId);
+					}
+
 					if ((groupId == 0L) &&
-						icModel.hasAttribute("groupId") &&
+						model.hasAttribute("groupId") &&
 						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
 						continue;
 					}
 
 					if ((groupId != 0L) &&
-						!icModel.hasAttribute("groupId") &&
+						!model.hasAttribute("groupId") &&
 						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
 
 						continue;
 					}
 
-					Criterion filter = icModel.getCompanyGroupFilter(
+					Criterion filter = model.getCompanyGroupFilter(
 						companyId, groupId);
 
 					Set<Data> liferayData = new HashSet<Data>(
-						icModel.getLiferayData(filter).values());
+						model.getLiferayData(filter).values());
 
 					Set<Data> indexData;
 
 					if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
 						!liferayData.isEmpty()) {
 
-						indexData = icModel.getIndexData(companyId, groupId);
+						indexData = model.getIndexData(companyId, groupId);
 					}
 					else {
 						indexData = new HashSet<Data>();
@@ -148,13 +154,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 					Results result =
 						Results.getIndexCheckResult(
-							icModel, liferayData, indexData, executionMode);
+							model, liferayData, indexData, executionMode);
 
 					resultList.add(result);
 				}
 				catch (Exception e) {
 					_log.error(
-						"Model: " + icModel.getName() + " EXCEPTION: " +
+						"Model: " + model.getName() + " EXCEPTION: " +
 							e.getClass() + " - " + e.getMessage(),e);
 				}
 			}
