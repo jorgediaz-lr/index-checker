@@ -141,7 +141,6 @@ public class JournalArticle extends IndexCheckerModel {
 
 	@Override
 	public Criterion generateQueryFilter() {
-
 		return this.generateCriterionFilter("classNameId=0,indexable=true");
 	}
 
