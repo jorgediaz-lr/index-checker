@@ -15,6 +15,7 @@
 package jorgediazest.util.reflection;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -22,6 +23,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import java.sql.Types;
@@ -251,6 +253,35 @@ public class ReflectionUtil {
 		}
 
 		return data;
+	}
+
+	public static String getWrappedCriterionString(Criterion criterion) {
+
+		return getWrappedString(criterion, "getWrappedCriterion");
+	}
+
+	public static String getWrappedDynamicQueryString(
+		DynamicQuery dynamicQuery) {
+
+		return getWrappedString(dynamicQuery, "getDetachedCriteria");
+	}
+
+	public static String getWrappedString(Object object, String methodName) {
+		if (object == null) {
+			return null;
+		}
+
+		try {
+			Method method = object.getClass().getMethod(methodName);
+
+			if (method != null) {
+				return method.invoke(object).toString();
+			}
+		}
+		catch (Throwable t) {
+		}
+
+		return object.toString();
 	}
 
 	public static void makeFieldModifiable(Field nameField)

@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
@@ -115,10 +116,19 @@ public class ServiceImpl implements Service {
 
 		if (filter != null) {
 			dynamicQuery.add(filter);
+		}
 
-			if (_log.isDebugEnabled()) {
-				_log.debug("adding custom filter: " + filter);
+		if (_log.isDebugEnabled()) {
+			if (filter != null) {
+				String filterString = ReflectionUtil.getWrappedCriterionString(
+					filter);
+				_log.debug("added filter: " + filterString);
 			}
+
+			String filterDynamicQuery =
+				ReflectionUtil.getWrappedDynamicQueryString(dynamicQuery);
+
+			_log.debug("executing dynamicQuery: " + filterDynamicQuery);
 		}
 
 		return (List<?>)executeServiceMethod(
