@@ -141,7 +141,7 @@ public class JournalArticle extends IndexCheckerModel {
 
 	@Override
 	public Criterion generateQueryFilter() {
-		return this.generateCriterionFilter("classNameId=0,indexable=true");
+		return this.generateCriterionFilter("classNameId=0");
 	}
 
 	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
