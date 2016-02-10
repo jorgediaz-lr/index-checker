@@ -115,8 +115,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			for (IndexCheckerModel model : modelList) {
 				try {
-					if (_log.isDebugEnabled()) {
-						_log.debug(
+					if (_log.isInfoEnabled()) {
+						_log.info(
 							"Model: " + model.getName() + " - GroupId: " +
 							groupId);
 					}
