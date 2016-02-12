@@ -252,7 +252,8 @@ public class IndexCheckerModel extends ModelImpl {
 		return indexAttributes;
 	}
 
-	public Set<Data> getIndexData(long companyId, long groupId) {
+	public Set<Data> getIndexData(long companyId, long groupId)
+		throws SearchException {
 
 		Set<Data> indexData = new HashSet<Data>();
 		SearchContext searchContext = new SearchContext();
@@ -268,39 +269,16 @@ public class IndexCheckerModel extends ModelImpl {
 			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
 		}
 
-		int indexSearchLimit = -1;
+		int size = Math.max((int)this.count() * 2, 50000);
 
-		try {
-			indexSearchLimit = IndexSearchUtil.getIndexSearchLimit();
+		Document[] docs = IndexSearchUtil.executeSearch(
+			searchContext, contextQuery, size, 50000);
 
-			IndexSearchUtil.setIndexSearchLimit(Integer.MAX_VALUE);
+		if (docs != null) {
+			for (int i = 0; i < docs.length; i++) {
+				Data data = this.createDataObject(docs[i]);
 
-			Document[] docs = IndexSearchUtil.executeSearch(
-				searchContext, contextQuery, 50000, 200000);
-
-			if (docs != null) {
-				for (int i = 0; i < docs.length; i++) {
-					Data data = this.createDataObject(docs[i]);
-
-					indexData.add(data);
-				}
-			}
-		}
-		catch (Exception e) {
-			_log.error("EXCEPTION: " + e.getClass() + " - " + e.getMessage(),e);
-		}
-		finally {
-			if (indexSearchLimit != -1) {
-				try {
-					IndexSearchUtil.setIndexSearchLimit(indexSearchLimit);
-				}
-				catch (Exception e) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Error restoring INDEX_SEARCH_LIMIT: " +
-								e.getMessage(), e);
-					}
-				}
+				indexData.add(data);
 			}
 		}
 

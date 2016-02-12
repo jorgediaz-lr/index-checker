@@ -45,10 +45,12 @@ import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletException;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.Data;
 import jorgediazest.indexchecker.data.Results;
+import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 
@@ -97,6 +99,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			IndexCheckerModel icModel = castModel(model);
 			modelList.add(icModel);
 		}
+
+		IndexSearchUtil.autoAdjustIndexSearchLimit(modelList);
 
 		Map<Long, List<Results>> resultDataMap =
 			new LinkedHashMap<Long, List<Results>>();
@@ -477,6 +481,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute("companyError", companyError);
 	}
 
+	public List<String> getClassNames() throws SystemException {
+		return getClassNames(null);
+	}
+
 	public List<String> getClassNames(String[] filterClassNameArr)
 		throws SystemException {
 
@@ -534,6 +542,30 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return groupIds;
+	}
+
+	public void init() throws PortletException {
+		super.init();
+
+		try {
+			ModelFactory modelFactory = new IndexCheckerModelFactory();
+
+			Map<String, Model> modelMap = modelFactory.getModelMap(
+				getClassNames());
+
+			List<IndexCheckerModel> modelList =
+				new ArrayList<IndexCheckerModel>();
+
+			for (Model model : modelMap.values()) {
+				IndexCheckerModel icModel = castModel(model);
+				modelList.add(icModel);
+			}
+
+			IndexSearchUtil.autoAdjustIndexSearchLimit(modelList);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+		}
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
