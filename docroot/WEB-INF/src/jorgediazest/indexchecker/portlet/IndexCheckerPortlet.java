@@ -117,8 +117,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				try {
 					if (_log.isInfoEnabled()) {
 						_log.info(
-							"Model: " + model.getName() + " - GroupId: " +
-							groupId);
+							"Model: " + model.getName() + " - CompanyId: " +
+								company.getCompanyId() + " - GroupId: " +
+									groupId);
 					}
 
 					if ((groupId == 0L) &&
