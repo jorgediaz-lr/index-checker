@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 
 import java.sql.Types;
 
@@ -32,6 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jorgediazest.util.model.Model;
+
+import sun.misc.Unsafe;
 
 /**
  * @author Jorge Díaz
@@ -255,6 +256,15 @@ public class ReflectionUtil {
 		return data;
 	}
 
+	public static sun.misc.Unsafe getUnsafe()
+		throws IllegalAccessException, IllegalArgumentException,
+		NoSuchFieldException, SecurityException {
+
+		Field field = Unsafe.class.getDeclaredField("theUnsafe");
+		field.setAccessible(true);
+		return (Unsafe)field.get(null);
+	}
+
 	public static String getWrappedCriterionString(Criterion criterion) {
 
 		return getWrappedString(criterion, "getWrappedCriterion");
@@ -284,25 +294,40 @@ public class ReflectionUtil {
 		return object.toString();
 	}
 
-	public static void makeFieldModifiable(Field nameField)
-		throws NoSuchFieldException, SecurityException,
-			IllegalArgumentException, IllegalAccessException {
-
-		nameField.setAccessible(true);
-		int modifiers = nameField.getModifiers();
-		Field modifierField =
-			nameField.getClass().getDeclaredField("modifiers");
-		modifiers = modifiers & ~Modifier.FINAL;
-		modifierField.setAccessible(true);
-		modifierField.setInt(nameField, modifiers);
-	}
-
-	public static void setFieldValue(Object owner, Field field, Object value)
+	public static void updateStaticFinal(Field field, Object value)
 		throws IllegalArgumentException, IllegalAccessException,
 			NoSuchFieldException, SecurityException {
 
-		makeFieldModifiable(field);
-		field.set(owner, value);
+		/* see:
+		 * http://java-performance.info/updating-final-and-static-final-fields/
+		 */
+
+		Unsafe unsafe = getUnsafe();
+
+		//this is a 'base'. Usually a Class object will be returned here.
+		Object base = unsafe.staticFieldBase(field);
+		//this is an 'offset'
+		long offset = unsafe.staticFieldOffset(field);
+		//actual update
+		unsafe.putObject(base, offset, value);
+	}
+
+	public static void updateStaticFinalInt(Field field, int value)
+		throws IllegalArgumentException, IllegalAccessException,
+			NoSuchFieldException, SecurityException {
+
+		/* see:
+		 * http://java-performance.info/updating-final-and-static-final-fields/
+		 */
+
+		Unsafe unsafe = getUnsafe();
+
+		//this is a 'base'. Usually a Class object will be returned here.
+		Object base = unsafe.staticFieldBase(field);
+		//this is an 'offset'
+		long offset = unsafe.staticFieldOffset(field);
+		//actual update
+		unsafe.putInt( base, offset, value);
 	}
 
 	static Log _log = LogFactoryUtil.getLog(ReflectionUtil.class);
