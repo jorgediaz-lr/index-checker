@@ -14,7 +14,6 @@
 
 package jorgediazest.indexchecker.portlet;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -32,11 +31,9 @@ import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +53,6 @@ import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
-
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
@@ -163,61 +159,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		executor.shutdownNow();
 
 		return resultDataMap;
-	}
-
-	public static Results executeCheckGroupAndModel(
-		long companyId, long groupId, IndexCheckerModel model,
-		Set<ExecutionMode> executionMode) {
-
-		Results result = null;
-
-		try {
-			if (_log.isInfoEnabled()) {
-				_log.info(
-					"Model: " + model.getName() + " - CompanyId: " +
-						companyId + " - GroupId: " + groupId);
-			}
-
-			if ((groupId == 0L) &&
-				model.hasAttribute("groupId") &&
-				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-				return null;
-			}
-
-			if ((groupId != 0L) &&
-				!model.hasAttribute("groupId") &&
-				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-				return null;
-			}
-
-			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
-
-			Set<Data> liferayData = new HashSet<Data>(
-				model.getLiferayData(filter).values());
-
-			Set<Data> indexData;
-
-			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-				!liferayData.isEmpty()) {
-
-				indexData = model.getIndexData(companyId, groupId);
-			}
-			else {
-				indexData = new HashSet<Data>();
-			}
-
-			result = Results.getIndexCheckResult(
-					model, liferayData, indexData, executionMode);
-		}
-		catch (Exception e) {
-			_log.error(
-				"Model: " + model.getName() + " EXCEPTION: " +
-					e.getClass() + " - " + e.getMessage(),e);
-		}
-
-		return result;
 	}
 
 	public static EnumSet<ExecutionMode> getExecutionMode(
