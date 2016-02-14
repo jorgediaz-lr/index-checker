@@ -95,8 +95,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		List<IndexCheckerModel> modelList = new ArrayList<IndexCheckerModel>();
 
 		for (Model model : modelMap.values()) {
-			IndexCheckerModel icModel = castModel(model);
-			modelList.add(icModel);
+			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
+				(model.count()>0)) {
+
+				modelList.add(castModel(model));
+			}
 		}
 
 		IndexSearchUtil.autoAdjustIndexSearchLimit(modelList);
