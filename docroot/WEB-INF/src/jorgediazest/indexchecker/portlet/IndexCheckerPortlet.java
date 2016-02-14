@@ -42,6 +42,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -102,9 +105,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		IndexSearchUtil.autoAdjustIndexSearchLimit(modelList);
 
-		Map<Long, List<Results>> resultDataMap =
-			new LinkedHashMap<Long, List<Results>>();
-
 		long companyId = company.getCompanyId();
 
 		List<Long> groupIdsFor = new ArrayList<Long>();
@@ -114,66 +114,110 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			groupIdsFor.addAll(groupIds);
 		}
 
+		ExecutorService executor = Executors.newFixedThreadPool(100);
+
+		Map<Long, List<Future<Results>>> futureResultDataMap =
+			new LinkedHashMap<Long, List<Future<Results>>>();
+
 		for (long groupId : groupIdsFor) {
-			List<Results> resultList = new ArrayList<Results>();
+			List<Future<Results>> futureResultList =
+				new ArrayList<Future<Results>>();
 
 			for (IndexCheckerModel model : modelList) {
+				CallableCheckGroupAndModel c =
+					new CallableCheckGroupAndModel(
+						companyId, groupId, model, executionMode);
+
+				futureResultList.add(executor.submit(c));
+			}
+
+			futureResultDataMap.put(groupId, futureResultList);
+		}
+
+		Map<Long, List<Results>> resultDataMap =
+			new LinkedHashMap<Long, List<Results>>();
+
+		for (
+			Entry<Long, List<Future<Results>>> entry :
+				futureResultDataMap.entrySet()) {
+
+			List<Results> resultList = new ArrayList<Results>();
+
+			for (Future<Results> f : entry.getValue()) {
+				Results results = null;
 				try {
-					if (_log.isInfoEnabled()) {
-						_log.info(
-							"Model: " + model.getName() + " - CompanyId: " +
-								company.getCompanyId() + " - GroupId: " +
-									groupId);
-					}
-
-					if ((groupId == 0L) &&
-						model.hasAttribute("groupId") &&
-						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-						continue;
-					}
-
-					if ((groupId != 0L) &&
-						!model.hasAttribute("groupId") &&
-						executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-						continue;
-					}
-
-					Criterion filter = model.getCompanyGroupFilter(
-						companyId, groupId);
-
-					Set<Data> liferayData = new HashSet<Data>(
-						model.getLiferayData(filter).values());
-
-					Set<Data> indexData;
-
-					if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-						!liferayData.isEmpty()) {
-
-						indexData = model.getIndexData(companyId, groupId);
-					}
-					else {
-						indexData = new HashSet<Data>();
-					}
-
-					Results result =
-						Results.getIndexCheckResult(
-							model, liferayData, indexData, executionMode);
-
-					resultList.add(result);
+					results = f.get();
 				}
 				catch (Exception e) {
-					_log.error(
-						"Model: " + model.getName() + " EXCEPTION: " +
-							e.getClass() + " - " + e.getMessage(),e);
+					_log.error(e, e);
+				}
+
+				if (results != null) {
+					resultList.add(results);
 				}
 			}
 
-			resultDataMap.put(groupId, resultList);
+			resultDataMap.put(entry.getKey(), resultList);
 		}
 
+		executor.shutdownNow();
+
 		return resultDataMap;
+	}
+
+	public static Results executeCheckGroupAndModel(
+		long companyId, long groupId, IndexCheckerModel model,
+		Set<ExecutionMode> executionMode) {
+
+		Results result = null;
+
+		try {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Model: " + model.getName() + " - CompanyId: " +
+						companyId + " - GroupId: " + groupId);
+			}
+
+			if ((groupId == 0L) &&
+				model.hasAttribute("groupId") &&
+				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+				return null;
+			}
+
+			if ((groupId != 0L) &&
+				!model.hasAttribute("groupId") &&
+				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+
+				return null;
+			}
+
+			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
+
+			Set<Data> liferayData = new HashSet<Data>(
+				model.getLiferayData(filter).values());
+
+			Set<Data> indexData;
+
+			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
+				!liferayData.isEmpty()) {
+
+				indexData = model.getIndexData(companyId, groupId);
+			}
+			else {
+				indexData = new HashSet<Data>();
+			}
+
+			result = Results.getIndexCheckResult(
+					model, liferayData, indexData, executionMode);
+		}
+		catch (Exception e) {
+			_log.error(
+				"Model: " + model.getName() + " EXCEPTION: " +
+					e.getClass() + " - " + e.getMessage(),e);
+		}
+
+		return result;
 	}
 
 	public static EnumSet<ExecutionMode> getExecutionMode(
