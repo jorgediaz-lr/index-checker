@@ -31,6 +31,7 @@ import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -53,6 +55,7 @@ import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
+
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
@@ -65,9 +68,8 @@ import jorgediazest.util.model.ModelUtil;
 public class IndexCheckerPortlet extends MVCPortlet {
 
 	public static IndexCheckerModel castModel(Model model) {
-		IndexCheckerModel icModel;
 		try {
-			icModel = (IndexCheckerModel)model;
+			return (IndexCheckerModel)model;
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -76,17 +78,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						e.getClass() + " - " + e.getMessage(), e);
 			}
 
-			icModel = null;
+			return null;
 		}
-
-		return icModel;
 	}
 
 	public static Map<Long, List<Results>>
 		executeCheck(
 			Company company, List<Long> groupIds, List<String> classNames,
-			Set<ExecutionMode> executionMode)
-		throws SystemException {
+			Set<ExecutionMode> executionMode, int threadsExecutor)
+		throws ExecutionException, InterruptedException {
 
 		ModelFactory modelFactory = new IndexCheckerModelFactory();
 
@@ -96,7 +96,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		for (Model model : modelMap.values()) {
 			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-				(model.count()>0)) {
+				model.count()>0) {
 
 				modelList.add(castModel(model));
 			}
@@ -113,7 +113,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			groupIdsFor.addAll(groupIds);
 		}
 
-		ExecutorService executor = Executors.newFixedThreadPool(100);
+		ExecutorService executor = Executors.newFixedThreadPool(
+			threadsExecutor);
 
 		Map<Long, List<Future<Results>>> futureResultDataMap =
 			new LinkedHashMap<Long, List<Future<Results>>>();
@@ -143,13 +144,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			List<Results> resultList = new ArrayList<Results>();
 
 			for (Future<Results> f : entry.getValue()) {
-				Results results = null;
-				try {
-					results = f.get();
-				}
-				catch (Exception e) {
-					_log.error(e, e);
-				}
+				Results results = f.get();
 
 				if (results != null) {
 					resultList.add(results);
@@ -242,9 +237,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
+				int threadsExecutor = 100;
+
 				Map<Long, List<Results>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, executionMode);
+						company, groupIds, classNames, executionMode,
+						threadsExecutor);
 
 				long endTime = System.currentTimeMillis();
 
@@ -267,7 +265,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			catch (Exception e) {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
-				pw.println("Error during script execution: " + e.getMessage());
+				pw.println("Error during execution: " + e.getMessage());
 				e.printStackTrace(pw);
 				companyError.put(company, sw.toString());
 				_log.error(e, e);
@@ -326,9 +324,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
+				int threadsExecutor = 100;
+
 				Map<Long, List<Results>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, executionMode);
+						company, groupIds, classNames, executionMode,
+						threadsExecutor);
 
 				for (
 					Entry<Long, List<Results>> entry :
@@ -339,7 +340,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					for (Results result : resultList) {
 						Map<Data, String> errors = result.reindex();
 /* TODO Mover todo esto al JSP */
-						if ((errors!= null) && (errors.size() > 0)) {
+						if (((errors!= null) && (errors.size() > 0)) ||
+							(result.getError() != null)) {
+
 							pw.println();
 							pw.println("----");
 							pw.println(result.getModel().getName());
@@ -350,6 +353,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 									" * " + e.getKey() + " - Exception: " +
 										e.getValue());
 							}
+
+							pw.println(" * " + result.getError());
 						}
 					}
 				}
@@ -359,7 +364,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyProcessTime.put(company, endTime-startTime);
 			}
 			catch (Exception e) {
-				pw.println("Error during script execution: " + e.getMessage());
+				pw.println("Error during execution: " + e.getMessage());
 				e.printStackTrace(pw);
 				_log.error(e, e);
 			}
@@ -419,9 +424,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
+				int threadsExecutor = 100;
+
 				Map<Long, List<Results>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, executionMode);
+						company, groupIds, classNames, executionMode,
+						threadsExecutor);
 
 				for (
 					Entry<Long, List<Results>> entry :
@@ -431,8 +439,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 					for (Results result : resultList) {
 						Map<Data, String> errors = result.removeIndexOrphans();
-/* TODO Mover todo esto al JSP */
-						if ((errors!= null) && (errors.size() > 0)) {
+						/* TODO Mover todo esto al JSP */
+						if (((errors!= null) && (errors.size() > 0)) ||
+							(result.getError() != null)) {
+
 							pw.println();
 							pw.println("----");
 							pw.println(result.getModel().getName());
@@ -443,6 +453,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 									" * " + e.getKey() + " - Exception: " +
 										e.getValue());
 							}
+
+							pw.println(" * " + result.getError());
 						}
 					}
 				}
@@ -452,7 +464,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyProcessTime.put(company, endTime-startTime);
 			}
 			catch (Exception e) {
-				pw.println("Error during script execution: " + e.getMessage());
+				pw.println("Error during execution: " + e.getMessage());
 				e.printStackTrace(pw);
 				_log.error(e, e);
 			}

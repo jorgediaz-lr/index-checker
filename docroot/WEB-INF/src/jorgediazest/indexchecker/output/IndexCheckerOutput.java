@@ -131,6 +131,16 @@ public class IndexCheckerOutput {
 					}
 
 					for (Results result : entry.getValue()) {
+						String lineError = generateCSVRow(
+							portletConfig, result, companyOutput, groupIdOutput,
+							groupNameOutput, "error", locale, result.getError(),
+							"");
+
+						if (lineError != null) {
+							numberOfRows++;
+							out.add(lineError);
+						}
+
 						for (String type : outputTypes) {
 							String line = generateCSVRow(
 									portletConfig, result, companyOutput,
@@ -243,6 +253,15 @@ public class IndexCheckerOutput {
 			List<ResultRow> resultRows = searchContainer.getResultRows();
 
 			for (Results result : entry.getValue()) {
+				ResultRow rowError = generateSearchContainerRow(
+					portletConfig, result, groupIdOutput, groupNameOutput,
+					"error", locale, numberOfRows, result.getError(), "");
+
+				if (rowError != null) {
+					numberOfRows++;
+					resultRows.add(rowError);
+				}
+
 				for (String type : outputTypes) {
 					ResultRow row = generateSearchContainerRow(
 						portletConfig, result, groupIdOutput, groupNameOutput,
@@ -274,12 +293,27 @@ public class IndexCheckerOutput {
 			return null;
 		}
 
+		String output = DataUtil.getValuesPKText(type, data);
+		String outputSize = "" + data.size();
+
+		return generateCSVRow(
+			portletConfig, result, companyOutput, groupIdOutput,
+			groupNameOutput, type, locale, output, outputSize);
+	}
+
+	protected static String generateCSVRow(
+		PortletConfig portletConfig, Results result, String companyOutput,
+		String groupIdOutput, String groupNameOutput, String type,
+		Locale locale, String output, String outputSize) {
+
+		if (Validator.isNull(output)) {
+			return null;
+		}
+
 		IndexCheckerModel model = result.getModel();
 
 		String modelOutput = model.getName();
 		String modelDisplayNameOutput = model.getDisplayName(locale);
-
-		String valuesPK = DataUtil.getValuesPKText(type, data);
 
 		List<String> line = new ArrayList<String>();
 		line.add(companyOutput);
@@ -292,8 +326,8 @@ public class IndexCheckerOutput {
 		line.add(modelOutput);
 		line.add(modelDisplayNameOutput);
 		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
-		line.add("" + data.size());
-		line.add(valuesPK);
+		line.add(outputSize);
+		line.add(output);
 		return OutputUtils.getCSVRow(line);
 	}
 
@@ -307,7 +341,22 @@ public class IndexCheckerOutput {
 			return null;
 		}
 
-		String valuesPK = DataUtil.getValuesPKText(type, data);
+		String output = DataUtil.getValuesPKText(type, data);
+		String outputSize = ""+data.size();
+
+		return generateSearchContainerRow(
+			portletConfig, result, groupIdOutput, groupNameOutput, type, locale,
+			numberOfRows, output, outputSize);
+	}
+
+	protected static ResultRow generateSearchContainerRow(
+		PortletConfig portletConfig, Results result, String groupIdOutput,
+		String groupNameOutput, String type, Locale locale, int numberOfRows,
+		String output, String outputSize) {
+
+		if (Validator.isNull(output)) {
+			return null;
+		}
 
 		ResultRow row = new ResultRow(result, type, numberOfRows);
 		IndexCheckerModel model = result.getModel();
@@ -327,8 +376,8 @@ public class IndexCheckerOutput {
 				LanguageUtil.get(
 					portletConfig, locale, "output." + type)).replace(
 						" ", "&nbsp;"));
-		row.addText(HtmlUtil.escape(""+data.size()));
-		row.addText(HtmlUtil.escape(valuesPK));
+		row.addText(HtmlUtil.escape(outputSize));
+		row.addText(HtmlUtil.escape(output));
 		return row;
 	}
 

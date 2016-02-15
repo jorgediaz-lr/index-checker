@@ -69,6 +69,14 @@ public class Results {
 		}
 	}
 
+	public static Results getError(IndexCheckerModel model, Exception e) {
+		_log.error(
+			"Model: " + model.getName() + " EXCEPTION: " +
+				e.getClass() + " - " + e.getMessage(),e);
+
+		return new Results(model, e.getClass() + " - " + e.getMessage());
+	}
+
 	public static Results getIndexCheckResult(
 		IndexCheckerModel model, Set<Data> liferayData, Set<Data> indexData,
 		Set<ExecutionMode> executionMode) {
@@ -163,6 +171,10 @@ public class Results {
 		return data.get(type);
 	}
 
+	public String getError() {
+		return error;
+	}
+
 	public IndexCheckerModel getModel() {
 		return model;
 	}
@@ -204,12 +216,20 @@ public class Results {
 
 	protected Results(IndexCheckerModel model, Map<String, Set<Data>> data) {
 		this.data = data;
+		this.error = null;
+		this.model = model;
+	}
+
+	protected Results(IndexCheckerModel model, String error) {
+		this.data = new HashMap<String, Set<Data>>();
+		this.error = error;
 		this.model = model;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(Results.class);
 
 	private Map<String, Set<Data>> data;
+	private String error;
 	private IndexCheckerModel model;
 
 }

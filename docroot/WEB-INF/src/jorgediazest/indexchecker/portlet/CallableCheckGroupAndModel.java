@@ -45,62 +45,57 @@ public class CallableCheckGroupAndModel implements Callable<Results> {
 	@Override
 	public Results call() throws Exception {
 
-		Results result = null;
-		
 		try {
 			if (_log.isInfoEnabled()) {
 				_log.info(
 					"Model: " + model.getName() + " - CompanyId: " +
 						companyId + " - GroupId: " + groupId);
 			}
-		
+
 			if ((groupId == 0L) &&
 				model.hasAttribute("groupId") &&
 				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-		
+
 				return null;
 			}
-		
+
 			if ((groupId != 0L) &&
 				!model.hasAttribute("groupId") &&
 				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-		
+
 				return null;
 			}
-		
+
 			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
-		
+
 			Set<Data> liferayData = new HashSet<Data>(
 				model.getLiferayData(filter).values());
-		
+
 			Set<Data> indexData;
-		
+
 			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
 				!liferayData.isEmpty()) {
-		
+
 				indexData = model.getIndexData(companyId, groupId);
 			}
 			else {
 				indexData = new HashSet<Data>();
 			}
-		
-			result = Results.getIndexCheckResult(
+
+			return Results.getIndexCheckResult(
 					model, liferayData, indexData, executionMode);
 		}
 		catch (Exception e) {
-			_log.error(
-				"Model: " + model.getName() + " EXCEPTION: " +
-					e.getClass() + " - " + e.getMessage(),e);
+			return Results.getError(model, e);
 		}
-		
-		return result;
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(
+		CallableCheckGroupAndModel.class);
 
 	private long companyId = -1;
 	private Set<ExecutionMode> executionMode = null;
 	private long groupId = -1;
 	private IndexCheckerModel model = null;
-
-	private static Log _log = LogFactoryUtil.getLog(CallableCheckGroupAndModel.class);
 
 }
