@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
@@ -28,6 +29,7 @@ import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
+import com.liferay.util.portlet.PortletProps;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -82,11 +84,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 	}
 
-	public static Map<Long, List<Results>>
-		executeCheck(
-			Company company, List<Long> groupIds, List<String> classNames,
-			Set<ExecutionMode> executionMode, int threadsExecutor)
-		throws ExecutionException, InterruptedException {
+	public static Map<Long, List<Results>> executeCheck(
+		Company company, List<Long> groupIds, List<String> classNames,
+		Set<ExecutionMode> executionMode, int threadsExecutor)
+	throws ExecutionException, InterruptedException {
 
 		ModelFactory modelFactory = new IndexCheckerModelFactory();
 
@@ -96,7 +97,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		for (Model model : modelMap.values()) {
 			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-				model.count()>0) {
+				(model.count() > 0)) {
 
 				modelList.add(castModel(model));
 			}
@@ -159,8 +160,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return resultDataMap;
 	}
 
-	public static EnumSet<ExecutionMode> getExecutionMode(
-		ActionRequest request) {
+	public static EnumSet<ExecutionMode>
+		getExecutionMode(ActionRequest request) {
 
 		EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(
 			ExecutionMode.class);
@@ -237,7 +238,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				int threadsExecutor = 100;
+				int threadsExecutor = GetterUtil.getInteger(
+					PortletProps.get("number.threads"),1);
 
 				Map<Long, List<Results>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
@@ -260,7 +262,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				companyResultDataMap.put(company, resultDataMap);
 
-				companyProcessTime.put(company, (endTime-startTime));
+				companyProcessTime.put(company, (endTime - startTime));
 			}
 			catch (Exception e) {
 				StringWriter sw = new StringWriter();
@@ -361,7 +363,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
-				companyProcessTime.put(company, endTime-startTime);
+				companyProcessTime.put(company, endTime - startTime);
 			}
 			catch (Exception e) {
 				pw.println("Error during execution: " + e.getMessage());
@@ -440,7 +442,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					for (Results result : resultList) {
 						Map<Data, String> errors = result.removeIndexOrphans();
 						/* TODO Mover todo esto al JSP */
-						if (((errors!= null) && (errors.size() > 0)) ||
+						if (((errors != null) && (errors.size() > 0)) ||
 							(result.getError() != null)) {
 
 							pw.println();
@@ -461,7 +463,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long endTime = System.currentTimeMillis();
 
-				companyProcessTime.put(company, endTime-startTime);
+				companyProcessTime.put(company, endTime - startTime);
 			}
 			catch (Exception e) {
 				pw.println("Error during execution: " + e.getMessage());
@@ -505,7 +507,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				continue;
 			}
 
-			for (int i = 0; i<filterClassNameArr.length; i++) {
+			for (int i = 0; i < filterClassNameArr.length; i++) {
 				if (className.contains(filterClassNameArr[i])) {
 					classNames.add(className);
 					break;
@@ -533,7 +535,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			String groupIdStr = "" + group.getGroupId();
 
-			for (int i = 0; i<filterGroupIdArr.length; i++) {
+			for (int i = 0; i < filterGroupIdArr.length; i++) {
 				if (groupIdStr.equals(filterGroupIdArr[i])) {
 					groupIds.add(group.getGroupId());
 					break;
