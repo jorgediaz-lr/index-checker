@@ -184,29 +184,27 @@ public class IndexCheckerModel extends ModelImpl {
 			return false;
 		}
 
-		if (!DataUtil.exactLongs(data1.getCompanyId(), data2.getCompanyId())) {
+		if (!Validator.equals(data1.getCompanyId(), data2.getCompanyId())) {
 			return false;
 		}
 
 		if (this.hasAttribute("groupId") &&
-			!DataUtil.exactLongs(data1.getGroupId(), data2.getGroupId())) {
+			!Validator.equals(data1.getGroupId(), data2.getGroupId())) {
 
 			return false;
 		}
 
-		if (!DataUtil.exactLongs(
-				data1.getCreateDate(), data2.getCreateDate())) {
-
+		if (!Validator.equals(data1.getCreateDate(), data2.getCreateDate())) {
 			return false;
 		}
 
-		if (!DataUtil.exactLongs(
+		if (!Validator.equals(
 				data1.getModifiedDate(), data2.getModifiedDate())) {
 
 			return false;
 		}
 
-		if (!DataUtil.exactIntegers(data1.getStatus(), data2.getStatus())) {
+		if (!Validator.equals(data1.getStatus(), data2.getStatus())) {
 			return false;
 		}
 

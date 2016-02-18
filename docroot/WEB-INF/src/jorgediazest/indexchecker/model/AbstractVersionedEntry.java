@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.HashMap;
@@ -26,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.data.DataUtil;
 
 import jorgediazest.util.model.Model;
 
@@ -69,7 +69,7 @@ public abstract class AbstractVersionedEntry extends IndexCheckerModel {
 			Data data = dataMapAux.get(fileEntryId);
 
 			if ((data == null) ||
-				!DataUtil.exactStrings(version, data.getVersion())) {
+				!Validator.equals(version, data.getVersion())) {
 
 				continue;
 			}

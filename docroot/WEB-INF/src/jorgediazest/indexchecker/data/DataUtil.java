@@ -117,32 +117,10 @@ public class DataUtil {
 		return value.toString();
 	}
 
+	/* Long.compare()is not available at java 1.6 */
+
 	public static int compareLongs(long x, long y) {
 		return (x < y) ? -1 : ((x == y) ? 0 : 1);
-	}
-
-	public static boolean exactIntegers(Integer i1, Integer i2) {
-		if (i1 == null) {
-			return (i2 == null);
-		}
-
-		return i1.equals(i2);
-	}
-
-	public static boolean exactLongs(Long l1, Long l2) {
-		if (l1 == null) {
-			return (l2 == null);
-		}
-
-		return l1.equals(l2);
-	}
-
-	public static boolean exactStrings(String s1, String s2) {
-		if (s1 == null) {
-			return (s2 == null);
-		}
-
-		return s1.equals(s2);
 	}
 
 	public static long getIdFromUID(String strValue) {
