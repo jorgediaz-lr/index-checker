@@ -117,8 +117,7 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 
 		return this.generateCriterionFilter(
-			"status=" + WorkflowConstants.STATUS_APPROVED +"+" +
-			"status=" + WorkflowConstants.STATUS_IN_TRASH);
+			"status=" + WorkflowConstants.STATUS_APPROVED);
 	}
 
 	public Set<Data> getIndexData(

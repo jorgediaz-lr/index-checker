@@ -74,8 +74,7 @@ public abstract class AbstractVersionedEntry extends IndexCheckerModel {
 				continue;
 			}
 
-			if ((status == WorkflowConstants.STATUS_APPROVED) ||
-				(status == WorkflowConstants.STATUS_IN_TRASH)) {
+			if (status == WorkflowConstants.STATUS_APPROVED) {
 
 				data.set("status", status);
 			}

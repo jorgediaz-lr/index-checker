@@ -59,11 +59,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		modelClassMap.put(
 			"com.liferay.portlet.messageboards.model.MBMessage",
 			MBMessage.class);
-		modelClassMap.put(
-			"com.liferay.portlet.trash.model.TrashEntry", NotIndexed.class);
 		modelClassMap.put("com.liferay.portal.model.User", User.class);
-		modelClassMap.put(
-			"com.liferay.portlet.wiki.model.WikiNode", WikiNode.class);
 		modelClassMap.put(
 			"com.liferay.portlet.wiki.model.WikiPage", WikiPage.class);
 	}
