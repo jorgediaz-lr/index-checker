@@ -15,148 +15,58 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.Junction;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portlet.journal.model.JournalArticleConstants;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataUtil;
-import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
-import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.service.Service;
 
 /**
  * @author Jorge Díaz
  */
 public class JournalArticle extends IndexCheckerModel {
 
-	public void addMissingJournalArticles(
-			String[] attributes, Criterion filter, Criterion filterStatus,
-			Map<Long, Data> dataMap)
-		throws Exception {
-
-		DynamicQuery query = service.newDynamicQuery();
-
-		List<String> validAttributes = new ArrayList<String>();
-
-		ProjectionList projectionList = this.getPropertyProjection(
-			attributes, validAttributes);
-
-		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
-
-		query.add(filter);
-
-		DynamicQuery articleVersionDynamicQuery = ModelUtil.newDynamicQuery(
-			com.liferay.portlet.journal.model.JournalArticle.class,
-			"articleVersion");
-
-		articleVersionDynamicQuery.setProjection(
-			ProjectionFactoryUtil.alias(
-				ProjectionFactoryUtil.max(
-					"articleVersion.version"), "articleVersion.version"));
-
-		// We need to use the "this" default alias to make sure the database
-		// engine handles this subquery as a correlated subquery
-
-		articleVersionDynamicQuery.add(
-			RestrictionsFactoryUtil.eqProperty(
-				"this.resourcePrimKey", "articleVersion.resourcePrimKey"));
-
-		articleVersionDynamicQuery.add(filterStatus);
-
-		query.add(getProperty("version").eq(articleVersionDynamicQuery));
-
-		query.add(filterStatus);
-
-		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
-			query);
-
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
-
-		for (Object[] result : results) {
-			Data data = createDataObject(validAttributesArr, result);
-
-			if (!dataMap.containsKey(data.getResourcePrimKey())) {
-				dataMap.put(data.getResourcePrimKey(), data);
-			}
-		}
-	}
-
-	@Override
-	public Data createDataObject(String[] attributes, Document doc) {
-		Data data = super.createDataObject(attributes, doc);
-
-		if (indexAllVersions) {
-			long id = DataUtil.getIdFromUID(doc.get(Field.UID));
-			data.setPrimaryKey(id);
-		}
-
-		return data;
-	}
-
 	@Override
 	public Criterion generateQueryFilter() {
-		return this.generateCriterionFilter("classNameId=0");
-	}
+		Junction junction = RestrictionsFactoryUtil.disjunction();
 
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
-		throws Exception {
+		Junction approvedArticlesJunction = RestrictionsFactoryUtil.conjunction();
 
-		if (indexAllVersions) {
-			return super.getData(attributes, filter);
-		}
+		Property displayDateProperty = PropertyFactoryUtil.forName("displayDate");
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+		approvedArticlesJunction.add(displayDateProperty.lt(new Date()));
 
-		Criterion filterStatusApproved = this.generateCriterionFilter(
-			"status=" + WorkflowConstants.STATUS_APPROVED + "+status=" +
-				WorkflowConstants.STATUS_IN_TRASH);
+		Property statusProperty = PropertyFactoryUtil.forName("status");
 
-		addMissingJournalArticles(
-			attributes, filter, filterStatusApproved, dataMap);
+		approvedArticlesJunction.add(statusProperty.eq(WorkflowConstants.STATUS_APPROVED));
 
-		Criterion filterStatusNotApproved = this.generateCriterionFilter(
-			"status<>" + WorkflowConstants.STATUS_APPROVED + ",status<>" +
-				WorkflowConstants.STATUS_IN_TRASH);
+		junction.add(approvedArticlesJunction);
 
-		addMissingJournalArticles(
-			attributes, filter, filterStatusNotApproved, dataMap);
+		Junction draftArticlesJunction = RestrictionsFactoryUtil.conjunction();
 
-		return dataMap;
-	}
+		Property versionProperty = PropertyFactoryUtil.forName("version");
 
-	@Override
-	public void init(
-			String classPackageName, String classSimpleName, Service service,
-			DataComparatorFactory dataComparatorFactory)
-		throws Exception {
+		draftArticlesJunction.add(versionProperty.eq(JournalArticleConstants.VERSION_DEFAULT));
 
-		super.init(
-			classPackageName, classSimpleName, service, dataComparatorFactory);
+		draftArticlesJunction.add(statusProperty.eq(WorkflowConstants.STATUS_DRAFT));
 
-		try {
-			indexAllVersions =
-				PrefsPropsUtil.getBoolean(
-					"journal.articles.index.all.versions");
-		}
-		catch (SystemException e) {
-			throw new RuntimeException(e);
-		}
+		junction.add(draftArticlesJunction);
+
+		Junction expiredArticlesJunction = RestrictionsFactoryUtil.conjunction();
+
+		expiredArticlesJunction.add(statusProperty.eq(WorkflowConstants.STATUS_EXPIRED));
+
+		junction.add(expiredArticlesJunction);
+
+		return junction;
 	}
 
 	@Override
@@ -170,13 +80,5 @@ public class JournalArticle extends IndexCheckerModel {
 
 		return super.reindex(articles.values());
 	}
-
-	@Override
-	public void reindex(Data value) throws SearchException {
-		getIndexerNullSafe().reindex(
-			this.getClassName(), value.getResourcePrimKey());
-	}
-
-	protected boolean indexAllVersions;
 
 }

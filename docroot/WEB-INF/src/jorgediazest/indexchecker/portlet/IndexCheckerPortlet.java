@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -101,10 +100,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		DataComparatorFactory dataComparatorFactory =
 			new DataComparatorFactory() {
 
-			protected boolean indexAllVersions =
-				PrefsPropsUtil.getBoolean(
-					"journal.articles.index.all.versions");
-
 			protected DataComparator defaultComparator =
 				new DataModelComparator(
 					new String[] {
@@ -117,12 +112,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			@Override
 			public DataComparator getDataComparator(Model model) {
-				if ("com.liferay.portlet.journal.model.JournalArticle".equals(
-						model.getClassName()) && indexAllVersions) {
-
-					return defaultComparator;
-				}
-
 				if (model.isResourcedModel()) {
 					return resourceComparator;
 				}
