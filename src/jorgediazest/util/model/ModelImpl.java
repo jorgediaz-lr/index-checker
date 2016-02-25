@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.lar.StagedModelDataHandler;
+import com.liferay.portal.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Indexer;
@@ -452,6 +454,11 @@ public abstract class ModelImpl implements Model {
 
 	public Service getService() {
 		return service;
+	}
+
+	public StagedModelDataHandler<?> getStagedModelDataHandler() {
+		return StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
+			getClassName());
 	}
 
 	public TrashHandler getTrashHandler() {

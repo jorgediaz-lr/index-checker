@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.trash.TrashHandler;
 
@@ -87,6 +88,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public ProjectionList getPropertyProjection(String[] attributes);
 
 	public Service getService();
+
+	public StagedModelDataHandler<?> getStagedModelDataHandler();
 
 	public TrashHandler getTrashHandler();
 
