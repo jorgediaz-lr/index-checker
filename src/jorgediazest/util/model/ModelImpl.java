@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jorgediazest.util.data.Data;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 
@@ -75,6 +76,13 @@ public abstract class ModelImpl implements Model {
 		return model;
 	}
 
+	@Override
+	public int compareTo(Data data1, Data data2) {
+
+		return Long.valueOf(data1.getPrimaryKey()).compareTo(
+			Long.valueOf(data2.getPrimaryKey()));
+	}
+
 	public int compareTo(Model o) {
 		return this.getClassName().compareTo(o.getClassName());
 	}
@@ -104,6 +112,60 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return -1;
+	}
+
+	public Data createDataObject(String[] attributes, Object[] result) {
+		Data data = new Data(this);
+		data.setPrimaryKey((Long)result[0]);
+
+		int i = 0;
+
+		for (String attrib : attributes) {
+			data.set(attrib, result[i++]);
+		}
+
+		return data;
+	}
+
+	@Override
+	public boolean equals(Data data1, Data data2) {
+
+		return Long.valueOf(data1.getPrimaryKey()).equals(
+			Long.valueOf(data2.getPrimaryKey()));
+	}
+
+	@Override
+	public boolean exact(Data data1, Data data2) {
+		if (!data1.equals(data2)) {
+			return false;
+		}
+
+		if (!Validator.equals(data1.getCompanyId(), data2.getCompanyId())) {
+			return false;
+		}
+
+		if (this.hasAttribute("groupId") &&
+			!Validator.equals(data1.getGroupId(), data2.getGroupId())) {
+
+			return false;
+		}
+
+		for (String attr : checkExactAttributes) {
+			/* TODO if name or title are a XML,
+			 * we have to parse it and compare */
+
+			Object value1 = data1.get(attr);
+			Object value2 = data2.get(attr);
+
+			if (Validator.isNotNull(value1) &&
+				Validator.isNotNull(value2) &&
+				!Validator.equals(value1, value2)) {
+
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
@@ -198,7 +260,7 @@ public abstract class ModelImpl implements Model {
 			this, attrName, attrValue, op);
 	}
 
-	public int getAttributePos(String name) {
+	public int getAttributePos(String name) { /* Cachear!! */
 		Object[][] values = this.getAttributes();
 
 		if (name.endsWith(StringPool.UNDERLINE)) {
@@ -278,6 +340,49 @@ public abstract class ModelImpl implements Model {
 
 	public String getClassSimpleName() {
 		return classSimpleName;
+	}
+
+	public Map<Long, Data> getData() throws Exception {
+		return getData(null, null);
+	}
+
+	public Map<Long, Data> getData(Criterion filter) throws Exception {
+		return getData(null, filter);
+	}
+
+	public Map<Long, Data> getData(String[] attributes) throws Exception {
+		return getData(attributes, null);
+	}
+
+	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception {
+
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		DynamicQuery query = service.newDynamicQuery();
+
+		if (attributes == null) {
+			attributes = this.getAttributesName();
+		}
+
+		ProjectionList projectionList = this.getPropertyProjection(attributes);
+
+		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
+
+		if (filter != null) {
+			query.add(filter);
+		}
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
+			query);
+
+		for (Object[] result : results) {
+			Data data = createDataObject(attributes, result);
+			dataMap.put(data.getPrimaryKey(), data);
+		}
+
+		return dataMap;
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -510,6 +615,11 @@ public abstract class ModelImpl implements Model {
 		return true;
 	}
 
+	@Override
+	public Integer hashCode(Data data) {
+		return Long.valueOf(data.getPrimaryKey()).hashCode();
+	}
+
 	public boolean hasIndexer() {
 		return (IndexerRegistryUtil.getIndexer(getClassName()) != null);
 	}
@@ -705,5 +815,10 @@ public abstract class ModelImpl implements Model {
 	protected String[] primaryKeyMultiAttribute = null;
 	protected Service service = null;
 	protected String suffix = null;
+
+	private String[] checkExactAttributes =
+		new String[] {
+			"createDate", "modifiedDate", "status", "version", "name",
+			"title" };
 
 }

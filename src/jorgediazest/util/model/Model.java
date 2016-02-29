@@ -24,7 +24,9 @@ import com.liferay.portal.kernel.trash.TrashHandler;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import jorgediazest.util.data.Data;
 import jorgediazest.util.service.Service;
 
 /**
@@ -34,9 +36,15 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public Model clone();
 
+	public int compareTo(Data data, Data data2);
+
 	public long count();
 
 	public long count(Criterion condition);
+
+	public boolean equals(Data data1, Data data2);
+
+	public boolean exact(Data data1, Data data2);
 
 	public Criterion generateCriterionFilter(String stringFilter);
 
@@ -62,6 +70,15 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public String getClassName();
 
 	public long getClassNameId();
+
+	public Map<Long, Data> getData() throws Exception;
+
+	public Map<Long, Data> getData(Criterion filter) throws Exception;
+
+	public Map<Long, Data> getData(String[] attributes) throws Exception;
+
+	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception;
 
 	public String getDisplayName(Locale locale);
 
@@ -96,6 +113,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public boolean hasAttribute(String attribute);
 
 	public boolean hasAttributes(String[] attributes);
+
+	public Integer hashCode(Data data);
 
 	public boolean hasIndexer();
 
