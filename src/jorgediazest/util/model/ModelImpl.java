@@ -44,6 +44,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 
@@ -59,14 +60,20 @@ public abstract class ModelImpl implements Model {
 		ModelImpl model;
 		try {
 			model = this.getClass().newInstance();
-			model.name = this.name;
-			model.service = this.service.clone();
-			model.attributesString = this.attributesString;
+
 			model.attributesArray = this.attributesArray;
+			model.attributesString = this.attributesString;
+			model.classModelImpl = this.classModelImpl;
 			model.className = this.className;
 			model.classPackageName = this.classPackageName;
 			model.classSimpleName = this.classSimpleName;
-			model.classModelImpl = this.classModelImpl;
+			model.exactAttributes = this.exactAttributes;
+			model.modelFactory = this.modelFactory;
+			model.name = this.name;
+			model.primaryKeyAttribute = this.primaryKeyAttribute;
+			model.primaryKeyMultiAttribute = this.primaryKeyMultiAttribute;
+			model.service = this.service.clone();
+			model.suffix = this.suffix;
 		}
 		catch (Exception e) {
 			_log.error("Error executing clone");
@@ -76,11 +83,10 @@ public abstract class ModelImpl implements Model {
 		return model;
 	}
 
-	@Override
 	public int compareTo(Data data1, Data data2) {
 
-		return Long.valueOf(data1.getPrimaryKey()).compareTo(
-			Long.valueOf(data2.getPrimaryKey()));
+		return DataUtil.compareLongs(
+			data1.getPrimaryKey(), data2.getPrimaryKey());
 	}
 
 	public int compareTo(Model o) {
@@ -115,8 +121,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Data createDataObject(String[] attributes, Object[] result) {
-		Data data = new Data(this);
-		data.setPrimaryKey((Long)result[0]);
+		Data data = new Data(this, (Long)result[0]);
 
 		int i = 0;
 
@@ -127,14 +132,11 @@ public abstract class ModelImpl implements Model {
 		return data;
 	}
 
-	@Override
 	public boolean equals(Data data1, Data data2) {
 
-		return Long.valueOf(data1.getPrimaryKey()).equals(
-			Long.valueOf(data2.getPrimaryKey()));
+		return (data1.getPrimaryKey() == data2.getPrimaryKey());
 	}
 
-	@Override
 	public boolean exact(Data data1, Data data2) {
 		if (!data1.equals(data2)) {
 			return false;
@@ -150,7 +152,7 @@ public abstract class ModelImpl implements Model {
 			return false;
 		}
 
-		for (String attr : checkExactAttributes) {
+		for (String attr : exactAttributes) {
 			/* TODO if name or title are a XML,
 			 * we have to parse it and compare */
 
@@ -402,6 +404,10 @@ public abstract class ModelImpl implements Model {
 		return displayName + " (" + suffix + ")";
 	}
 
+	public String[] getExactAttributes() {
+		return exactAttributes;
+	}
+
 	public Criterion getFilter() {
 		return service.getFilter();
 	}
@@ -615,9 +621,9 @@ public abstract class ModelImpl implements Model {
 		return true;
 	}
 
-	@Override
 	public Integer hashCode(Data data) {
-		return Long.valueOf(data.getPrimaryKey()).hashCode();
+		return data.getEntryClassName().hashCode() *
+			Long.valueOf(data.getPrimaryKey()).hashCode();
 	}
 
 	public boolean hasIndexer() {
@@ -710,6 +716,10 @@ public abstract class ModelImpl implements Model {
 		return this.getClassName().equals(clazz.getName());
 	}
 
+	public void setExactAttributes(String[] exactAttributes) {
+		this.exactAttributes = exactAttributes;
+	}
+
 	public void setFilter(Criterion filter) {
 		service.setFilter(filter);
 	}
@@ -785,6 +795,10 @@ public abstract class ModelImpl implements Model {
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
+	protected String[] exactAttributes =
+		new String[] {
+			"createDate", "modifiedDate", "status", "version", "name",
+			"title" };
 	protected Map<String, Boolean> mapHasAttribute =
 		new HashMap<String, Boolean>();
 	protected ModelFactory modelFactory = null;
@@ -815,10 +829,5 @@ public abstract class ModelImpl implements Model {
 	protected String[] primaryKeyMultiAttribute = null;
 	protected Service service = null;
 	protected String suffix = null;
-
-	private String[] checkExactAttributes =
-		new String[] {
-			"createDate", "modifiedDate", "status", "version", "name",
-			"title" };
 
 }

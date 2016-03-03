@@ -25,8 +25,9 @@ import jorgediazest.util.model.Model;
  */
 public class Data implements Comparable<Data> {
 
-	public Data(Model model) {
+	public Data(Model model, long primaryKey) {
 		this.model = model;
+		this.primaryKey = primaryKey;
 	}
 
 	@Override
@@ -58,6 +59,28 @@ public class Data implements Comparable<Data> {
 	}
 
 	public Object get(String attribute) {
+		if ("companyId".equals(attribute)) {
+			return getCompanyId();
+		}
+
+		if ("groupId".equals(attribute)) {
+			return getGroupId();
+		}
+
+		if (attribute.equals("pk") ||
+			attribute.equals(model.getPrimaryKeyAttribute())) {
+
+			return getPrimaryKey();
+		}
+
+		if (attribute.equals("resourcePrimKey")) {
+			return getResourcePrimKey();
+		}
+
+		if (attribute.equals("uuid")) {
+			return getUuid();
+		}
+
 		return data.get(attribute);
 	}
 
@@ -112,12 +135,30 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Object value) {
-		if ("modified".equals(attribute)) {
+		if ("scopeGroupId".equals(attribute)) {
+			attribute = "groupId";
+		}
+		else if ("modified".equals(attribute)) {
 			attribute = "modifiedDate";
 		}
+		else if ("entryClassPK".equals(attribute)) {
+			if (model.isResourcedModel()) {
+				attribute = "resourcePrimKey";
+			}
+			else {
+				attribute = model.getPrimaryKeyAttribute();
+			}
+		}
 
-		Object convertedObject = DataUtil.castObjectToJdbcTypeObject(
-			model.getAttributeType(attribute), value);
+		Object convertedObject;
+		int type = model.getAttributeType(attribute);
+
+		if (type == 0) {
+			convertedObject = value.toString();
+		}
+		else {
+			convertedObject = DataUtil.castObjectToJdbcTypeObject(type, value);
+		}
 
 		if (convertedObject == null) {
 			return;
@@ -126,17 +167,7 @@ public class Data implements Comparable<Data> {
 		if ("companyId".equals(attribute)) {
 			setCompanyId((Long)convertedObject);
 		}
-		else if ("entryClassPK".equals(attribute)) {
-			if (model.isResourcedModel()) {
-				setResourcePrimKey((Long)convertedObject);
-			}
-			else {
-				setPrimaryKey((Long)convertedObject);
-			}
-		}
-		else if ("groupId".equals(attribute) ||
-				 "scopeGroupId".equals(attribute)) {
-
+		else if ("groupId".equals(attribute)) {
 			setGroupId((Long)convertedObject);
 		}
 		else if ("resourcePrimKey".equals(attribute)) {
@@ -144,6 +175,9 @@ public class Data implements Comparable<Data> {
 		}
 		else if ("uuid".equals(attribute)) {
 			setUuid((String)convertedObject);
+		}
+		else if (model.getPrimaryKeyAttribute().equals(attribute)) {
+			setPrimaryKey((Long)convertedObject);
 		}
 		else {
 			data.put(attribute, convertedObject);

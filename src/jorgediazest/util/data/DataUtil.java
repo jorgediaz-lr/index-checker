@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.TreeSet;
 
 import jorgediazest.util.reflection.ReflectionUtil;
 
@@ -373,6 +374,12 @@ public class DataUtil {
 		return (x < y) ? -1 : ((x == y) ? 0 : 1);
 	}
 
+	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
+		Set<Data> both = new TreeSet<Data>(set1);
+		both.retainAll(set2);
+		return both.toArray(new Data[0]);
+	}
+
 	public static long getIdFromUID(String strValue) {
 		long id = -1;
 		String[] uidArr = strValue.split("_");
@@ -391,32 +398,20 @@ public class DataUtil {
 		return id;
 	}
 
-	public static Long[] getListPK(Collection<Data> data) {
-		Long[] valuesPK = new Long[data.size()];
+	public static String[] getListAttr(Collection<Data> data, String attr) {
+		String[] values = new String[data.size()];
 
 		int i = 0;
 
 		for (Data value : data) {
-			valuesPK[i++] = value.getPrimaryKey();
+			values[i++] = value.get(attr).toString();
 		}
 
-		return valuesPK;
+		return values;
 	}
 
-	public static String[] getListUuid(Collection<Data> data) {
-		String[] valuesPK = new String[data.size()];
-
-		int i = 0;
-
-		for (Data value : data) {
-			valuesPK[i++] = value.getUuid();
-		}
-
-		return valuesPK;
-	}
-
-	public static String getValuesPKText(String type, Set<Data> data) {
-		String valuesPK = Arrays.toString(getListUuid(data));
+	public static String getListAttrAsString(Set<Data> data, String attr) {
+		String valuesPK = Arrays.toString(getListAttr(data, attr));
 
 		if (valuesPK.length() <= 1) {
 			valuesPK = StringPool.BLANK;
