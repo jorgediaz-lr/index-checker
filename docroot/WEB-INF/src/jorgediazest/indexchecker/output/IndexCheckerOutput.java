@@ -344,7 +344,7 @@ public class IndexCheckerOutput {
 
 		String attribute = "pk";
 
-		if (type.contains("index")) {
+		if (type.contains("right")) {
 			attribute = "uid";
 		}
 
