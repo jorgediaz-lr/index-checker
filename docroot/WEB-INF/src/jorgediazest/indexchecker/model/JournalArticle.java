@@ -31,9 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.data.DataUtil;
-
+import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.service.Service;
 
@@ -43,7 +42,8 @@ import jorgediazest.util.service.Service;
 public class JournalArticle extends IndexCheckerModel {
 
 	public void addMissingJournalArticles(
-			Criterion filter, Criterion filterStatus, Map<Long, Data> dataMap)
+			String[] attributes, Criterion filter, Criterion filterStatus,
+			Map<Long, Data> dataMap)
 		throws Exception {
 
 		DynamicQuery query = service.newDynamicQuery();
@@ -83,7 +83,7 @@ public class JournalArticle extends IndexCheckerModel {
 			query);
 
 		for (Object[] result : results) {
-			Data data = createDataObject(result);
+			Data data = createDataObject(attributes, result);
 
 			if (!dataMap.containsKey(data.getResourcePrimKey())) {
 				dataMap.put(data.getResourcePrimKey(), data);
@@ -144,9 +144,11 @@ public class JournalArticle extends IndexCheckerModel {
 		return this.generateCriterionFilter("classNameId=0");
 	}
 
-	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
+	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception {
+
 		if (indexAllVersions) {
-			return super.getLiferayData(filter);
+			return super.getData(attributes, filter);
 		}
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -155,13 +157,15 @@ public class JournalArticle extends IndexCheckerModel {
 			"status=" + WorkflowConstants.STATUS_APPROVED + "+status=" +
 				WorkflowConstants.STATUS_IN_TRASH);
 
-		addMissingJournalArticles(filter, filterStatusApproved, dataMap);
+		addMissingJournalArticles(
+			attributes, filter, filterStatusApproved, dataMap);
 
 		Criterion filterStatusNotApproved = this.generateCriterionFilter(
 			"status<>" + WorkflowConstants.STATUS_APPROVED + ",status<>" +
 				WorkflowConstants.STATUS_IN_TRASH);
 
-		addMissingJournalArticles(filter, filterStatusNotApproved, dataMap);
+		addMissingJournalArticles(
+			attributes, filter, filterStatusNotApproved, dataMap);
 
 		return dataMap;
 	}

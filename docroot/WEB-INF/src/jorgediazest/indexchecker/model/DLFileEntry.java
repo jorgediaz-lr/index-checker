@@ -19,16 +19,17 @@ import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 
 import java.util.Map;
 
-import jorgediazest.indexchecker.data.Data;
+import jorgediazest.util.data.Data;
 
 /**
  * @author Jorge Díaz
  */
 public class DLFileEntry extends AbstractVersionedEntry {
 
-	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
+	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception {
 
-		return getLiferayData(filter, DLFileVersion.class.getName());
+		return getData(attributes, filter, DLFileVersion.class.getName());
 	}
 
 }

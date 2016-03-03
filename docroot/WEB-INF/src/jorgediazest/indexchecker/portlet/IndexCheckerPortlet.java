@@ -37,6 +37,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,12 +53,13 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 
+import jorgediazest.util.data.Comparison;
+import jorgediazest.util.data.ComparisonUtil;
+import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
@@ -84,7 +86,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 	}
 
-	public static Map<Long, List<Results>> executeCheck(
+	public static Map<Long, List<Comparison>> executeCheck(
 		Company company, List<Long> groupIds, List<String> classNames,
 		Set<ExecutionMode> executionMode, int threadsExecutor)
 	throws ExecutionException, InterruptedException {
@@ -117,12 +119,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		ExecutorService executor = Executors.newFixedThreadPool(
 			threadsExecutor);
 
-		Map<Long, List<Future<Results>>> futureResultDataMap =
-			new LinkedHashMap<Long, List<Future<Results>>>();
+		Map<Long, List<Future<Comparison>>> futureResultDataMap =
+			new LinkedHashMap<Long, List<Future<Comparison>>>();
 
 		for (long groupId : groupIdsFor) {
-			List<Future<Results>> futureResultList =
-				new ArrayList<Future<Results>>();
+			List<Future<Comparison>> futureResultList =
+				new ArrayList<Future<Comparison>>();
 
 			for (IndexCheckerModel model : modelList) {
 				CallableCheckGroupAndModel c =
@@ -135,17 +137,17 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			futureResultDataMap.put(groupId, futureResultList);
 		}
 
-		Map<Long, List<Results>> resultDataMap =
-			new LinkedHashMap<Long, List<Results>>();
+		Map<Long, List<Comparison>> resultDataMap =
+			new LinkedHashMap<Long, List<Comparison>>();
 
 		for (
-			Entry<Long, List<Future<Results>>> entry :
+			Entry<Long, List<Future<Comparison>>> entry :
 				futureResultDataMap.entrySet()) {
 
-			List<Results> resultList = new ArrayList<Results>();
+			List<Comparison> resultList = new ArrayList<Comparison>();
 
-			for (Future<Results> f : entry.getValue()) {
-				Results results = f.get();
+			for (Future<Comparison> f : entry.getValue()) {
+				Comparison results = f.get();
 
 				if (results != null) {
 					resultList.add(results);
@@ -197,6 +199,37 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return _log;
 	}
 
+	public static Map<Data, String> reindex(Comparison comparison) {
+
+		Set<Data> objectsToReindex = new HashSet<Data>();
+
+		for (String type : comparison.getOutputTypes()) {
+			if (!type.endsWith("-right")) {
+				Set<Data> aux = comparison.getData(type);
+
+				if (aux != null) {
+					objectsToReindex.addAll(aux);
+				}
+			}
+		}
+
+		IndexCheckerModel model = (IndexCheckerModel)comparison.getModel();
+
+		return model.reindex(objectsToReindex);
+	}
+
+	public static Map<Data, String> removeIndexOrphans(Comparison comparison) {
+		Set<Data> indexOnlyData = comparison.getData("only-right");
+
+		if ((indexOnlyData == null) || indexOnlyData.isEmpty()) {
+			return null;
+		}
+
+		IndexCheckerModel model = (IndexCheckerModel)comparison.getModel();
+
+		return model.deleteAndCheck(indexOnlyData);
+	}
+
 	public void executeCheck(ActionRequest request, ActionResponse response)
 		throws Exception {
 
@@ -221,8 +254,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
-		Map<Company, Map<Long, List<Results>>> companyResultDataMap =
-			new HashMap<Company, Map<Long, List<Results>>>();
+		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap =
+			new HashMap<Company, Map<Long, List<Comparison>>>();
 
 		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
 
@@ -241,7 +274,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				int threadsExecutor = GetterUtil.getInteger(
 					PortletProps.get("number.threads"),1);
 
-				Map<Long, List<Results>> resultDataMap =
+				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode,
 						threadsExecutor);
@@ -257,7 +290,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					boolean groupBySite = executionMode.contains(
 						ExecutionMode.GROUP_BY_SITE);
 
-					Results.dumpToLog(groupBySite, resultDataMap);
+					ComparisonUtil.dumpToLog(groupBySite, resultDataMap);
 				}
 
 				companyResultDataMap.put(company, resultDataMap);
@@ -328,19 +361,19 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				int threadsExecutor = 100;
 
-				Map<Long, List<Results>> resultDataMap =
+				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode,
 						threadsExecutor);
 
 				for (
-					Entry<Long, List<Results>> entry :
+					Entry<Long, List<Comparison>> entry :
 						resultDataMap.entrySet()) {
 
-					List<Results> resultList = entry.getValue();
+					List<Comparison> resultList = entry.getValue();
 
-					for (Results result : resultList) {
-						Map<Data, String> errors = result.reindex();
+					for (Comparison result : resultList) {
+						Map<Data, String> errors = reindex(result);
 /* TODO Mover todo esto al JSP */
 						if (((errors!= null) && (errors.size() > 0)) ||
 							(result.getError() != null)) {
@@ -428,19 +461,19 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				int threadsExecutor = 100;
 
-				Map<Long, List<Results>> resultDataMap =
+				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode,
 						threadsExecutor);
 
 				for (
-					Entry<Long, List<Results>> entry :
+					Entry<Long, List<Comparison>> entry :
 						resultDataMap.entrySet()) {
 
-					List<Results> resultList = entry.getValue();
+					List<Comparison> resultList = entry.getValue();
 
-					for (Results result : resultList) {
-						Map<Data, String> errors = result.removeIndexOrphans();
+					for (Comparison result : resultList) {
+						Map<Data, String> errors = removeIndexOrphans(result);
 						/* TODO Mover todo esto al JSP */
 						if (((errors != null) && (errors.size() > 0)) ||
 							(result.getError() != null)) {

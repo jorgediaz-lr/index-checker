@@ -19,16 +19,17 @@ import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
 
 import java.util.Map;
 
-import jorgediazest.indexchecker.data.Data;
+import jorgediazest.util.data.Data;
 
 /**
  * @author Jorge Díaz
  */
 public class DDLRecord extends AbstractVersionedEntry {
 
-	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
+	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception {
 
-		return getLiferayData(filter, DDLRecordVersion.class.getName());
+		return getData(attributes, filter, DDLRecordVersion.class.getName());
 	}
 
 }

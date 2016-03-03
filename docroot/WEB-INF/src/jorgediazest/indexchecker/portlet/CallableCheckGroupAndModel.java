@@ -23,14 +23,16 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.data.Results;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
+
+import jorgediazest.util.data.Comparison;
+import jorgediazest.util.data.ComparisonUtil;
+import jorgediazest.util.data.Data;
 
 /**
  * @author Jorge Díaz
  */
-public class CallableCheckGroupAndModel implements Callable<Results> {
+public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 	CallableCheckGroupAndModel(
 		long companyId, long groupId, IndexCheckerModel model,
@@ -43,7 +45,7 @@ public class CallableCheckGroupAndModel implements Callable<Results> {
 	}
 
 	@Override
-	public Results call() throws Exception {
+	public Comparison call() throws Exception {
 
 		try {
 			if (_log.isInfoEnabled()) {
@@ -68,8 +70,11 @@ public class CallableCheckGroupAndModel implements Callable<Results> {
 
 			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
 
+			String[] attributesToCheck =
+				model.getLiferayIndexedAttributes().toArray(new String[0]);
+
 			Set<Data> liferayData = new HashSet<Data>(
-				model.getLiferayData(filter).values());
+				model.getData(attributesToCheck, filter).values());
 
 			Set<Data> indexData;
 
@@ -82,11 +87,21 @@ public class CallableCheckGroupAndModel implements Callable<Results> {
 				indexData = new HashSet<Data>();
 			}
 
-			return Results.getIndexCheckResult(
-					model, liferayData, indexData, executionMode);
+			boolean showBothExact = executionMode.contains(
+				ExecutionMode.SHOW_BOTH_EXACT);
+			boolean showBothNotExact = executionMode.contains(
+				ExecutionMode.SHOW_BOTH_NOTEXACT);
+			boolean showOnlyLiferay = executionMode.contains(
+				ExecutionMode.SHOW_LIFERAY);
+			boolean showOnlyIndex = executionMode.contains(
+				ExecutionMode.SHOW_INDEX);
+
+			return ComparisonUtil.getComparation(
+				model, liferayData, indexData, showBothExact, showBothNotExact,
+				showOnlyLiferay, showOnlyIndex);
 		}
 		catch (Exception e) {
-			return Results.getError(model, e);
+			return ComparisonUtil.getError(model, e);
 		}
 	}
 

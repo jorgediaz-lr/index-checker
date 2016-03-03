@@ -16,9 +16,6 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -40,10 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jorgediazest.indexchecker.data.Data;
-import jorgediazest.indexchecker.data.DataUtil;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 
+import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelImpl;
 import jorgediazest.util.service.Service;
@@ -82,8 +79,7 @@ public class IndexCheckerModel extends ModelImpl {
 		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
 			!this.isResourcedModel()) {
 
-			return DataUtil.compareLongs(
-				data1.getPrimaryKey(), data2.getPrimaryKey());
+			return super.compareTo(data1, data2);
 		}
 		else if ((data1.getResourcePrimKey() != -1) &&
 				 (data2.getResourcePrimKey() != -1)) {
@@ -97,30 +93,17 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public Data createDataObject(Document doc) {
-		Data data = new Data(this);
+		Data data = new Data(this, -1);
 
 		for (String attrib : this.getIndexAttributes()) {
-			data.setProperty(attrib, doc.get(attrib));
-		}
-
-		return data;
-	}
-
-	public Data createDataObject(Object[] result) {
-		Data data = new Data(this);
-		data.setPrimaryKey((Long)result[0]);
-
-		int i = 0;
-
-		for (String attrib : this.getLiferayIndexedAttributes()) {
-			data.setProperty(attrib, result[i++]);
+			data.set(attrib, doc.get(attrib));
 		}
 
 		return data;
 	}
 
 	public void delete(Data value) throws SearchException {
-		getIndexer().delete(value.getCompanyId(), value.getUid());
+		getIndexer().delete(value.getCompanyId(), value.get("uid").toString());
 	}
 
 	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
@@ -141,7 +124,8 @@ public class IndexCheckerModel extends ModelImpl {
 				this.delete(data);
 
 				if (_log.isDebugEnabled()) {
-					_log.debug("Deleting " + (i++) + " uid: " + data.getUid());
+					_log.debug(
+						"Deleting " + (i++) + " uid: " + data.get("uid"));
 				}
 			}
 			catch (SearchException e) {
@@ -167,7 +151,7 @@ public class IndexCheckerModel extends ModelImpl {
 		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
 			!this.isResourcedModel()) {
 
-			return (data1.getPrimaryKey() == data2.getPrimaryKey());
+			return super.equals(data1, data2);
 		}
 		else if ((data1.getResourcePrimKey() != -1) &&
 				 (data2.getResourcePrimKey() != -1)) {
@@ -177,45 +161,6 @@ public class IndexCheckerModel extends ModelImpl {
 		else {
 			return false;
 		}
-	}
-
-	public boolean exact(Data data1, Data data2) {
-		if (!data1.equals(data2)) {
-			return false;
-		}
-
-		if (!Validator.equals(data1.getCompanyId(), data2.getCompanyId())) {
-			return false;
-		}
-
-		if (this.hasAttribute("groupId") &&
-			!Validator.equals(data1.getGroupId(), data2.getGroupId())) {
-
-			return false;
-		}
-
-		if (!Validator.equals(data1.getCreateDate(), data2.getCreateDate())) {
-			return false;
-		}
-
-		if (!Validator.equals(
-				data1.getModifiedDate(), data2.getModifiedDate())) {
-
-			return false;
-		}
-
-		if (!Validator.equals(data1.getStatus(), data2.getStatus())) {
-			return false;
-		}
-
-		if (this.hasAttribute("version") &&
-			Validator.isNotNull(data1.getVersion()) &&
-			Validator.isNotNull(data2.getVersion())) {
-
-			return data1.getVersion().equals(data2.getVersion());
-		}
-
-		return true;
 	}
 
 	public Criterion generateQueryFilter() {
@@ -283,40 +228,13 @@ public class IndexCheckerModel extends ModelImpl {
 		return indexData;
 	}
 
-	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
-
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
-
-		DynamicQuery query = service.newDynamicQuery();
-
-		ProjectionList projectionList =
-			this.getPropertyProjection(
-				liferayIndexedAttributes.toArray(new String[0]));
-
-		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
-
-		query.add(filter);
-
-		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
-			query);
-
-		for (Object[] result : results) {
-			Data data = createDataObject(result);
-			dataMap.put(data.getPrimaryKey(), data);
-		}
-
-		return dataMap;
-	}
-
 	public List<String> getLiferayIndexedAttributes() {
 		return liferayIndexedAttributes;
 	}
 
 	public Integer hashCode(Data data) {
 		if ((data.getPrimaryKey() != -1) && !this.isResourcedModel()) {
-			return data.getEntryClassName().hashCode() *
-				Long.valueOf(data.getPrimaryKey()).hashCode();
+			return super.hashCode(data);
 		}
 		else if (data.getResourcePrimKey() != -1) {
 			return -1 * data.getEntryClassName().hashCode() *
@@ -372,6 +290,9 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 
 		this.setFilter(this.generateQueryFilter());
+
+		this.setExactAttributes(
+			new String[] {"createDate", "modifiedDate", "status", "version"});
 	}
 
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {

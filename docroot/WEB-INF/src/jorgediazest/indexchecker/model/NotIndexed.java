@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import java.util.HashMap;
 import java.util.Map;
 
-import jorgediazest.indexchecker.data.Data;
+import jorgediazest.util.data.Data;
 
 /**
  * @author Jorge Díaz
@@ -27,7 +27,9 @@ import jorgediazest.indexchecker.data.Data;
 public class NotIndexed extends IndexCheckerModel {
 
 	@Override
-	public Map<Long, Data> getLiferayData(Criterion filter) throws Exception {
+	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception {
+
 		/* Return empty data as it is not indexed */
 		return new HashMap<Long, Data>();
 	}

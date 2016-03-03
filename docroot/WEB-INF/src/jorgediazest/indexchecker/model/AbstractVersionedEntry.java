@@ -26,8 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jorgediazest.indexchecker.data.Data;
-
+import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
 
 /**
@@ -35,13 +34,14 @@ import jorgediazest.util.model.Model;
  */
 public abstract class AbstractVersionedEntry extends IndexCheckerModel {
 
-	public Map<Long, Data> getLiferayData(Criterion filter, String className)
+	public Map<Long, Data> getData(
+			String[] attributes, Criterion filter, String classNameVersion)
 		throws Exception {
 
-		Map<Long, Data> dataMapAux = super.getLiferayData(filter);
+		Map<Long, Data> dataMapAux = super.getData(attributes, filter);
 
 		Model modelVersion = this.getModelFactory().getModelObject(
-			null, className);
+			null, classNameVersion);
 
 		DynamicQuery queryModelVersion =
 			modelVersion.getService().newDynamicQuery();
@@ -69,7 +69,7 @@ public abstract class AbstractVersionedEntry extends IndexCheckerModel {
 			Data data = dataMapAux.get(fileEntryId);
 
 			if ((data == null) ||
-				!Validator.equals(version, data.getVersion())) {
+				!Validator.equals(version, data.get("version"))) {
 
 				continue;
 			}
@@ -77,14 +77,14 @@ public abstract class AbstractVersionedEntry extends IndexCheckerModel {
 			if ((status == WorkflowConstants.STATUS_APPROVED) ||
 				(status == WorkflowConstants.STATUS_IN_TRASH)) {
 
-				data.setStatus(status);
+				data.set("status", status);
 			}
 		}
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
 		for (Entry<Long, Data> entry : dataMapAux.entrySet()) {
-			if (entry.getValue().getStatus() != null) {
+			if (entry.getValue().get("status") != null) {
 				dataMap.put(entry.getKey(), entry.getValue());
 			}
 		}
