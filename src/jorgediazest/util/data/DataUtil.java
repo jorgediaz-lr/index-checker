@@ -146,15 +146,15 @@ public class DataUtil {
 		}
 
 		if (value instanceof Time) {
-			return ((Time)value).getTime();
+			return ((Time)value).getTime() / 1000L;
 		}
 
 		if (value instanceof Date) {
-			return ((Date)value).getTime();
+			return ((Date)value).getTime() / 1000L;
 		}
 
 		if (value instanceof Timestamp) {
-			return ((Timestamp)value).getTime();
+			return ((Timestamp)value).getTime() / 1000L;
 		}
 
 		if (value instanceof String) {
