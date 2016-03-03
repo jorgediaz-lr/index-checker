@@ -164,6 +164,13 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
+		if ((type == 0) && ("companyId".equals(attribute) ||
+			 "groupId".equals(attribute) ||
+			 "resourcePrimKey".equals(attribute))) {
+
+			return;
+		}
+
 		if ("companyId".equals(attribute)) {
 			setCompanyId((Long)convertedObject);
 		}
