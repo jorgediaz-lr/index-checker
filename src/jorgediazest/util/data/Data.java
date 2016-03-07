@@ -25,9 +25,8 @@ import jorgediazest.util.model.Model;
  */
 public class Data implements Comparable<Data> {
 
-	public Data(Model model, long primaryKey) {
+	public Data(Model model) {
 		this.model = model;
-		this.primaryKey = primaryKey;
 	}
 
 	@Override

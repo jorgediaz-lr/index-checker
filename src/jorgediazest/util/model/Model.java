@@ -71,6 +71,10 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public long getClassNameId();
 
+	public Criterion getCompanyFilter(long companyId);
+
+	public Criterion getCompanyGroupFilter(long companyId, long groupId);
+
 	public Map<Long, Data> getData() throws Exception;
 
 	public Map<Long, Data> getData(Criterion filter) throws Exception;

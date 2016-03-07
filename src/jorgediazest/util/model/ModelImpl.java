@@ -127,7 +127,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Data createDataObject(String[] attributes, Object[] result) {
-		Data data = new Data(this, (Long)result[0]);
+		Data data = new Data(this);
 
 		int i = 0;
 
@@ -348,6 +348,24 @@ public abstract class ModelImpl implements Model {
 
 	public String getClassSimpleName() {
 		return classSimpleName;
+	}
+
+	public Criterion getCompanyFilter(long companyId) {
+		return getCompanyGroupFilter(companyId, 0);
+	}
+
+	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
+		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+
+		if (this.hasAttribute("companyId")) {
+			conjunction.add(getProperty("companyId").eq(companyId));
+		}
+
+		if (this.hasAttribute("groupId") && (groupId != 0)) {
+			conjunction.add(getProperty("groupId").eq(groupId));
+		}
+
+		return conjunction;
 	}
 
 	public Map<Long, Data> getData() throws Exception {
@@ -803,8 +821,8 @@ public abstract class ModelImpl implements Model {
 	protected String classSimpleName = null;
 	protected String[] exactAttributes =
 		new String[] {
-			"createDate", "modifiedDate", "status", "version", "name", "title",
-			"description", "size" };
+			"createDate", "status", "version", "name", "title", "description",
+			"size" };
 	protected Map<String, Boolean> mapHasAttribute =
 		new HashMap<String, Boolean>();
 	protected ModelFactory modelFactory = null;
