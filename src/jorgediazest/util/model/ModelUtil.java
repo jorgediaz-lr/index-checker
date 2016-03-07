@@ -48,7 +48,8 @@ public class ModelUtil {
 
 		if (criterion1 == null) {
 			return criterion2;
-		} else if (criterion2 == null) {
+		}
+		else if (criterion2 == null) {
 			return criterion1;
 		}
 
