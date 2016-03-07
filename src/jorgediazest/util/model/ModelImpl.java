@@ -56,6 +56,12 @@ public abstract class ModelImpl implements Model {
 	/* Oracle limitation */
 	public static final int MAX_NUMBER_OF_CLAUSES = 1000;
 
+	public void addFilter(Criterion filter) {
+		service.setFilter(
+			ModelUtil.generateConjunctionQueryFilter(
+				service.getFilter(), filter));
+	}
+
 	public Model clone() {
 		ModelImpl model;
 		try {
@@ -797,8 +803,8 @@ public abstract class ModelImpl implements Model {
 	protected String classSimpleName = null;
 	protected String[] exactAttributes =
 		new String[] {
-			"createDate", "modifiedDate", "status", "version", "name",
-			"title" };
+			"createDate", "modifiedDate", "status", "version", "name", "title",
+			"description", "size" };
 	protected Map<String, Boolean> mapHasAttribute =
 		new HashMap<String, Boolean>();
 	protected ModelFactory modelFactory = null;

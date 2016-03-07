@@ -34,6 +34,8 @@ import jorgediazest.util.service.Service;
  */
 public interface Model extends Cloneable, Comparable<Model> {
 
+	public void addFilter(Criterion filter);
+
 	public Model clone();
 
 	public int compareTo(Data data, Data data2);
@@ -47,8 +49,6 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public boolean exact(Data data1, Data data2);
 
 	public Criterion generateCriterionFilter(String stringFilter);
-
-	public Criterion generateDisjunctionCriterion(String[] filters);
 
 	public Criterion generateInCriteria(String property, List<Long> list);
 

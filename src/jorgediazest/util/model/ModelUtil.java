@@ -14,9 +14,11 @@
 
 package jorgediazest.util.model;
 
+import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
@@ -40,6 +42,21 @@ import jorgediazest.util.reflection.ReflectionUtil;
  * @author Jorge Díaz
  */
 public class ModelUtil {
+
+	public static Criterion generateConjunctionQueryFilter(
+		Criterion criterion1, Criterion criterion2) {
+
+		if (criterion1 == null) {
+			return criterion2;
+		} else if (criterion2 == null) {
+			return criterion1;
+		}
+
+		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+		conjuntion.add(criterion1);
+		conjuntion.add(criterion2);
+		return conjuntion;
+	}
 
 	public static Criterion generateSingleCriterion(
 		Model model, String filter) {
