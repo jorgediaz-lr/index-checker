@@ -14,9 +14,7 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
@@ -25,15 +23,13 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -59,13 +55,53 @@ public class IndexCheckerModel extends ModelImpl {
 		new String[] { "companyId", "createDate", "modifiedDate" };
 	public static String[] workflowModelAttributes = new String[] { "status" };
 
+	public Set<String> calculateAttributesToCheck() {
+		Set<String> attributesToCheckAux = new LinkedHashSet<String>();
+
+		attributesToCheckAux.add(this.getPrimaryKeyAttribute());
+		attributesToCheckAux.add("companyId");
+
+		if (this.isAuditedModel()) {
+			attributesToCheckAux.addAll(Arrays.asList(auditedModelAttributes));
+		}
+
+		if (this.isGroupedModel()) {
+			attributesToCheckAux.addAll(Arrays.asList(groupedModelAttributes));
+		}
+
+		if (this.isResourcedModel()) {
+			attributesToCheckAux.addAll(
+				Arrays.asList(resourcedModelAttributes));
+		}
+
+		if (this.isStagedModel()) {
+			attributesToCheckAux.addAll(Arrays.asList(stagedModelAttributes));
+		}
+
+		if (this.isWorkflowEnabled()) {
+			attributesToCheckAux.addAll(Arrays.asList(workflowModelAttributes));
+		}
+
+		attributesToCheckAux.add("version");
+
+		Set<String> attributesToCheck = new LinkedHashSet<String>();
+
+		for (String attr : attributesToCheckAux) {
+			if (this.hasAttribute(attr)) {
+				attributesToCheck.add(attr);
+			}
+		}
+
+		return attributesToCheck;
+	}
+
 	@Override
 	public Model clone() {
 		IndexCheckerModel model;
 		try {
 			model = (IndexCheckerModel)super.clone();
-			model.liferayIndexedAttributes = ListUtil.copy(
-				this.liferayIndexedAttributes);
+			model.attributesToCheck = new LinkedHashSet<String>(
+				this.attributesToCheck);
 		}
 		catch (Exception e) {
 			_log.error("Error executing clone");
@@ -93,7 +129,7 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public Data createDataObject(Document doc) {
-		Data data = new Data(this, -1);
+		Data data = new Data(this);
 
 		for (String attrib : this.getIndexAttributes()) {
 			data.set(attrib, doc.get(attrib));
@@ -173,22 +209,12 @@ public class IndexCheckerModel extends ModelImpl {
 			"status=" + WorkflowConstants.STATUS_IN_TRASH);
 	}
 
-	public Criterion getCompanyGroupFilter(long companyId) {
-		return getCompanyGroupFilter(companyId, 0);
-	}
-
-	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
-		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
-
-		if (this.hasAttribute("companyId")) {
-			conjunction.add(getProperty("companyId").eq(companyId));
+	public final Set<String> getAttributesToCheck() {
+		if (attributesToCheck == null) {
+			attributesToCheck = calculateAttributesToCheck();
 		}
 
-		if (this.hasAttribute("groupId") && (groupId != 0)) {
-			conjunction.add(getProperty("groupId").eq(groupId));
-		}
-
-		return conjunction;
+		return attributesToCheck;
 	}
 
 	public String[] getIndexAttributes() {
@@ -228,10 +254,6 @@ public class IndexCheckerModel extends ModelImpl {
 		return indexData;
 	}
 
-	public List<String> getLiferayIndexedAttributes() {
-		return liferayIndexedAttributes;
-	}
-
 	public Integer hashCode(Data data) {
 		if ((data.getPrimaryKey() != -1) && !this.isResourcedModel()) {
 			return super.hashCode(data);
@@ -250,44 +272,6 @@ public class IndexCheckerModel extends ModelImpl {
 		throws Exception {
 
 		super.init(classPackageName, classSimpleName, service);
-
-		this.liferayIndexedAttributes = new ArrayList<String>();
-
-		String primaryKey = this.getPrimaryKeyAttribute();
-
-		this.setIndexPrimaryKey(primaryKey);
-
-		if (Validator.isNull(primaryKey)) {
-			throw new RuntimeException("Missing primary key!!");
-		}
-
-		if (this.hasAttribute("companyId")) {
-			this.addIndexedAttribute("companyId");
-		}
-
-		if (this.isAuditedModel()) {
-			addIndexedAttributes(auditedModelAttributes);
-		}
-
-		if (this.isGroupedModel()) {
-			addIndexedAttributes(groupedModelAttributes);
-		}
-
-		if (this.isResourcedModel()) {
-			addIndexedAttributes(resourcedModelAttributes);
-		}
-
-		if (this.isStagedModel()) {
-			addIndexedAttributes(stagedModelAttributes);
-		}
-
-		if (this.isWorkflowEnabled()) {
-			addIndexedAttributes(workflowModelAttributes);
-		}
-
-		if (this.hasAttribute("version")) {
-			this.addIndexedAttribute("version");
-		}
 
 		this.setFilter(this.generateQueryFilter());
 
@@ -335,39 +319,11 @@ public class IndexCheckerModel extends ModelImpl {
 	public String toString() {
 		String toString = this.getClassSimpleName()+":";
 
-		for (String attr : this.liferayIndexedAttributes) {
+		for (String attr : this.getAttributesToCheck()) {
 			toString += " " + attr;
 		}
 
 		return toString;
-	}
-
-	protected void addIndexedAttribute(String col) {
-		if (!liferayIndexedAttributes.contains(col)) {
-			liferayIndexedAttributes.add(col);
-		}
-	}
-
-	protected void addIndexedAttributes(String[] modelAttributes) {
-
-		for (int i = 0; i<modelAttributes.length; i++)
-		{
-			this.addIndexedAttribute((modelAttributes[i]));
-		}
-	}
-
-	protected void removeIndexedAttribute(String col) {
-		while (liferayIndexedAttributes.contains(col)) {
-			liferayIndexedAttributes.remove(col);
-		}
-	}
-
-	protected void setIndexPrimaryKey(String col) {
-		if (liferayIndexedAttributes.contains(col)) {
-			liferayIndexedAttributes.remove(col);
-		}
-
-		liferayIndexedAttributes.add(0, col);
 	}
 
 	protected static String[] indexAttributes =
@@ -375,8 +331,8 @@ public class IndexCheckerModel extends ModelImpl {
 		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID,
 		Field.SCOPE_GROUP_ID, Field.VERSION};
 
-	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);
+	protected Set<String> attributesToCheck = null;
 
-	private List<String> liferayIndexedAttributes = null;
+	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);
 
 }

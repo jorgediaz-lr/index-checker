@@ -50,7 +50,7 @@ public class JournalArticle extends IndexCheckerModel {
 
 		ProjectionList projectionList =
 			this.getPropertyProjection(
-				getLiferayIndexedAttributes().toArray(new String[0]));
+				getAttributesToCheck().toArray(new String[0]));
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 

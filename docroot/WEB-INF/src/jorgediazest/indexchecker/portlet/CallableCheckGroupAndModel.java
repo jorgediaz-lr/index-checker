@@ -71,7 +71,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
 
 			String[] attributesToCheck =
-				model.getLiferayIndexedAttributes().toArray(new String[0]);
+				model.getAttributesToCheck().toArray(new String[0]);
 
 			Set<Data> liferayData = new HashSet<Data>(
 				model.getData(attributesToCheck, filter).values());

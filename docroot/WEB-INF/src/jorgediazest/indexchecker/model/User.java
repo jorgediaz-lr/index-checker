@@ -16,7 +16,7 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 
-import jorgediazest.util.service.Service;
+import java.util.Set;
 
 /**
  * @author Jorge Díaz
@@ -24,19 +24,16 @@ import jorgediazest.util.service.Service;
 public class User extends IndexCheckerModel {
 
 	@Override
-	public Criterion generateQueryFilter() {
-		return this.generateCriterionFilter("defaultUser=false");
+	public Set<String> calculateAttributesToCheck() {
+		Set<String> aux = super.calculateAttributesToCheck();
+		aux.remove("createDate");
+		aux.add("status");
+		return aux;
 	}
 
 	@Override
-	public void init(
-			String classPackageName, String classSimpleName, Service service)
-		throws Exception {
-
-		super.init(classPackageName, classSimpleName, service);
-
-		this.removeIndexedAttribute("createDate");
-		this.addIndexedAttribute("status");
+	public Criterion generateQueryFilter() {
+		return this.generateCriterionFilter("defaultUser=false");
 	}
 
 }
