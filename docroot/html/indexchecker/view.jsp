@@ -45,10 +45,10 @@
 <%@ page import="javax.portlet.PortletURL" %>
 
 <%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
-<%@ page import="jorgediazest.util.data.Comparison" %>
 <%@ page import="jorgediazest.indexchecker.output.IndexCheckerOutput" %>
 <%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
+<%@ page import="jorgediazest.util.data.Comparison" %>
 <%@ page import="jorgediazest.util.output.OutputUtils" %>
 
 <portlet:defineObjects />
