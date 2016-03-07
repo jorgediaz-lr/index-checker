@@ -16,6 +16,8 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 
+import jorgediazest.util.model.ModelUtil;
+
 /**
  * @author Jorge Díaz
  */
@@ -23,7 +25,7 @@ public class WikiPage extends IndexCheckerModel {
 
 	@Override
 	public Criterion generateQueryFilter() {
-		return IndexCheckerModel.generateConjunctionQueryFilter(
+		return ModelUtil.generateConjunctionQueryFilter(
 			super.generateQueryFilter(),
 			this.generateCriterionFilter("head=true,redirectTitle="));
 	}
