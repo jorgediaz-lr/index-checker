@@ -17,6 +17,7 @@ package jorgediazest.util.service;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.service.BaseLocalService;
 
 import java.lang.reflect.Method;
@@ -59,12 +60,44 @@ public class ServiceUtil {
 			ClassLoader classLoader, String classPackageName,
 			String classSimpleName) {
 
+		Service service = new ServiceImpl();
+
 		BaseLocalService modelService = ServiceUtil.getLocalService(
 			classLoader, classPackageName, classSimpleName);
 
-		Service service = new ServiceImpl();
-		service.init(modelService, classPackageName, classSimpleName);
+		if (modelService != null) {
+			service.init(modelService, classPackageName, classSimpleName);
+
+			return service;
+		}
+
+		Class<? extends ClassedModel> classInterface = getClassModel(
+			classPackageName + "." + classSimpleName);
+
+		if (classInterface == null) {
+			return null;
+		}
+
+		service.init(classInterface);
+
 		return service;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected static Class<? extends ClassedModel> getClassModel(
+		String className) {
+
+		try {
+			return (Class<? extends ClassedModel>)
+				PortalClassLoaderUtil.getClassLoader().loadClass(className);
+		}
+		catch (ClassNotFoundException e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("ClassModel not found: " + className);
+			}
+
+			return null;
+		}
 	}
 
 	protected static Class<?> getJavaClass(
@@ -110,8 +143,8 @@ public class ServiceUtil {
 			if (_log.isDebugEnabled()) {
 				_log.debug(e, e);
 			}
-			else if (_log.isWarnEnabled()) {
-				_log.warn(
+			else if (_log.isInfoEnabled()) {
+				_log.info(
 					"Cannot get service of " + classPackageName + "." +
 					classSimpleName + " EXCEPTION: " + e.getClass().getName() +
 					": " + e.getMessage());

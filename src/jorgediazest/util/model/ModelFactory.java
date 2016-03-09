@@ -106,6 +106,13 @@ public class ModelFactory {
 			classSimpleName = className.substring(pos + 1, className.length());
 		}
 
+		Service service = ServiceUtil.getService(
+			classLoader, classPackageName, classSimpleName);
+
+		if (service == null) {
+			return null;
+		}
+
 		Class<? extends Model> modelClass = this.defaultModelClass;
 
 		if ((this.modelClassMap != null) &&
@@ -118,17 +125,17 @@ public class ModelFactory {
 		try {
 			model = (Model)modelClass.newInstance();
 
-			Service service = ServiceUtil.getService(
-				classLoader, classPackageName, classSimpleName);
-
 			model.setModelFactory(this);
 
 			model.init(classPackageName, classSimpleName, service);
 		}
 		catch (Exception e) {
-			_log.error(
-				"getModelObject(" + className + ") ERROR " +
-				e.getClass().getName() + ": " + e.getMessage());
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"getModelObject(" + className + ") EXCEPTION " +
+					e.getClass().getName() + ": " + e.getMessage());
+			}
+
 			throw new RuntimeException(e);
 		}
 

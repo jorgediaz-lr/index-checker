@@ -46,11 +46,13 @@ public interface Service extends Cloneable {
 
 	public Criterion getFilter();
 
-	public Class<?> getLiferayModelImplClass();
+	public Class<?> getLiferayModelImplClass() throws Exception;
 
 	public void init(
 		BaseLocalService modelService, String classPackageName,
 		String classSimpleName);
+
+	public void init(Class<? extends ClassedModel> classInterface);
 
 	public DynamicQuery newDynamicQuery();
 

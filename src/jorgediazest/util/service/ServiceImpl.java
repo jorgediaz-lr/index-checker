@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
@@ -41,7 +40,8 @@ import jorgediazest.util.reflection.ReflectionUtil;
 public class ServiceImpl implements Service {
 
 	public static Class<?> getLiferayModelImplClass(
-		ClassLoader classloader, String packageName, String simpleName) {
+			ClassLoader classloader, String packageName, String simpleName)
+		throws Exception {
 
 		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(
 			packageName, simpleName);
@@ -52,13 +52,13 @@ public class ServiceImpl implements Service {
 				classloader, liferayModelImpl);
 		}
 		catch (ClassNotFoundException e) {
-			_log.error("Class not found: " + liferayModelImpl);
-			throw new RuntimeException(e);
+			_log.warn("Class not found: " + liferayModelImpl);
+			throw e;
 		}
 
 		if (classLiferayModelImpl == null) {
-			_log.error("Class not found: " + liferayModelImpl);
-			throw new RuntimeException("Class not found: " + liferayModelImpl);
+			_log.warn("Class not found: " + liferayModelImpl);
+			throw new Exception("Class not found: " + liferayModelImpl);
 		}
 
 		return classLiferayModelImpl;
@@ -193,7 +193,7 @@ public class ServiceImpl implements Service {
 		return filter;
 	}
 
-	public Class<?> getLiferayModelImplClass() {
+	public Class<?> getLiferayModelImplClass() throws Exception {
 		return ServiceImpl.getLiferayModelImplClass(
 			getClassLoader(), classPackageName, classSimpleName);
 	}
@@ -202,19 +202,27 @@ public class ServiceImpl implements Service {
 		BaseLocalService modelService, String classPackageName,
 		String classSimpleName) {
 
+		if (modelService == null) {
+			throw new NullPointerException("modelService cannot be null");
+		}
+
 		this.modelService = modelService;
 
-		this.className = classPackageName + "." + classSimpleName;
 		this.classPackageName = classPackageName;
 		this.classSimpleName = classSimpleName;
+		this.className = classPackageName + "." + classSimpleName;
+	}
 
-		if (modelService == null) {
-			Class<?> clazz = Group.class;
-			this.modelService = ServiceUtil.getLocalService(
-				null, clazz.getPackage().getName(), clazz.getSimpleName());
+	public void init(Class<? extends ClassedModel> classInterface) {
 
-			this.classInterface = getClassModel(className);
-		}
+		Class<?> clazz = Group.class;
+		this.modelService = ServiceUtil.getLocalService(
+			null, clazz.getPackage().getName(), clazz.getSimpleName());
+
+		this.classPackageName = classInterface.getPackage().getName();
+		this.classSimpleName = classInterface.getSimpleName();
+		this.className = classPackageName + "." + classSimpleName;
+		this.classInterface = classInterface;
 	}
 
 	public DynamicQuery newDynamicQuery() {
@@ -235,18 +243,6 @@ public class ServiceImpl implements Service {
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
-	}
-
-	@SuppressWarnings("unchecked")
-	protected Class<? extends ClassedModel> getClassModel(String className) {
-		try {
-			return (Class<? extends ClassedModel>)
-				PortalClassLoaderUtil.getClassLoader().loadClass(className);
-		}
-		catch (ClassNotFoundException e) {
-			_log.error("Class not found: " + className);
-			throw new RuntimeException(e);
-		}
 	}
 
 	protected Method getLocalServiceMethod(
