@@ -531,7 +531,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		List<String> classNames = new ArrayList<String>();
 
 		for (String className : allClassName) {
-			if (className == null) {
+			if (ignoreClassName(className)) {
 				continue;
 			}
 
@@ -540,8 +540,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				continue;
 			}
 
-			for (int i = 0; i < filterClassNameArr.length; i++) {
-				if (className.contains(filterClassNameArr[i])) {
+			for (String filterClassName : filterClassNameArr) {
+				if (className.contains(filterClassName)) {
 					classNames.add(className);
 					break;
 				}
@@ -579,6 +579,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return groupIds;
 	}
 
+	public boolean ignoreClassName(String className) {
+		if (Validator.isNull(className)) {
+			return true;
+		}
+
+		for (String ignoreClassName : ignoreClassNames) {
+			if (ignoreClassName.equals(className)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public void init() throws PortletException {
 		super.init();
 
@@ -604,5 +618,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
+
+	private static String[] ignoreClassNames = new String[] {
+		"com.liferay.portal.kernel.repository.model.FileEntry",
+		"com.liferay.portal.kernel.repository.model.Folder",
+		"com.liferay.portal.model.UserPersonalSite"};
 
 }
