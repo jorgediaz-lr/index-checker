@@ -52,12 +52,18 @@ public class ServiceImpl implements Service {
 				classloader, liferayModelImpl);
 		}
 		catch (ClassNotFoundException e) {
-			_log.warn("Class not found: " + liferayModelImpl);
+			if (_log.isWarnEnabled()) {
+				_log.warn("Class not found: " + liferayModelImpl);
+			}
+
 			throw e;
 		}
 
 		if (classLiferayModelImpl == null) {
-			_log.warn("Class not found: " + liferayModelImpl);
+			if (_log.isWarnEnabled()) {
+				_log.warn("Class not found: " + liferayModelImpl);
+			}
+
 			throw new Exception("Class not found: " + liferayModelImpl);
 		}
 

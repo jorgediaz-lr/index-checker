@@ -159,9 +159,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		for (String attr : exactAttributes) {
-			/* TODO if name or title are a XML,
-			 * we have to parse it and compare */
-
 			Object value1 = data1.get(attr);
 			Object value2 = data2.get(attr);
 
