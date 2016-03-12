@@ -70,7 +70,7 @@ public class ComparisonUtil {
 		}
 	}
 
-	public static Comparison getComparation(
+	public static Comparison getComparison(
 		Model model, Set<Data> leftData, Set<Data> rightData,
 		boolean showBothExact, boolean showBothNotExact, boolean showOnlyLeft,
 		boolean showOnlyRight) {
