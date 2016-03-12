@@ -96,7 +96,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			boolean showOnlyIndex = executionMode.contains(
 				ExecutionMode.SHOW_INDEX);
 
-			return ComparisonUtil.getComparation(
+			return ComparisonUtil.getComparison(
 				model, liferayData, indexData, showBothExact, showBothNotExact,
 				showOnlyLiferay, showOnlyIndex);
 		}
