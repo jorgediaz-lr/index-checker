@@ -73,10 +73,6 @@ public class DataUtil {
 			return (Boolean)value;
 		}
 
-		if (value instanceof Number) {
-			return ((Boolean)value).booleanValue();
-		}
-
 		if (value instanceof String) {
 			try {
 				return Boolean.parseBoolean((String)value);
@@ -98,7 +94,7 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return ((Byte)value).byteValue();
+			return ((Number)value).byteValue();
 		}
 
 		if (value instanceof String) {
@@ -337,11 +333,11 @@ public class DataUtil {
 		}
 
 		if (value instanceof Integer) {
-			return (Short)value;
+			return ((Integer)value).shortValue();
 		}
 
 		if (value instanceof Number) {
-			return ((Short)value).shortValue();
+			return ((Number)value).shortValue();
 		}
 
 		if (value instanceof String) {
