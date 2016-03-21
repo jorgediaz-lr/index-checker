@@ -34,17 +34,24 @@ import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowHandler;
+import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
+import com.liferay.portal.model.Portlet;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.util.PortalUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataUtil;
+import jorgediazest.util.data.DataComparator;
+import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 
@@ -62,6 +69,18 @@ public abstract class ModelImpl implements Model {
 				service.getFilter(), filter));
 	}
 
+	public Set<Portlet> calculatePortlets() {
+		Set<Portlet> portletsSet = new HashSet<Portlet>();
+		portletsSet.addAll(modelFactory.getPortletSet(this.getIndexer()));
+		portletsSet.addAll(
+			modelFactory.getPortletSet(this.getStagedModelDataHandler()));
+		portletsSet.addAll(modelFactory.getPortletSet(this.getTrashHandler()));
+		portletsSet.addAll(
+			modelFactory.getPortletSet(this.getWorkflowHandler()));
+
+		return portletsSet;
+	}
+
 	public Model clone() {
 		ModelImpl model;
 		try {
@@ -73,7 +92,7 @@ public abstract class ModelImpl implements Model {
 			model.className = this.className;
 			model.classPackageName = this.classPackageName;
 			model.classSimpleName = this.classSimpleName;
-			model.exactAttributes = this.exactAttributes;
+			model.dataComparator = this.dataComparator;
 			model.modelFactory = this.modelFactory;
 			model.name = this.name;
 			model.primaryKeyAttribute = this.primaryKeyAttribute;
@@ -87,12 +106,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return model;
-	}
-
-	public int compareTo(Data data1, Data data2) {
-
-		return DataUtil.compareLongs(
-			data1.getPrimaryKey(), data2.getPrimaryKey());
 	}
 
 	public int compareTo(Model o) {
@@ -127,7 +140,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Data createDataObject(String[] attributes, Object[] result) {
-		Data data = new Data(this);
+		Data data = new Data(this, this.dataComparator);
 
 		int i = 0;
 
@@ -136,41 +149,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return data;
-	}
-
-	public boolean equals(Data data1, Data data2) {
-
-		return (data1.getPrimaryKey() == data2.getPrimaryKey());
-	}
-
-	public boolean exact(Data data1, Data data2) {
-		if (!data1.equals(data2)) {
-			return false;
-		}
-
-		if (!Validator.equals(data1.getCompanyId(), data2.getCompanyId())) {
-			return false;
-		}
-
-		if (this.hasAttribute("groupId") &&
-			!Validator.equals(data1.getGroupId(), data2.getGroupId())) {
-
-			return false;
-		}
-
-		for (String attr : exactAttributes) {
-			Object value1 = data1.get(attr);
-			Object value2 = data2.get(attr);
-
-			if (Validator.isNotNull(value1) &&
-				Validator.isNotNull(value2) &&
-				!Validator.equals(value1, value2)) {
-
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
@@ -388,7 +366,9 @@ public abstract class ModelImpl implements Model {
 			attributes = this.getAttributesName();
 		}
 
-		ProjectionList projectionList = this.getPropertyProjection(attributes);
+		List<String> validAttributes = new ArrayList<String>();
+		ProjectionList projectionList = this.getPropertyProjection(
+			attributes, validAttributes);
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
@@ -400,12 +380,19 @@ public abstract class ModelImpl implements Model {
 		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
 			query);
 
+		String[] validAttributesArr = validAttributes.toArray(
+			new String[validAttributes.size()]);
+
 		for (Object[] result : results) {
-			Data data = createDataObject(attributes, result);
+			Data data = createDataObject(validAttributesArr, result);
 			dataMap.put(data.getPrimaryKey(), data);
 		}
 
 		return dataMap;
+	}
+
+	public DataComparator getDataComparator() {
+		return dataComparator;
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -423,10 +410,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return displayName + " (" + suffix + ")";
-	}
-
-	public String[] getExactAttributes() {
-		return exactAttributes;
 	}
 
 	public Criterion getFilter() {
@@ -466,6 +449,28 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return name;
+	}
+
+	public Portlet getPortlet() {
+		if (portlets.isEmpty()) {
+			return null;
+		}
+
+		return portlets.toArray(new Portlet[portlets.size()])[0];
+	}
+
+	public String getPortletId() {
+		Portlet portlet = this.getPortlet();
+
+		if (portlet == null) {
+			return null;
+		}
+
+		return portlet.getPortletId();
+	}
+
+	public Set<Portlet> getPortlets() {
+		return portlets;
 	}
 
 	public String getPrimaryKeyAttribute() {
@@ -543,6 +548,20 @@ public abstract class ModelImpl implements Model {
 
 	public ProjectionList getPropertyProjection(String[] attributes) {
 
+		List<String> validAttributes = new ArrayList<String>();
+		ProjectionList projectionList = getPropertyProjection(
+			attributes, validAttributes);
+
+		if (attributes.length != validAttributes.size()) {
+			throw new IllegalArgumentException(Arrays.toString(attributes));
+		}
+
+		return projectionList;
+	}
+
+	public ProjectionList getPropertyProjection(
+		String[] attributes, List<String> validAttributes) {
+
 		String[] op = new String[attributes.length];
 		String[] attributesAux = new String[attributes.length];
 
@@ -574,7 +593,16 @@ public abstract class ModelImpl implements Model {
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
 
 		for (int i = 0; i<attributesAux.length; i++) {
-			projectionList.add(getPropertyProjection(attributesAux[i], op[i]));
+			Projection projection = getPropertyProjection(
+				attributesAux[i], op[i]);
+
+			if (projection != null) {
+				projectionList.add(projection);
+
+				if (validAttributes != null) {
+					validAttributes.add(attributes[i]);
+				}
+			}
 		}
 
 		if (attributesAux.length == 1) {
@@ -595,6 +623,10 @@ public abstract class ModelImpl implements Model {
 
 	public TrashHandler getTrashHandler() {
 		return TrashHandlerRegistryUtil.getTrashHandler(getClassName());
+	}
+
+	public WorkflowHandler getWorkflowHandler() {
+		return WorkflowHandlerRegistryUtil.getWorkflowHandler(getClassName());
 	}
 
 	public boolean hasAttribute(String attribute) {
@@ -642,17 +674,13 @@ public abstract class ModelImpl implements Model {
 		return true;
 	}
 
-	public Integer hashCode(Data data) {
-		return data.getEntryClassName().hashCode() *
-			Long.valueOf(data.getPrimaryKey()).hashCode();
-	}
-
 	public boolean hasIndexer() {
 		return (IndexerRegistryUtil.getIndexer(getClassName()) != null);
 	}
 
 	public void init(
-			String classPackageName, String classSimpleName, Service service)
+			String classPackageName, String classSimpleName, Service service,
+			DataComparatorFactory dataComparatorFactory)
 		throws Exception {
 
 		this.service = service;
@@ -662,6 +690,10 @@ public abstract class ModelImpl implements Model {
 		this.classSimpleName = classSimpleName;
 
 		this.classModelImpl = service.getLiferayModelImplClass();
+
+		this.dataComparator = dataComparatorFactory.getDataComparator(this);
+
+		this.portlets = calculatePortlets();
 	}
 
 	public boolean isAuditedModel() {
@@ -737,10 +769,6 @@ public abstract class ModelImpl implements Model {
 		return this.getClassName().equals(clazz.getName());
 	}
 
-	public void setExactAttributes(String[] exactAttributes) {
-		this.exactAttributes = exactAttributes;
-	}
-
 	public void setFilter(Criterion filter) {
 		service.setFilter(filter);
 	}
@@ -774,17 +802,23 @@ public abstract class ModelImpl implements Model {
 	}
 
 	protected Projection getPropertyProjection(String attribute, String op) {
-		Projection property = null;
+
+		if ("rowCount".equals(op)) {
+			return ProjectionFactoryUtil.rowCount();
+		}
+
+		if (!this.hasAttribute(attribute)) {
+			return null;
+		}
 
 		if (isPartOfPrimaryKeyMultiAttribute(attribute)) {
 			attribute = "primaryKey." + attribute;
 		}
 
-		if (op == null) {
+		Projection property = null;
+
+		if (Validator.isNull(op)) {
 			property = ProjectionFactoryUtil.property(attribute);
-		}
-		else if ("rowCount".equals(op)) {
-			property = ProjectionFactoryUtil.rowCount();
 		}
 		else if ("count".equals(op)) {
 			property = ProjectionFactoryUtil.count(attribute);
@@ -816,14 +850,12 @@ public abstract class ModelImpl implements Model {
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
-	protected String[] exactAttributes =
-		new String[] {
-			"createDate", "status", "version", "name", "title", "description",
-			"size" };
+	protected DataComparator dataComparator;
 	protected Map<String, Boolean> mapHasAttribute =
 		new HashMap<String, Boolean>();
 	protected ModelFactory modelFactory = null;
 	protected String name = null;
+	protected Set<Portlet> portlets = null;
 
 	/**
 	 * primaries keys can be at following ways:

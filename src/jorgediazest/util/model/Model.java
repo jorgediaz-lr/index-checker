@@ -21,12 +21,16 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.trash.TrashHandler;
+import com.liferay.portal.model.Portlet;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataComparator;
+import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.service.Service;
 
 /**
@@ -38,15 +42,9 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public Model clone();
 
-	public int compareTo(Data data, Data data2);
-
 	public long count();
 
 	public long count(Criterion condition);
-
-	public boolean equals(Data data1, Data data2);
-
-	public boolean exact(Data data1, Data data2);
 
 	public Criterion generateCriterionFilter(String stringFilter);
 
@@ -84,6 +82,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public Map<Long, Data> getData(String[] attributes, Criterion filter)
 		throws Exception;
 
+	public DataComparator getDataComparator();
+
 	public String getDisplayName(Locale locale);
 
 	public Criterion getFilter();
@@ -98,6 +98,12 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public String getName();
 
+	public Portlet getPortlet();
+
+	public String getPortletId();
+
+	public Set<Portlet> getPortlets();
+
 	public String getPrimaryKeyAttribute();
 
 	public String[] getPrimaryKeyMultiAttribute();
@@ -107,6 +113,9 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public Projection getPropertyProjection(String attribute);
 
 	public ProjectionList getPropertyProjection(String[] attributes);
+
+	public ProjectionList getPropertyProjection(
+		String[] attributes, List<String> validAttributes);
 
 	public Service getService();
 
@@ -118,12 +127,11 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public boolean hasAttributes(String[] attributes);
 
-	public Integer hashCode(Data data);
-
 	public boolean hasIndexer();
 
 	public void init(
-			String classPackageName, String classSimpleName, Service service)
+			String classPackageName, String classSimpleName, Service service,
+			DataComparatorFactory dataComparatorFactory)
 		throws Exception;
 
 	public boolean isAuditedModel();

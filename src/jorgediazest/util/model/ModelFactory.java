@@ -18,11 +18,19 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.model.Portlet;
+import com.liferay.portal.service.PortletLocalServiceUtil;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import jorgediazest.util.data.DataComparator;
+import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceUtil;
 
@@ -51,6 +59,12 @@ public class ModelFactory {
 		}
 
 		this.modelClassMap = modelClassMap;
+
+		fillHandlerPortletIdMap();
+	}
+
+	public DataComparatorFactory getDataComparatorFactory() {
+		return dataComparatorFactory;
 	}
 
 	public Map<String, Model> getModelMap(Collection<String> classNames) {
@@ -127,7 +141,9 @@ public class ModelFactory {
 
 			model.setModelFactory(this);
 
-			model.init(classPackageName, classSimpleName, service);
+			model.init(
+				classPackageName, classSimpleName, service,
+				dataComparatorFactory);
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -142,8 +158,76 @@ public class ModelFactory {
 		return model;
 	}
 
+	public Set<Portlet> getPortletSet(Object handler) {
+
+		Object handlerAux = ReflectionUtil.unWrapProxy(handler);
+
+		if ((handlerAux == null) ||
+			!handlerPortletMap.containsKey(handlerAux.getClass().getName())) {
+
+			return new HashSet<Portlet>();
+		}
+
+		return handlerPortletMap.get(handlerAux.getClass().getName());
+	}
+
+	public void setDataComparatorFactory(
+		DataComparatorFactory dataComparatorFactory) {
+
+		this.dataComparatorFactory = dataComparatorFactory;
+	}
+
+	public interface DataComparatorFactory {
+		public DataComparator getDataComparator(Model model);
+	}
+
+	protected void fillHandlerPortletIdMap() {
+		for (Portlet portlet : PortletLocalServiceUtil.getPortlets()) {
+			addHandlersToMap(portlet.getIndexerClasses(), portlet);
+			addHandlersToMap(
+				portlet.getStagedModelDataHandlerClasses(), portlet);
+			addHandlersToMap(portlet.getTrashHandlerClasses(), portlet);
+			addHandlersToMap(portlet.getWorkflowHandlerClasses(), portlet);
+		}
+	}
+
+	protected DataComparatorFactory dataComparatorFactory =
+		new DataComparatorFactory() {
+
+		protected DataComparator dataComparator = new DataComparator(
+			new String[] {
+				"createDate", "status", "version", "name", "title",
+				"description", "size" });
+
+		@Override
+		public DataComparator getDataComparator(Model model) {
+			return dataComparator;
+		}
+
+	};
+
 	protected Class<? extends Model> defaultModelClass = null;
+	protected Map<String, Set<Portlet>> handlerPortletMap =
+		new HashMap<String, Set<Portlet>>();
 	protected Map<String, Class<? extends Model>> modelClassMap = null;
+
+	private void addHandlersToMap(List<String> handlerList, Portlet portlet) {
+		for (String handler : handlerList) {
+			if (!handlerPortletMap.containsKey(handler)) {
+				handlerPortletMap.put(handler, new HashSet<Portlet>());
+			}
+
+			Set<Portlet> portletSet = handlerPortletMap.get(handler);
+
+			if (!portletSet.contains(portlet)) {
+				portletSet.add(portlet);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("Adding: " + handler + " portlet " + portlet);
+				}
+			}
+		}
+	}
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 

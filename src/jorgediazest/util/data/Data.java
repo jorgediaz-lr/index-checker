@@ -25,13 +25,14 @@ import jorgediazest.util.model.Model;
  */
 public class Data implements Comparable<Data> {
 
-	public Data(Model model) {
+	public Data(Model model, DataComparator comparator) {
+		this.comparator = comparator;
 		this.model = model;
 	}
 
 	@Override
 	public int compareTo(Data data) {
-		return model.compareTo(this, data);
+		return comparator.compare(this, data);
 	}
 
 	public boolean equals(Object obj) {
@@ -49,23 +50,15 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		return model.equals(this, data);
+		return comparator.equals(this, data);
 	}
 
 	public boolean exact(Data data) {
 
-		return model.exact(this, data);
+		return comparator.exact(this, data);
 	}
 
 	public Object get(String attribute) {
-		if ("companyId".equals(attribute)) {
-			return getCompanyId();
-		}
-
-		if ("groupId".equals(attribute)) {
-			return getGroupId();
-		}
-
 		if (attribute.equals("pk") ||
 			attribute.equals(model.getPrimaryKeyAttribute())) {
 
@@ -76,18 +69,13 @@ public class Data implements Comparable<Data> {
 			return getResourcePrimKey();
 		}
 
-		if (attribute.equals("uuid")) {
-			return getUuid();
-		}
-
 		return data.get(attribute);
 	}
 
 	public String getAllData(String sep) {
 
-		return this.getEntryClassName() + sep + companyId + sep + groupId +
-			sep + primaryKey + sep + resourcePrimKey + sep + uuid + sep +
-			data.toString();
+		return this.getEntryClassName() + sep + primaryKey + sep +
+			resourcePrimKey + sep + data.toString();
 	}
 
 	public Set<String> getAttributes() {
@@ -95,7 +83,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public Long getCompanyId() {
-		return companyId;
+		return (Long)get("companyId");
 	}
 
 	public String getEntryClassName() {
@@ -103,7 +91,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public Long getGroupId() {
-		return groupId;
+		return (Long)get("groupId");
 	}
 
 	public Model getModel() {
@@ -119,11 +107,11 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String getUuid() {
-		return uuid;
+		return (String) get("uuid");
 	}
 
 	public int hashCode() {
-		Integer hashCode = model.hashCode(this);
+		Integer hashCode = comparator.hashCode(this);
 
 		if (hashCode != null) {
 			return hashCode;
@@ -134,21 +122,6 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Object value) {
-		if ("scopeGroupId".equals(attribute)) {
-			attribute = "groupId";
-		}
-		else if ("modified".equals(attribute)) {
-			attribute = "modifiedDate";
-		}
-		else if ("entryClassPK".equals(attribute)) {
-			if (model.isResourcedModel()) {
-				attribute = "resourcePrimKey";
-			}
-			else {
-				attribute = model.getPrimaryKeyAttribute();
-			}
-		}
-
 		Object convertedObject;
 		int type = model.getAttributeType(attribute);
 
@@ -170,17 +143,8 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
-		if ("companyId".equals(attribute)) {
-			setCompanyId((Long)convertedObject);
-		}
-		else if ("groupId".equals(attribute)) {
-			setGroupId((Long)convertedObject);
-		}
-		else if ("resourcePrimKey".equals(attribute)) {
+		if ("resourcePrimKey".equals(attribute)) {
 			setResourcePrimKey((Long)convertedObject);
-		}
-		else if ("uuid".equals(attribute)) {
-			setUuid((String)convertedObject);
 		}
 		else if (model.getPrimaryKeyAttribute().equals(attribute)) {
 			setPrimaryKey((Long)convertedObject);
@@ -188,14 +152,6 @@ public class Data implements Comparable<Data> {
 		else {
 			data.put(attribute, convertedObject);
 		}
-	}
-
-	public void setCompanyId(Long companyId) {
-		this.companyId = companyId;
-	}
-
-	public void setGroupId(Long groupId) {
-		this.groupId = groupId;
 	}
 
 	public void setPrimaryKey(long primaryKey) {
@@ -206,21 +162,15 @@ public class Data implements Comparable<Data> {
 		this.resourcePrimKey = resourcePrimKey;
 	}
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-
 	public String toString() {
 		return this.getEntryClassName() + " " +
-				primaryKey + " " + resourcePrimKey + " " + uuid;
+				primaryKey + " " + resourcePrimKey + " " + this.getUuid();
 	}
 
-	protected Long companyId = null;
+	protected DataComparator comparator = null;
 	protected Map<String, Object> data = new HashMap<String, Object>();
-	protected Long groupId = null;
 	protected Model model = null;
 	protected long primaryKey = -1;
 	protected long resourcePrimKey = -1;
-	protected String uuid = null;
 
 }
