@@ -25,19 +25,16 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataUtil;
-import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.model.ModelImpl;
 import jorgediazest.util.service.Service;
 
@@ -46,100 +43,31 @@ import jorgediazest.util.service.Service;
  */
 public class IndexCheckerModel extends ModelImpl {
 
-	public static String[] auditedModelAttributes =
-		new String[] { "companyId", "createDate", "modifiedDate"};
-	public static String[] groupedModelAttributes = new String[] { "groupId" };
-	public static String[] resourcedModelAttributes =
-		new String[] { "resourcePrimKey" };
-	public static String[] stagedModelAttributes =
-		new String[] { "companyId", "createDate", "modifiedDate" };
-	public static String[] workflowModelAttributes = new String[] { "status" };
+	public Data createDataObject(String[] attributes, Document doc) {
+		Data data = new Data(this, this.dataComparator);
 
-	public Set<String> calculateAttributesToCheck() {
-		Set<String> attributesToCheckAux = new LinkedHashSet<String>();
+		data.set("uid", doc.getUID());
 
-		attributesToCheckAux.add(this.getPrimaryKeyAttribute());
-		attributesToCheckAux.add("companyId");
+		for (String attribute : attributes) {
+			String attrDoc = IndexSearchUtil.getAttributeForDocument(
+				this, attribute);
 
-		if (this.isAuditedModel()) {
-			attributesToCheckAux.addAll(Arrays.asList(auditedModelAttributes));
-		}
-
-		if (this.isGroupedModel()) {
-			attributesToCheckAux.addAll(Arrays.asList(groupedModelAttributes));
-		}
-
-		if (this.isResourcedModel()) {
-			attributesToCheckAux.addAll(
-				Arrays.asList(resourcedModelAttributes));
-		}
-
-		if (this.isStagedModel()) {
-			attributesToCheckAux.addAll(Arrays.asList(stagedModelAttributes));
-		}
-
-		if (this.isWorkflowEnabled()) {
-			attributesToCheckAux.addAll(Arrays.asList(workflowModelAttributes));
-		}
-
-		attributesToCheckAux.add("version");
-
-		Set<String> attributesToCheck = new LinkedHashSet<String>();
-
-		for (String attr : attributesToCheckAux) {
-			if (this.hasAttribute(attr)) {
-				attributesToCheck.add(attr);
+			if (doc.hasField(attrDoc)) {
+				data.set(attribute, doc.get(attrDoc));
 			}
-		}
-
-		return attributesToCheck;
-	}
-
-	@Override
-	public Model clone() {
-		IndexCheckerModel model;
-		try {
-			model = (IndexCheckerModel)super.clone();
-			model.attributesToCheck = new LinkedHashSet<String>(
-				this.attributesToCheck);
-		}
-		catch (Exception e) {
-			_log.error("Error executing clone");
-			throw new RuntimeException(e);
-		}
-
-		return model;
-	}
-
-	public int compareTo(Data data1, Data data2) {
-		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
-			!this.isResourcedModel()) {
-
-			return super.compareTo(data1, data2);
-		}
-		else if ((data1.getResourcePrimKey() != -1) &&
-				 (data2.getResourcePrimKey() != -1)) {
-
-			return DataUtil.compareLongs(
-				data1.getResourcePrimKey(), data2.getResourcePrimKey());
-		}
-		else {
-			return 0;
-		}
-	}
-
-	public Data createDataObject(Document doc) {
-		Data data = new Data(this);
-
-		for (String attrib : this.getIndexAttributes()) {
-			data.set(attrib, doc.get(attrib));
 		}
 
 		return data;
 	}
 
 	public void delete(Data value) throws SearchException {
-		getIndexer().delete(value.getCompanyId(), value.get("uid").toString());
+		Object uid = value.get("uid");
+
+		if (uid == null) {
+			return;
+		}
+
+		getIndexer().delete(value.getCompanyId(), uid.toString());
 	}
 
 	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
@@ -183,22 +111,6 @@ public class IndexCheckerModel extends ModelImpl {
 		return errors;
 	}
 
-	public boolean equals(Data data1, Data data2) {
-		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
-			!this.isResourcedModel()) {
-
-			return super.equals(data1, data2);
-		}
-		else if ((data1.getResourcePrimKey() != -1) &&
-				 (data2.getResourcePrimKey() != -1)) {
-
-			return (data1.getResourcePrimKey() == data2.getResourcePrimKey());
-		}
-		else {
-			return false;
-		}
-	}
-
 	public Criterion generateQueryFilter() {
 		if (!this.isWorkflowEnabled()) {
 			return null;
@@ -209,25 +121,31 @@ public class IndexCheckerModel extends ModelImpl {
 			"status=" + WorkflowConstants.STATUS_IN_TRASH);
 	}
 
-	public final Set<String> getAttributesToCheck() {
-		if (attributesToCheck == null) {
-			attributesToCheck = calculateAttributesToCheck();
-		}
-
-		return attributesToCheck;
-	}
-
-	public String[] getIndexAttributes() {
-		return indexAttributes;
-	}
-
-	public Set<Data> getIndexData(long companyId, long groupId)
+	public Set<Data> getIndexData(
+			String[] attributes, SearchContext searchContext,
+			BooleanQuery contextQuery)
 		throws SearchException {
 
+		int size = Math.max((int)this.count() * 2, 50000);
+
+		Document[] docs = IndexSearchUtil.executeSearch(
+			searchContext, contextQuery, size, 50000);
+
 		Set<Data> indexData = new HashSet<Data>();
-		SearchContext searchContext = new SearchContext();
-		searchContext.setCompanyId(companyId);
-		searchContext.setEntryClassNames(new String[] {this.getClassName()});
+
+		if (docs != null) {
+			for (int i = 0; i < docs.length; i++) {
+				Data data = this.createDataObject(attributes, docs[i]);
+
+				indexData.add(data);
+			}
+		}
+
+		return indexData;
+	}
+
+	public BooleanQuery getIndexQuery(
+		long groupId, SearchContext searchContext) {
 
 		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
 			searchContext);
@@ -238,45 +156,26 @@ public class IndexCheckerModel extends ModelImpl {
 			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
 		}
 
-		int size = Math.max((int)this.count() * 2, 50000);
-
-		Document[] docs = IndexSearchUtil.executeSearch(
-			searchContext, contextQuery, size, 50000);
-
-		if (docs != null) {
-			for (int i = 0; i < docs.length; i++) {
-				Data data = this.createDataObject(docs[i]);
-
-				indexData.add(data);
-			}
-		}
-
-		return indexData;
+		return contextQuery;
 	}
 
-	public Integer hashCode(Data data) {
-		if ((data.getPrimaryKey() != -1) && !this.isResourcedModel()) {
-			return super.hashCode(data);
-		}
-		else if (data.getResourcePrimKey() != -1) {
-			return -1 * data.getEntryClassName().hashCode() *
-				Long.valueOf(data.getResourcePrimKey()).hashCode();
-		}
-
-		return null;
+	public SearchContext getIndexSearchContext(long companyId) {
+		SearchContext searchContext = new SearchContext();
+		searchContext.setCompanyId(companyId);
+		searchContext.setEntryClassNames(new String[] {this.getClassName()});
+		return searchContext;
 	}
 
 	@Override
 	public void init(
-			String classPackageName, String classSimpleName, Service service)
+			String classPackageName, String classSimpleName, Service service,
+			DataComparatorFactory dataComparatorFactory)
 		throws Exception {
 
-		super.init(classPackageName, classSimpleName, service);
+		super.init(
+			classPackageName, classSimpleName, service, dataComparatorFactory);
 
 		this.setFilter(this.generateQueryFilter());
-
-		this.setExactAttributes(
-			new String[] {"createDate", "modifiedDate", "status", "version"});
 	}
 
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {
@@ -315,23 +214,6 @@ public class IndexCheckerModel extends ModelImpl {
 	public void reindex(Data value) throws SearchException {
 		getIndexer().reindex(getClassName(), value.getPrimaryKey());
 	}
-
-	public String toString() {
-		String toString = this.getClassSimpleName()+":";
-
-		for (String attr : this.getAttributesToCheck()) {
-			toString += " " + attr;
-		}
-
-		return toString;
-	}
-
-	protected static String[] indexAttributes =
-		{Field.UID, Field.CREATE_DATE, Field.MODIFIED_DATE,
-		Field.ENTRY_CLASS_PK, Field.STATUS, Field.COMPANY_ID,
-		Field.SCOPE_GROUP_ID, Field.VERSION};
-
-	protected Set<String> attributesToCheck = null;
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);
 

@@ -28,6 +28,7 @@ import java.util.List;
 
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 
+import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.reflection.ReflectionUtil;
 
@@ -84,6 +85,29 @@ public class IndexSearchUtil {
 				return docs;
 			}
 		}
+	}
+
+	public static String getAttributeForDocument(
+		Model model, String attribute) {
+
+		if ("groupId".equals(attribute)) {
+			attribute = "scopeGroupId";
+		}
+		else if ("modifiedDate".equals(attribute)) {
+			attribute = "modified";
+		}
+		else if ("resourcePrimKey".equals(attribute) &&
+				 model.isResourcedModel()) {
+
+			attribute = "entryClassPK";
+		}
+		else if (model.getPrimaryKeyAttribute().equals(attribute) &&
+				 !model.isResourcedModel()) {
+
+			attribute = "entryClassPK";
+		}
+
+		return attribute;
 	}
 
 	public static int getIndexSearchLimit() {

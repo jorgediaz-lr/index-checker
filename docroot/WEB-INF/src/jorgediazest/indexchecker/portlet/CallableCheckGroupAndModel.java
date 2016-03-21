@@ -17,8 +17,12 @@ package jorgediazest.indexchecker.portlet;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanQuery;
+import com.liferay.portal.kernel.search.SearchContext;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -28,6 +32,7 @@ import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
+import jorgediazest.util.model.Model;
 
 /**
  * @author Jorge Díaz
@@ -42,6 +47,23 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		this.groupId = groupId;
 		this.model = model;
 		this.executionMode = executionMode;
+	}
+
+	public static Set<String> calculateAttributesToCheck(Model model) {
+		Set<String> attributesToCheck = new LinkedHashSet<String>();
+
+		attributesToCheck.add(model.getPrimaryKeyAttribute());
+		attributesToCheck.add("companyId");
+		attributesToCheck.add("groupId");
+
+		if (model.isResourcedModel()) {
+			attributesToCheck.add("resourcePrimKey");
+		}
+
+		attributesToCheck.addAll(
+			Arrays.asList(model.getDataComparator().getExactAttributes()));
+
+		return attributesToCheck;
 	}
 
 	@Override
@@ -70,8 +92,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
 
-			String[] attributesToCheck =
-				model.getAttributesToCheck().toArray(new String[0]);
+			String[] attributesToCheck = calculateAttributesToCheck(
+				model).toArray(new String[0]);
 
 			Set<Data> liferayData = new HashSet<Data>(
 				model.getData(attributesToCheck, filter).values());
@@ -81,7 +103,13 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
 				!liferayData.isEmpty()) {
 
-				indexData = model.getIndexData(companyId, groupId);
+				SearchContext searchContext = model.getIndexSearchContext(
+					companyId);
+				BooleanQuery contextQuery = model.getIndexQuery(
+					groupId, searchContext);
+
+				indexData = model.getIndexData(
+					attributesToCheck, searchContext, contextQuery);
 			}
 			else {
 				indexData = new HashSet<Data>();

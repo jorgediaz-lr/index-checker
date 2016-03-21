@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.Map;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
+import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.service.Service;
 
@@ -48,9 +50,10 @@ public class JournalArticle extends IndexCheckerModel {
 
 		DynamicQuery query = service.newDynamicQuery();
 
-		ProjectionList projectionList =
-			this.getPropertyProjection(
-				getAttributesToCheck().toArray(new String[0]));
+		List<String> validAttributes = new ArrayList<String>();
+
+		ProjectionList projectionList = this.getPropertyProjection(
+			attributes, validAttributes);
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
@@ -82,8 +85,11 @@ public class JournalArticle extends IndexCheckerModel {
 		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
 			query);
 
+		String[] validAttributesArr = validAttributes.toArray(
+			new String[validAttributes.size()]);
+
 		for (Object[] result : results) {
-			Data data = createDataObject(attributes, result);
+			Data data = createDataObject(validAttributesArr, result);
 
 			if (!dataMap.containsKey(data.getResourcePrimKey())) {
 				dataMap.put(data.getResourcePrimKey(), data);
@@ -92,27 +98,8 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
-	public int compareTo(Data data1, Data data2) {
-		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
-			indexAllVersions) {
-
-			return DataUtil.compareLongs(
-				data1.getPrimaryKey(), data2.getPrimaryKey());
-		}
-		else if ((data1.getResourcePrimKey() != -1) &&
-				 (data2.getResourcePrimKey() != -1)) {
-
-			return DataUtil.compareLongs(
-				data1.getResourcePrimKey(), data2.getResourcePrimKey());
-		}
-		else {
-			return 0;
-		}
-	}
-
-	@Override
-	public Data createDataObject(Document doc) {
-		Data data = super.createDataObject(doc);
+	public Data createDataObject(String[] attributes, Document doc) {
+		Data data = super.createDataObject(attributes, doc);
 
 		if (indexAllVersions) {
 			long id = DataUtil.getIdFromUID(doc.get(Field.UID));
@@ -120,23 +107,6 @@ public class JournalArticle extends IndexCheckerModel {
 		}
 
 		return data;
-	}
-
-	@Override
-	public boolean equals(Data data1, Data data2) {
-		if ((data1.getPrimaryKey() != -1) && (data2.getPrimaryKey() != -1) &&
-			indexAllVersions) {
-
-			return (data1.getPrimaryKey() == data2.getPrimaryKey());
-		}
-		else if ((data1.getResourcePrimKey() != -1) &&
-				 (data2.getResourcePrimKey() != -1)) {
-
-			return (data1.getResourcePrimKey() == data2.getResourcePrimKey());
-		}
-		else {
-			return false;
-		}
 	}
 
 	@Override
@@ -170,25 +140,14 @@ public class JournalArticle extends IndexCheckerModel {
 		return dataMap;
 	}
 
-	public Integer hashCode(Data data) {
-		if ((data.getPrimaryKey() != -1) && indexAllVersions) {
-			return data.getEntryClassName().hashCode() *
-				Long.valueOf(data.getPrimaryKey()).hashCode();
-		}
-		else if (data.getResourcePrimKey() != -1) {
-			return -1 * data.getEntryClassName().hashCode() *
-				Long.valueOf(data.getResourcePrimKey()).hashCode();
-		}
-
-		return null;
-	}
-
 	@Override
 	public void init(
-			String classPackageName, String classSimpleName, Service service)
+			String classPackageName, String classSimpleName, Service service,
+			DataComparatorFactory dataComparatorFactory)
 		throws Exception {
 
-		super.init(classPackageName, classSimpleName, service);
+		super.init(
+			classPackageName, classSimpleName, service, dataComparatorFactory);
 
 		try {
 			indexAllVersions =
