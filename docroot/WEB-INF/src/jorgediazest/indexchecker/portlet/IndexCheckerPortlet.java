@@ -398,7 +398,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				int threadsExecutor = 100;
+				int threadsExecutor = GetterUtil.getInteger(
+					PortletProps.get("number.threads"),1);
 
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
@@ -498,7 +499,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				int threadsExecutor = 100;
+				int threadsExecutor = GetterUtil.getInteger(
+					PortletProps.get("number.threads"),1);
 
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
