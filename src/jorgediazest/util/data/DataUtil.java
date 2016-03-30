@@ -14,23 +14,22 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.lang.reflect.Method;
-
 import java.math.BigDecimal;
 
-import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import java.text.DateFormat;
+
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.TreeSet;
 
 import jorgediazest.util.reflection.ReflectionUtil;
@@ -128,40 +127,25 @@ public class DataUtil {
 		return null;
 	}
 
-	public static Long castDate(Object value) {
+	public static Long castDateToEpoch(Object value) {
 		if (value == null) {
 			return null;
 		}
 
-		if (value instanceof Long) {
-			return (Long)value;
-		}
-
-		if (value instanceof Number) {
-			return ((Number)value).longValue();
-		}
-
-		if (value instanceof Time) {
-			return ((Time)value).getTime() / 1000L;
-		}
+		Date date = null;
 
 		if (value instanceof Date) {
-			return ((Date)value).getTime() / 1000L;
+			date = (Date)value;
+		}
+		else if (value instanceof String) {
+			date = stringToDate((String)value);
 		}
 
-		if (value instanceof Timestamp) {
-			return ((Timestamp)value).getTime() / 1000L;
+		if (Validator.isNull(date)) {
+			return castLong(value);
 		}
 
-		if (value instanceof String) {
-			try {
-				return stringToDate((String)value);
-			}
-			catch (Exception e) {
-			}
-		}
-
-		return null;
+		return date.getTime() / 1000L;
 	}
 
 	public static Double castDouble(Object value) {
@@ -315,7 +299,7 @@ public class DataUtil {
 			case Types.DATE:
 			case Types.TIME:
 			case Types.TIMESTAMP:
-				result = castDate(value);
+				result = castDateToEpoch(value);
 				break;
 
 			default:
@@ -419,45 +403,64 @@ public class DataUtil {
 		return valuesPK;
 	}
 
-	public static Long stringToDate(String dateString) {
-		if (Validator.isNull(dateString)) {
-			return null;
-		}
+	public static Date stringToDate(String dateString) {
+
+		Date date = null;
 
 		try {
-			return ((Long)stringToTimeMethod.invoke(null, dateString))/1000;
+			date = dateFormatyyyyMMddHHmmss.get().parse(dateString);
 		}
 		catch (Exception e) {}
 
+		if (date != null) {
+			return date;
+		}
+
 		try {
-			return (Long.valueOf(dateString))/1000;
+			date = dateFormatyyyyMMddHHmmssSSS.get().parse(dateString);
 		}
 		catch (Exception e) {}
 
-		try {
-			long rawOffset = TimeZone.getDefault().getRawOffset() / 1000L;
+		if (date != null) {
+			return date;
+		}
 
-			return ((Timestamp.valueOf(dateString).getTime())/1000) + rawOffset;
+		try {
+			date = Timestamp.valueOf(dateString);
 		}
 		catch (Exception e) {}
 
-		return null;
+		if (date != null) {
+			return date;
+		}
+
+		try {
+			date = Time.valueOf(dateString);
+		}
+		catch (Exception e) {}
+
+		return date;
 	}
 
-	protected static Method stringToTimeMethod = null;
+	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
+			new ThreadLocal<DateFormat>() {
 
-	static {
-		try {
-			Class<?> dateTools =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-				"org.apache.lucene.document.DateTools");
+		@Override
+		protected DateFormat initialValue()
+		{
+			return DateFormatFactoryUtil.getSimpleDateFormat("yyyyMMddHHmmss");
+		}
+	};
 
-			stringToTimeMethod = dateTools.getMethod(
-				"stringToTime", String.class);
+	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmssSSS =
+			new ThreadLocal<DateFormat>() {
+
+		@Override
+		protected DateFormat initialValue()
+		{
+			return DateFormatFactoryUtil.getSimpleDateFormat(
+				"yyyyMMddHHmmssSSS");
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-	}
+	};
 
 }
