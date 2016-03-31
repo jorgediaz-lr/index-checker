@@ -297,6 +297,10 @@ public class ReflectionUtil {
 	}
 
 	public static Object unWrapProxy(Object object) {
+		if (object == null) {
+			return null;
+		}
+
 		if (object instanceof Proxy) {
 			try {
 				ClassLoaderBeanHandler classLoaderBeanHandler =
