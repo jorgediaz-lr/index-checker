@@ -67,7 +67,7 @@ public class IndexCheckerModel extends ModelImpl {
 			return;
 		}
 
-		getIndexer().delete(value.getCompanyId(), uid.toString());
+		getIndexerNullSafe().delete(value.getCompanyId(), uid.toString());
 	}
 
 	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
@@ -212,7 +212,7 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public void reindex(Data value) throws SearchException {
-		getIndexer().reindex(getClassName(), value.getPrimaryKey());
+		getIndexerNullSafe().reindex(getClassName(), value.getPrimaryKey());
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);

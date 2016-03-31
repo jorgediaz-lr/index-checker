@@ -173,7 +173,8 @@ public class JournalArticle extends IndexCheckerModel {
 
 	@Override
 	public void reindex(Data value) throws SearchException {
-		getIndexer().reindex(this.getClassName(), value.getResourcePrimKey());
+		getIndexerNullSafe().reindex(
+			this.getClassName(), value.getResourcePrimKey());
 	}
 
 	protected boolean indexAllVersions;
