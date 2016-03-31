@@ -14,6 +14,8 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.portal.kernel.util.Validator;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -59,27 +61,30 @@ public class Data implements Comparable<Data> {
 	}
 
 	public Object get(String attribute) {
-		if (attribute.equals("pk") ||
-			attribute.equals(model.getPrimaryKeyAttribute())) {
-
-			return getPrimaryKey();
+		if (Validator.isNull(attribute)) {
+			return null;
 		}
 
-		if (attribute.equals("resourcePrimKey")) {
-			return getResourcePrimKey();
+		if ("pk".equals(attribute)) {
+			return get(model.getPrimaryKeyAttribute());
 		}
 
-		return data.get(attribute);
+		return map.get(attribute);
 	}
 
-	public String getAllData(String sep) {
+	public <T> T get(String attribute, T defaultValue) {
+		@SuppressWarnings("unchecked")
+		T value = (T)this.get(attribute);
 
-		return this.getEntryClassName() + sep + primaryKey + sep +
-			resourcePrimKey + sep + data.toString();
+		if (value != null) {
+			return value;
+		}
+
+		return defaultValue;
 	}
 
 	public Set<String> getAttributes() {
-		return data.keySet();
+		return map.keySet();
 	}
 
 	public Long getCompanyId() {
@@ -94,16 +99,20 @@ public class Data implements Comparable<Data> {
 		return (Long)get("groupId");
 	}
 
+	public Map<String, Object> getMap() {
+		return map;
+	}
+
 	public Model getModel() {
 		return model;
 	}
 
 	public long getPrimaryKey() {
-		return primaryKey;
+		return get("pk", -1L);
 	}
 
 	public long getResourcePrimKey() {
-		return resourcePrimKey;
+		return get("resourcePrimKey", -1L);
 	}
 
 	public String getUuid() {
@@ -143,34 +152,24 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
-		if ("resourcePrimKey".equals(attribute)) {
-			setResourcePrimKey((Long)convertedObject);
-		}
-		else if (model.getPrimaryKeyAttribute().equals(attribute)) {
-			setPrimaryKey((Long)convertedObject);
-		}
-		else {
-			data.put(attribute, convertedObject);
-		}
+		map.put(attribute, convertedObject);
 	}
 
 	public void setPrimaryKey(long primaryKey) {
-		this.primaryKey = primaryKey;
+		set(model.getPrimaryKeyAttribute(), primaryKey);
 	}
 
 	public void setResourcePrimKey(long resourcePrimKey) {
-		this.resourcePrimKey = resourcePrimKey;
+		set("resourcePrimKey", resourcePrimKey);
 	}
 
 	public String toString() {
-		return this.getEntryClassName() + " " +
-				primaryKey + " " + resourcePrimKey + " " + this.getUuid();
+		return this.getEntryClassName() + " " + this.getPrimaryKey() + " " +
+			this.getResourcePrimKey() + " " + this.getUuid();
 	}
 
 	protected DataComparator comparator = null;
-	protected Map<String, Object> data = new HashMap<String, Object>();
+	protected Map<String, Object> map = new HashMap<String, Object>();
 	protected Model model = null;
-	protected long primaryKey = -1;
-	protected long resourcePrimKey = -1;
 
 }

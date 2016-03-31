@@ -43,7 +43,8 @@ public class Comparison {
 				_log.info("==" + entry.getKey() + "==");
 
 				for (Data d : entry.getValue()) {
-					_log.info(d.getAllData(","));
+					_log.info(
+						d.getEntryClassName() + " " + d.getMap().toString());
 				}
 			}
 		}
