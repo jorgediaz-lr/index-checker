@@ -94,6 +94,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public Indexer getIndexer();
 
+	public Indexer getIndexerNullSafe();
+
 	public ModelFactory getModelFactory();
 
 	public String getName();

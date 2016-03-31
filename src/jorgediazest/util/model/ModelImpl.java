@@ -243,7 +243,7 @@ public abstract class ModelImpl implements Model {
 			this, attrName, attrValue, op);
 	}
 
-	public int getAttributePos(String name) { /* Cachear!! */
+	public int getAttributePos(String name) { /* TODO Cachear!! */
 		Object[][] values = this.getAttributes();
 
 		if (name.endsWith(StringPool.UNDERLINE)) {
@@ -383,9 +383,12 @@ public abstract class ModelImpl implements Model {
 		String[] validAttributesArr = validAttributes.toArray(
 			new String[validAttributes.size()]);
 
+		long i = -1;
+
 		for (Object[] result : results) {
 			Data data = createDataObject(validAttributesArr, result);
-			dataMap.put(data.getPrimaryKey(), data);
+			long pk = data.get("pk", i--);
+			dataMap.put(pk, data);
 		}
 
 		return dataMap;
@@ -436,6 +439,10 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Indexer getIndexer() {
+		return IndexerRegistryUtil.getIndexer(getClassName());
+	}
+
+	public Indexer getIndexerNullSafe() {
 		return IndexerRegistryUtil.nullSafeGetIndexer(getClassName());
 	}
 
@@ -675,7 +682,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean hasIndexer() {
-		return (IndexerRegistryUtil.getIndexer(getClassName()) != null);
+		return getIndexer() != null;
 	}
 
 	public void init(
