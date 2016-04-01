@@ -14,21 +14,41 @@
 
 package jorgediazest.util.data;
 
-import java.util.Comparator;
-
 /**
  * @author Jorge Díaz
  */
-public interface DataComparator extends Comparator<Data> {
+public class DataBaseComparator implements DataComparator {
 
-	public int compare(Data data1, Data data2);
+	public int compare(Data data1, Data data2) {
 
-	public boolean equals(Data data1, Data data2);
+		if (data1.equals(data2)) {
+			return 0;
+		}
 
-	public boolean exact(Data data1, Data data2);
+		return DataUtil.compareLongs(data1.hashCode(), data2.hashCode());
+	}
 
-	public String[] getExactAttributes();
+	public boolean equals(Data data1, Data data2) {
 
-	public Integer hashCode(Data data);
+		if (data1.hashCode() != data2.hashCode()) {
+			return false;
+		}
+
+		return data1.getMap().equals(data2.getMap());
+	}
+
+	public boolean exact(Data data1, Data data2) {
+		return equals(data1, data2);
+	}
+
+	@Override
+	public String[] getExactAttributes() {
+		return new String[0];
+	}
+
+	public Integer hashCode(Data data) {
+
+		return data.getMap().hashCode();
+	}
 
 }

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.data.DataComparator;
+import jorgediazest.util.data.DataModelComparator;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceUtil;
@@ -194,7 +195,7 @@ public class ModelFactory {
 	protected DataComparatorFactory dataComparatorFactory =
 		new DataComparatorFactory() {
 
-		protected DataComparator dataComparator = new DataComparator(
+		protected DataComparator dataComparator = new DataModelComparator(
 			new String[] {
 				"createDate", "status", "version", "name", "title",
 				"description", "size" });

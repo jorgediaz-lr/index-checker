@@ -16,7 +16,7 @@ package jorgediazest.util.data;
 
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,10 +46,6 @@ public class Data implements Comparable<Data> {
 
 		if (this == obj) {
 			return true;
-		}
-
-		if (this.model != data.model) {
-			return false;
 		}
 
 		return comparator.equals(this, data);
@@ -87,6 +83,10 @@ public class Data implements Comparable<Data> {
 		return map.keySet();
 	}
 
+	public String[] getAttributesArr() {
+		return map.keySet().toArray(new String[map.keySet().size()]);
+	}
+
 	public Long getCompanyId() {
 		return (Long)get("companyId");
 	}
@@ -120,14 +120,17 @@ public class Data implements Comparable<Data> {
 	}
 
 	public int hashCode() {
-		Integer hashCode = comparator.hashCode(this);
-
 		if (hashCode != null) {
 			return hashCode;
 		}
-		else {
-			return super.hashCode();
+
+		hashCode = comparator.hashCode(this);
+
+		if (hashCode == null) {
+			hashCode = super.hashCode();
 		}
+
+		return hashCode;
 	}
 
 	public void set(String attribute, Object value) {
@@ -164,12 +167,20 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String toString() {
-		return this.getEntryClassName() + " " + this.getPrimaryKey() + " " +
-			this.getResourcePrimKey() + " " + this.getUuid();
+		long pk = this.getPrimaryKey();
+		long rpk = this.getResourcePrimKey();
+
+		if ((pk == -1) && (rpk == -1)) {
+			return this.getEntryClassName() + " " + map.toString();
+		}
+
+		return this.getEntryClassName() + " " + pk + " " + rpk + " " +
+			this.getUuid();
 	}
 
 	protected DataComparator comparator = null;
-	protected Map<String, Object> map = new HashMap<String, Object>();
+	protected Integer hashCode = null;
+	protected Map<String, Object> map = new LinkedHashMap<String, Object>();
 	protected Model model = null;
 
 }
