@@ -54,7 +54,7 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.data.DataComparatorResourceModel;
+import jorgediazest.indexchecker.data.DataResourceModelComparator;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
@@ -63,6 +63,7 @@ import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
+import jorgediazest.util.data.DataModelComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
@@ -104,12 +105,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				PrefsPropsUtil.getBoolean(
 					"journal.articles.index.all.versions");
 
-			protected DataComparator defaultComparator = new DataComparator(
-				new String[] {
-					"createDate", "modifiedDate", "status", "version"});
+			protected DataComparator defaultComparator =
+				new DataModelComparator(
+					new String[] {
+						"createDate", "modifiedDate", "status", "version"});
 
 			protected DataComparator resourceComparator =
-				new DataComparatorResourceModel(
+				new DataResourceModelComparator(
 					new String[] {
 						"createDate", "modifiedDate", "status", "version"});
 
