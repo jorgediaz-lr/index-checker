@@ -60,23 +60,35 @@ public class ServiceUtil {
 			ClassLoader classLoader, String classPackageName,
 			String classSimpleName) {
 
-		Service service = new ServiceImpl();
-
 		BaseLocalService modelService = ServiceUtil.getLocalService(
 			classLoader, classPackageName, classSimpleName);
 
 		if (modelService != null) {
+			Service service = new ServiceImpl();
+
 			service.init(modelService, classPackageName, classSimpleName);
 
 			return service;
 		}
 
-		Class<? extends ClassedModel> classInterface = getClassModel(
-			classPackageName + "." + classSimpleName);
+		if (classLoader == null) {
+			return ServiceUtil.getServiceFromPortal(
+				classPackageName + "." + classSimpleName);
+		}
+
+		return null;
+	}
+
+	public static Service getServiceFromPortal(String classname) {
+
+		Class<? extends ClassedModel> classInterface = getClassModelFromPortal(
+			classname);
 
 		if (classInterface == null) {
 			return null;
 		}
+
+		Service service = new ServiceImpl();
 
 		service.init(classInterface);
 
@@ -84,7 +96,7 @@ public class ServiceUtil {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected static Class<? extends ClassedModel> getClassModel(
+	protected static Class<? extends ClassedModel> getClassModelFromPortal(
 		String className) {
 
 		try {
@@ -92,8 +104,8 @@ public class ServiceUtil {
 				PortalClassLoaderUtil.getClassLoader().loadClass(className);
 		}
 		catch (ClassNotFoundException e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("ClassModel not found: " + className);
+			if (_log.isInfoEnabled()) {
+				_log.info("ClassModel not found: " + className);
 			}
 
 			return null;

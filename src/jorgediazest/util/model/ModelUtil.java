@@ -99,7 +99,7 @@ public class ModelUtil {
 		return criterion;
 	}
 
-	public static ClassLoader getClassLoader() {
+	public static ClassLoader getClassLoaderAggregate() {
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 
@@ -112,6 +112,14 @@ public class ModelUtil {
 
 		aggregateClassLoader.addClassLoader(portalClassLoader);
 
+		aggregateClassLoader.addClassLoader(getClassLoaders());
+
+		return aggregateClassLoader;
+	}
+
+	public static List<ClassLoader> getClassLoaders() {
+		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+
 		for (String servletContextName : ServletContextPool.keySet()) {
 			try {
 				ServletContext servletContext = ServletContextPool.get(
@@ -119,10 +127,12 @@ public class ModelUtil {
 
 				ClassLoader classLoader = servletContext.getClassLoader();
 
-				_log.debug(
-					"Adding " + classLoader + " for " + servletContextName);
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Adding " + classLoader + " for " + servletContextName);
+				}
 
-				aggregateClassLoader.addClassLoader(classLoader);
+				classLoaders.add(classLoader);
 			}
 			catch (Exception e) {
 				if (_log.isWarnEnabled()) {
@@ -133,7 +143,7 @@ public class ModelUtil {
 			}
 		}
 
-		return aggregateClassLoader;
+		return classLoaders;
 	}
 
 	public static List<String> getClassNameValues(

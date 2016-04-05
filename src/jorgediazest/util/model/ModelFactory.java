@@ -64,13 +64,17 @@ public class ModelFactory {
 		fillHandlerPortletIdMap();
 	}
 
+	public ModelFactory(Map<String, Class<? extends Model>> modelClassMap) {
+		this(null, modelClassMap);
+	}
+
 	public DataComparatorFactory getDataComparatorFactory() {
 		return dataComparatorFactory;
 	}
 
 	public Map<String, Model> getModelMap(Collection<String> classNames) {
 
-		ClassLoader classLoader = ModelUtil.getClassLoader();
+		List<ClassLoader> classLoaders = ModelUtil.getClassLoaders();
 
 		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
 
@@ -79,28 +83,9 @@ public class ModelFactory {
 				continue;
 			}
 
-			Model model = null;
-			String[] attributes = null;
-			try {
-				model = this.getModelObject(classLoader, classname);
+			Model model = getModelObject(classLoaders, classname);
 
-				if (model != null) {
-					attributes = model.getAttributesName();
-				}
-			}
-			catch (Exception e) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
-				}
-				else if (_log.isInfoEnabled()) {
-					_log.info(
-						"Cannot get model object of " + classname +
-						" EXCEPTION: " + e.getClass().getName() + ": " +
-						e.getMessage());
-				}
-			}
-
-			if ((model != null) && (attributes != null)) {
+			if (model != null) {
 				modelMap.put(model.getName(), model);
 			}
 		}
@@ -122,11 +107,65 @@ public class ModelFactory {
 		}
 
 		Service service = ServiceUtil.getService(
-			classLoader, classPackageName, classSimpleName);
+				classLoader, classPackageName, classSimpleName);
 
 		if (service == null) {
 			return null;
 		}
+
+		return getModelObject(classPackageName, classSimpleName, service);
+	}
+
+	public Model getModelObject(
+		List<ClassLoader> classLoaders, String classname) {
+
+		try {
+			Model model = this.getModelObjectFromPortal(classname);
+
+			if ((model != null) && (model.getAttributesName() != null)) {
+				return model;
+			}
+		}
+		catch (Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(e, e);
+			}
+			else if (_log.isInfoEnabled()) {
+				_log.info(
+					"Cannot get model object of " + classname +
+					" EXCEPTION: " + e.getClass().getName() + ": " +
+					e.getMessage());
+			}
+		}
+
+		for (ClassLoader classLoader : classLoaders) {
+			try {
+				Model model = this.getModelObject(classLoader, classname);
+
+				if ((model != null) && (model.getAttributesName() != null)) {
+					return model;
+				}
+			}
+			catch (Exception e) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(e, e);
+				}
+				else if (_log.isInfoEnabled()) {
+					_log.info(
+						"Cannot get model object of " + classname +
+						" EXCEPTION: " + e.getClass().getName() + ": " +
+						e.getMessage());
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public Model getModelObject(
+		String classPackageName, String classSimpleName, Service service) {
+
+		String className = classPackageName + "." + classSimpleName;
 
 		Class<? extends Model> modelClass = this.defaultModelClass;
 
@@ -157,6 +196,10 @@ public class ModelFactory {
 		}
 
 		return model;
+	}
+
+	public final Model getModelObjectFromPortal(String className) {
+		return getModelObject((ClassLoader)null, className);
 	}
 
 	public Set<Portlet> getPortletSet(Object handler) {
