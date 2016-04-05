@@ -155,7 +155,7 @@ public class IndexSearchUtil {
 		}
 
 		try {
-			ClassLoader classLoader = ModelUtil.getClassLoader();
+			ClassLoader classLoader = ModelUtil.getClassLoaderAggregate();
 
 			Class<?> solrIndexSearcher = classLoader.loadClass(
 				"com.liferay.portal.search.solr.SolrIndexSearcher");

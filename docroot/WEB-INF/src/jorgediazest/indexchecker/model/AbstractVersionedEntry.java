@@ -40,8 +40,8 @@ public abstract class AbstractVersionedEntry extends IndexCheckerModel {
 
 		Map<Long, Data> dataMapAux = super.getData(attributes, filter);
 
-		Model modelVersion = this.getModelFactory().getModelObject(
-			null, classNameVersion);
+		Model modelVersion = this.getModelFactory().getModelObjectFromPortal(
+			classNameVersion);
 
 		DynamicQuery queryModelVersion =
 			modelVersion.getService().newDynamicQuery();
