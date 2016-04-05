@@ -84,6 +84,11 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public DataComparator getDataComparator();
 
+	public Map<Long, Data> getDataWithCache() throws Exception;
+
+	public Map<Long, Data> getDataWithCache(String[] attributes)
+		throws Exception;
+
 	public String getDisplayName(Locale locale);
 
 	public Criterion getFilter();

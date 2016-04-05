@@ -398,6 +398,23 @@ public abstract class ModelImpl implements Model {
 		return dataComparator;
 	}
 
+	public Map<Long, Data> getDataWithCache() throws Exception {
+		return getDataWithCache(null);
+	}
+
+	public Map<Long, Data> getDataWithCache(String[] attr) throws Exception {
+		Map<Long, Data> values = cachedDifferentAttributeValues.get(
+			Arrays.toString(attr));
+
+		if (values == null) {
+			values = this.getData(attr);
+
+			cachedDifferentAttributeValues.put(Arrays.toString(attr), values);
+		}
+
+		return values;
+	}
+
 	public String getDisplayName(Locale locale) {
 		String displayName = ResourceActionsUtil.getModelResource(
 			locale, getClassName());
@@ -853,6 +870,8 @@ public abstract class ModelImpl implements Model {
 
 	protected Object[][] attributesArray = null;
 	protected String attributesString = null;
+	protected Map<String, Map<Long, Data>> cachedDifferentAttributeValues =
+		new HashMap<String, Map<Long, Data>>();
 	protected Class<?> classModelImpl = null;
 	protected String className = null;
 	protected String classPackageName = null;
