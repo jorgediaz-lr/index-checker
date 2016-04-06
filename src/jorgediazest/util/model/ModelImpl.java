@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
@@ -243,7 +244,11 @@ public abstract class ModelImpl implements Model {
 			this, attrName, attrValue, op);
 	}
 
-	public int getAttributePos(String name) { /* TODO Cachear!! */
+	public int getAttributePos(String name) {
+		if (mapAttributePosition.containsKey(name)) {
+			return mapAttributePosition.get(name);
+		}
+
 		Object[][] values = this.getAttributes();
 
 		if (name.endsWith(StringPool.UNDERLINE)) {
@@ -252,18 +257,22 @@ public abstract class ModelImpl implements Model {
 
 		String nameWithUnderline = name + StringPool.UNDERLINE;
 
+		int pos = -1;
+
 		for (int i = 0; i < values.length; i++) {
 			if (((String)values[i][0]).endsWith(StringPool.UNDERLINE) &&
 				((String)values[i][0]).equals(nameWithUnderline)) {
 
-				return i;
+				pos = i;
 			}
 			else if (((String)values[i][0]).equals(name)) {
-				return i;
+				pos = i;
 			}
 		}
 
-		return -1;
+		mapAttributePosition.put(name, pos);
+
+		return pos;
 	}
 
 	public Object[][] getAttributes() {
@@ -655,37 +664,7 @@ public abstract class ModelImpl implements Model {
 
 	public boolean hasAttribute(String attribute) {
 
-		if (mapHasAttribute.containsKey(attribute)) {
-			return mapHasAttribute.get(attribute);
-		}
-
-		Object[][] modelAttributes = getAttributes();
-
-		if (attribute.endsWith(StringPool.UNDERLINE)) {
-			attribute = attribute.substring(0, attribute.length() - 1);
-		}
-
-		String attributeWithUnderline = attribute + StringPool.UNDERLINE;
-
-		for (int i = 0; i < modelAttributes.length; i++) {
-			if (((String)modelAttributes[i][0]).endsWith(
-					StringPool.UNDERLINE) &&
-				((String)modelAttributes[i][0]).equals(
-					attributeWithUnderline)) {
-
-				mapHasAttribute.put(attribute, Boolean.TRUE);
-
-				return true;
-			}
-			else if (((String)modelAttributes[i][0]).equals(attribute)) {
-				mapHasAttribute.put(attribute, Boolean.TRUE);
-
-				return true;
-			}
-		}
-
-		mapHasAttribute.put(attribute, Boolean.FALSE);
-		return false;
+		return (getAttributePos(attribute) != -1);
 	}
 
 	public boolean hasAttributes(String[] attributes) {
@@ -877,8 +856,8 @@ public abstract class ModelImpl implements Model {
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected DataComparator dataComparator;
-	protected Map<String, Boolean> mapHasAttribute =
-		new HashMap<String, Boolean>();
+	protected Map<String, Integer> mapAttributePosition =
+		new ConcurrentHashMap<String, Integer>();
 	protected ModelFactory modelFactory = null;
 	protected String name = null;
 	protected Set<Portlet> portlets = null;
