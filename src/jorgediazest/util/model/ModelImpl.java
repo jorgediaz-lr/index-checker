@@ -89,7 +89,6 @@ public abstract class ModelImpl implements Model {
 
 			model.attributesArray = this.attributesArray;
 			model.attributesString = this.attributesString;
-			model.classModelImpl = this.classModelImpl;
 			model.className = this.className;
 			model.classPackageName = this.classPackageName;
 			model.classSimpleName = this.classSimpleName;
@@ -278,7 +277,7 @@ public abstract class ModelImpl implements Model {
 	public Object[][] getAttributes() {
 		if (attributesArray == null) {
 			attributesArray = ModelUtil.getDatabaseAttributesArr(
-				classModelImpl);
+				service.getLiferayModelImplClass());
 		}
 
 		return attributesArray;
@@ -539,7 +538,8 @@ public abstract class ModelImpl implements Model {
 
 	public String[] getPrimaryKeyMultiAttribute() {
 		if (primaryKeyMultiAttribute == null) {
-			String aux = ModelUtil.getDatabaseAttributesStr(classModelImpl);
+			String aux = ModelUtil.getDatabaseAttributesStr(
+				service.getLiferayModelImplClass());
 
 			if (aux.indexOf('#') > 0) {
 				aux = aux.split("#")[1];
@@ -692,8 +692,6 @@ public abstract class ModelImpl implements Model {
 		this.classPackageName = classPackageName;
 		this.classSimpleName = classSimpleName;
 
-		this.classModelImpl = service.getLiferayModelImplClass();
-
 		this.dataComparator = dataComparatorFactory.getDataComparator(this);
 
 		this.portlets = calculatePortlets();
@@ -792,7 +790,8 @@ public abstract class ModelImpl implements Model {
 	protected String getCreateTableAttributes() {
 
 		if (attributesString == null) {
-			String aux = ModelUtil.getDatabaseAttributesStr(classModelImpl);
+			String aux = ModelUtil.getDatabaseAttributesStr(
+				service.getLiferayModelImplClass());
 
 			if (aux.indexOf('#') > 0) {
 				aux = aux.split("#")[0];
@@ -851,7 +850,6 @@ public abstract class ModelImpl implements Model {
 	protected String attributesString = null;
 	protected Map<String, Map<Long, Data>> cachedDifferentAttributeValues =
 		new HashMap<String, Map<Long, Data>>();
-	protected Class<?> classModelImpl = null;
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;

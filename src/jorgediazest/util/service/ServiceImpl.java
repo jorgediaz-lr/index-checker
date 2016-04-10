@@ -31,44 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
  */
 public class ServiceImpl implements Service {
-
-	public static Class<?> getLiferayModelImplClass(
-			ClassLoader classloader, String packageName, String simpleName)
-		throws Exception {
-
-		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(
-			packageName, simpleName);
-
-		Class<?> classLiferayModelImpl;
-		try {
-			classLiferayModelImpl = ServiceUtil.getJavaClass(
-				classloader, liferayModelImpl);
-		}
-		catch (ClassNotFoundException e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Class not found: " + liferayModelImpl);
-			}
-
-			throw e;
-		}
-
-		if (classLiferayModelImpl == null) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Class not found: " + liferayModelImpl);
-			}
-
-			throw new Exception("Class not found: " + liferayModelImpl);
-		}
-
-		return classLiferayModelImpl;
-	}
 
 	public ClassedModel addObject(ClassedModel object) {
 		String methodName = "add" + object.getModelClass().getSimpleName();
@@ -86,6 +54,7 @@ public class ServiceImpl implements Service {
 			service.classSimpleName = this.classSimpleName;
 			service.modelService = this.modelService;
 			service.filter = this.filter;
+			service.liferayModelImplClass = this.liferayModelImplClass;
 			service.classInterface = this.classInterface;
 		}
 		catch (Exception e) {
@@ -199,9 +168,13 @@ public class ServiceImpl implements Service {
 		return filter;
 	}
 
-	public Class<?> getLiferayModelImplClass() throws Exception {
-		return ServiceImpl.getLiferayModelImplClass(
-			getClassLoader(), classPackageName, classSimpleName);
+	public Class<?> getLiferayModelImplClass() {
+		if (liferayModelImplClass == null) {
+			liferayModelImplClass = ServiceUtil.getLiferayModelImplClass(
+				getClassLoader(), classPackageName, classSimpleName);
+		}
+
+		return liferayModelImplClass;
 	}
 
 	public void init(
@@ -297,12 +270,11 @@ public class ServiceImpl implements Service {
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected Criterion filter = null;
-
+	protected Class<?> liferayModelImplClass = null;
 	protected Map<String, MethodKey> localServiceMethods =
 		new ConcurrentHashMap<String, MethodKey>();
-
-	static Log _log = LogFactoryUtil.getLog(ServiceImpl.class);
-
 	protected BaseLocalService modelService = null;
+
+	private static Log _log = LogFactoryUtil.getLog(ServiceImpl.class);
 
 }

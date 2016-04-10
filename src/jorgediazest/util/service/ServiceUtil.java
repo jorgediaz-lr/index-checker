@@ -22,6 +22,11 @@ import com.liferay.portal.service.BaseLocalService;
 
 import java.lang.reflect.Method;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import jorgediazest.util.model.ModelUtil;
+
 /**
  * @author Jorge Díaz
  */
@@ -56,9 +61,40 @@ public class ServiceUtil {
 			"Util";
 	}
 
+	public static Class<?> getLiferayModelImplClass(
+			ClassLoader classloader, String packageName, String simpleName) {
+
+		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(
+			packageName, simpleName);
+
+		Exception exception = null;
+
+		Class<?> classLiferayModelImpl = null;
+		try {
+			classLiferayModelImpl = getJavaClass(classloader, liferayModelImpl);
+		}
+		catch (ClassNotFoundException e) {
+			exception = e;
+		}
+
+		if (classLiferayModelImpl == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Class not found: " + liferayModelImpl);
+			}
+
+			if (exception != null) {
+				throw new RuntimeException(exception);
+			}
+
+			throw new RuntimeException("Class not found: " + liferayModelImpl);
+		}
+
+		return classLiferayModelImpl;
+	}
+
 	public static Service getService(
-			ClassLoader classLoader, String classPackageName,
-			String classSimpleName) {
+		ClassLoader classLoader, String classPackageName,
+		String classSimpleName) {
 
 		BaseLocalService modelService = ServiceUtil.getLocalService(
 			classLoader, classPackageName, classSimpleName);
@@ -71,15 +107,32 @@ public class ServiceUtil {
 			return service;
 		}
 
-		if (classLoader == null) {
-			return ServiceUtil.getServiceFromPortal(
-				classPackageName + "." + classSimpleName);
-		}
-
 		return null;
 	}
 
-	public static Service getServiceFromPortal(String classname) {
+	public static Service getServiceFromPortal(
+			String classPackageName, String classSimpleName) {
+
+		String className = classPackageName + "." + classSimpleName;
+
+		Service service = portalServices.get(className);
+
+		if (service == null) {
+			service = getService(null, classPackageName, classSimpleName);
+		}
+
+		if (service == null) {
+			service = getServiceFromPortalClassInterface(className);
+		}
+
+		if (service != null) {
+			portalServices.put(className, service);
+		}
+
+		return service;
+	}
+
+	public static Service getServiceFromPortalClassInterface(String classname) {
 
 		Class<? extends ClassedModel> classInterface = getClassModelFromPortal(
 			classname);
@@ -158,7 +211,8 @@ public class ServiceUtil {
 			else if (_log.isInfoEnabled()) {
 				_log.info(
 					"Cannot get service of " + classPackageName + "." +
-					classSimpleName + " EXCEPTION: " + e.getClass().getName() +
+					classSimpleName + " in classloader: " + classLoader +
+					" - EXCEPTION: " + e.getClass().getName() +
 					": " + e.getMessage());
 			}
 
@@ -191,5 +245,8 @@ public class ServiceUtil {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
+
+	private static Map<String, Service> portalServices =
+		new HashMap<String, Service>();
 
 }

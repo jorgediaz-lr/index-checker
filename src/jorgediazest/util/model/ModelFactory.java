@@ -106,6 +106,13 @@ public class ModelFactory {
 			classSimpleName = className.substring(pos + 1, className.length());
 		}
 
+		return getModelObject(classLoader, classPackageName, classSimpleName);
+	}
+
+	public Model getModelObject(
+			ClassLoader classLoader, String classPackageName,
+			String classSimpleName) {
+
 		Service service = ServiceUtil.getService(
 				classLoader, classPackageName, classSimpleName);
 
@@ -117,10 +124,21 @@ public class ModelFactory {
 	}
 
 	public Model getModelObject(
-		List<ClassLoader> classLoaders, String classname) {
+		List<ClassLoader> classLoaders, String className) {
+
+		String classPackageName = StringPool.BLANK;
+		String classSimpleName = className;
+
+		int pos = className.lastIndexOf(".");
+
+		if (pos > 0) {
+			classPackageName = className.substring(0, pos);
+			classSimpleName = className.substring(pos + 1, className.length());
+		}
 
 		try {
-			Model model = this.getModelObjectFromPortal(classname);
+			Model model = this.getModelObjectFromPortal(
+				classPackageName, classSimpleName);
 
 			if ((model != null) && (model.getAttributesName() != null)) {
 				return model;
@@ -132,7 +150,7 @@ public class ModelFactory {
 			}
 			else if (_log.isInfoEnabled()) {
 				_log.info(
-					"Cannot get model object of " + classname +
+					"Cannot get model object of " + className +
 					" EXCEPTION: " + e.getClass().getName() + ": " +
 					e.getMessage());
 			}
@@ -140,7 +158,8 @@ public class ModelFactory {
 
 		for (ClassLoader classLoader : classLoaders) {
 			try {
-				Model model = this.getModelObject(classLoader, classname);
+				Model model = this.getModelObject(
+					classLoader, classPackageName, classSimpleName);
 
 				if ((model != null) && (model.getAttributesName() != null)) {
 					return model;
@@ -152,7 +171,7 @@ public class ModelFactory {
 				}
 				else if (_log.isInfoEnabled()) {
 					_log.info(
-						"Cannot get model object of " + classname +
+						"Cannot get model object of " + className +
 						" EXCEPTION: " + e.getClass().getName() + ": " +
 						e.getMessage());
 				}
@@ -199,7 +218,30 @@ public class ModelFactory {
 	}
 
 	public final Model getModelObjectFromPortal(String className) {
-		return getModelObject((ClassLoader)null, className);
+		String classPackageName = StringPool.BLANK;
+		String classSimpleName = className;
+
+		int pos = className.lastIndexOf(".");
+
+		if (pos > 0) {
+			classPackageName = className.substring(0, pos);
+			classSimpleName = className.substring(pos + 1, className.length());
+		}
+
+		return getModelObjectFromPortal(classPackageName, classSimpleName);
+	}
+
+	public final Model getModelObjectFromPortal(
+		String classPackageName, String classSimpleName) {
+
+		Service service = ServiceUtil.getServiceFromPortal(
+			classPackageName, classSimpleName);
+
+		if (service == null) {
+			return null;
+		}
+
+		return getModelObject(classPackageName, classSimpleName, service);
 	}
 
 	public Set<Portlet> getPortletSet(Object handler) {

@@ -46,7 +46,7 @@ public interface Service extends Cloneable {
 
 	public Criterion getFilter();
 
-	public Class<?> getLiferayModelImplClass() throws Exception;
+	public Class<?> getLiferayModelImplClass();
 
 	public void init(
 		BaseLocalService modelService, String classPackageName,
