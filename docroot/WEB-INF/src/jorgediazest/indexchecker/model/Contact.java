@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.User;
 
+import java.util.List;
+
 import jorgediazest.util.model.Model;
 
 /**
@@ -45,7 +47,19 @@ public class Contact extends IndexCheckerModel {
 			modelUser.generateCriterionFilter(
 				"defaultUser=true+status<>"+WorkflowConstants.STATUS_APPROVED));
 
-		conjunction.add(getProperty("classPK").notIn(userDynamicQuery));
+		try {
+			@SuppressWarnings("unchecked")
+			List<Long> ignoredUsers = (List<Long>)
+					modelUser.getService().executeDynamicQuery(
+						userDynamicQuery);
+
+			conjunction.add(
+				RestrictionsFactoryUtil.not(
+					generateInCriteria("classPK",ignoredUsers)));
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 
 		return conjunction;
 	}
