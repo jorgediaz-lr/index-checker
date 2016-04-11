@@ -52,7 +52,7 @@ public class IndexCheckerModel extends ModelImpl {
 			String attrDoc = IndexSearchUtil.getAttributeForDocument(
 				this, attribute);
 
-			if (doc.hasField(attrDoc)) {
+			if (doc.getFields().containsKey(attrDoc)) {
 				data.set(attribute, doc.get(attrDoc));
 			}
 		}
