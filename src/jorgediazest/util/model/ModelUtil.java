@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.PluginContextListener;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -125,7 +126,9 @@ public class ModelUtil {
 				ServletContext servletContext = ServletContextPool.get(
 					servletContextName);
 
-				ClassLoader classLoader = servletContext.getClassLoader();
+				ClassLoader classLoader =
+					(ClassLoader)servletContext.getAttribute(
+						PluginContextListener.PLUGIN_CLASS_LOADER);
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
