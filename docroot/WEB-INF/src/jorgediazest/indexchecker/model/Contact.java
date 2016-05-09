@@ -45,17 +45,15 @@ public class Contact extends IndexCheckerModel {
 
 		userDynamicQuery.add(
 			modelUser.generateCriterionFilter(
-				"defaultUser=true+status<>"+WorkflowConstants.STATUS_APPROVED));
+				"status="+WorkflowConstants.STATUS_APPROVED));
 
 		try {
 			@SuppressWarnings("unchecked")
-			List<Long> ignoredUsers = (List<Long>)
+			List<Long> users = (List<Long>)
 					modelUser.getService().executeDynamicQuery(
 						userDynamicQuery);
 
-			conjunction.add(
-				RestrictionsFactoryUtil.not(
-					generateInCriteria("classPK",ignoredUsers)));
+			conjunction.add(generateInCriteria("classPK",users));
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
