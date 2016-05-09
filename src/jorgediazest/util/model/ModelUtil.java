@@ -31,13 +31,10 @@ import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.ClassedModel;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.ServletContext;
-
-import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
@@ -165,32 +162,8 @@ public class ModelUtil {
 		return classNameStr;
 	}
 
-	public static Object[][] getDatabaseAttributesArr(
-		Class<?> classLiferayModelImpl) {
-
-		Object[][] tableColumns =
-			(Object[][])ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, "TABLE_COLUMNS");
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Database attributes array of " +
-				classLiferayModelImpl.getName() + ": " +
-				Arrays.toString(tableColumns));
-		}
-
-		return tableColumns;
-	}
-
 	public static String getDatabaseAttributesStr(
-		Class<?> classLiferayModelImpl) {
-
-		String tableName =
-			(String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, "TABLE_NAME");
-		String tableSqlCreate =
-			(String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, "TABLE_SQL_CREATE");
+			String tableName, String tableSqlCreate) {
 
 		int posTableName = tableSqlCreate.indexOf(tableName);
 
@@ -215,8 +188,7 @@ public class ModelUtil {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Database attributes of " + classLiferayModelImpl.getName() +
-				": " + tableAttributes);
+				"Database attributes of " + tableName + ": " + tableAttributes);
 		}
 
 		return tableAttributes;

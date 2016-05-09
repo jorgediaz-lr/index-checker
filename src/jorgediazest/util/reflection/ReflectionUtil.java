@@ -29,7 +29,9 @@ import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import jorgediazest.util.model.Model;
@@ -256,6 +258,33 @@ public class ReflectionUtil {
 		}
 
 		return data;
+	}
+
+	public static List<String> getLiferayModelImplMappingTablesFields(
+		Class<?> classLiferayModelImpl) {
+
+		List<String> mappingTablesFields = new ArrayList<String>();
+
+		try {
+			Field[] fields = classLiferayModelImpl.getFields();
+
+			for (Field field : fields) {
+				String fieldName = field.getName();
+
+				if (fieldName.startsWith("MAPPING_TABLE_") &&
+					fieldName.endsWith("_NAME")) {
+
+					mappingTablesFields.add(fieldName);
+				}
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(
+				"Error accessing to " +
+				classLiferayModelImpl.getName() + " fields", e);
+		}
+
+		return mappingTablesFields;
 	}
 
 	public static sun.misc.Unsafe getUnsafe()

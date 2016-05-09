@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
@@ -87,18 +88,16 @@ public abstract class ModelImpl implements Model {
 		try {
 			model = this.getClass().newInstance();
 
-			model.attributesArray = this.attributesArray;
-			model.attributesString = this.attributesString;
 			model.className = this.className;
 			model.classPackageName = this.classPackageName;
 			model.classSimpleName = this.classSimpleName;
 			model.dataComparator = this.dataComparator;
 			model.modelFactory = this.modelFactory;
 			model.name = this.name;
-			model.primaryKeyAttribute = this.primaryKeyAttribute;
-			model.primaryKeyMultiAttribute = this.primaryKeyMultiAttribute;
 			model.service = this.service.clone();
 			model.suffix = this.suffix;
+			model.tableInfo = this.tableInfo;
+			model.tableInfoMappings = this.tableInfoMappings;
 		}
 		catch (Exception e) {
 			_log.error("Error executing clone");
@@ -275,12 +274,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Object[][] getAttributes() {
-		if (attributesArray == null) {
-			attributesArray = ModelUtil.getDatabaseAttributesArr(
-				service.getLiferayModelImplClass());
-		}
-
-		return attributesArray;
+		return getTableInfo().getAttributesArr();
 	}
 
 	public String[] getAttributesName() {
@@ -506,56 +500,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public String getPrimaryKeyAttribute() {
-		if (primaryKeyAttribute == null) {
-			String[] arrDatabaseAttributes =
-				getCreateTableAttributes().split(",");
-
-			for (String attr : arrDatabaseAttributes) {
-				String[] aux = attr.split(" ");
-
-				if (aux.length < 2) {
-					continue;
-				}
-
-				String col = aux[0];
-
-				if (col.endsWith("_")) {
-					col = col.substring(0, col.length() - 1);
-				}
-
-				if (attr.endsWith("not null primary key")) {
-					primaryKeyAttribute = col;
-				}
-			}
-
-			if (primaryKeyAttribute == null) {
-				primaryKeyAttribute = StringPool.BLANK;
-			}
-		}
-
-		return primaryKeyAttribute;
+		return getTableInfo().getPrimaryKeyAttribute();
 	}
 
 	public String[] getPrimaryKeyMultiAttribute() {
-		if (primaryKeyMultiAttribute == null) {
-			String aux = ModelUtil.getDatabaseAttributesStr(
-				service.getLiferayModelImplClass());
-
-			if (aux.indexOf('#') > 0) {
-				aux = aux.split("#")[1];
-				primaryKeyMultiAttribute = aux.split(",");
-
-				for (int i = 0; i < primaryKeyMultiAttribute.length; i++) {
-					primaryKeyMultiAttribute[i] =
-						primaryKeyMultiAttribute[i].trim();
-				}
-			}
-			else {
-				primaryKeyMultiAttribute = new String[0];
-			}
-		}
-
-		return primaryKeyMultiAttribute;
+		return getTableInfo().getPrimaryKeyMultiAttribute();
 	}
 
 	public Property getProperty(String attribute) {
@@ -652,6 +601,36 @@ public abstract class ModelImpl implements Model {
 	public StagedModelDataHandler<?> getStagedModelDataHandler() {
 		return StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
 			getClassName());
+	}
+
+	public TableInfo getTableInfo() {
+		if (tableInfo == null) {
+			tableInfo = new TableInfo(service.getLiferayModelImplClass());
+		}
+
+		return tableInfo;
+	}
+
+	public List<TableInfo> getTableInfoMappings() {
+		if (tableInfoMappings == null) {
+			tableInfoMappings = new ArrayList<TableInfo>();
+
+			List<String> mappingTables =
+				ReflectionUtil.getLiferayModelImplMappingTablesFields(
+					service.getLiferayModelImplClass());
+
+			for (String mappingTable : mappingTables) {
+				String prefix = StringUtil.replace(
+					mappingTable, "_NAME", StringPool.BLANK);
+
+				TableInfo tableInfo = new TableInfo(
+					service.getLiferayModelImplClass(), prefix);
+
+				tableInfoMappings.add(tableInfo);
+			}
+		}
+
+		return tableInfoMappings;
 	}
 
 	public TrashHandler getTrashHandler() {
@@ -787,22 +766,6 @@ public abstract class ModelImpl implements Model {
 		return getName();
 	}
 
-	protected String getCreateTableAttributes() {
-
-		if (attributesString == null) {
-			String aux = ModelUtil.getDatabaseAttributesStr(
-				service.getLiferayModelImplClass());
-
-			if (aux.indexOf('#') > 0) {
-				aux = aux.split("#")[0];
-			}
-
-			attributesString = aux;
-		}
-
-		return attributesString;
-	}
-
 	protected Projection getPropertyProjection(String attribute, String op) {
 
 		if ("rowCount".equals(op)) {
@@ -846,8 +809,6 @@ public abstract class ModelImpl implements Model {
 
 	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
-	protected Object[][] attributesArray = null;
-	protected String attributesString = null;
 	protected Map<String, Map<Long, Data>> cachedDifferentAttributeValues =
 		new HashMap<String, Map<Long, Data>>();
 	protected String className = null;
@@ -859,31 +820,9 @@ public abstract class ModelImpl implements Model {
 	protected ModelFactory modelFactory = null;
 	protected String name = null;
 	protected Set<Portlet> portlets = null;
-
-	/**
-	 * primaries keys can be at following ways:
-	 *
-	 * - single => create table UserGroupGroupRole (userGroupId LONG not
-	 * null,groupId LONG not null,roleId LONG not null,primary key (userGroupId,
-	 * groupId, roleId))";
-	 *
-	 * - multi => create table JournalArticle (uuid_ VARCHAR(75) null,id_ LONG
-	 * not null primary key,resourcePrimKey LONG,groupId LONG,companyId
-	 * LONG,userId LONG,userName VARCHAR(75) null,createDate DATE
-	 * null,modifiedDate DATE null,folderId LONG,classNameId LONG,classPK
-	 * LONG,treePath STRING null,articleId VARCHAR(75) null,version DOUBLE,title
-	 * STRING null,urlTitle VARCHAR(150) null,description TEXT null,content TEXT
-	 * null,type_ VARCHAR(75) null,structureId VARCHAR(75) null,templateId
-	 * VARCHAR(75) null,layoutUuid VARCHAR(75) null,displayDate DATE
-	 * null,expirationDate DATE null,reviewDate DATE null,indexable
-	 * BOOLEAN,smallImage BOOLEAN,smallImageId LONG,smallImageURL STRING
-	 * null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75)
-	 * null,statusDate DATE null)
-	 */
-	protected String primaryKeyAttribute = null;
-
-	protected String[] primaryKeyMultiAttribute = null;
 	protected Service service = null;
 	protected String suffix = null;
+	protected TableInfo tableInfo = null;
+	protected List<TableInfo> tableInfoMappings = null;
 
 }
