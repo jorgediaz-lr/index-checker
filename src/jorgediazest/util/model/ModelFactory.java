@@ -93,6 +93,10 @@ public class ModelFactory {
 		return modelMap;
 	}
 
+	public final Model getModelObject(ClassLoader classLoader, Class<?> clazz) {
+		return getModelObject(classLoader, clazz.getName());
+	}
+
 	public final Model getModelObject(
 		ClassLoader classLoader, String className) {
 
@@ -121,6 +125,12 @@ public class ModelFactory {
 		}
 
 		return getModelObject(classPackageName, classSimpleName, service);
+	}
+
+
+	public final Model getModelObject(
+			List<ClassLoader> classLoaders, Class<?> clazz) {
+		return getModelObject(classLoaders, clazz.getName());
 	}
 
 	public Model getModelObject(
@@ -215,6 +225,10 @@ public class ModelFactory {
 		}
 
 		return model;
+	}
+
+	public final Model getModelObjectFromPortal(Class<?> clazz) {
+		return getModelObjectFromPortal(clazz.getName());
 	}
 
 	public final Model getModelObjectFromPortal(String className) {
