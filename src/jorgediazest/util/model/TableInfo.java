@@ -16,7 +16,6 @@ package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.util.StringPool;
 
-import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**

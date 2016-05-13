@@ -127,9 +127,9 @@ public class ModelFactory {
 		return getModelObject(classPackageName, classSimpleName, service);
 	}
 
-
 	public final Model getModelObject(
-			List<ClassLoader> classLoaders, Class<?> clazz) {
+		List<ClassLoader> classLoaders, Class<?> clazz) {
+
 		return getModelObject(classLoaders, clazz.getName());
 	}
 
