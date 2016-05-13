@@ -134,6 +134,10 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Object value) {
+		if (value == null) {
+			return;
+		}
+
 		Object convertedObject;
 		int type = model.getAttributeType(attribute);
 

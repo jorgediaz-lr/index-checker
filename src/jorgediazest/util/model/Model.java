@@ -82,6 +82,13 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public Map<Long, Data> getData(String[] attributes, Criterion filter)
 		throws Exception;
 
+	public Map<Long, Data> getData(String[] attributes, String mapKeyAttribute)
+		throws Exception;
+
+	public Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
+		throws Exception;
+
 	public DataComparator getDataComparator();
 
 	public Map<Long, Data> getDataWithCache() throws Exception;

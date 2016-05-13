@@ -346,7 +346,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Map<Long, Data> getData() throws Exception {
-		return getData(null, null);
+		return getData(null, "pk", null);
 	}
 
 	public Map<Long, Data> getData(Criterion filter) throws Exception {
@@ -354,10 +354,23 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Map<Long, Data> getData(String[] attributes) throws Exception {
-		return getData(attributes, null);
+		return getData(attributes, "pk", null);
 	}
 
 	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+		throws Exception {
+
+		return getData(attributes, "pk", filter);
+	}
+
+	public Map<Long, Data> getData(String[] attributes, String mapKeyAttribute)
+		throws Exception {
+
+		return getData(attributes, mapKeyAttribute, null);
+	}
+
+	public Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -389,8 +402,8 @@ public abstract class ModelImpl implements Model {
 
 		for (Object[] result : results) {
 			Data data = createDataObject(validAttributesArr, result);
-			long pk = data.get("pk", i--);
-			dataMap.put(pk, data);
+			long mappingAttributeValue = data.get(mapKeyAttribute, i--);
+			dataMap.put(mappingAttributeValue, data);
 		}
 
 		return dataMap;
@@ -560,6 +573,11 @@ public abstract class ModelImpl implements Model {
 			}
 			else {
 				op[i] = null;
+
+				if ("pk".equals(attribute)) {
+					attribute = this.getPrimaryKeyAttribute();
+				}
+
 				attributesAux[i] = attribute;
 			}
 		}
@@ -592,6 +610,25 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return projectionList;
+	}
+
+	public Map<Long, Data> getRelatedData(
+		String[] attributes, Criterion filter,
+		String mappingAttributeName) throws Exception {
+
+		Map<Long, Data> dataMap = this.getData(attributes, filter);
+
+		Map <Long, Data> relatedData = new HashMap<Long, Data>();
+
+		for (Data data : dataMap.values()) {
+			long mappingAttributeValue = data.get(mappingAttributeName, -1L);
+
+			if (mappingAttributeValue > 0) {
+				relatedData.put(mappingAttributeValue, data);
+			}
+		}
+
+		return relatedData;
 	}
 
 	public Service getService() {
