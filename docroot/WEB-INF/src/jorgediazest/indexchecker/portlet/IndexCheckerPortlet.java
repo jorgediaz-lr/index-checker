@@ -88,12 +88,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			protected DataComparator defaultComparator =
 				new DataModelComparator(
 					new String[] {
-						"createDate", "status", "version"});
+						"createDate", "status", "version",
+						"priority", "viewCount", "visible", "ratings"});
 
 			protected DataComparator resourceComparator =
 				new DataResourceModelComparator(
 					new String[] {
-						"createDate", "status", "version"});
+						"createDate", "status", "version",
+						"priority", "viewCount", "visible", "ratings"});
 
 			@Override
 			public DataComparator getDataComparator(Model model) {

@@ -66,6 +66,28 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		return attributesToCheck;
 	}
 
+	public Set<String> calculateRelatedAttributesToCheck(Model model) {
+		Set<String> relatedAttributesToCheck = new LinkedHashSet<String>();
+
+		String attributeClassPK = "pk";
+
+		if (model.isResourcedModel()) {
+			attributeClassPK = "resourcePrimKey";
+		}
+
+		String mapping = attributeClassPK+"=classPK";
+
+		relatedAttributesToCheck.add(
+			"com.liferay.portlet.asset.model.AssetEntry:" + mapping +
+			":entryId, =classPK,priority,viewCount,visible");
+
+		relatedAttributesToCheck.add(
+			"com.liferay.portlet.ratings.model.RatingsStats:" + mapping +
+			":statsId, =classPK,ratings=averageScore: ");
+
+		return relatedAttributesToCheck;
+	}
+
 	@Override
 	public Comparison call() throws Exception {
 
@@ -95,8 +117,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			String[] attributesToCheck = calculateAttributesToCheck(
 				model).toArray(new String[0]);
 
+			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
+				model).toArray(new String[0]);
+
 			Set<Data> liferayData = new HashSet<Data>(
-				model.getData(attributesToCheck, filter).values());
+				model.getData(
+					attributesToCheck, relatedAttrToCheck, filter).values());
 
 			Set<Data> indexData;
 
@@ -128,8 +154,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				model, liferayData, indexData, showBothExact, showBothNotExact,
 				showOnlyLiferay, showOnlyIndex);
 		}
-		catch (Exception e) {
-			return ComparisonUtil.getError(model, e);
+		catch (Throwable t) {
+			return ComparisonUtil.getError(model, t);
 		}
 	}
 
