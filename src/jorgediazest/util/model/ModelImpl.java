@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.trash.TrashHandler;
@@ -48,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -70,6 +72,64 @@ public abstract class ModelImpl implements Model {
 			ModelUtil.generateConjunctionQueryFilter(
 				service.getFilter(), filter));
 	}
+
+	public void addRelatedModelData(
+			Map<Long, Data> dataMap, String classNameRelated,
+			String[] attrRelated, String[] mappings, Criterion filter)
+		throws Exception {
+
+			String[] attrRelatedOrig = new String[attrRelated.length];
+			String[] attrRelatedDest = new String[attrRelated.length];
+			String[] mappingsSource = new String[mappings.length];
+			String[] mappingsDest = new String[mappings.length];
+
+			splitSourceDest(attrRelated, attrRelatedOrig, attrRelatedDest);
+			splitSourceDest(mappings, mappingsSource, mappingsDest);
+
+			Map<Long, List<Data>> relatedMap = getRelatedModelData(
+				classNameRelated, attrRelatedDest, mappingsDest[0], filter);
+
+			for (Data data : dataMap.values()) {
+				List<Data> relatedList = relatedMap.get(
+					data.get(mappingsSource[0]));
+
+				if (relatedList == null) {
+					continue;
+				}
+
+				Data matched = null;
+
+				for (Data related : relatedList) {
+					boolean equalsAttributes = true;
+
+					for (int j = 1; j<mappings.length; j++) {
+						equalsAttributes = data.equalsAttributes(
+								related, mappingsSource[j], mappingsDest[j]);
+
+						if (!equalsAttributes) {
+							break;
+						}
+					}
+
+					if (equalsAttributes) {
+						matched = related;
+						break;
+					}
+				}
+
+				if (matched == null) {
+					continue;
+				}
+
+				for (int k = 0; k<attrRelatedOrig.length; k++) {
+					if (Validator.isNotNull(attrRelatedOrig[k])) {
+						data.set(
+							attrRelatedOrig[k],
+							matched.get(attrRelatedDest[k]));
+					}
+				}
+			}
+		}
 
 	public Set<Portlet> calculatePortlets() {
 		Set<Portlet> portletsSet = new HashSet<Portlet>();
@@ -345,25 +405,26 @@ public abstract class ModelImpl implements Model {
 		return conjunction;
 	}
 
-	public Map<Long, Data> getData() throws Exception {
+	public final Map<Long, Data> getData() throws Exception {
 		return getData(null, "pk", null);
 	}
 
-	public Map<Long, Data> getData(Criterion filter) throws Exception {
+	public final Map<Long, Data> getData(Criterion filter) throws Exception {
 		return getData(null, filter);
 	}
 
-	public Map<Long, Data> getData(String[] attributes) throws Exception {
+	public final Map<Long, Data> getData(String[] attributes) throws Exception {
 		return getData(attributes, "pk", null);
 	}
 
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+	public final Map<Long, Data> getData(String[] attributes, Criterion filter)
 		throws Exception {
 
 		return getData(attributes, "pk", filter);
 	}
 
-	public Map<Long, Data> getData(String[] attributes, String mapKeyAttribute)
+	public final Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute)
 		throws Exception {
 
 		return getData(attributes, mapKeyAttribute, null);
@@ -373,7 +434,89 @@ public abstract class ModelImpl implements Model {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
+		Map<Long, List<Data>> dataMapWithDuplicates = getDataWithDuplicates(
+			attributes, mapKeyAttribute, filter);
+
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		for (Entry<Long, List<Data>> e : dataMapWithDuplicates.entrySet()) {
+			Data data = e.getValue().get(0);
+			dataMap.put(e.getKey(), data);
+		}
+
+		return dataMap;
+	}
+
+	public Map<Long, Data> getData(
+			String[] attributesModel, String[] attributesRelated,
+			Criterion filter)
+		throws Exception {
+
+		return getData(attributesModel, attributesRelated, "pk", filter);
+	}
+
+	public Map<Long, Data> getData(
+			String[] attributesModel, String[] attributesRelated,
+			String mapKeyAttribute, Criterion filter)
+		throws Exception {
+
+			Map<Long, Data> dataMap = getData(
+				attributesModel, mapKeyAttribute, filter);
+
+			for (String attributeRelated : attributesRelated) {
+				String[] relatedDataArr = attributeRelated.split(":");
+
+				if (relatedDataArr.length > 3) {
+					if (Validator.isNull(relatedDataArr[3])) {
+						filter = null;
+					}
+					else {
+						filter = generateCriterionFilter(relatedDataArr[3]);
+					}
+				}
+
+				addRelatedModelData(
+					dataMap, relatedDataArr[0], relatedDataArr[2].split(","),
+					relatedDataArr[1].split(","), filter);
+			}
+
+			return dataMap;
+		}
+
+	public DataComparator getDataComparator() {
+		return dataComparator;
+	}
+
+	public Map<Long, Data> getDataWithCache() throws Exception {
+		return getDataWithCache(null);
+	}
+
+	public Map<Long, Data> getDataWithCache(String[] attr) throws Exception {
+		return getDataWithCache(null, "pk");
+	}
+
+	public Map<Long, Data> getDataWithCache(
+			String[] attr, String mapKeyAttribute)
+		throws Exception {
+
+		Map<Long, Data> values = cachedDifferentAttributeValues.get(
+			Arrays.toString(attr) + "key: " + mapKeyAttribute);
+
+		if (values == null) {
+			values = this.getData(attr, mapKeyAttribute);
+
+			cachedDifferentAttributeValues.put(
+				Arrays.toString(attr) + "key: " + mapKeyAttribute, values);
+		}
+
+		return values;
+	}
+
+	public Map<Long, List<Data>> getDataWithDuplicates(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
+		throws Exception {
+
+		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
 
 		DynamicQuery query = service.newDynamicQuery();
 
@@ -403,31 +546,18 @@ public abstract class ModelImpl implements Model {
 		for (Object[] result : results) {
 			Data data = createDataObject(validAttributesArr, result);
 			long mappingAttributeValue = data.get(mapKeyAttribute, i--);
-			dataMap.put(mappingAttributeValue, data);
+
+			if (!dataMap.containsKey(mappingAttributeValue)) {
+				List<Data> list = new ArrayList<Data>();
+				list.add(data);
+				dataMap.put(mappingAttributeValue, list);
+			}
+			else {
+				dataMap.get(mappingAttributeValue).add(data);
+			}
 		}
 
 		return dataMap;
-	}
-
-	public DataComparator getDataComparator() {
-		return dataComparator;
-	}
-
-	public Map<Long, Data> getDataWithCache() throws Exception {
-		return getDataWithCache(null);
-	}
-
-	public Map<Long, Data> getDataWithCache(String[] attr) throws Exception {
-		Map<Long, Data> values = cachedDifferentAttributeValues.get(
-			Arrays.toString(attr));
-
-		if (values == null) {
-			values = this.getData(attr);
-
-			cachedDifferentAttributeValues.put(Arrays.toString(attr), values);
-		}
-
-		return values;
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -631,6 +761,27 @@ public abstract class ModelImpl implements Model {
 		return relatedData;
 	}
 
+	public Map<Long, List<Data>> getRelatedModelData(
+			String classNameRelated, String[] attributes, String mappingAttr,
+			Criterion filter)
+		throws Exception {
+
+			Model model = modelFactory.getModelObject(classNameRelated);
+
+			if ((model == null) || this.getClassName().equals(model)) {
+				return new HashMap<Long, List<Data>>();
+			}
+
+			if ("classPK".equals(mappingAttr)) {
+				Criterion classNameIdFilter = model.getProperty(
+					"classNameId").eq(this.getClassNameId());
+				filter = ModelUtil.generateConjunctionQueryFilter(
+					classNameIdFilter, filter);
+			}
+
+			return model.getDataWithDuplicates(attributes, mappingAttr, filter);
+		}
+
 	public Service getService() {
 		return service;
 	}
@@ -695,6 +846,22 @@ public abstract class ModelImpl implements Model {
 
 	public boolean hasIndexer() {
 		return getIndexer() != null;
+	}
+
+	public boolean hasIndexerEnabled() {
+		Indexer indexer = getIndexer();
+
+		if (indexer == null) {
+			return false;
+		}
+
+		Object aux = ReflectionUtil.unWrapProxy(indexer);
+
+		if ((aux == null) || !(aux instanceof BaseIndexer)) {
+			return false;
+		}
+
+		return ((BaseIndexer)aux).isIndexerEnabled();
 	}
 
 	public void init(
@@ -842,6 +1009,25 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return property;
+	}
+
+	protected void splitSourceDest(
+		String[] dataArray, String[] dataArrayOrigin, String[] dataArrayDest) {
+
+		int i = 0;
+
+		for (String data : dataArray) {
+			String[] aux = data.split("=");
+			dataArrayOrigin[i] = aux[0];
+			int posDest = 0;
+
+			if (aux.length > 1) {
+				posDest = 1;
+			}
+
+			dataArrayDest[i] = aux[posDest];
+			i++;
+		}
 	}
 
 	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);

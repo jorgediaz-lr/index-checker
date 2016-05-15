@@ -40,6 +40,11 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public void addFilter(Criterion filter);
 
+	public void addRelatedModelData(
+			Map<Long, Data> dataMap, String classNameRelated,
+			String[] attributesRelated, String[] mappings, Criterion filter)
+		throws Exception;
+
 	public Model clone();
 
 	public long count();
@@ -89,12 +94,30 @@ public interface Model extends Cloneable, Comparable<Model> {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception;
 
+	public Map<Long, Data> getData(
+			String[] attributesModel, String[] attributesRelated,
+			Criterion filter)
+		throws Exception;
+
+	public Map<Long, Data> getData(
+			String[] attributesModel, String[] attributesRelated,
+			String mapKeyAttribute, Criterion filter)
+		throws Exception;
+
 	public DataComparator getDataComparator();
 
 	public Map<Long, Data> getDataWithCache() throws Exception;
 
 	public Map<Long, Data> getDataWithCache(String[] attributes)
 		throws Exception;
+
+	public Map<Long, Data> getDataWithCache(
+			String[] attributes, String mapKeyAttribute)
+		throws Exception;
+
+	public Map<Long, List<Data>> getDataWithDuplicates(
+		String[] attributes, String mapKeyAttribute, Criterion filter)
+	throws Exception;
 
 	public String getDisplayName(Locale locale);
 
@@ -142,6 +165,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public boolean hasAttributes(String[] attributes);
 
 	public boolean hasIndexer();
+
+	public boolean hasIndexerEnabled();
 
 	public void init(
 			String classPackageName, String classSimpleName, Service service,
