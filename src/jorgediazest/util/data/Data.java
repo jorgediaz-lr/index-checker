@@ -51,6 +51,12 @@ public class Data implements Comparable<Data> {
 		return comparator.equals(this, data);
 	}
 
+	public boolean equalsAttributes(Data data, String attr1, String attr2) {
+		return DataUtil.equalsAttributes(
+			getModel(), data.getModel(), attr1, attr2, get(attr1),
+			data.get(attr2));
+	}
+
 	public boolean exact(Data data) {
 
 		return comparator.exact(this, data);

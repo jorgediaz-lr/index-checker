@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.Set;
 import java.util.TreeSet;
 
+import jorgediazest.util.model.Model;
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
@@ -352,6 +353,25 @@ public class DataUtil {
 
 	public static int compareLongs(long x, long y) {
 		return (x < y) ? -1 : ((x == y) ? 0 : 1);
+	}
+
+	public static boolean equalsAttributes(
+		Model model1, Model model2, String attr1, String attr2, Object o1,
+		Object o2) {
+
+		if (o1 == null) {
+			return (o1 == o2);
+		}
+
+		int type1 = model1.getAttributeType(attr1);
+		int type2 = model2.getAttributeType(attr2);
+
+		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
+			o1 = o1.toString();
+			o2 = o2.toString();
+		}
+
+		return o1.equals(o2);
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
