@@ -131,12 +131,12 @@ public class ComparisonUtil {
 		return new Comparison(model, data);
 	}
 
-	public static Comparison getError(Model model, Exception e) {
+	public static Comparison getError(Model model, Throwable t) {
 		_log.error(
 			"Model: " + model.getName() + " EXCEPTION: " +
-				e.getClass() + " - " + e.getMessage(),e);
+				t.getClass() + " - " + t.getMessage(),t);
 
-		return new Comparison(model, e.getClass() + " - " + e.getMessage());
+		return new Comparison(model, t.getClass() + " - " + t.getMessage());
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ComparisonUtil.class);
