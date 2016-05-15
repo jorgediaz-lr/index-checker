@@ -24,12 +24,21 @@ import jorgediazest.util.data.Data;
 /**
  * @author Jorge Díaz
  */
-public class DLFileEntry extends AbstractVersionedEntry {
+public class DLFileEntry extends IndexCheckerModel {
 
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+	public Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
-		return getData(attributes, filter, DLFileVersion.class.getName());
+		Map<Long, Data> dataMap = super.getData(
+			attributes, mapKeyAttribute, filter);
+
+		addRelatedModelData(
+			dataMap, DLFileVersion.class.getName(),
+			" =fileEntryId, =version,status".split(","),
+			"fileEntryId,version".split(","), filter);
+
+		return dataMap;
 	}
 
 }

@@ -24,12 +24,21 @@ import jorgediazest.util.data.Data;
 /**
  * @author Jorge Díaz
  */
-public class DDLRecord extends AbstractVersionedEntry {
+public class DDLRecord extends IndexCheckerModel {
 
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+	public Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
-		return getData(attributes, filter, DDLRecordVersion.class.getName());
-	}
+	Map<Long, Data> dataMap = super.getData(
+		attributes, mapKeyAttribute, filter);
+
+	addRelatedModelData(
+		dataMap, DDLRecordVersion.class.getName(),
+		" =recordId, =version,status".split(","), "recordId,version".split(","),
+		filter);
+
+	return dataMap;
+}
 
 }
