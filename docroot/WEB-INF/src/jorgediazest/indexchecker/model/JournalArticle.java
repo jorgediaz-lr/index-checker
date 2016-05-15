@@ -114,11 +114,12 @@ public class JournalArticle extends IndexCheckerModel {
 		return this.generateCriterionFilter("classNameId=0");
 	}
 
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
+	public Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
 		if (indexAllVersions) {
-			return super.getData(attributes, filter);
+			return super.getData(attributes, mapKeyAttribute, filter);
 		}
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -137,7 +138,13 @@ public class JournalArticle extends IndexCheckerModel {
 		addMissingJournalArticles(
 			attributes, filter, filterStatusNotApproved, dataMap);
 
-		return dataMap;
+		Map<Long, Data> dataMap2 = new HashMap<Long, Data>();
+
+		for (Data data : dataMap.values()) {
+			dataMap2.put((Long)data.get(mapKeyAttribute), data);
+		}
+
+		return dataMap2;
 	}
 
 	@Override
