@@ -24,9 +24,7 @@ import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
-import java.util.List;
-
-import jorgediazest.indexchecker.model.IndexCheckerModel;
+import java.util.Collection;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
@@ -37,15 +35,15 @@ import jorgediazest.util.reflection.ReflectionUtil;
  */
 public class IndexSearchUtil {
 
-	public static void autoAdjustIndexSearchLimit(
-		List<IndexCheckerModel> modelList) {
-
+	public static void autoAdjustIndexSearchLimit(Collection<Model> modelList) {
 		try {
 			int indexSearchLimit = Math.max(20000, getIndexSearchLimit());
 
-			for (IndexCheckerModel m : modelList) {
-				indexSearchLimit = Math.max(
-					indexSearchLimit, (int)m.count() * 2);
+			for (Model m : modelList) {
+				if (m.hasIndexerEnabled()) {
+					indexSearchLimit = Math.max(
+						indexSearchLimit, (int)m.count() * 2);
+				}
 			}
 
 			setIndexSearchLimit(indexSearchLimit);

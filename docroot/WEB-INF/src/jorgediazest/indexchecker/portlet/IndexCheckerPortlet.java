@@ -75,21 +75,6 @@ import jorgediazest.util.model.ModelUtil;
  */
 public class IndexCheckerPortlet extends MVCPortlet {
 
-	public static IndexCheckerModel castModel(Model model) {
-		try {
-			return (IndexCheckerModel)model;
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Model: " + model.getName() + " EXCEPTION: " +
-						e.getClass() + " - " + e.getMessage(), e);
-			}
-
-			return null;
-		}
-	}
-
 	public static Map<Long, List<Comparison>> executeCheck(
 		Company company, List<Long> groupIds, List<String> classNames,
 		Set<ExecutionMode> executionMode, int threadsExecutor)
@@ -125,17 +110,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Map<String, Model> modelMap = modelFactory.getModelMap(classNames);
 
-		List<IndexCheckerModel> modelList = new ArrayList<IndexCheckerModel>();
-
-		for (Model model : modelMap.values()) {
-			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-				(model.count() > 0)) {
-
-				modelList.add(castModel(model));
-			}
-		}
-
-		IndexSearchUtil.autoAdjustIndexSearchLimit(modelList);
+		IndexSearchUtil.autoAdjustIndexSearchLimit(modelMap.values());
 
 		long companyId = company.getCompanyId();
 
@@ -156,10 +131,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			List<Future<Comparison>> futureResultList =
 				new ArrayList<Future<Comparison>>();
 
-			for (IndexCheckerModel model : modelList) {
+			for (Model model : modelMap.values()) {
+				if (!model.hasIndexerEnabled()) {
+					continue;
+				}
+
 				CallableCheckGroupAndModel c =
 					new CallableCheckGroupAndModel(
-						companyId, groupId, model, executionMode);
+						companyId, groupId, (IndexCheckerModel)model,
+						executionMode);
 
 				futureResultList.add(executor.submit(c));
 			}
@@ -327,13 +307,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				companyProcessTime.put(company, (endTime - startTime));
 			}
-			catch (Exception e) {
+			catch (Throwable t) {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
-				pw.println("Error during execution: " + e.getMessage());
-				e.printStackTrace(pw);
+				pw.println("Error during execution: " + t.getMessage());
+				t.printStackTrace(pw);
 				companyError.put(company, sw.toString());
-				_log.error(e, e);
+				_log.error(t, t);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -634,15 +614,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			Map<String, Model> modelMap = modelFactory.getModelMap(
 				getClassNames());
 
-			List<IndexCheckerModel> modelList =
-				new ArrayList<IndexCheckerModel>();
-
-			for (Model model : modelMap.values()) {
-				IndexCheckerModel icModel = castModel(model);
-				modelList.add(icModel);
-			}
-
-			IndexSearchUtil.autoAdjustIndexSearchLimit(modelList);
+			IndexSearchUtil.autoAdjustIndexSearchLimit(modelMap.values());
 		}
 		catch (Exception e) {
 			_log.error(e, e);

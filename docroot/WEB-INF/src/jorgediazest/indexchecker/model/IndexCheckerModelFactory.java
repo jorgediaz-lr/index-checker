@@ -14,17 +14,8 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
-import com.liferay.portal.kernel.search.BaseIndexer;
-import com.liferay.portal.kernel.search.Indexer;
-
-import java.lang.reflect.Proxy;
-
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
@@ -73,44 +64,6 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		Map<String, Class<? extends Model>> modelClassMap) {
 
 		super(defaultModelClass, modelClassMap);
-	}
-
-	@Override
-	public Map<String, Model> getModelMap(Collection<String> classNames) {
-
-		Map<String, Model> originalModelMap = super.getModelMap(classNames);
-
-		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
-
-		for (Entry<String, Model> entry : originalModelMap.entrySet()) {
-			Model model = entry.getValue();
-
-			if (model.hasIndexer()) {
-				BaseIndexer baseindexer =
-					IndexCheckerModelFactory.getBaseIndexer(model.getIndexer());
-
-				if ((baseindexer != null) && baseindexer.isIndexerEnabled()) {
-					modelMap.put(entry.getKey(), model);
-				}
-			}
-		}
-
-		return modelMap;
-	}
-
-	protected static BaseIndexer getBaseIndexer(Indexer indexer) {
-		BaseIndexer baseindexer = null;
-
-		if (indexer instanceof BaseIndexer) {
-			baseindexer = (BaseIndexer)indexer;
-		}
-		else if (indexer instanceof Proxy) {
-			ClassLoaderBeanHandler classLoaderBeanHandler =
-				(ClassLoaderBeanHandler)Proxy.getInvocationHandler(indexer);
-			baseindexer = (BaseIndexer)classLoaderBeanHandler.getBean();
-		}
-
-		return baseindexer;
 	}
 
 }
