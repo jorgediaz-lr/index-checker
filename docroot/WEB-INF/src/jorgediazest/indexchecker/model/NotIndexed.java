@@ -14,24 +14,14 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import jorgediazest.util.data.Data;
-
 /**
  * @author Jorge Díaz
  */
 public class NotIndexed extends IndexCheckerModel {
 
 	@Override
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
-		throws Exception {
-
-		/* Return empty data as it is not indexed */
-		return new HashMap<Long, Data>();
+	public boolean hasIndexerEnabled() {
+		return false;
 	}
 
 }
