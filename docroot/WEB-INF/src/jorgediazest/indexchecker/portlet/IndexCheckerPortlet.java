@@ -90,14 +90,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					new String[] {
 						"createDate", "status", "version",
 						"priority", "viewCount", "visible", "ratings",
-						"assetCategoryIds", "assetTagIds"});
+						"assetCategoryIds", "assetTagIds", "assetTagNames"});
 
 			protected DataComparator resourceComparator =
 				new DataResourceModelComparator(
 					new String[] {
 						"createDate", "status", "version",
 						"priority", "viewCount", "visible", "ratings",
-						"assetCategoryIds", "assetTagIds"});
+						"assetCategoryIds", "assetTagIds", "assetTagNames"});
 
 			@Override
 			public DataComparator getDataComparator(Model model) {
