@@ -355,23 +355,19 @@ public class DataUtil {
 		return (x < y) ? -1 : ((x == y) ? 0 : 1);
 	}
 
-	public static boolean equalsAttributes(
-		Model model1, Model model2, String attr1, String attr2, Object o1,
-		Object o2) {
+	public static Data createDataObject(
+		Model model, DataComparator dataComparator, String[] attributes,
+		Object[] result) {
 
-		if (o1 == null) {
-			return (o1 == o2);
+		Data data = new Data(model, dataComparator);
+
+		int i = 0;
+
+		for (String attrib : attributes) {
+			data.set(attrib, result[i++]);
 		}
 
-		int type1 = model1.getAttributeType(attr1);
-		int type2 = model2.getAttributeType(attr2);
-
-		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
-			o1 = o1.toString();
-			o2 = o2.toString();
-		}
-
-		return o1.equals(o2);
+		return data;
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {

@@ -51,10 +51,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
+import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
@@ -73,6 +73,7 @@ public abstract class ModelImpl implements Model {
 				service.getFilter(), filter));
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, String classNameRelated,
 			String[] attrRelated, String[] mappings, Criterion filter)
@@ -90,20 +91,34 @@ public abstract class ModelImpl implements Model {
 				classNameRelated, attrRelatedDest, mappingsDest[0], filter);
 
 			for (Data data : dataMap.values()) {
-				List<Data> relatedList = relatedMap.get(
-					data.get(mappingsSource[0]));
+				List<Data> relatedList = new ArrayList<Data>();
 
-				if (relatedList == null) {
-					continue;
+				Object key = data.get(mappingsSource[0]);
+
+				if (key instanceof Set) {
+					for (Object k : (Set<Object>)key) {
+						List<Data> list = relatedMap.get(k);
+
+						if (list != null) {
+							relatedList.addAll(list);
+						}
+					}
+				}
+				else {
+					List<Data> list = relatedMap.get(key);
+
+					if (list != null) {
+						relatedList.addAll(list);
+					}
 				}
 
-				Data matched = null;
+				List<Data> matched = new ArrayList<Data>();
 
 				for (Data related : relatedList) {
 					boolean equalsAttributes = true;
 
 					for (int j = 1; j<mappings.length; j++) {
-						equalsAttributes = data.equalsAttributes(
+						equalsAttributes = data.includesValueOfAttribute(
 								related, mappingsSource[j], mappingsDest[j]);
 
 						if (!equalsAttributes) {
@@ -112,20 +127,35 @@ public abstract class ModelImpl implements Model {
 					}
 
 					if (equalsAttributes) {
-						matched = related;
-						break;
+						matched.add(related);
 					}
 				}
 
-				if (matched == null) {
+				if (matched.isEmpty()) {
 					continue;
 				}
 
+				data.addModelTableInfo(matched.get(0).getModel());
+
 				for (int k = 0; k<attrRelatedOrig.length; k++) {
 					if (Validator.isNotNull(attrRelatedOrig[k])) {
-						data.set(
-							attrRelatedOrig[k],
-							matched.get(attrRelatedDest[k]));
+						if (matched.size() == 1) {
+							Object value = matched.get(
+								0).get(attrRelatedDest[k]);
+
+							data.set(attrRelatedOrig[k], value);
+
+							continue;
+						}
+
+						Set<Object> values = new HashSet<Object>(
+							matched.size());
+
+						for (Data m : matched) {
+							values.add(m.get(attrRelatedDest[k]));
+						}
+
+						data.set(attrRelatedOrig[k], values);
 					}
 				}
 			}
@@ -199,15 +229,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Data createDataObject(String[] attributes, Object[] result) {
-		Data data = new Data(this, this.dataComparator);
+		Model model = this;
+		DataComparator dataComparator = this.dataComparator;
 
-		int i = 0;
-
-		for (String attrib : attributes) {
-			data.set(attrib, result[i++]);
-		}
-
-		return data;
+		return DataUtil.createDataObject(
+			model, dataComparator, attributes, result);
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
@@ -303,72 +329,23 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public int getAttributePos(String name) {
-		if (mapAttributePosition.containsKey(name)) {
-			return mapAttributePosition.get(name);
-		}
-
-		Object[][] values = this.getAttributes();
-
-		if (name.endsWith(StringPool.UNDERLINE)) {
-			name = name.substring(0, name.length() - 1);
-		}
-
-		String nameWithUnderline = name + StringPool.UNDERLINE;
-
-		int pos = -1;
-
-		for (int i = 0; i < values.length; i++) {
-			if (((String)values[i][0]).endsWith(StringPool.UNDERLINE) &&
-				((String)values[i][0]).equals(nameWithUnderline)) {
-
-				pos = i;
-			}
-			else if (((String)values[i][0]).equals(name)) {
-				pos = i;
-			}
-		}
-
-		mapAttributePosition.put(name, pos);
-
-		return pos;
+		return this.getTableInfo().getAttributePos(name);
 	}
 
 	public Object[][] getAttributes() {
-		return getTableInfo().getAttributesArr();
+		return getTableInfo().getAttributes();
 	}
 
 	public String[] getAttributesName() {
-		Object[][] values = this.getAttributes();
-
-		String[] names = new String[values.length];
-
-		for (int i = 0; i < values.length; i++) {
-			names[i] = (String)values[i][0];
-		}
-
-		return names;
+		return getTableInfo().getAttributesName();
 	}
 
 	public int[] getAttributesType() {
-		Object[][] values = this.getAttributes();
-
-		int[] types = new int[values.length];
-
-		for (int i = 0; i < values.length; i++) {
-			types[i] = (Integer)values[i][1];
-		}
-
-		return types;
+		return getTableInfo().getAttributesType();
 	}
 
 	public int getAttributeType(String name) {
-		int pos = this.getAttributePos(name);
-
-		if (pos == -1) {
-			return 0;
-		}
-
-		return (Integer)this.getAttributes()[pos][1];
+		return getTableInfo().getAttributeType(name);
 	}
 
 	public String getClassName() {
@@ -766,21 +743,31 @@ public abstract class ModelImpl implements Model {
 			Criterion filter)
 		throws Exception {
 
-			Model model = modelFactory.getModelObject(classNameRelated);
+		Model model = modelFactory.getModelObject(classNameRelated);
 
-			if ((model == null) || this.getClassName().equals(model)) {
-				return new HashMap<Long, List<Data>>();
-			}
-
-			if ("classPK".equals(mappingAttr)) {
-				Criterion classNameIdFilter = model.getProperty(
-					"classNameId").eq(this.getClassNameId());
-				filter = ModelUtil.generateConjunctionQueryFilter(
-					classNameIdFilter, filter);
-			}
-
-			return model.getDataWithDuplicates(attributes, mappingAttr, filter);
+		if (model == null) {
+			return new HashMap<Long, List<Data>>();
 		}
+
+		if ("MappingTable".equals(mappingAttr)) {
+			TableInfo tableInfo =
+				model.getTableInfoMappings().get(attributes[0]);
+			return tableInfo.queryTable(model.getPrimaryKeyAttribute());
+		}
+
+		if ("classPK".equals(mappingAttr)) {
+			Criterion classNameIdFilter = model.getProperty(
+				"classNameId").eq(this.getClassNameId());
+			filter = ModelUtil.generateConjunctionQueryFilter(
+				classNameIdFilter, filter);
+		}
+
+		if (this.getClassName().equals(model.getClassName())) {
+			return new HashMap<Long, List<Data>>();
+		}
+
+		return model.getDataWithDuplicates(attributes, mappingAttr, filter);
+	}
 
 	public Service getService() {
 		return service;
@@ -793,15 +780,15 @@ public abstract class ModelImpl implements Model {
 
 	public TableInfo getTableInfo() {
 		if (tableInfo == null) {
-			tableInfo = new TableInfo(service.getLiferayModelImplClass());
+			tableInfo = new TableInfo(this);
 		}
 
 		return tableInfo;
 	}
 
-	public List<TableInfo> getTableInfoMappings() {
+	public HashMap<String, TableInfo> getTableInfoMappings() {
 		if (tableInfoMappings == null) {
-			tableInfoMappings = new ArrayList<TableInfo>();
+			tableInfoMappings = new HashMap<String, TableInfo>();
 
 			List<String> mappingTables =
 				ReflectionUtil.getLiferayModelImplMappingTablesFields(
@@ -811,10 +798,11 @@ public abstract class ModelImpl implements Model {
 				String prefix = StringUtil.replace(
 					mappingTable, "_NAME", StringPool.BLANK);
 
-				TableInfo tableInfo = new TableInfo(
-					service.getLiferayModelImplClass(), prefix);
+				TableInfo tableInfo = new TableInfo(this, prefix);
 
-				tableInfoMappings.add(tableInfo);
+				String destinationAttr = tableInfo.getDestinationAttr(
+					getPrimaryKeyAttribute());
+				tableInfoMappings.put(destinationAttr, tableInfo);
 			}
 		}
 
@@ -1038,14 +1026,12 @@ public abstract class ModelImpl implements Model {
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected DataComparator dataComparator;
-	protected Map<String, Integer> mapAttributePosition =
-		new ConcurrentHashMap<String, Integer>();
 	protected ModelFactory modelFactory = null;
 	protected String name = null;
 	protected Set<Portlet> portlets = null;
 	protected Service service = null;
 	protected String suffix = null;
 	protected TableInfo tableInfo = null;
-	protected List<TableInfo> tableInfoMappings = null;
+	protected HashMap<String, TableInfo> tableInfoMappings = null;
 
 }

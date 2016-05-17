@@ -16,6 +16,15 @@ package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.util.StringPool;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import jorgediazest.util.data.Data;
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
@@ -23,17 +32,23 @@ import jorgediazest.util.reflection.ReflectionUtil;
  */
 public class TableInfo {
 
-	public TableInfo(Class<?> classLiferayModelImpl) {
-		this(classLiferayModelImpl, "TABLE_");
+	public TableInfo(Model model) {
+		this(model, "TABLE");
 	}
 
-	public TableInfo(Class<?> classLiferayModelImpl, String fieldPrefix) {
+	public TableInfo(Model model, String fieldPrefix) {
+
+		this.model = model;
+
+		Class<?> classLiferayModelImpl =
+			model.getService().getLiferayModelImplClass();
+
 		attributesArr = (Object[][])ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "COLUMNS");
+				classLiferayModelImpl, fieldPrefix + "_COLUMNS");
 		name = (String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "NAME");
+				classLiferayModelImpl, fieldPrefix + "_NAME");
 		sqlCreate = (String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "SQL_CREATE");
+				classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
 		attributesStr = ModelUtil.getDatabaseAttributesStr(name, sqlCreate);
 
 		if ((attributesStr != null) && (attributesStr.indexOf('#') > 0)) {
@@ -74,8 +89,101 @@ public class TableInfo {
 		}
 	}
 
-	public Object[][] getAttributesArr() {
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof TableInfo)) {
+			return false;
+		}
+
+		TableInfo tableInfo = ((TableInfo)obj);
+		return getName().equals(tableInfo.getName());
+	}
+
+	public int getAttributePos(String name) {
+		if (mapAttributePosition.containsKey(name)) {
+			return mapAttributePosition.get(name);
+		}
+
+		Object[][] values = this.getAttributes();
+
+		if (name.endsWith(StringPool.UNDERLINE)) {
+			name = name.substring(0, name.length() - 1);
+		}
+
+		String nameWithUnderline = name + StringPool.UNDERLINE;
+
+		int pos = -1;
+
+		for (int i = 0; i < values.length; i++) {
+			if (((String)values[i][0]).endsWith(StringPool.UNDERLINE) &&
+				((String)values[i][0]).equals(nameWithUnderline)) {
+
+				pos = i;
+			}
+			else if (((String)values[i][0]).equals(name)) {
+				pos = i;
+			}
+		}
+
+		mapAttributePosition.put(name, pos);
+
+		return pos;
+	}
+
+	public Object[][] getAttributes() {
 		return attributesArr;
+	}
+
+	public String[] getAttributesName() {
+		Object[][] values = this.getAttributes();
+
+		String[] names = new String[values.length];
+
+		for (int i = 0; i < values.length; i++) {
+			names[i] = (String)values[i][0];
+		}
+
+		return names;
+	}
+
+	public int[] getAttributesType() {
+		Object[][] values = this.getAttributes();
+
+		int[] types = new int[values.length];
+
+		for (int i = 0; i < values.length; i++) {
+			types[i] = (Integer)values[i][1];
+		}
+
+		return types;
+	}
+
+	public int getAttributeType(String name) {
+		int pos = this.getAttributePos(name);
+
+		if (pos == -1) {
+			return 0;
+		}
+
+		return (Integer)this.getAttributes()[pos][1];
+	}
+
+	public String getDestinationAttr(String primaryKey) {
+		String[] attrNames = getAttributesName();
+		String destinationAttr = null;
+
+		for (int i = 0; i<attrNames.length; i++) {
+			if ((primaryKey != null) && !primaryKey.equals(attrNames[i])) {
+				destinationAttr = attrNames[i];
+				break;
+			}
+		}
+
+		if (destinationAttr == null) {
+			destinationAttr = Arrays.toString(attrNames);
+		}
+
+		return destinationAttr;
 	}
 
 	public String getName() {
@@ -94,6 +202,42 @@ public class TableInfo {
 		return sqlCreate;
 	}
 
+	@Override
+	public int hashCode() {
+		return getName().hashCode();
+	}
+
+	public Set<Data> queryTable() throws Exception {
+		if (dataSetCache == null) {
+			dataSetCache = DatabaseUtil.queryTable(
+				model, name, getAttributesName());
+		}
+
+		return dataSetCache;
+	}
+
+	public Map<Long, List<Data>> queryTable(String mappingAttr)
+		throws Exception {
+
+		Set<Data> dataSet = queryTable();
+		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+
+		for (Data data : dataSet) {
+			long key = (Long)data.get(mappingAttr);
+
+			if (!dataMap.containsKey(key)) {
+				List<Data> list = new ArrayList<Data>();
+				list.add(data);
+				dataMap.put(key, list);
+			}
+			else {
+				dataMap.get(key).add(data);
+			}
+		}
+
+		return dataMap;
+	}
+
 	protected String getCreateTableAttributes() {
 		String aux = attributesStr;
 
@@ -104,8 +248,13 @@ public class TableInfo {
 		return aux;
 	}
 
+	protected Map<String, Integer> mapAttributePosition =
+		new ConcurrentHashMap<String, Integer>();
+
 	private Object[][] attributesArr = null;
 	private String attributesStr = null;
+	private Set<Data> dataSetCache = null;
+	private Model model = null;
 	private String name = null;
 
 	/**
