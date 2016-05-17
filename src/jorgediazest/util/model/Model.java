@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.model.Portlet;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -157,6 +158,10 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public Service getService();
 
 	public StagedModelDataHandler<?> getStagedModelDataHandler();
+
+	public TableInfo getTableInfo();
+
+	public HashMap<String, TableInfo> getTableInfoMappings();
 
 	public TrashHandler getTrashHandler();
 
