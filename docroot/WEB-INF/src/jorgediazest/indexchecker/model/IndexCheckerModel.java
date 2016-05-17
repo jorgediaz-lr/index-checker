@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portlet.asset.model.AssetEntry;
+import com.liferay.portlet.ratings.model.RatingsStats;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,6 +36,7 @@ import java.util.Set;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 
 import jorgediazest.util.data.Data;
+import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.model.ModelImpl;
 import jorgediazest.util.service.Service;
@@ -42,23 +45,6 @@ import jorgediazest.util.service.Service;
  * @author Jorge Díaz
  */
 public class IndexCheckerModel extends ModelImpl {
-
-	public Data createDataObject(String[] attributes, Document doc) {
-		Data data = new Data(this, this.dataComparator);
-
-		data.set("uid", doc.getUID());
-
-		for (String attribute : attributes) {
-			String attrDoc = IndexSearchUtil.getAttributeForDocument(
-				this, attribute);
-
-			if (doc.hasField(attrDoc)) {
-				data.set(attribute, doc.get(attrDoc));
-			}
-		}
-
-		return data;
-	}
 
 	public void delete(Data value) throws SearchException {
 		Object uid = value.get("uid");
@@ -111,6 +97,19 @@ public class IndexCheckerModel extends ModelImpl {
 		return errors;
 	}
 
+	public void fillDataObject(Data data, String[] attributes, Document doc) {
+		data.set("uid", doc.getUID());
+
+		for (String attribute : attributes) {
+			String attrDoc = IndexSearchUtil.getAttributeForDocument(
+				this, attribute);
+
+			if (doc.hasField(attrDoc)) {
+				data.set(attribute, doc.getField(attrDoc).getValues());
+			}
+		}
+	}
+
 	public Criterion generateQueryFilter() {
 		if (!this.isWorkflowEnabled()) {
 			return null;
@@ -133,9 +132,17 @@ public class IndexCheckerModel extends ModelImpl {
 
 		Set<Data> indexData = new HashSet<Data>();
 
+		Model assetEntryModel = modelFactory.getModelObject(AssetEntry.class);
+		Model ratingsStsModel = modelFactory.getModelObject(RatingsStats.class);
+
 		if (docs != null) {
 			for (int i = 0; i < docs.length; i++) {
-				Data data = this.createDataObject(attributes, docs[i]);
+				Data data = new Data(this, this.dataComparator);
+
+				data.addModelTableInfo(assetEntryModel);
+				data.addModelTableInfo(ratingsStsModel);
+
+				fillDataObject(data, attributes, docs[i]);
 
 				indexData.add(data);
 			}

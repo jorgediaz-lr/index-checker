@@ -98,15 +98,13 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
-	public Data createDataObject(String[] attributes, Document doc) {
-		Data data = super.createDataObject(attributes, doc);
+	public void fillDataObject(Data data, String[] attributes, Document doc) {
+		super.fillDataObject(data, attributes, doc);
 
 		if (indexAllVersions) {
 			long id = DataUtil.getIdFromUID(doc.get(Field.UID));
 			data.setPrimaryKey(id);
 		}
-
-		return data;
 	}
 
 	@Override
