@@ -247,21 +247,20 @@ public class Data implements Comparable<Data> {
 		Set<Object> convertedObjects = new HashSet<Object>(values.length);
 		int type = getAttributeType(attribute);
 
-		if (type == 0) {
-			for (Object o : values) {
+		for (Object o : values) {
+			if (type == 0) {
 				convertedObjects.add(o.toString());
-			}
-		}
-		else {
-			for (Object o : values) {
-				Object c = DataUtil.castObjectToJdbcTypeObject(type, o);
 
-				if (c == null) {
-					return;
-				}
-
-				convertedObjects.add(c);
+				continue;
 			}
+
+			Object c = DataUtil.castObjectToJdbcTypeObject(type, o);
+
+			if (c == null) {
+				return;
+			}
+
+			convertedObjects.add(c);
 		}
 
 		if ((type == 0) && ("companyId".equals(attribute) ||
