@@ -71,6 +71,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public int getAttributeType(String name);
 
+	public Class<?> getAttributeTypeClass(String name);
+
 	public String getClassName();
 
 	public long getClassNameId();

@@ -348,6 +348,10 @@ public abstract class ModelImpl implements Model {
 		return getTableInfo().getAttributeType(name);
 	}
 
+	public Class<?> getAttributeTypeClass(String name) {
+		return getTableInfo().getAttributeTypeClass(name);
+	}
+
 	public String getClassName() {
 		return className;
 	}

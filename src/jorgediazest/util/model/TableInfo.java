@@ -168,6 +168,16 @@ public class TableInfo {
 		return (Integer)this.getAttributes()[pos][1];
 	}
 
+	public Class<?> getAttributeTypeClass(String name) {
+		int type = this.getAttributeType(name);
+
+		if (type == 0) {
+			return Object.class;
+		}
+
+		return ReflectionUtil.getJdbcTypeClass(type);
+	}
+
 	public String getDestinationAttr(String primaryKey) {
 		String[] attrNames = getAttributesName();
 		String destinationAttr = null;
