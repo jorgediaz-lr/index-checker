@@ -79,16 +79,20 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		relatedAttributesToCheck.add(
 			"com.liferay.portlet.asset.model.AssetEntry:" + mapping +
-			":assetEntryId, =classPK,priority,viewCount,visible");
+			":AssetEntry.entryId=entryId, =classPK,priority,viewCount,visible");
 		relatedAttributesToCheck.add(
 			"com.liferay.portlet.ratings.model.RatingsStats:" + mapping +
 			":statsId, =classPK,ratings=averageScore: ");
 		relatedAttributesToCheck.add(
 			"com.liferay.portlet.asset.model.AssetEntry:" +
-			"assetEntryId=MappingTable:assetCategoryIds=categoryId");
+			"AssetEntry.entryId=MappingTable:" +
+			"assetCategoryIds=categoryId,categoryId");
+		relatedAttributesToCheck.add(
+			"com.liferay.portlet.asset.model.AssetCategory:" +
+			"categoryId: =categoryId,assetCategoryTitles=title");
 		relatedAttributesToCheck.add(
 			"com.liferay.portlet.asset.model.AssetEntry:" +
-			"assetEntryId=MappingTable:assetTagIds=tagId,tagId");
+			"AssetEntry.entryId=MappingTable:assetTagIds=tagId,tagId");
 		relatedAttributesToCheck.add(
 			"com.liferay.portlet.asset.model.AssetTag:" +
 			"tagId: =tagId,assetTagNames=name");
