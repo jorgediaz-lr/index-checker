@@ -15,14 +15,18 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.ratings.model.RatingsStats;
@@ -30,6 +34,7 @@ import com.liferay.portlet.ratings.model.RatingsStats;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,11 +105,30 @@ public class IndexCheckerModel extends ModelImpl {
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
 		data.set("uid", doc.getUID());
 
+		Locale[] locales = LanguageUtil.getAvailableLocales();
+		Locale siteLocale = LocaleUtil.getSiteDefault();
+
 		for (String attribute : attributes) {
 			String attrDoc = IndexSearchUtil.getAttributeForDocument(
 				this, attribute);
 
-			if (doc.getFields().containsKey(attrDoc)) {
+			Map<Locale, String> valueMap = null;
+
+			Class<?> typeClass = getAttributeTypeClass(attribute);
+
+			if (typeClass.equals(String.class) ||
+				typeClass.equals(Object.class)) {
+
+				valueMap = getLocalizedMap(locales, doc, attrDoc);
+			}
+
+			if ((valueMap != null) && !valueMap.isEmpty()) {
+				String xml = LocalizationUtil.updateLocalization(
+					valueMap, "", "data", LocaleUtil.toLanguageId(siteLocale));
+
+				data.set(attribute, xml);
+			}
+			else if (doc.getFields().containsKey(attrDoc)) {
 				data.set(attribute, doc.getField(attrDoc).getValues());
 			}
 		}
@@ -170,6 +194,29 @@ public class IndexCheckerModel extends ModelImpl {
 		searchContext.setCompanyId(companyId);
 		searchContext.setEntryClassNames(new String[] {this.getClassName()});
 		return searchContext;
+	}
+
+	public Map<Locale, String> getLocalizedMap(
+		Locale[] locales, Document doc, String attribute) {
+
+		Map<Locale, String> valueMap = new HashMap<Locale, String>();
+
+		for (int i = 0; i<locales.length; i++) {
+			String localizedFieldName = DocumentImpl.getLocalizedName(
+				locales[i], attribute);
+
+			if (!doc.hasField(localizedFieldName)) {
+				continue;
+			}
+
+			String[] values = doc.getField(localizedFieldName).getValues();
+
+			if (values.length == 1) {
+				valueMap.put(locales[i], values[0]);
+			}
+		}
+
+		return valueMap;
 	}
 
 	@Override
