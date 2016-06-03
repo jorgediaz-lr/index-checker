@@ -55,13 +55,7 @@ public class DataModelComparator extends DataBaseComparator {
 		}
 
 		for (String attr : exactAttributes) {
-			Object value1 = data1.get(attr);
-			Object value2 = data2.get(attr);
-
-			if (Validator.isNotNull(value1) &&
-				Validator.isNotNull(value2) &&
-				!Validator.equals(value1, value2)) {
-
+			if (!data1.equalsAttributes(data2, attr)) {
 				return false;
 			}
 		}

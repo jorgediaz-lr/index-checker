@@ -14,6 +14,7 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.HashSet;
@@ -63,6 +64,11 @@ public class Data implements Comparable<Data> {
 		return comparator.equals(this, data);
 	}
 
+	public boolean equalsAttributes(Data data, String attr) {
+		return this.equalsAttributes(
+			data, attr, attr, get(attr), data.get(attr));
+	}
+
 	public boolean equalsAttributes(Data data, String attr1, String attr2) {
 		return this.equalsAttributes(
 			data, attr1, attr2, get(attr1), data.get(attr2));
@@ -71,8 +77,12 @@ public class Data implements Comparable<Data> {
 	public boolean equalsAttributes(
 		Data data, String attr1, String attr2, Object o1, Object o2) {
 
-		if (o1 == null) {
-			return (o1 == o2);
+		if (DataUtil.isNull(o1)) {
+			return DataUtil.isNull(o2);
+		}
+
+		if (o1.equals(o2)) {
+			return true;
 		}
 
 		int type1 = this.getAttributeType(attr1);
@@ -81,9 +91,11 @@ public class Data implements Comparable<Data> {
 		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
 			o1 = o1.toString();
 			o2 = o2.toString();
+
+			return o1.equals(o2);
 		}
 
-		return o1.equals(o2);
+		return false;
 	}
 
 	public boolean exact(Data data) {
@@ -213,7 +225,7 @@ public class Data implements Comparable<Data> {
 		int type = getAttributeType(attribute);
 
 		if (type == 0) {
-			convertedObject = value.toString();
+			convertedObject = value;
 		}
 		else {
 			convertedObject = DataUtil.castObjectToJdbcTypeObject(type, value);
@@ -228,6 +240,14 @@ public class Data implements Comparable<Data> {
 			 "resourcePrimKey".equals(attribute))) {
 
 			return;
+		}
+
+		if (convertedObject instanceof String) {
+			String aux = (String)convertedObject;
+
+			if (Validator.isXml(aux)) {
+				convertedObject = LocalizationUtil.getLocalizationMap(aux);
+			}
 		}
 
 		map.put(attribute, convertedObject);

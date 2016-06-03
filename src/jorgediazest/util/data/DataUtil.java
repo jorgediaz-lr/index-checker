@@ -419,6 +419,24 @@ public class DataUtil {
 		return valuesPK;
 	}
 
+	public static boolean isNull(Object obj) {
+		if (Validator.isNull(obj)) {
+			return true;
+		}
+
+		if (obj instanceof Double) {
+			return (((Double)obj).longValue() == 0);
+		}
+		else if (obj instanceof Float) {
+			return (((Float)obj).longValue() == 0);
+		}
+		else if (obj instanceof Integer) {
+			return (((Integer)obj).longValue() == 0);
+		}
+
+		return false;
+	}
+
 	public static Date stringToDate(String dateString) {
 
 		Date date = null;
