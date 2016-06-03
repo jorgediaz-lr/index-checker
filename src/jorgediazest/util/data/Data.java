@@ -135,7 +135,19 @@ public class Data implements Comparable<Data> {
 	}
 
 	public int getAttributeType(String attribute) {
+		String prefix = null;
+		int pos = attribute.indexOf(".");
+
+		if (pos != -1) {
+			prefix = attribute.substring(0, pos);
+			attribute = attribute.substring(pos+1);
+		}
+
 		for (TableInfo tableInfo : tableInfoSet) {
+			if ((prefix != null) && !tableInfo.getName().equals(prefix)) {
+				continue;
+			}
+
 			int type = tableInfo.getAttributeType(attribute);
 
 			if (type != 0) {
