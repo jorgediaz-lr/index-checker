@@ -90,14 +90,21 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					new String[] {
 						"createDate", "status", "version",
 						"priority", "viewCount", "visible", "ratings",
-						"assetCategoryIds", "assetTagIds", "assetTagNames"});
+						"assetCategoryIds", "assetCategoryTitles",
+						"assetTagIds", "assetTagNames"});
 
 			protected DataComparator resourceComparator =
 				new DataResourceModelComparator(
 					new String[] {
 						"createDate", "status", "version",
 						"priority", "viewCount", "visible", "ratings",
-						"assetCategoryIds", "assetTagIds", "assetTagNames"});
+						"assetCategoryIds", "assetCategoryTitles",
+						"assetTagIds", "assetTagNames"});
+
+/* document.addLocalizedKeyword(
+				"localized_title",
+				populateMap(assetEntry, assetEntry.getTitleMap()), true, true);
+*/
 
 			@Override
 			public DataComparator getDataComparator(Model model) {
