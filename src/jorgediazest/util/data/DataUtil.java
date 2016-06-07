@@ -15,7 +15,9 @@
 package jorgediazest.util.data;
 
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.math.BigDecimal;
@@ -29,6 +31,8 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -341,18 +345,51 @@ public class DataUtil {
 			return null;
 		}
 
+		String aux;
+
 		if (value.getClass() == byte[].class) {
 			byte[] valueArray = (byte[])value;
-			return new String(valueArray, 0, valueArray.length);
+			aux = new String(valueArray, 0, valueArray.length);
+		}
+		else {
+			aux = value.toString();
 		}
 
-		return value.toString();
+		if (DataUtil.getIgnoreCase() && !Validator.isXml(aux)) {
+			aux = StringUtil.toLowerCase(aux);
+		}
+
+		return aux;
 	}
 
 	/* Long.compare()is not available at java 1.6 */
 
 	public static int compareLongs(long x, long y) {
 		return (x < y) ? -1 : ((x == y) ? 0 : 1);
+	}
+
+	public static Object convertXmlToMap(Object object) {
+		if (object instanceof String) {
+			String str = (String)object;
+
+			if (Validator.isXml(str)) {
+				object = convertXmlToMap(str);
+			}
+		}
+
+		return object;
+	}
+
+	public static Map<Locale, String> convertXmlToMap(String xml) {
+		Map<Locale, String> map = LocalizationUtil.getLocalizationMap(xml);
+
+		if (DataUtil.getIgnoreCase()) {
+			for (Locale key : map.keySet()) {
+				map.put(key, StringUtil.toLowerCase(map.get(key)));
+			}
+		}
+
+		return map;
 	}
 
 	public static Data createDataObject(
@@ -394,6 +431,14 @@ public class DataUtil {
 		return id;
 	}
 
+	public static ThreadLocal<Boolean> getIgnorecase() {
+		return DataUtil.ignoreCase;
+	}
+
+	public static boolean getIgnoreCase() {
+		return DataUtil.ignoreCase.get();
+	}
+
 	public static String[] getListAttr(Collection<Data> data, String attr) {
 		String[] values = new String[data.size()];
 
@@ -433,8 +478,25 @@ public class DataUtil {
 		else if (obj instanceof Integer) {
 			return (((Integer)obj).longValue() == 0);
 		}
+		else if (obj instanceof String) {
+			Double d = castDouble((String)obj);
+
+			if (d != null) {
+				return (d.longValue() == 0);
+			}
+
+			Long l = castLong((String)obj);
+
+			if (l != null) {
+				return (l.longValue() == 0);
+			}
+		}
 
 		return false;
+	}
+
+	public static void setIgnoreCase(boolean ignoreCase) {
+		DataUtil.ignoreCase.set(ignoreCase);
 	}
 
 	public static Date stringToDate(String dateString) {
@@ -494,6 +556,16 @@ public class DataUtil {
 		{
 			return DateFormatFactoryUtil.getSimpleDateFormat(
 				"yyyyMMddHHmmssSSS");
+		}
+	};
+
+	private static ThreadLocal<Boolean> ignoreCase =
+		new ThreadLocal<Boolean>() {
+
+		@Override
+		protected Boolean initialValue()
+		{
+			return false;
 		}
 	};
 

@@ -14,9 +14,9 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -25,6 +25,7 @@ import java.util.Set;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.TableInfo;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
@@ -37,7 +38,17 @@ public class Data implements Comparable<Data> {
 		addModelTableInfo(model);
 	}
 
+	public void addModelTableInfo(Collection<Model> modelList) {
+		for (Model model : modelList) {
+			addModelTableInfo(model);
+		}
+	}
+
 	public void addModelTableInfo(Model model) {
+		if (!this.model.equals(model)) {
+			this.relatedModelsSet.add(model);
+		}
+
 		this.tableInfoSet.add(model.getTableInfo());
 
 		for (TableInfo tableInfo : model.getTableInfoMappings().values()) {
@@ -81,6 +92,10 @@ public class Data implements Comparable<Data> {
 			return DataUtil.isNull(o2);
 		}
 
+		if (DataUtil.isNull(o2)) {
+			return false;
+		}
+
 		if (o1.equals(o2)) {
 			return true;
 		}
@@ -89,8 +104,8 @@ public class Data implements Comparable<Data> {
 		int type2 = data.getAttributeType(attr2);
 
 		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
-			o1 = o1.toString();
-			o2 = o2.toString();
+			o1 = DataUtil.castString(o1);
+			o2 = DataUtil.castString(o2);
 
 			return o1.equals(o2);
 		}
@@ -158,6 +173,16 @@ public class Data implements Comparable<Data> {
 		return 0;
 	}
 
+	public Class<?> getAttributeTypeClass(String attribute) {
+		int type = this.getAttributeType(attribute);
+
+		if (type == 0) {
+			return Object.class;
+		}
+
+		return ReflectionUtil.getJdbcTypeClass(type);
+	}
+
 	public Long getCompanyId() {
 		return (Long)get("companyId");
 	}
@@ -180,6 +205,10 @@ public class Data implements Comparable<Data> {
 
 	public long getPrimaryKey() {
 		return get("pk", -1L);
+	}
+
+	public Set<Model> getRelatedModels() {
+		return relatedModelsSet;
 	}
 
 	public long getResourcePrimKey() {
@@ -254,13 +283,7 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
-		if (convertedObject instanceof String) {
-			String aux = (String)convertedObject;
-
-			if (Validator.isXml(aux)) {
-				convertedObject = LocalizationUtil.getLocalizationMap(aux);
-			}
-		}
+		convertedObject = DataUtil.convertXmlToMap(convertedObject);
 
 		map.put(attribute, convertedObject);
 	}
@@ -281,18 +304,19 @@ public class Data implements Comparable<Data> {
 
 		for (Object o : values) {
 			if (type == 0) {
-				convertedObjects.add(o.toString());
+				convertedObjects.add(DataUtil.convertXmlToMap(o.toString()));
 
 				continue;
 			}
 
-			Object c = DataUtil.castObjectToJdbcTypeObject(type, o);
+			Object convertedObject = DataUtil.castObjectToJdbcTypeObject(
+				type, o);
 
-			if (c == null) {
+			if (convertedObject == null) {
 				return;
 			}
 
-			convertedObjects.add(c);
+			convertedObjects.add(DataUtil.convertXmlToMap(convertedObject));
 		}
 
 		if ((type == 0) && ("companyId".equals(attribute) ||
@@ -337,6 +361,7 @@ public class Data implements Comparable<Data> {
 	protected Integer hashCode = null;
 	protected Map<String, Object> map = new LinkedHashMap<String, Object>();
 	protected Model model = null;
+	protected Set<Model> relatedModelsSet = new LinkedHashSet<Model>();
 	protected Set<TableInfo> tableInfoSet = new LinkedHashSet<TableInfo>();
 
 }
