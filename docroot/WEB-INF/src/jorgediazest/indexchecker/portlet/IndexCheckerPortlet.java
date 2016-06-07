@@ -25,10 +25,14 @@ import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.model.User;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.journal.model.JournalArticle;
+import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 import com.liferay.util.portlet.PortletProps;
 
@@ -83,6 +87,19 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		ModelFactory modelFactory = new IndexCheckerModelFactory();
 
+		final String dateAttributes = PortletProps.get(
+			"data-comparator.date.attributes");
+		final String dateAttributesUser = PortletProps.get(
+			"data-comparator.date.attributes.user");
+		final String basicAttributes = PortletProps.get(
+			"data-comparator.basic.attributes");
+		final String basicAttributesNoVersion = PortletProps.get(
+			"data-comparator.basic.attributes.noversion");
+		final String categoriesTagsAttributes = PortletProps.get(
+			"data-comparator.categories-tags.attributes");
+		final String assetEntryAttributes = PortletProps.get(
+			"data-comparator.assetentry.attributes");
+
 		DataComparatorFactory dataComparatorFactory =
 			new DataComparatorFactory() {
 
@@ -92,31 +109,52 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			protected DataComparator defaultComparator =
 				new DataModelComparator(
-					new String[] {
-						"createDate", "modifiedDate", "status", "version",
-						"priority", "viewCount", "visible", "ratings",
-						"assetCategoryIds", "assetCategoryTitles",
-						"assetTagIds", "assetTagNames"});
+					(dateAttributes + "," + basicAttributes + "," +
+						assetEntryAttributes + "," +
+						categoriesTagsAttributes).split(","));
+
+			protected DataComparator userComparator =
+				new DataModelComparator(
+					(dateAttributesUser + "," + basicAttributes + "," +
+						categoriesTagsAttributes).split(","));
+
+			protected DataComparator dlFileEntryComparator =
+				new DataModelComparator(
+					(dateAttributes + "," + basicAttributesNoVersion + "," +
+						assetEntryAttributes + "," +
+							categoriesTagsAttributes).split(","));
+
+			protected DataComparator wikiPageComparator =
+				new DataResourceModelComparator(
+					(dateAttributes + "," + basicAttributesNoVersion + "," +
+						assetEntryAttributes + "," +
+							categoriesTagsAttributes).split(","));
 
 			protected DataComparator resourceComparator =
 				new DataResourceModelComparator(
-					new String[] {
-						"createDate", "modifiedDate", "status", "version",
-						"priority", "viewCount", "visible", "ratings",
-						"assetCategoryIds", "assetCategoryTitles",
-						"assetTagIds", "assetTagNames"});
-
-/* document.addLocalizedKeyword(
-				"localized_title",
-				populateMap(assetEntry, assetEntry.getTitleMap()), true, true);
-*/
+					(dateAttributes + "," + basicAttributes + "," +
+						assetEntryAttributes + "," +
+						categoriesTagsAttributes).split(","));
 
 			@Override
 			public DataComparator getDataComparator(Model model) {
-				if ("com.liferay.portlet.journal.model.JournalArticle".equals(
+				if (JournalArticle.class.getName().equals(
 						model.getClassName()) && indexAllVersions) {
 
 					return defaultComparator;
+				}
+				else if (User.class.getName().equals(model.getClassName())) {
+					return userComparator;
+				}
+				else if (DLFileEntry.class.getName().equals(
+							model.getClassName())) {
+
+					return dlFileEntryComparator;
+				}
+				else if (WikiPage.class.getName().equals(
+							model.getClassName())) {
+
+					return wikiPageComparator;
 				}
 
 				if (model.isResourcedModel()) {
