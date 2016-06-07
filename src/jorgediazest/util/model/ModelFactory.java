@@ -160,13 +160,14 @@ public class ModelFactory {
 		}
 		catch (Exception e) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-			else if (_log.isInfoEnabled()) {
-				_log.info(
+				_log.debug(
 					"Cannot get model object of " + className +
 					" EXCEPTION: " + e.getClass().getName() + ": " +
 					e.getMessage());
+			}
+
+			if (_log.isTraceEnabled()) {
+				_log.trace(e, e);
 			}
 		}
 
@@ -181,15 +182,20 @@ public class ModelFactory {
 			}
 			catch (Exception e) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
-				}
-				else if (_log.isInfoEnabled()) {
-					_log.info(
+					_log.debug(
 						"Cannot get model object of " + className +
 						" EXCEPTION: " + e.getClass().getName() + ": " +
 						e.getMessage());
 				}
+
+				if (_log.isTraceEnabled()) {
+					_log.trace(e, e);
+				}
 			}
+		}
+
+		if (_log.isWarnEnabled()) {
+			_log.warn("Model object " + className + " was not found");
 		}
 
 		return null;
@@ -223,8 +229,8 @@ public class ModelFactory {
 				dataComparatorFactory);
 		}
 		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
+			if (_log.isDebugEnabled()) {
+				_log.debug(
 					"getModelObject(" + className + ") EXCEPTION " +
 					e.getClass().getName() + ": " + e.getMessage());
 			}

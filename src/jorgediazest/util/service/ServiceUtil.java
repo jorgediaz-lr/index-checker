@@ -78,8 +78,8 @@ public class ServiceUtil {
 		}
 
 		if (classLiferayModelImpl == null) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Class not found: " + liferayModelImpl);
+			if (_log.isDebugEnabled()) {
+				_log.debug("Class not found: " + liferayModelImpl);
 			}
 
 			if (exception != null) {
@@ -157,8 +157,8 @@ public class ServiceUtil {
 				PortalClassLoaderUtil.getClassLoader().loadClass(className);
 		}
 		catch (ClassNotFoundException e) {
-			if (_log.isInfoEnabled()) {
-				_log.info("ClassModel not found: " + className);
+			if (_log.isDebugEnabled()) {
+				_log.debug("ClassModel not found: " + className);
 			}
 
 			return null;
@@ -206,14 +206,15 @@ public class ServiceUtil {
 		}
 		catch (Exception e) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-			else if (_log.isInfoEnabled()) {
-				_log.info(
+				_log.debug(
 					"Cannot get service of " + classPackageName + "." +
 					classSimpleName + " in classloader: " + classLoader +
 					" - EXCEPTION: " + e.getClass().getName() +
 					": " + e.getMessage());
+			}
+
+			if (_log.isTraceEnabled()) {
+				_log.trace(e, e);
 			}
 
 			return null;
