@@ -19,6 +19,14 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portlet.asset.model.AssetCategory;
+import com.liferay.portlet.asset.model.AssetEntry;
+import com.liferay.portlet.asset.model.AssetTag;
+import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.documentlibrary.model.DLFileVersion;
+import com.liferay.portlet.dynamicdatalists.model.DDLRecord;
+import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
+import com.liferay.portlet.ratings.model.RatingsStats;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,6 +40,7 @@ import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 
 /**
@@ -53,6 +62,10 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		attributesToCheck.addAll(
 			Arrays.asList(model.getDataComparator().getExactAttributes()));
 
+		if (DLFileEntry.class.getName().equals(model.getClassName())) {
+			attributesToCheck.add("version");
+		}
+
 		return attributesToCheck;
 	}
 
@@ -69,6 +82,17 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	public Set<String> calculateRelatedAttributesToCheck(Model model) {
 		Set<String> relatedAttributesToCheck = new LinkedHashSet<String>();
 
+		if (model.getName().equals(DDLRecord.class.getName())) {
+			relatedAttributesToCheck.add(
+				DDLRecordVersion.class.getName() + ":recordId,version" +
+				": =recordId,version,status");
+		}
+		else if (model.getName().equals(DLFileEntry.class.getName())) {
+			relatedAttributesToCheck.add(
+				DLFileVersion.class.getName() + ":fileEntryId,version" +
+				": =fileEntryId, =version,status");
+		}
+
 		String attributeClassPK = "pk";
 
 		if (model.isResourcedModel()) {
@@ -78,30 +102,61 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		String mapping = attributeClassPK+"=classPK";
 
 		relatedAttributesToCheck.add(
-			"com.liferay.portlet.asset.model.AssetEntry:" + mapping +
+			AssetEntry.class.getName() + ":" + mapping +
 			":AssetEntry.entryId=entryId, =classPK,priority,viewCount,visible");
 		relatedAttributesToCheck.add(
-			"com.liferay.portlet.ratings.model.RatingsStats:" + mapping +
-			":statsId, =classPK,ratings=averageScore: ");
+			RatingsStats.class.getName() + ":" + mapping +
+			":statsId, =classPK,averageScore: ");
 		relatedAttributesToCheck.add(
-			"com.liferay.portlet.asset.model.AssetEntry:" +
+			AssetEntry.class.getName() + ":" +
 			"AssetEntry.entryId=MappingTable:" +
 			"assetCategoryIds=categoryId,categoryId");
 		relatedAttributesToCheck.add(
-			"com.liferay.portlet.asset.model.AssetCategory:" +
+			AssetCategory.class.getName() + ":" +
 			"categoryId: =categoryId,assetCategoryTitles=title");
 		relatedAttributesToCheck.add(
-			"com.liferay.portlet.asset.model.AssetEntry:" +
+			AssetEntry.class.getName() + ":" +
 			"AssetEntry.entryId=MappingTable:assetTagIds=tagId,tagId");
 		relatedAttributesToCheck.add(
-			"com.liferay.portlet.asset.model.AssetTag:" +
-			"tagId: =tagId,assetTagNames=name");
+			AssetTag.class.getName() + ":tagId: =tagId,assetTagNames=name");
 
 		return relatedAttributesToCheck;
 	}
 
+	public Set<Model> calculateRelatedModels(Model model) {
+
+		Set<Model> relatedModels = new LinkedHashSet<Model>();
+
+		if (model.getName().equals(DDLRecord.class.getName())) {
+			relatedModels.add(model.getModelFactory().getModelObject(
+				DDLRecordVersion.class.getName()));
+		}
+		else if (model.getName().equals(DLFileEntry.class.getName())) {
+			relatedModels.add(model.getModelFactory().getModelObject(
+				DLFileVersion.class.getName()));
+		}
+
+		relatedModels.add(model.getModelFactory().getModelObject(
+			AssetEntry.class.getName()));
+
+		relatedModels.add(model.getModelFactory().getModelObject(
+			RatingsStats.class.getName()));
+
+		relatedModels.add(model.getModelFactory().getModelObject(
+			AssetCategory.class.getName()));
+
+		relatedModels.add(model.getModelFactory().getModelObject(
+			AssetTag.class.getName()));
+
+		return relatedModels;
+	}
+
 	@Override
 	public Comparison call() throws Exception {
+
+		boolean oldIgnoreCase = DataUtil.getIgnoreCase();
+
+		DataUtil.setIgnoreCase(true);
 
 		try {
 			if (_log.isInfoEnabled()) {
@@ -132,6 +187,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
 				model).toArray(new String[0]);
 
+			Set<Model> relatedModels = calculateRelatedModels(model);
+
 			Set<Data> liferayData = new HashSet<Data>(
 				model.getData(
 					attributesToCheck, relatedAttrToCheck, filter).values());
@@ -147,7 +204,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 					groupId, searchContext);
 
 				indexData = model.getIndexData(
-					attributesToCheck, searchContext, contextQuery);
+					relatedModels, attributesToCheck, searchContext,
+					contextQuery);
 			}
 			else {
 				indexData = new HashSet<Data>();
@@ -168,6 +226,9 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		}
 		catch (Throwable t) {
 			return ComparisonUtil.getError(model, t);
+		}
+		finally {
+			DataUtil.setIgnoreCase(oldIgnoreCase);
 		}
 	}
 
