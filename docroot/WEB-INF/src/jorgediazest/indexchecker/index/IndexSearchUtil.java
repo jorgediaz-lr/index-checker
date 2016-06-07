@@ -94,6 +94,9 @@ public class IndexSearchUtil {
 		else if ("modifiedDate".equals(attribute)) {
 			attribute = "modified";
 		}
+		else if ("averageScore".equals(attribute)) {
+			attribute = "ratings";
+		}
 		else if ("resourcePrimKey".equals(attribute) &&
 				 model.isResourcedModel()) {
 

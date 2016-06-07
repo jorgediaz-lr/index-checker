@@ -39,12 +39,6 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			CalendarBooking.class);
 		modelClassMap.put("com.liferay.portal.model.Contact", Contact.class);
 		modelClassMap.put(
-			"com.liferay.portlet.dynamicdatalists.model.DDLRecord",
-			DDLRecord.class);
-		modelClassMap.put(
-			"com.liferay.portlet.documentlibrary.model.DLFileEntry",
-			DLFileEntry.class);
-		modelClassMap.put(
 			"com.liferay.portlet.journal.model.JournalArticle",
 			JournalArticle.class);
 		modelClassMap.put(
