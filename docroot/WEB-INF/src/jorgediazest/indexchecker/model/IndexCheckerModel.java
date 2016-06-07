@@ -28,12 +28,12 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portlet.asset.model.AssetEntry;
-import com.liferay.portlet.ratings.model.RatingsStats;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -112,19 +112,26 @@ public class IndexCheckerModel extends ModelImpl {
 			String attrDoc = IndexSearchUtil.getAttributeForDocument(
 				this, attribute);
 
-			Map<Locale, String> valueMap = null;
+			List<Map<Locale, String>> listValueMap = null;
 
-			Class<?> typeClass = getAttributeTypeClass(attribute);
+			Class<?> typeClass = data.getAttributeTypeClass(attribute);
 
 			if (typeClass.equals(String.class) ||
 				typeClass.equals(Object.class)) {
 
-				valueMap = getLocalizedMap(locales, doc, attrDoc);
+				listValueMap = getLocalizedMap(locales, doc, attrDoc);
 			}
 
-			if ((valueMap != null) && !valueMap.isEmpty()) {
-				String xml = LocalizationUtil.updateLocalization(
-					valueMap, "", "data", LocaleUtil.toLanguageId(siteLocale));
+			if ((listValueMap != null) && !listValueMap.isEmpty()) {
+				String[] xml = new String[listValueMap.size()];
+
+				int pos = 0;
+
+				for (Map<Locale, String> valueMap : listValueMap) {
+					xml[pos++] = LocalizationUtil.updateLocalization(
+						valueMap, "", "data",
+						LocaleUtil.toLanguageId(siteLocale));
+				}
 
 				data.set(attribute, xml);
 			}
@@ -145,8 +152,8 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public Set<Data> getIndexData(
-			String[] attributes, SearchContext searchContext,
-			BooleanQuery contextQuery)
+			Set<Model> relatedModels, String[] attributes,
+			SearchContext searchContext, BooleanQuery contextQuery)
 		throws SearchException {
 
 		int size = Math.max((int)this.count() * 2, 50000);
@@ -156,15 +163,11 @@ public class IndexCheckerModel extends ModelImpl {
 
 		Set<Data> indexData = new HashSet<Data>();
 
-		Model assetEntryModel = modelFactory.getModelObject(AssetEntry.class);
-		Model ratingsStsModel = modelFactory.getModelObject(RatingsStats.class);
-
 		if (docs != null) {
 			for (int i = 0; i < docs.length; i++) {
 				Data data = new Data(this, this.dataComparator);
 
-				data.addModelTableInfo(assetEntryModel);
-				data.addModelTableInfo(ratingsStsModel);
+				data.addModelTableInfo(relatedModels);
 
 				fillDataObject(data, attributes, docs[i]);
 
@@ -197,8 +200,29 @@ public class IndexCheckerModel extends ModelImpl {
 		return searchContext;
 	}
 
-	public Map<Locale, String> getLocalizedMap(
+	public List<Map<Locale, String>> getLocalizedMap(
 		Locale[] locales, Document doc, String attribute) {
+
+		List<Map<Locale, String>> listValueMap =
+			new ArrayList<Map<Locale, String>>();
+
+		int pos = 0;
+		while (true) {
+			Map<Locale, String> valueMap = getLocalizedMap(
+				locales, doc, attribute, pos++);
+
+			if (valueMap.isEmpty()) {
+				break;
+			}
+
+			listValueMap.add(valueMap);
+		}
+
+		return listValueMap;
+	}
+
+	public Map<Locale, String> getLocalizedMap(
+		Locale[] locales, Document doc, String attribute, int pos) {
 
 		Map<Locale, String> valueMap = new HashMap<Locale, String>();
 
@@ -212,8 +236,8 @@ public class IndexCheckerModel extends ModelImpl {
 
 			String[] values = doc.getField(localizedFieldName).getValues();
 
-			if (values.length == 1) {
-				valueMap.put(locales[i], values[0]);
+			if (values.length >= (pos + 1)) {
+				valueMap.put(locales[i], values[pos]);
 			}
 		}
 
