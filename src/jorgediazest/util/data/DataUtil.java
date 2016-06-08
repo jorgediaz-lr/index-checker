@@ -14,6 +14,7 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -31,6 +32,7 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -383,13 +385,25 @@ public class DataUtil {
 	public static Map<Locale, String> convertXmlToMap(String xml) {
 		Map<Locale, String> map = LocalizationUtil.getLocalizationMap(xml);
 
-		if (DataUtil.getIgnoreCase()) {
-			for (Locale key : map.keySet()) {
-				map.put(key, StringUtil.toLowerCase(map.get(key)));
+		Map<Locale, String> cleanMap = new HashMap<Locale, String>();
+
+		for (Locale key : LanguageUtil.getAvailableLocales()) {
+			if (!map.containsKey(key)) {
+				continue;
+			}
+
+			String value = map.get(key);
+
+			if (DataUtil.isNotNull(value)) {
+				if (DataUtil.getIgnoreCase()) {
+					value = StringUtil.toLowerCase(value);
+				}
+
+				cleanMap.put(key, value);
 			}
 		}
 
-		return map;
+		return cleanMap;
 	}
 
 	public static Data createDataObject(
@@ -462,6 +476,10 @@ public class DataUtil {
 		}
 
 		return valuesPK;
+	}
+
+	public static boolean isNotNull(Object obj) {
+		return !isNull(obj);
 	}
 
 	public static boolean isNull(Object obj) {
