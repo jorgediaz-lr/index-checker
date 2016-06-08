@@ -26,7 +26,8 @@ public interface DataComparator extends Comparator<Data> {
 	public boolean equals(Data data1, Data data2);
 
 	public boolean equalsAttributes(
-		Data data1, Data data2, String attr1, String attr2, Object o1, Object o2);
+		Data data1, Data data2, String attr1, String attr2, Object o1,
+		Object o2);
 
 	public boolean exact(Data data1, Data data2);
 
