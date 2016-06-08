@@ -15,15 +15,15 @@
 package jorgediazest.indexchecker.data;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataModelComparator;
 import jorgediazest.util.data.DataUtil;
 
 /**
  * @author Jorge Díaz
  */
-public class DataResourceModelComparator extends DataModelComparator {
+public class DataIndexCheckerResourceModelComparator
+	extends DataIndexCheckerModelComparator {
 
-	public DataResourceModelComparator(String[] exactAttributes) {
+	public DataIndexCheckerResourceModelComparator(String[] exactAttributes) {
 		super(exactAttributes);
 	}
 

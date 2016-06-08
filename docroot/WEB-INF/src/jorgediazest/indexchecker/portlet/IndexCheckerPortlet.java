@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
+import com.liferay.portal.security.auth.CompanyThreadLocal;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
@@ -57,7 +58,8 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.data.DataResourceModelComparator;
+import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
+import jorgediazest.indexchecker.data.DataIndexCheckerResourceModelComparator;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
@@ -66,7 +68,6 @@ import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
-import jorgediazest.util.data.DataModelComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
@@ -103,30 +104,30 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			new DataComparatorFactory() {
 
 			protected DataComparator defaultComparator =
-				new DataModelComparator(
+				new DataIndexCheckerModelComparator(
 					(dateAttributes + "," + basicAttributes + "," +
 						assetEntryAttributes + "," +
 						categoriesTagsAttributes).split(","));
 
 			protected DataComparator userComparator =
-				new DataModelComparator(
+				new DataIndexCheckerModelComparator(
 					(dateAttributesUser + "," + basicAttributes + "," +
 						categoriesTagsAttributes).split(","));
 
 			protected DataComparator dlFileEntryComparator =
-				new DataModelComparator(
+				new DataIndexCheckerModelComparator(
 					(dateAttributes + "," + basicAttributesNoVersion + "," +
 						assetEntryAttributes + "," +
 							categoriesTagsAttributes).split(","));
 
 			protected DataComparator wikiPageComparator =
-				new DataResourceModelComparator(
+				new DataIndexCheckerResourceModelComparator(
 					(dateAttributes + "," + basicAttributesNoVersion + "," +
 						assetEntryAttributes + "," +
 							categoriesTagsAttributes).split(","));
 
 			protected DataComparator resourceComparator =
-				new DataResourceModelComparator(
+				new DataIndexCheckerResourceModelComparator(
 					(dateAttributes + "," + basicAttributes + "," +
 						assetEntryAttributes + "," +
 						categoriesTagsAttributes).split(","));
@@ -323,6 +324,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		for (Company company : companies) {
 			try {
+				CompanyThreadLocal.setCompanyId(company.getCompanyId());
+
 				ShardUtil.pushCompanyService(company.getCompanyId());
 
 				List<String> classNames = getClassNames(filterClassNameArr);

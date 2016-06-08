@@ -15,10 +15,12 @@
 package jorgediazest.indexchecker.portlet;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.security.auth.CompanyThreadLocal;
 import com.liferay.portlet.asset.model.AssetCategory;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.model.AssetTag;
@@ -110,15 +112,18 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		relatedAttributesToCheck.add(
 			AssetEntry.class.getName() + ":" +
 			"AssetEntry.entryId=MappingTable:" +
-			"assetCategoryIds=categoryId,categoryId");
+			"AssetEntries_AssetCategories.categoryId=categoryId");
 		relatedAttributesToCheck.add(
 			AssetCategory.class.getName() + ":" +
-			"categoryId: =categoryId,assetCategoryTitles=title");
+			"AssetEntries_AssetCategories.categoryId=categoryId:" +
+			" =categoryId,AssetCategory.title=title");
 		relatedAttributesToCheck.add(
 			AssetEntry.class.getName() + ":" +
-			"AssetEntry.entryId=MappingTable:assetTagIds=tagId,tagId");
+			"AssetEntry.entryId=MappingTable:" +
+			"AssetEntries_AssetTags.tagId=tagId");
 		relatedAttributesToCheck.add(
-			AssetTag.class.getName() + ":tagId: =tagId,assetTagNames=name");
+			AssetTag.class.getName() + ":" +
+			"AssetEntries_AssetTags.tagId=tagId: =tagId,AssetTag.name=name");
 
 		return relatedAttributesToCheck;
 	}
@@ -156,9 +161,13 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		boolean oldIgnoreCase = DataUtil.getIgnoreCase();
 
-		DataUtil.setIgnoreCase(true);
-
 		try {
+			DataUtil.setIgnoreCase(true);
+
+			CompanyThreadLocal.setCompanyId(companyId);
+
+			ShardUtil.pushCompanyService(companyId);
+
 			if (_log.isInfoEnabled()) {
 				_log.info(
 					"Model: " + model.getName() + " - CompanyId: " +
@@ -229,6 +238,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		}
 		finally {
 			DataUtil.setIgnoreCase(oldIgnoreCase);
+
+			ShardUtil.popCompanyService();
 		}
 	}
 
