@@ -18,13 +18,19 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
@@ -97,6 +103,18 @@ public class IndexSearchUtil {
 		else if ("averageScore".equals(attribute)) {
 			attribute = "ratings";
 		}
+		else if ("AssetEntries_AssetCategories.categoryId".equals(attribute)) {
+			attribute = "assetCategoryIds";
+		}
+		else if ("AssetCategory.title".equals(attribute)) {
+			attribute = "assetCategoryTitles";
+		}
+		else if ("AssetEntries_AssetTags.tagId".equals(attribute)) {
+			attribute = "assetTagIds";
+		}
+		else if ("AssetTag.name".equals(attribute)) {
+			attribute = "assetTagNames";
+		}
 		else if ("resourcePrimKey".equals(attribute) &&
 				 model.isResourcedModel()) {
 
@@ -126,6 +144,27 @@ public class IndexSearchUtil {
 			_log.error("Error at getIndexSearchLimit: " + t);
 			return -1;
 		}
+	}
+
+	public static List<Map<Locale, String>> getLocalizedMap(
+		Locale[] locales, Document doc, String attribute) {
+
+		List<Map<Locale, String>> listValueMap =
+			new ArrayList<Map<Locale, String>>();
+
+		int pos = 0;
+		while (true) {
+			Map<Locale, String> valueMap = IndexSearchUtil.getLocalizedMap(
+				locales, doc, attribute, pos++);
+
+			if (valueMap.isEmpty()) {
+				break;
+			}
+
+			listValueMap.add(valueMap);
+		}
+
+		return listValueMap;
 	}
 
 	public static void setIndexSearchLimit(int indexSearchLimit) {
@@ -177,6 +216,29 @@ public class IndexSearchUtil {
 					"EXCEPTION: " + t.getClass() + " - " + t.getMessage());
 			}
 		}
+	}
+
+	protected static Map<Locale, String> getLocalizedMap(
+		Locale[] locales, Document doc, String attribute, int pos) {
+
+		Map<Locale, String> valueMap = new HashMap<Locale, String>();
+
+		for (int i = 0; i<locales.length; i++) {
+			String localizedFieldName = DocumentImpl.getLocalizedName(
+				locales[i], attribute);
+
+			if (!doc.hasField(localizedFieldName)) {
+				continue;
+			}
+
+			String[] values = doc.getField(localizedFieldName).getValues();
+
+			if (values.length >= (pos + 1)) {
+				valueMap.put(locales[i], values[pos]);
+			}
+		}
+
+		return valueMap;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexSearchUtil.class);

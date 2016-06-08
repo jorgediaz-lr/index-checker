@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
@@ -29,7 +28,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -119,7 +117,8 @@ public class IndexCheckerModel extends ModelImpl {
 			if (typeClass.equals(String.class) ||
 				typeClass.equals(Object.class)) {
 
-				listValueMap = getLocalizedMap(locales, doc, attrDoc);
+				listValueMap = IndexSearchUtil.getLocalizedMap(
+					locales, doc, attrDoc);
 			}
 
 			if ((listValueMap != null) && !listValueMap.isEmpty()) {
@@ -197,50 +196,6 @@ public class IndexCheckerModel extends ModelImpl {
 		searchContext.setCompanyId(companyId);
 		searchContext.setEntryClassNames(new String[] {this.getClassName()});
 		return searchContext;
-	}
-
-	public List<Map<Locale, String>> getLocalizedMap(
-		Locale[] locales, Document doc, String attribute) {
-
-		List<Map<Locale, String>> listValueMap =
-			new ArrayList<Map<Locale, String>>();
-
-		int pos = 0;
-		while (true) {
-			Map<Locale, String> valueMap = getLocalizedMap(
-				locales, doc, attribute, pos++);
-
-			if (valueMap.isEmpty()) {
-				break;
-			}
-
-			listValueMap.add(valueMap);
-		}
-
-		return listValueMap;
-	}
-
-	public Map<Locale, String> getLocalizedMap(
-		Locale[] locales, Document doc, String attribute, int pos) {
-
-		Map<Locale, String> valueMap = new HashMap<Locale, String>();
-
-		for (int i = 0; i<locales.length; i++) {
-			String localizedFieldName = DocumentImpl.getLocalizedName(
-				locales[i], attribute);
-
-			if (!doc.hasField(localizedFieldName)) {
-				continue;
-			}
-
-			String[] values = doc.getField(localizedFieldName).getValues();
-
-			if (values.length >= (pos + 1)) {
-				valueMap.put(locales[i], values[pos]);
-			}
-		}
-
-		return valueMap;
 	}
 
 	@Override
