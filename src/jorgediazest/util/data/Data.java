@@ -88,29 +88,7 @@ public class Data implements Comparable<Data> {
 	public boolean equalsAttributes(
 		Data data, String attr1, String attr2, Object o1, Object o2) {
 
-		if (DataUtil.isNull(o1)) {
-			return DataUtil.isNull(o2);
-		}
-
-		if (DataUtil.isNull(o2)) {
-			return false;
-		}
-
-		if (o1.equals(o2)) {
-			return true;
-		}
-
-		int type1 = this.getAttributeType(attr1);
-		int type2 = data.getAttributeType(attr2);
-
-		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
-			o1 = DataUtil.castString(o1);
-			o2 = DataUtil.castString(o2);
-
-			return o1.equals(o2);
-		}
-
-		return false;
+		return comparator.equalsAttributes(this, data, attr1, attr2, o1, o2);
 	}
 
 	public boolean exact(Data data) {
@@ -265,7 +243,7 @@ public class Data implements Comparable<Data> {
 		Object convertedObject;
 		int type = getAttributeType(attribute);
 
-		if (type == 0) {
+		if ((type == 0)|| value instanceof Map) {
 			convertedObject = value;
 		}
 		else {
@@ -303,8 +281,8 @@ public class Data implements Comparable<Data> {
 		int type = getAttributeType(attribute);
 
 		for (Object o : values) {
-			if (type == 0) {
-				convertedObjects.add(DataUtil.convertXmlToMap(o.toString()));
+			if ((type == 0)|| o instanceof Map) {
+				convertedObjects.add(DataUtil.convertXmlToMap(o));
 
 				continue;
 			}
