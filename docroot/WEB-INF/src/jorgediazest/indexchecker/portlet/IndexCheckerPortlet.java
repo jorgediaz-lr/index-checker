@@ -14,7 +14,11 @@
 
 package jorgediazest.indexchecker.portlet;
 
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -37,6 +41,7 @@ import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 import com.liferay.util.portlet.PortletProps;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -57,6 +62,8 @@ import java.util.concurrent.Future;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
@@ -301,6 +308,35 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return model.deleteAndCheck(indexOnlyData);
 	}
 
+	public void doView(
+		RenderRequest renderRequest, RenderResponse renderResponse)
+			throws IOException, PortletException {
+
+		String filterGroupId = ParamUtil.getString(
+			renderRequest, "filterGroupId");
+
+		if (Validator.isNull(filterGroupId)) {
+			List<Long> siteGroupIds = this.getSiteGroupIds();
+
+			filterGroupId = "";
+
+			for (Long groupId : siteGroupIds) {
+				if (Validator.isNotNull(filterGroupId)) {
+					filterGroupId += ",";
+				}
+
+				filterGroupId += groupId;
+			}
+		}
+
+		renderRequest.setAttribute("filterGroupId", filterGroupId);
+
+		int numberOfThreads = getNumberOfThreads(renderRequest);
+		renderRequest.setAttribute("numberOfThreads", numberOfThreads);
+
+		super.doView(renderRequest, renderResponse);
+	}
+
 	public void executeCheck(ActionRequest request, ActionResponse response)
 		throws Exception {
 
@@ -344,13 +380,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				int threadsExecutor = GetterUtil.getInteger(
-					PortletProps.get("number.threads"),1);
-
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode,
-						threadsExecutor);
+						getNumberOfThreads(request));
 
 				long endTime = System.currentTimeMillis();
 
@@ -371,11 +404,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyProcessTime.put(company, (endTime - startTime));
 			}
 			catch (Throwable t) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				pw.println("Error during execution: " + t.getMessage());
-				t.printStackTrace(pw);
-				companyError.put(company, sw.toString());
+				StringWriter swt = new StringWriter();
+				PrintWriter pwt = new PrintWriter(swt);
+				pwt.println("Error during execution: " + t.getMessage());
+				t.printStackTrace(pwt);
+				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
 			finally {
@@ -432,13 +465,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				int threadsExecutor = GetterUtil.getInteger(
-					PortletProps.get("number.threads"),1);
-
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode,
-						threadsExecutor);
+						getNumberOfThreads(request));
 
 				for (
 					Entry<Long, List<Comparison>> entry :
@@ -472,10 +502,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				companyProcessTime.put(company, endTime - startTime);
 			}
-			catch (Exception e) {
-				pw.println("Error during execution: " + e.getMessage());
-				e.printStackTrace(pw);
-				_log.error(e, e);
+			catch (Throwable t) {
+				StringWriter swt = new StringWriter();
+				PrintWriter pwt = new PrintWriter(swt);
+				pwt.println("Error during execution: " + t.getMessage());
+				t.printStackTrace(pwt);
+				companyError.put(company, swt.toString());
+				_log.error(t, t);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -533,13 +566,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				int threadsExecutor = GetterUtil.getInteger(
-					PortletProps.get("number.threads"),1);
-
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
 						company, groupIds, classNames, executionMode,
-						threadsExecutor);
+						getNumberOfThreads(request));
 
 				for (
 					Entry<Long, List<Comparison>> entry :
@@ -573,10 +603,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				companyProcessTime.put(company, endTime - startTime);
 			}
-			catch (Exception e) {
-				pw.println("Error during execution: " + e.getMessage());
-				e.printStackTrace(pw);
-				_log.error(e, e);
+			catch (Throwable t) {
+				StringWriter swt = new StringWriter();
+				PrintWriter pwt = new PrintWriter(swt);
+				pwt.println("Error during execution: " + t.getMessage());
+				t.printStackTrace(pwt);
+				companyError.put(company, swt.toString());
+				_log.error(t, t);
 			}
 			finally {
 				ShardUtil.popCompanyService();
@@ -652,6 +685,62 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return groupIds;
+	}
+
+	public int getNumberOfThreads(ActionRequest actionRequest) {
+		int def = GetterUtil.getInteger(PortletProps.get("number.threads"),1);
+
+		int num = ParamUtil.getInteger(actionRequest, "numberOfThreads", def);
+
+		return (num == 0) ? def : num;
+	}
+
+	public int getNumberOfThreads(RenderRequest renderRequest) {
+		int def = GetterUtil.getInteger(PortletProps.get("number.threads"), 1);
+
+		int num = ParamUtil.getInteger(renderRequest, "numberOfThreads", def);
+
+		return (num == 0) ? def : num;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Long> getSiteGroupIds() {
+
+		long companyClassNameId = PortalUtil.getClassNameId(Company.class);
+
+		ModelFactory modelFactory = new IndexCheckerModelFactory();
+
+		Model model = modelFactory.getModelObject(Group.class);
+
+		DynamicQuery groupDynamicQuery = model.getService().newDynamicQuery();
+
+		Conjunction stagingSites = RestrictionsFactoryUtil.conjunction();
+		stagingSites.add(model.getProperty("site").eq(false));
+		stagingSites.add(model.getProperty("liveGroupId").ne(0L));
+
+		Conjunction normalSites = RestrictionsFactoryUtil.conjunction();
+		normalSites.add(model.getProperty("site").eq(true));
+		normalSites.add(
+			model.getProperty("classNameId").ne(companyClassNameId));
+
+		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+		disjunction.add(stagingSites);
+		disjunction.add(normalSites);
+
+		groupDynamicQuery.add(disjunction);
+		groupDynamicQuery.setProjection(model.getPropertyProjection("groupId"));
+
+		try {
+			return (List<Long>)model.getService().executeDynamicQuery(
+				groupDynamicQuery);
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(e, e);
+			}
+
+			return new ArrayList<Long>();
+		}
 	}
 
 	public boolean ignoreClassName(String className) {
