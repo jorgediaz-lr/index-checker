@@ -14,6 +14,9 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
 /**
  * @author Jorge Díaz
  */
@@ -41,29 +44,37 @@ public class DataBaseComparator implements DataComparator {
 		Data data1, Data data2, String attr1, String attr2, Object o1,
 		Object o2) {
 
-		if (DataUtil.isNull(o1)) {
-			return DataUtil.isNull(o2);
+		boolean equalsAttribute = false;
+
+		boolean isNull1 = DataUtil.isNull(o1);
+		boolean isNull2 = DataUtil.isNull(o2);
+
+		if (isNull1 || isNull2) {
+			equalsAttribute = (isNull1 && isNull2);
+		}
+		else {
+			equalsAttribute = o1.equals(o2);
+
+			if (!equalsAttribute) {
+				int type1 = data1.getAttributeType(attr1);
+				int type2 = data2.getAttributeType(attr2);
+
+				if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
+					o1 = DataUtil.castString(o1);
+					o2 = DataUtil.castString(o2);
+
+					equalsAttribute = o1.equals(o2);
+				}
+			}
 		}
 
-		if (DataUtil.isNull(o2)) {
-			return false;
+		if (_log.isDebugEnabled() && !(equalsAttribute)) {
+			_log.debug("data1=" + data1 + " data2=" + data2 + " attr1=" +
+				attr1 + " attr2=" + attr2 + " o1=" + o1 + " o2=" + o2 +
+				" are not equal");
 		}
 
-		if (o1.equals(o2)) {
-			return true;
-		}
-
-		int type1 = data1.getAttributeType(attr1);
-		int type2 = data2.getAttributeType(attr2);
-
-		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
-			o1 = DataUtil.castString(o1);
-			o2 = DataUtil.castString(o2);
-
-			return o1.equals(o2);
-		}
-
-		return false;
+		return equalsAttribute;
 	}
 
 	public boolean exact(Data data1, Data data2) {
@@ -79,5 +90,7 @@ public class DataBaseComparator implements DataComparator {
 
 		return data.getMap().hashCode();
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(DataBaseComparator.class);
 
 }
