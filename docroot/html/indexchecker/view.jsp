@@ -89,9 +89,12 @@
 	<aui:fieldset column="<%= true %>" cssClass="aui-w25">
 			<aui:input name="outputGroupBySite" onClick='<%= renderResponse.getNamespace() + "toogleFilterGroupId(this);" %>' type="checkbox" value="false" />
 			<span class="<%= (ParamUtil.getBoolean(request, "outputGroupBySite") ? "" : "hide") %>" id="filterGroupIdSpan">
-			<aui:input helpMessage="filter-group-id-help" name="filterGroupId" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value="" />
+			<aui:input helpMessage="filter-group-id-help" name="filterGroupId" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value='<%=request.getAttribute("filterGroupId") %>' />
 			</span>
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
+	</aui:fieldset>
+	<aui:fieldset column="<%= true %>" cssClass="aui-w25">
+			<aui:input helpMessage="number-of-threads-help" name="numberOfThreads" type="text" value='<%= request.getAttribute("numberOfThreads") %>' />
 	</aui:fieldset>
 
 	<aui:button-row>
