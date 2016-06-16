@@ -16,6 +16,8 @@ package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.util.StringPool;
 
+import java.sql.Types;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -162,7 +164,7 @@ public class TableInfo {
 		int pos = this.getAttributePos(name);
 
 		if (pos == -1) {
-			return 0;
+			return Types.NULL;
 		}
 
 		return (Integer)this.getAttributes()[pos][1];
@@ -171,7 +173,7 @@ public class TableInfo {
 	public Class<?> getAttributeTypeClass(String name) {
 		int type = this.getAttributeType(name);
 
-		if (type == 0) {
+		if (type == Types.NULL) {
 			return Object.class;
 		}
 

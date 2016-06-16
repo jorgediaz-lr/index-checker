@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -255,6 +256,9 @@ public class DataUtil {
 		Object result = null;
 
 		switch (type) {
+			case Types.NULL:
+				result = value;
+				break;
 			case Types.CHAR:
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:
@@ -368,42 +372,6 @@ public class DataUtil {
 
 	public static int compareLongs(long x, long y) {
 		return (x < y) ? -1 : ((x == y) ? 0 : 1);
-	}
-
-	public static Object convertXmlToMap(Object object) {
-		if (object instanceof String) {
-			String str = (String)object;
-
-			if (Validator.isXml(str)) {
-				object = convertXmlToMap(str);
-			}
-		}
-
-		return object;
-	}
-
-	public static Map<Locale, String> convertXmlToMap(String xml) {
-		Map<Locale, String> map = LocalizationUtil.getLocalizationMap(xml);
-
-		Map<Locale, String> cleanMap = new HashMap<Locale, String>();
-
-		for (Locale key : LanguageUtil.getAvailableLocales()) {
-			if (!map.containsKey(key)) {
-				continue;
-			}
-
-			String value = map.get(key);
-
-			if (DataUtil.isNotNull(value)) {
-				if (DataUtil.getIgnoreCase()) {
-					value = StringUtil.toLowerCase(value);
-				}
-
-				cleanMap.put(key, value);
-			}
-		}
-
-		return cleanMap;
 	}
 
 	public static Data createDataObject(
@@ -554,6 +522,76 @@ public class DataUtil {
 		catch (Exception e) {}
 
 		return date;
+	}
+
+	public static Object transformArray(int type, Object[] values) {
+		Set<Object> transformObjects = transformArrayToSet(type, values);
+
+		if (transformObjects.isEmpty()) {
+			return null;
+		}
+
+		if (transformObjects.size() == 1) {
+			return transformObjects.toArray()[0];
+		}
+
+		return transformObjects;
+	}
+
+	public static Object transformObject(int type, Object o) {
+		if (o instanceof Map) {
+			return o;
+		}
+
+		Object transformObject = castObjectToJdbcTypeObject(type, o);
+
+		if (transformObject instanceof String) {
+			String str = (String)transformObject.toString();
+
+			if (Validator.isXml(str)) {
+				transformObject = transformXmlToMap(str);
+			}
+		}
+
+		return transformObject;
+	}
+
+	protected static Set<Object> transformArrayToSet(int type, Object[] values) {
+		Set<Object> transformObjects = new HashSet<Object>(values.length);
+
+		for (Object o : values) {
+			Object transformObject = transformObject(type, o);
+
+			if (transformObject != null) {
+				transformObjects.add(transformObject);
+			}
+		}
+
+		return transformObjects;
+	}
+
+	protected static Map<Locale, String> transformXmlToMap(String xml) {
+		Map<Locale, String> map = LocalizationUtil.getLocalizationMap(xml);
+
+		Map<Locale, String> cleanMap = new HashMap<Locale, String>();
+
+		for (Locale key : LanguageUtil.getAvailableLocales()) {
+			if (!map.containsKey(key)) {
+				continue;
+			}
+
+			String value = map.get(key);
+
+			if (DataUtil.isNotNull(value)) {
+				if (DataUtil.getIgnoreCase()) {
+					value = StringUtil.toLowerCase(value);
+				}
+
+				cleanMap.put(key, value);
+			}
+		}
+
+		return cleanMap;
 	}
 
 	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
