@@ -17,7 +17,6 @@ package jorgediazest.util.data;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -235,84 +234,72 @@ public class Data implements Comparable<Data> {
 		return eq;
 	}
 
-	public void set(String attribute, Object value) {
+	public boolean isValid(String attribute, int type, Object value) {
 		if (value == null) {
-			return;
+			return false;
 		}
 
-		Object convertedObject;
+		if (type != 0) {
+			return true;
+		}
+
+		return !("companyId".equals(attribute) || "groupId".equals(attribute) ||
+			 "resourcePrimKey".equals(attribute));
+	}
+
+	@SuppressWarnings("rawtypes")
+	public void set(String attribute, Object value) {
 		int type = getAttributeType(attribute);
 
-		if ((type == 0)|| value instanceof Map) {
-			convertedObject = value;
+		if (!isValid(attribute, type, value)) {
+			return;
+		}
+
+		Object transformObject;
+
+		if (value instanceof Set) {
+			transformObject = DataUtil.transformArray(
+				type, ((Set)value).toArray());
+		}
+		else if (value instanceof Object[] || value.getClass().isArray()) {
+			transformObject = DataUtil.transformArray(type, (Object[])value);
 		}
 		else {
-			convertedObject = DataUtil.castObjectToJdbcTypeObject(type, value);
+			transformObject = DataUtil.transformObject(type, value);
 		}
 
-		if (convertedObject == null) {
-			return;
+		if (transformObject != null) {
+			map.put(attribute, transformObject);
 		}
-
-		if ((type == 0) && ("companyId".equals(attribute) ||
-			 "groupId".equals(attribute) ||
-			 "resourcePrimKey".equals(attribute))) {
-
-			return;
-		}
-
-		convertedObject = DataUtil.convertXmlToMap(convertedObject);
-
-		map.put(attribute, convertedObject);
 	}
 
 	public void set(String attribute, Object[] values) {
-		if ((values == null)||(values.length == 0)) {
-			return;
-		}
-
-		if (values.length == 1) {
-			set(attribute, values[0]);
-
-			return;
-		}
-
-		Set<Object> convertedObjects = new HashSet<Object>(values.length);
 		int type = getAttributeType(attribute);
 
-		for (Object o : values) {
-			if ((type == 0)|| o instanceof Map) {
-				convertedObjects.add(DataUtil.convertXmlToMap(o));
-
-				continue;
-			}
-
-			Object convertedObject = DataUtil.castObjectToJdbcTypeObject(
-				type, o);
-
-			if (convertedObject == null) {
-				return;
-			}
-
-			convertedObjects.add(DataUtil.convertXmlToMap(convertedObject));
-		}
-
-		if ((type == 0) && ("companyId".equals(attribute) ||
-			 "groupId".equals(attribute) ||
-			 "resourcePrimKey".equals(attribute))) {
-
+		if (!isValid(attribute, type, values)) {
 			return;
 		}
 
-		map.put(attribute, convertedObjects);
+		Object transformObject = DataUtil.transformArray(type, values);
+
+		if (transformObject != null) {
+			map.put(attribute, transformObject);
+		}
 	}
 
 	public void set(String attribute, Set<Object> values) {
-		if (values == null) {
+		int type = getAttributeType(attribute);
+
+		if (!isValid(attribute, type, values)) {
 			return;
 		}
 
-		set(attribute, values.toArray());
+		Object transformObject = DataUtil.transformArray(
+			type, values.toArray());
+
+		if (transformObject != null) {
+			map.put(attribute, transformObject);
+		}
 	}
 
 	public void setPrimaryKey(long primaryKey) {
