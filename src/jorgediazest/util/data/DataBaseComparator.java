@@ -69,9 +69,10 @@ public class DataBaseComparator implements DataComparator {
 		}
 
 		if (_log.isDebugEnabled() && !(equalsAttribute)) {
-			_log.debug("data1=" + data1 + " data2=" + data2 + " attr1=" +
-				attr1 + " attr2=" + attr2 + " o1=" + o1 + " o2=" + o2 +
-				" are not equal");
+			_log.debug(
+				"data1=" + data1 + " data2=" + data2 + " attr1=" + attr1 +
+					" attr2=" + attr2 + " o1=" + o1 + " o2=" + o2 +
+						" are not equal");
 		}
 
 		return equalsAttribute;
