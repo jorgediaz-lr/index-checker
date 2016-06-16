@@ -703,6 +703,10 @@ public abstract class ModelImpl implements Model {
 
 		ProjectionList projectionList = ProjectionFactoryUtil.projectionList();
 
+		Projection firstProjection = null;
+
+		int numProjections = 0;
+
 		for (int i = 0; i<attributesAux.length; i++) {
 			Projection projection = getPropertyProjection(
 				attributesAux[i], op[i]);
@@ -710,14 +714,20 @@ public abstract class ModelImpl implements Model {
 			if (projection != null) {
 				projectionList.add(projection);
 
+				numProjections++;
+
+				if (firstProjection == null) {
+					firstProjection = projection;
+				}
+
 				if (validAttributes != null) {
 					validAttributes.add(attributes[i]);
 				}
 			}
 		}
 
-		if (attributesAux.length == 1) {
-			projectionList.add(getPropertyProjection(attributes[0], op[0]));
+		if (numProjections == 1) {
+			projectionList.add(firstProjection);
 		}
 
 		return projectionList;
