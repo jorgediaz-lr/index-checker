@@ -86,12 +86,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		if (model.getName().equals(DDLRecord.class.getName())) {
 			relatedAttributesToCheck.add(
-				DDLRecordVersion.class.getName() + ":recordId,version" +
+				DDLRecordVersion.class.getName() + ":recordId,version-" +
 				": =recordId,version,status");
 		}
 		else if (model.getName().equals(DLFileEntry.class.getName())) {
 			relatedAttributesToCheck.add(
-				DLFileVersion.class.getName() + ":fileEntryId,version" +
+				DLFileVersion.class.getName() + ":fileEntryId,version-" +
 				": =fileEntryId, =version,status");
 		}
 
