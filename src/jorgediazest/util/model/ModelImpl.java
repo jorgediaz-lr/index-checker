@@ -76,7 +76,8 @@ public abstract class ModelImpl implements Model {
 	@SuppressWarnings("unchecked")
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attrRelated, String[] mappings, Criterion filter)
+			String[] attrRelated, String[] mappings, boolean removeUnmatched,
+			Criterion filter)
 		throws Exception {
 
 			String[] attrRelatedOrig = new String[attrRelated.length];
@@ -90,7 +91,11 @@ public abstract class ModelImpl implements Model {
 			Map<Long, List<Data>> relatedMap = getRelatedModelData(
 				classNameRelated, attrRelatedDest, mappingsDest[0], filter);
 
-			for (Data data : dataMap.values()) {
+			Set<Long> unmatchedDataKeys = new HashSet<Long>();
+
+			for (Entry<Long, Data> entry : dataMap.entrySet()) {
+				Data data = entry.getValue();
+
 				List<Data> relatedList = new ArrayList<Data>();
 
 				Object key = data.get(mappingsSource[0]);
@@ -132,6 +137,10 @@ public abstract class ModelImpl implements Model {
 				}
 
 				if (matched.isEmpty()) {
+					if (removeUnmatched) {
+						unmatchedDataKeys.add(entry.getKey());
+					}
+
 					continue;
 				}
 
@@ -158,6 +167,10 @@ public abstract class ModelImpl implements Model {
 						data.set(attrRelatedOrig[k], values);
 					}
 				}
+			}
+
+			for (Long key : unmatchedDataKeys) {
+				dataMap.remove(key);
 			}
 		}
 
@@ -456,9 +469,18 @@ public abstract class ModelImpl implements Model {
 					}
 				}
 
+				boolean removeUnmatched = false;
+				String mappings = relatedDataArr[1];
+
+				if (mappings.endsWith("-")) {
+					removeUnmatched = true;
+
+					mappings = mappings.substring(0, mappings.length()-1);
+				}
+
 				addRelatedModelData(
 					dataMap, relatedDataArr[0], relatedDataArr[2].split(","),
-					relatedDataArr[1].split(","), filter);
+					mappings.split(","), removeUnmatched, filter);
 			}
 
 			return dataMap;

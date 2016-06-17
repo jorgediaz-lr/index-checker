@@ -43,7 +43,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attributesRelated, String[] mappings, Criterion filter)
+			String[] attrRelated, String[] mappings, boolean removeNotMatched,
+			Criterion filter)
 		throws Exception;
 
 	public Model clone();
