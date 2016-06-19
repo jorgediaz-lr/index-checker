@@ -127,6 +127,10 @@ public class ModelUtil {
 					(ClassLoader)servletContext.getAttribute(
 						PluginContextListener.PLUGIN_CLASS_LOADER);
 
+				if (classLoader == null) {
+					continue;
+				}
+
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Adding " + classLoader + " for " + servletContextName);
