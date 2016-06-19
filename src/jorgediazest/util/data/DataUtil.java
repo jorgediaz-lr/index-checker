@@ -556,7 +556,9 @@ public class DataUtil {
 		return transformObject;
 	}
 
-	protected static Set<Object> transformArrayToSet(int type, Object[] values) {
+	protected static Set<Object> transformArrayToSet(
+		int type, Object[] values) {
+
 		Set<Object> transformObjects = new HashSet<Object>(values.length);
 
 		for (Object o : values) {
