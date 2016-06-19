@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Collection;
@@ -104,7 +105,7 @@ public class IndexCheckerModel extends ModelImpl {
 		data.set("uid", doc.getUID());
 
 		Locale[] locales = LanguageUtil.getAvailableLocales();
-		Locale siteLocale = LocaleUtil.getSiteDefault();
+		Locale defaultLocale = LocaleUtil.getDefault();
 
 		for (String attribute : attributes) {
 			String attrDoc = IndexSearchUtil.getAttributeForDocument(
@@ -127,16 +128,50 @@ public class IndexCheckerModel extends ModelImpl {
 				int pos = 0;
 
 				for (Map<Locale, String> valueMap : listValueMap) {
-					xml[pos++] = LocalizationUtil.updateLocalization(
+					xml[pos++] = updateLocalization(
 						valueMap, "", "data",
-						LocaleUtil.toLanguageId(siteLocale));
+						LocaleUtil.toLanguageId(defaultLocale));
 				}
 
 				data.set(attribute, xml);
 			}
 			else if (doc.getFields().containsKey(attrDoc)) {
-				data.set(attribute, doc.getField(attrDoc).getValues());
+				data.set(attribute, doc.getValues(attrDoc));
 			}
+		}
+	}
+
+	public String updateLocalization(
+		Map<Locale, String> titleMap, String xml, String key,
+		String defaultLanguageId) {
+
+		if (titleMap == null) {
+			return xml;
+		}
+
+		Locale[] locales = LanguageUtil.getAvailableLocales();
+
+		for (Locale locale : locales) {
+			String title = titleMap.get(locale);
+
+			xml = updateLocalization(
+					title, xml, key, locale, defaultLanguageId);
+		}
+		return xml;
+	}
+
+	public String updateLocalization(
+		String title, String xml, String key, Locale locale,
+		String defaultLanguageId) {
+
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		if (Validator.isNotNull(title)) {
+			return LocalizationUtil.updateLocalization(
+					xml, key, title, languageId, defaultLanguageId);
+		}
+		else {
+			return LocalizationUtil.removeLocalization(xml, key, languageId);
 		}
 	}
 

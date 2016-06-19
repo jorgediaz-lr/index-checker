@@ -227,11 +227,11 @@ public class IndexSearchUtil {
 			String localizedFieldName = DocumentImpl.getLocalizedName(
 				locales[i], attribute);
 
-			if (!doc.hasField(localizedFieldName)) {
+			if (!doc.getFields().containsKey(localizedFieldName)) {
 				continue;
 			}
 
-			String[] values = doc.getField(localizedFieldName).getValues();
+			String[] values = doc.getValues(localizedFieldName);
 
 			if (values.length >= (pos + 1)) {
 				valueMap.put(locales[i], values[pos]);
