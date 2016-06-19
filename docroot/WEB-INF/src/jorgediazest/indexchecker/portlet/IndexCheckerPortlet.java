@@ -35,7 +35,6 @@ import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
-import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 import com.liferay.util.portlet.PortletProps;
@@ -96,8 +95,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		final String dateAttributes = PortletProps.get(
 			"data-comparator.date.attributes");
-		final String dateAttributesUser = PortletProps.get(
-			"data-comparator.date.attributes.user");
+		final String dateAttributesNoCreateDate = PortletProps.get(
+			"data-comparator.date.attributes.noCreateDate");
 		final String basicAttributes = PortletProps.get(
 			"data-comparator.basic.attributes");
 		final String basicAttributesNoVersion = PortletProps.get(
@@ -118,14 +117,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			protected DataComparator userComparator =
 				new DataIndexCheckerModelComparator(
-					(dateAttributesUser + "," + basicAttributes + "," +
+					(dateAttributesNoCreateDate + "," + basicAttributes + "," +
 						categoriesTagsAttributes).split(","));
 
 			protected DataComparator dlFileEntryComparator =
 				new DataIndexCheckerModelComparator(
-					(dateAttributes + "," + basicAttributesNoVersion + "," +
-						assetEntryAttributes + "," +
-							categoriesTagsAttributes).split(","));
+					(dateAttributesNoCreateDate + "," +
+						basicAttributesNoVersion + "," + assetEntryAttributes +
+							"," + categoriesTagsAttributes).split(","));
 
 			protected DataComparator wikiPageComparator =
 				new DataIndexCheckerResourceModelComparator(
