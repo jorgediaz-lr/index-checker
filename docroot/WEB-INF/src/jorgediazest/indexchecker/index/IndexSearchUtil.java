@@ -213,7 +213,7 @@ public class IndexSearchUtil {
 		catch (Throwable t) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"EXCEPTION: " + t.getClass() + " - " + t.getMessage());
+					"EXCEPTION: " + t.getClass() + " - " + t.getMessage(), t);
 			}
 		}
 	}
