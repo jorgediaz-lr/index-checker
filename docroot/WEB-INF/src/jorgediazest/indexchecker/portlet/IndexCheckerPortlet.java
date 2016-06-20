@@ -305,7 +305,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			renderRequest, "filterGroupId");
 
 		if (Validator.isNull(filterGroupId)) {
-			List<Long> siteGroupIds = this.getSiteGroupIds();
+			/*List<Long> siteGroupIds = this.getSiteGroupIds();
 
 			filterGroupId = "";
 
@@ -315,7 +315,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				}
 
 				filterGroupId += groupId;
-			}
+			}*/
 		}
 
 		renderRequest.setAttribute("filterGroupId", filterGroupId);
