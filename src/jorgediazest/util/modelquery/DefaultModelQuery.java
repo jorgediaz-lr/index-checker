@@ -18,5 +18,4 @@ package jorgediazest.util.modelquery;
  * @author Jorge Díaz
  */
 public class DefaultModelQuery extends ModelQueryImpl {
-
 }

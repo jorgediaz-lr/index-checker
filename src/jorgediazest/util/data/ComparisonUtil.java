@@ -107,8 +107,8 @@ public class ComparisonUtil {
 
 	public static Comparison getError(Model model, Throwable t) {
 		_log.error(
-			"Model: " + model.getName() + " EXCEPTION: " +
-				t.getClass() + " - " + t.getMessage(),t);
+			"Model: " + model.getName() + " EXCEPTION: " + t.getClass() +
+				" - " + t.getMessage(), t);
 
 		return _getError(model, t.getClass() + " - " + t.getMessage());
 	}

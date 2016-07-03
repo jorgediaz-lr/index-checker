@@ -58,7 +58,7 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return new java.math.BigDecimal(((Number)value).toString());
+			return new BigDecimal(((Number)value).toString());
 		}
 
 		if (value instanceof String) {
@@ -67,7 +67,7 @@ public class DataUtil {
 			}
 
 			try {
-				return new java.math.BigDecimal((String)value);
+				return new BigDecimal((String)value);
 			}
 			catch (Exception e) {
 			}
@@ -341,7 +341,7 @@ public class DataUtil {
 		Model model, TableInfo tableInfo, DataComparator dataComparator,
 		String[] attributes, Object[] result) {
 
-		List<TableInfo> tableInfoList = new ArrayList<TableInfo>();
+		List<TableInfo> tableInfoList = new ArrayList<>();
 
 		tableInfoList.add(tableInfo);
 
@@ -350,7 +350,7 @@ public class DataUtil {
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
-		Set<Data> both = new TreeSet<Data>(set1);
+		Set<Data> both = new TreeSet<>(set1);
 		both.retainAll(set2);
 		return both.toArray(new Data[0]);
 	}
@@ -417,25 +417,45 @@ public class DataUtil {
 		}
 
 		if (obj instanceof Double) {
-			return (((Double)obj).longValue() == 0);
+			if (((Double)obj).longValue() == 0) {
+				return true;
+			}
+
+			return false;
 		}
 		else if (obj instanceof Float) {
-			return (((Float)obj).longValue() == 0);
+			if (((Float)obj).longValue() == 0) {
+				return true;
+			}
+
+			return false;
 		}
 		else if (obj instanceof Integer) {
-			return (((Integer)obj).longValue() == 0);
+			if (((Integer)obj).longValue() == 0) {
+				return true;
+			}
+
+			return false;
 		}
 		else if (obj instanceof String) {
 			Double d = castDouble((String)obj);
 
 			if (d != null) {
-				return (d.longValue() == 0);
+				if (d.longValue() == 0) {
+					return true;
+				}
+
+				return false;
 			}
 
 			Long l = castLong((String)obj);
 
 			if (l != null) {
-				return (l.longValue() == 0);
+				if (l.longValue() == 0) {
+					return true;
+				}
+
+				return false;
 			}
 		}
 
@@ -447,13 +467,13 @@ public class DataUtil {
 	}
 
 	public static Date stringToDate(String dateString) {
-
 		Date date = null;
 
 		try {
 			date = dateFormatyyyyMMddHHmmss.get().parse(dateString);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		if (date != null) {
 			return date;
@@ -462,7 +482,8 @@ public class DataUtil {
 		try {
 			date = dateFormatyyyyMMddHHmmssSSS.get().parse(dateString);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		if (date != null) {
 			return date;
@@ -471,7 +492,8 @@ public class DataUtil {
 		try {
 			date = Timestamp.valueOf(dateString);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		if (date != null) {
 			return date;
@@ -480,7 +502,8 @@ public class DataUtil {
 		try {
 			date = Time.valueOf(dateString);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		return date;
 	}
@@ -521,7 +544,7 @@ public class DataUtil {
 	protected static Set<Object> transformArrayToSet(
 		int type, Object[] values) {
 
-		Set<Object> transformObjects = new HashSet<Object>(values.length);
+		Set<Object> transformObjects = new HashSet<>(values.length);
 
 		for (Object o : values) {
 			Object transformObject = transformObject(type, o);
@@ -537,7 +560,7 @@ public class DataUtil {
 	protected static Map<Locale, String> transformXmlToMap(String xml) {
 		Map<Locale, String> map = LocalizationUtil.getLocalizationMap(xml);
 
-		Map<Locale, String> cleanMap = new HashMap<Locale, String>();
+		Map<Locale, String> cleanMap = new HashMap<>();
 
 		for (Locale key : LanguageUtil.getAvailableLocales()) {
 			if (!map.containsKey(key)) {
@@ -695,7 +718,7 @@ public class DataUtil {
 	}
 
 	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
-			new ThreadLocal<DateFormat>() {
+		new ThreadLocal<DateFormat>() {
 
 		@Override
 		protected DateFormat initialValue()
@@ -705,7 +728,7 @@ public class DataUtil {
 	};
 
 	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmssSSS =
-			new ThreadLocal<DateFormat>() {
+		new ThreadLocal<DateFormat>() {
 
 		@Override
 		protected DateFormat initialValue()

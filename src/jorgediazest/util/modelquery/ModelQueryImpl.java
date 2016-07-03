@@ -78,12 +78,12 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		Map<Long, List<Data>> relatedMap = getRelatedModelData(
 			classNameRelated, attrRelatedDest, mappingsDest[0], filter);
 
-		Set<Long> unmatchedDataKeys = new HashSet<Long>();
+		Set<Long> unmatchedDataKeys = new HashSet<>();
 
 		for (Entry<Long, Data> entry : dataMap.entrySet()) {
 			Data data = entry.getValue();
 
-			List<Data> relatedList = new ArrayList<Data>();
+			List<Data> relatedList = new ArrayList<>();
 
 			Object key = data.get(mappingsSource[0]);
 
@@ -104,14 +104,14 @@ public abstract class ModelQueryImpl implements ModelQuery {
 				}
 			}
 
-			List<Data> matched = new ArrayList<Data>();
+			List<Data> matched = new ArrayList<>();
 
 			for (Data related : relatedList) {
 				boolean equalsAttributes = true;
 
 				for (int j = 1; j<mappings.length; j++) {
 					equalsAttributes = data.includesValueOfAttribute(
-							related, mappingsSource[j], mappingsDest[j]);
+						related, mappingsSource[j], mappingsDest[j]);
 
 					if (!equalsAttributes) {
 						break;
@@ -133,16 +133,15 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 			if (rawData) {
 				if (matched.size() == 1) {
-					Object value =
-						getRawRelatedData(
-							matched.get(0), attrRelatedOrig, attrRelatedDest);
+					Object value = getRawRelatedData(
+						matched.get(0), attrRelatedOrig, attrRelatedDest);
 
 					data.set(classNameRelated, value);
 
 					continue;
 				}
 
-				Set<Object> values = new HashSet<Object>(matched.size());
+				Set<Object> values = new HashSet<>(matched.size());
 
 				for (Data m : matched) {
 					Object value = getRawRelatedData(
@@ -167,7 +166,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 						continue;
 					}
 
-					Set<Object> values = new HashSet<Object>(matched.size());
+					Set<Object> values = new HashSet<>(matched.size());
 
 					for (Data m : matched) {
 						values.add(m.get(attrRelatedDest[k]));
@@ -184,9 +183,8 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	}
 
 	public void clearCache() {
-		cachedDifferentAttributeValues = new HashMap<String, Map<Long, Data>>();
-		cachedDifferentAttributeValuesDup =
-				new HashMap<String, Map<Long, List<Data>>>();
+		cachedDifferentAttributeValues = new HashMap<>();
+		cachedDifferentAttributeValuesDup = new HashMap<>();
 	}
 
 	public int compareTo(ModelQuery o) {
@@ -234,7 +232,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		List<Long> groupIds = null;
 
 		if (groupId != 0) {
-			groupIds = new ArrayList<Long>();
+			groupIds = new ArrayList<>();
 
 			groupIds.add(groupId);
 		}
@@ -274,7 +272,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		Map<Long, List<Data>> dataMapWithDuplicates = getDataWithDuplicates(
 			attributes, mapKeyAttribute, filter);
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+		Map<Long, Data> dataMap = new HashMap<>();
 
 		for (Entry<Long, List<Data>> e : dataMapWithDuplicates.entrySet()) {
 			Data data = e.getValue().get(0);
@@ -310,6 +308,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 					else {
 						ModelQuery relatedModel = mqFactory.getModelQueryObject(
 							relatedDataArr[0]);
+
 						filter =
 							relatedModel.getModel().generateCriterionFilter(
 								relatedDataArr[3]);
@@ -383,7 +382,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+		Map<Long, List<Data>> dataMap = new HashMap<>();
 
 		DynamicQuery query = model.getService().newDynamicQuery();
 
@@ -391,7 +390,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			attributes = getModel().getAttributesName();
 		}
 
-		List<String> validAttributes = new ArrayList<String>();
+		List<String> validAttributes = new ArrayList<>();
 		ProjectionList projectionList = getModel().getPropertyProjection(
 			attributes, validAttributes);
 
@@ -402,6 +401,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		}
 
 		Service service = model.getService();
+
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
 			query);
@@ -413,6 +413,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 		for (Object[] result : results) {
 			Data data = createDataObject(validAttributesArr, result);
+
 			Long mappingAttributeValue = DataUtil.castLong(
 				data.get(mapKeyAttribute));
 
@@ -421,7 +422,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			}
 
 			if (!dataMap.containsKey(mappingAttributeValue)) {
-				List<Data> list = new ArrayList<Data>();
+				List<Data> list = new ArrayList<>();
 				list.add(data);
 				dataMap.put(mappingAttributeValue, list);
 			}
@@ -464,7 +465,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 		Map<Long, Data> dataMap = this.getData(attributes, filter);
 
-		Map <Long, Data> relatedData = new HashMap<Long, Data>();
+		Map <Long, Data> relatedData = new HashMap<>();
 
 		for (Data data : dataMap.values()) {
 			long mappingAttributeValue = data.get(mappingAttributeName, -1L);
@@ -485,7 +486,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		ModelQuery mq = mqFactory.getModelQueryObject(classNameRelated);
 
 		if ((mq == null) || (mq.getModel() == null)) {
-			return new HashMap<Long, List<Data>>();
+			return new HashMap<>();
 		}
 
 		if ("MappingTable".equals(mappingAttr)) {
@@ -503,7 +504,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		}
 
 		if (getModel().getClassName().equals(mq.getModel().getClassName())) {
-			return new HashMap<Long, List<Data>>();
+			return new HashMap<>();
 		}
 
 		if (filter == null) {
@@ -534,7 +535,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		throws Exception {
 
 		Set<Data> dataSet = queryTable(tableInfo);
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+		Map<Long, List<Data>> dataMap = new HashMap<>();
 
 		for (Data data : dataSet) {
 			Long key = (Long)data.get(mappingAttr);
@@ -544,7 +545,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			}
 
 			if (!dataMap.containsKey(key)) {
-				List<Data> list = new ArrayList<Data>();
+				List<Data> list = new ArrayList<>();
 				list.add(data);
 				dataMap.put(key, list);
 			}
@@ -574,7 +575,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	protected Object getRawRelatedData(
 		Data data, String[] attrRelatedOrig, String[] attrRelatedDest) {
 
-		List<Object> list = new ArrayList<Object>();
+		List<Object> list = new ArrayList<>();
 
 		for (int k = 0; k<attrRelatedOrig.length; k++) {
 			if (Validator.isNotNull(attrRelatedOrig[k])) {
@@ -609,15 +610,13 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	protected static Log _log = LogFactoryUtil.getLog(ModelQueryImpl.class);
 
 	protected Map<String, Map<Long, Data>> cachedDifferentAttributeValues =
-		new ConcurrentHashMap<String, Map<Long, Data>>();
+		new ConcurrentHashMap<>();
 	protected Map<String, Map<Long, List<Data>>>
-		cachedDifferentAttributeValuesDup =
-			new ConcurrentHashMap<String, Map<Long, List<Data>>>();
+		cachedDifferentAttributeValuesDup = new ConcurrentHashMap<>();
 	protected DataComparator dataComparator;
 	protected Model model = null;
 	protected ModelQueryFactory mqFactory = null;
 
-	private Map<String, Set<Data>> dataSetCacheMap =
-		new ConcurrentHashMap<String, Set<Data>>();
+	private Map<String, Set<Data>> dataSetCacheMap = new ConcurrentHashMap<>();
 
 }

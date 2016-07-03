@@ -14,7 +14,7 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.util.Validator;
+import java.util.Objects;
 
 /**
  * @author Jorge Díaz
@@ -26,7 +26,6 @@ public class DataModelComparator extends DataBaseComparator {
 	}
 
 	public int compare(Data data1, Data data2) {
-
 		return DataUtil.compareLongs(
 			data1.getPrimaryKey(), data2.getPrimaryKey());
 	}
@@ -36,7 +35,11 @@ public class DataModelComparator extends DataBaseComparator {
 			return false;
 		}
 
-		return (data1.getPrimaryKey() == data2.getPrimaryKey());
+		if (data1.getPrimaryKey() == data2.getPrimaryKey()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean exact(Data data1, Data data2) {
@@ -44,12 +47,12 @@ public class DataModelComparator extends DataBaseComparator {
 			return false;
 		}
 
-		if (!Validator.equals(data1.getCompanyId(), data2.getCompanyId())) {
+		if (!Objects.equals(data1.getCompanyId(), data2.getCompanyId())) {
 			return false;
 		}
 
 		if (data1.getModel().hasAttribute("groupId") &&
-			!Validator.equals(data1.getGroupId(), data2.getGroupId())) {
+			!Objects.equals(data1.getGroupId(), data2.getGroupId())) {
 
 			return false;
 		}

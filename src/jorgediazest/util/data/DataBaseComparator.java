@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 public class DataBaseComparator implements DataComparator {
 
 	public int compare(Data data1, Data data2) {
-
 		if (data1.equals(data2)) {
 			return 0;
 		}
@@ -32,7 +31,6 @@ public class DataBaseComparator implements DataComparator {
 	}
 
 	public boolean equals(Data data1, Data data2) {
-
 		if (data1.hashCode() != data2.hashCode()) {
 			return false;
 		}
@@ -88,7 +86,6 @@ public class DataBaseComparator implements DataComparator {
 	}
 
 	public Integer hashCode(Data data) {
-
 		return data.getMap().hashCode();
 	}
 

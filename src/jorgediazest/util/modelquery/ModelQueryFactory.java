@@ -103,15 +103,18 @@ public class ModelQueryFactory {
 	}
 
 	public interface DataComparatorFactory {
+
 		public DataComparator getDataComparator(ModelQuery query);
+
 	}
 
 	public interface ModelQueryClassFactory {
+
 		public Class<? extends ModelQuery> getModelQueryClass(String className);
+
 	}
 
 	protected ModelQuery getModelQueryObjectNoCached(Model model) {
-
 		String className = model.getClassName();
 
 		Class<? extends ModelQuery> modelClass = null;
@@ -144,9 +147,8 @@ public class ModelQueryFactory {
 	}
 
 	protected Map<Model, ModelQuery> cacheModelObject =
-		new ConcurrentHashMap<Model, ModelQuery>();
-	protected Set<String> cacheNullModelObject =
-		new ConcurrentHashSet<String>();
+		new ConcurrentHashMap<>();
+	protected Set<String> cacheNullModelObject = new ConcurrentHashSet<>();
 
 	protected DataComparatorFactory dataComparatorFactory =
 		new DataComparatorFactory() {

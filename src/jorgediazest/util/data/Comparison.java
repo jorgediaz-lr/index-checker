@@ -73,7 +73,6 @@ public class Comparison {
 	}
 
 	public void dumpToLog() {
-
 		if (!_log.isInfoEnabled()) {
 			return;
 		}
@@ -120,7 +119,7 @@ public class Comparison {
 	}
 
 	public Set<String> getOutputTypes() {
-		Set<String> outputTypes = new TreeSet<String>();
+		Set<String> outputTypes = new TreeSet<>();
 
 		for (String key : data.keySet()) {
 			if (key.startsWith("both-exact")) {
@@ -185,7 +184,7 @@ public class Comparison {
 	}
 
 	protected Comparison(Model model, String error) {
-		this.data = new TreeMap<String, Set<Data>>();
+		this.data = new TreeMap<>();
 		this.error = error;
 		this.model = model;
 	}

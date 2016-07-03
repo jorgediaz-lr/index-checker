@@ -115,7 +115,6 @@ public class DatabaseUtil {
 	}
 
 	public static Map<Integer, String> getJdbcTypeNames() {
-
 		if (jdbcTypeNames == null) {
 			Map<Integer, String> aux = new HashMap<Integer, String>();
 
@@ -123,9 +122,9 @@ public class DatabaseUtil {
 				try {
 					aux.put((Integer)field.get(null), field.getName());
 				}
-				catch (IllegalArgumentException e) {
+				catch (IllegalArgumentException iae) {
 				}
-				catch (IllegalAccessException e) {
+				catch (IllegalAccessException iae) {
 				}
 			}
 
@@ -139,7 +138,7 @@ public class DatabaseUtil {
 			Model model, TableInfo tableInfo, String[] attributesName)
 		throws SQLException {
 
-		Set<Data> dataSet = new HashSet<Data>();
+		Set<Data> dataSet = new HashSet<>();
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -151,7 +150,7 @@ public class DatabaseUtil {
 			String attributes = (String)attributesName[0];
 
 			for (int i = 1; i<attributesName.length; i++) {
-				attributes += ", " + (String) attributesName[i];
+				attributes += ", " + (String)attributesName[i];
 			}
 
 			String sql =

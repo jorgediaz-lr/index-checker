@@ -92,7 +92,6 @@ public class Data implements Comparable<Data> {
 	}
 
 	public boolean exact(Data data) {
-
 		return comparator.exact(this, data);
 	}
 
@@ -204,7 +203,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String getUuid() {
-		return (String) get("uuid");
+		return (String)get("uuid");
 	}
 
 	public int hashCode() {
@@ -222,7 +221,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public boolean includesValueOfAttribute(
-			Data data, String attr1, String attr2) {
+		Data data, String attr1, String attr2) {
 
 		boolean eq = equalsAttributes(data, attr1, attr2);
 
@@ -254,8 +253,13 @@ public class Data implements Comparable<Data> {
 			return true;
 		}
 
-		return !("companyId".equals(attribute) || "groupId".equals(attribute) ||
-			 "resourcePrimKey".equals(attribute));
+		if (!("companyId".equals(attribute) || "groupId".equals(attribute) ||
+			 "resourcePrimKey".equals(attribute))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -272,11 +276,13 @@ public class Data implements Comparable<Data> {
 
 		Object transformObject;
 
+		Class valueClass = value.getClass();
+
 		if (value instanceof Set) {
 			transformObject = DataUtil.transformArray(
 				type, ((Set)value).toArray());
 		}
-		else if (value instanceof Object[] || value.getClass().isArray()) {
+		else if (value instanceof Object[] || valueClass.isArray()) {
 			transformObject = DataUtil.transformArray(type, (Object[])value);
 		}
 		else {
@@ -347,9 +353,9 @@ public class Data implements Comparable<Data> {
 
 	protected DataComparator comparator = null;
 	protected Integer hashCode = null;
-	protected Map<String, Object> map = new LinkedHashMap<String, Object>();
+	protected Map<String, Object> map = new LinkedHashMap<>();
 	protected Model model = null;
-	protected Set<Model> relatedModelsSet = new LinkedHashSet<Model>();
-	protected Set<TableInfo> tableInfoSet = new LinkedHashSet<TableInfo>();
+	protected Set<Model> relatedModelsSet = new LinkedHashSet<>();
+	protected Set<TableInfo> tableInfoSet = new LinkedHashSet<>();
 
 }
