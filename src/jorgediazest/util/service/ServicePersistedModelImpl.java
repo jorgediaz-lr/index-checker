@@ -18,10 +18,10 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassedModel;
+import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.model.ClassedModel;
-import com.liferay.portal.service.BaseLocalService;
 
 import java.lang.reflect.Method;
 

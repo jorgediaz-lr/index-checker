@@ -14,14 +14,14 @@
 
 package jorgediazest.util.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.lar.StagedModelDataHandler;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.trash.TrashHandler;
-import com.liferay.portal.model.Portlet;
 
 import java.util.List;
 import java.util.Locale;
