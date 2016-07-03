@@ -315,7 +315,9 @@ public class OutputUtils {
 		List<String> headers = new ArrayList<String>();
 
 		for (int i = 0; i<headerKeys.length; i++) {
-			headers.add(LanguageUtil.get(portletConfig, locale, headerKeys[i]));
+			ResourceBundle resourceBundle = portletConfig.getResourceBundle(
+				locale);
+			headers.add(LanguageUtil.get(resourceBundle, headerKeys[i]));
 		}
 
 		return headers;
