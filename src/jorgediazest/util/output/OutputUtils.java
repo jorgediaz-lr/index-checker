@@ -299,7 +299,6 @@ public class OutputUtils {
 	}
 
 	public static String getCSVRow(List<String> rowData, String sep) {
-
 		String row = StringPool.BLANK;
 
 		for (String aux : rowData) {
@@ -312,7 +311,7 @@ public class OutputUtils {
 	public static List<String> getHeaders(
 		PortletConfig portletConfig, Locale locale, String[] headerKeys) {
 
-		List<String> headers = new ArrayList<String>();
+		List<String> headers = new ArrayList<>();
 
 		for (int i = 0; i<headerKeys.length; i++) {
 			ResourceBundle resourceBundle = portletConfig.getResourceBundle(
@@ -352,7 +351,6 @@ public class OutputUtils {
 	}
 
 	public static String listStringToString(List<String> out) {
-
 		if (Validator.isNull(out)) {
 			return null;
 		}
