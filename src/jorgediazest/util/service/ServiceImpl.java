@@ -92,6 +92,7 @@ public abstract class ServiceImpl implements Service {
 	public void init(Service service) {
 		try {
 			ServiceImpl serviceImpl = (ServiceImpl)service;
+
 			this.className = serviceImpl.className;
 			this.classPackageName = serviceImpl.classPackageName;
 			this.classSimpleName = serviceImpl.classSimpleName;
@@ -105,7 +106,6 @@ public abstract class ServiceImpl implements Service {
 	}
 
 	public void prepareDynamicQuery(DynamicQuery dynamicQuery) {
-
 		if (filter != null) {
 			dynamicQuery.add(filter);
 		}

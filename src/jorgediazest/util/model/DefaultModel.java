@@ -18,5 +18,4 @@ package jorgediazest.util.model;
  * @author Jorge Díaz
  */
 public class DefaultModel extends ModelImpl {
-
 }

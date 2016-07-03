@@ -16,7 +16,6 @@ package jorgediazest.util.service;
 
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
@@ -47,8 +46,7 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 		return new ServiceClassInterfaceImpl(this);
 	}
 
-	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
-		throws SystemException {
+	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery) {
 
 		prepareDynamicQuery(dynamicQuery);
 
@@ -64,6 +62,7 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 			super.init(service);
 			ServiceClassInterfaceImpl serviceImpl =
 				(ServiceClassInterfaceImpl)service;
+
 			this.classInterface = serviceImpl.classInterface;
 		}
 		catch (Exception e) {

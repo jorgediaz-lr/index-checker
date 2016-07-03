@@ -69,7 +69,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Set<Portlet> calculatePortlets() {
-		Set<Portlet> portletsSet = new HashSet<Portlet>();
+		Set<Portlet> portletsSet = new HashSet<>();
 		portletsSet.addAll(modelFactory.getPortletSet(this.getIndexer()));
 		portletsSet.addAll(
 			modelFactory.getPortletSet(this.getStagedModelDataHandler()));
@@ -82,6 +82,7 @@ public abstract class ModelImpl implements Model {
 
 	public Model clone() {
 		ModelImpl model;
+
 		try {
 			model = this.getClass().newInstance();
 
@@ -113,6 +114,7 @@ public abstract class ModelImpl implements Model {
 
 	public long count(Criterion condition) {
 		DynamicQuery dynamicQuery = this.getService().newDynamicQuery();
+
 		dynamicQuery.setProjection(ProjectionFactoryUtil.rowCount());
 
 		if (condition != null) {
@@ -135,7 +137,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
-
 		if (Validator.isNull(stringFilter)) {
 			return null;
 		}
@@ -165,7 +166,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion generateDisjunctionCriterion(String[] filters) {
-
 		Criterion criterion = null;
 
 		if (filters.length == 1) {
@@ -219,7 +219,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion generateSingleCriterion(String filter) {
-
 		return ModelUtil.generateSingleCriterion(this, filter);
 	}
 
@@ -275,7 +274,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion getCompanyGroupFilter(
-			long companyId, List<Long> groupIds) {
+		long companyId, List<Long> groupIds) {
 
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
@@ -297,11 +296,10 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
-
 		List<Long> groupIds = null;
 
 		if (groupId != 0) {
-			groupIds = new ArrayList<Long>();
+			groupIds = new ArrayList<>();
 
 			groupIds.add(groupId);
 		}
@@ -354,7 +352,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Model getFilteredModel(String filters, String nameSufix) {
-
 		Criterion filter = this.generateCriterionFilter(filters);
 
 		if (filter == null) {
@@ -423,7 +420,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Projection getPropertyProjection(String attribute) {
-
 		String op = null;
 
 		if (attribute.indexOf("(") > 0) {
@@ -436,8 +432,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public ProjectionList getPropertyProjection(String[] attributes) {
-
-		List<String> validAttributes = new ArrayList<String>();
+		List<String> validAttributes = new ArrayList<>();
 		ProjectionList projectionList = getPropertyProjection(
 			attributes, validAttributes);
 
@@ -543,7 +538,7 @@ public abstract class ModelImpl implements Model {
 
 	public Map<String, TableInfo> getTableInfoMappings() {
 		if (tableInfoMappings == null) {
-			tableInfoMappings = new ConcurrentHashMap<String, TableInfo>();
+			tableInfoMappings = new ConcurrentHashMap<>();
 
 			List<String> mappingTables =
 				ReflectionUtil.getLiferayModelImplMappingTablesFields(
@@ -573,8 +568,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean hasAttribute(String attribute) {
+		if ((getAttributePos(attribute) != -1)) {
+			return true;
+		}
 
-		return (getAttributePos(attribute) != -1);
+		return false;
 	}
 
 	public boolean hasAttributes(String[] attributes) {
@@ -588,7 +586,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean hasIndexer() {
-		return getIndexer() != null;
+		if (getIndexer() != null) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean hasIndexerEnabled() {
@@ -643,7 +645,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
-
 		for (String primaryKeyAttribute : this.getPrimaryKeyMultiAttribute()) {
 			if (primaryKeyAttribute.equals(attribute)) {
 				return true;
@@ -666,8 +667,7 @@ public abstract class ModelImpl implements Model {
 
 	public boolean isStagedModel() {
 		if (hasAttribute("uuid") && hasAttribute("companyId") &&
-			hasAttribute("createDate") &&
-			hasAttribute("modifiedDate")) {
+			hasAttribute("createDate") && hasAttribute("modifiedDate")) {
 
 			return true;
 		}
@@ -676,7 +676,11 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean isTrashEnabled() {
-		return (getTrashHandler() != null);
+		if ((getTrashHandler() != null)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isWorkflowEnabled() {
@@ -711,7 +715,6 @@ public abstract class ModelImpl implements Model {
 	}
 
 	protected Projection getPropertyProjection(String attribute, String op) {
-
 		if ("rowCount".equals(op)) {
 			return ProjectionFactoryUtil.rowCount();
 		}

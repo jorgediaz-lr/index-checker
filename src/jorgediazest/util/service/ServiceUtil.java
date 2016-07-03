@@ -96,7 +96,7 @@ public class ServiceUtil {
 	}
 
 	public static Service getService(
-			String classPackageName, String classSimpleName) {
+		String classPackageName, String classSimpleName) {
 
 		String className = classPackageName + "." + classSimpleName;
 
@@ -106,7 +106,7 @@ public class ServiceUtil {
 
 		if (modelService != null) {
 			return new ServicePersistedModelImpl(
-					modelService, classPackageName, classSimpleName);
+				modelService, classPackageName, classSimpleName);
 		}
 
 		return getServiceFromPortal(className);
@@ -120,7 +120,7 @@ public class ServiceUtil {
 			return (Class<? extends ClassedModel>)
 				PortalClassLoaderUtil.getClassLoader().loadClass(className);
 		}
-		catch (ClassNotFoundException e) {
+		catch (ClassNotFoundException cnfe) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("ClassModel not found: " + className);
 			}
@@ -142,7 +142,7 @@ public class ServiceUtil {
 		try {
 			clazz = PortalClassLoaderUtil.getClassLoader().loadClass(className);
 		}
-		catch (ClassNotFoundException e) {
+		catch (ClassNotFoundException cnfe) {
 		}
 
 		if ((clazz == null) && (classloader != null)) {
@@ -167,13 +167,12 @@ public class ServiceUtil {
 		}
 
 		String className =
-			packageName + ".service." + simpleName +
-				"LocalService";
+			packageName + ".service." + simpleName + "LocalService";
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"LocalServiceUtil of " + packageName + "." + simpleName + ": " +
-				className);
+					className);
 		}
 
 		return className;
@@ -218,8 +217,8 @@ public class ServiceUtil {
 	private static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
 
 	private static Set<String> cacheNullPortalServices =
-		new ConcurrentHashSet<String>();
+		new ConcurrentHashSet<>();
 	private static Map<String, Service> cachePortalServices =
-		new ConcurrentHashMap<String, Service>();
+		new ConcurrentHashMap<>();
 
 }

@@ -98,20 +98,21 @@ public class ModelFactory {
 	}
 
 	public Set<Portlet> getPortletSet(Object handler) {
-
 		Object handlerAux = ReflectionUtil.unWrapProxy(handler);
 
 		if ((handlerAux == null) ||
 			!handlerPortletMap.containsKey(handlerAux.getClass().getName())) {
 
-			return new HashSet<Portlet>();
+			return new HashSet<>();
 		}
 
 		return handlerPortletMap.get(handlerAux.getClass().getName());
 	}
 
 	public interface ModelClassFactory {
+
 		public Class<? extends Model> getModelClass(String className);
+
 	}
 
 	protected void fillHandlerPortletIdMap() {
@@ -134,6 +135,7 @@ public class ModelFactory {
 			className);
 
 		Model model = null;
+
 		try {
 			model = (Model)modelClass.newInstance();
 
@@ -159,13 +161,10 @@ public class ModelFactory {
 		return model;
 	}
 
-	protected Map<String, Model> cacheModelObject =
-		new ConcurrentHashMap<String, Model>();
-	protected Set<String> cacheNullModelObject =
-		new ConcurrentHashSet<String>();
+	protected Map<String, Model> cacheModelObject = new ConcurrentHashMap<>();
+	protected Set<String> cacheNullModelObject = new ConcurrentHashSet<>();
 	protected Class<? extends Model> defaultModelClass = null;
-	protected Map<String, Set<Portlet>> handlerPortletMap =
-		new HashMap<String, Set<Portlet>>();
+	protected Map<String, Set<Portlet>> handlerPortletMap = new HashMap<>();
 
 	protected ModelClassFactory modelClassFactory = new ModelClassFactory() {
 

@@ -48,6 +48,7 @@ public class ModelUtil {
 		}
 
 		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+
 		conjuntion.add(criterion1);
 		conjuntion.add(criterion2);
 		return conjuntion;
@@ -56,7 +57,7 @@ public class ModelUtil {
 	public static Criterion generateSingleCriterion(
 		Model model, String filter) {
 
-		String[] ops = {"=", "<>", " like ", ">", "<" ,"<=", ">="};
+		String[] ops = {"=", "<>", " like ", ">", "<", "<=", ">="};
 
 		Criterion criterion = null;
 
@@ -94,7 +95,6 @@ public class ModelUtil {
 	}
 
 	public static ClassLoader getClassLoaderAggregate() {
-
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 
 		AggregateClassLoader aggregateClassLoader = new AggregateClassLoader(
@@ -112,7 +112,7 @@ public class ModelUtil {
 	}
 
 	public static List<ClassLoader> getClassLoaders() {
-		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+		List<ClassLoader> classLoaders = new ArrayList<>();
 
 		for (String servletContextName : ServletContextPool.keySet()) {
 			try {
@@ -145,9 +145,9 @@ public class ModelUtil {
 	}
 
 	public static List<String> getClassNameValues(
-			Collection<ClassName> classNames) {
+		Collection<ClassName> classNames) {
 
-		List<String> classNameStr = new ArrayList<String>();
+		List<String> classNameStr = new ArrayList<>();
 
 		for (ClassName className : classNames) {
 			String value = className.getValue();
@@ -161,7 +161,7 @@ public class ModelUtil {
 	}
 
 	public static String getDatabaseAttributesStr(
-			String tableName, String tableSqlCreate) {
+		String tableName, String tableSqlCreate) {
 
 		int posTableName = tableSqlCreate.indexOf(tableName);
 

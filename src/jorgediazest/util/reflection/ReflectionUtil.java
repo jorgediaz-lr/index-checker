@@ -127,20 +127,17 @@ public class ReflectionUtil {
 
 		try {
 			if (model.hasAttribute(attrValue)) {
-				criterion =
-					(Criterion)contructorCriterionImpl.newInstance(
-						contructorPropertyExpression.newInstance(
-					new Object[] { attrName, attrValue, op}));
+				criterion = (Criterion)contructorCriterionImpl.newInstance(
+					contructorPropertyExpression.newInstance(
+				new Object[] {attrName, attrValue, op}));
 			}
 			else {
-				Object value =
-					ReflectionUtil.castStringToJdbcTypeObject(
-						model.getAttributeType(attrName), attrValue);
+				Object value = ReflectionUtil.castStringToJdbcTypeObject(
+					model.getAttributeType(attrName), attrValue);
 
-				criterion =
-					(Criterion)contructorCriterionImpl.newInstance(
-						contructorSimpleExpression.newInstance(
-					new Object[] { attrName, value, op}));
+				criterion = (Criterion)contructorCriterionImpl.newInstance(
+					contructorSimpleExpression.newInstance(
+				new Object[] {attrName, value, op}));
 			}
 		}
 		catch (Exception e) {
@@ -221,15 +218,15 @@ public class ReflectionUtil {
 	public static Map<Integer, String> getJdbcTypeNames() {
 
 		if (jdbcTypeNames == null) {
-			Map<Integer, String> aux = new HashMap<Integer, String>();
+			Map<Integer, String> aux = new HashMap<>();
 
 			for (Field field : Types.class.getFields()) {
 				try {
 					aux.put((Integer)field.get(null), field.getName());
 				}
-				catch (IllegalArgumentException e) {
+				catch (IllegalArgumentException iae) {
 				}
-				catch (IllegalAccessException e) {
+				catch (IllegalAccessException iae) {
 				}
 			}
 
@@ -243,9 +240,11 @@ public class ReflectionUtil {
 		Class<?> classLiferayModelImpl, String liferayModelImplField) {
 
 		Object data = null;
+
 		try {
 			Field field = classLiferayModelImpl.getDeclaredField(
 				liferayModelImplField);
+
 			data = field.get(null);
 		}
 		catch (Exception e) {
@@ -261,7 +260,7 @@ public class ReflectionUtil {
 	public static List<String> getLiferayModelImplMappingTablesFields(
 		Class<?> classLiferayModelImpl) {
 
-		List<String> mappingTablesFields = new ArrayList<String>();
+		List<String> mappingTablesFields = new ArrayList<>();
 
 		try {
 			Field[] fields = classLiferayModelImpl.getFields();
@@ -402,8 +401,8 @@ public class ReflectionUtil {
 		if (object instanceof Proxy) {
 			try {
 				ClassLoaderBeanHandler classLoaderBeanHandler =
-					(ClassLoaderBeanHandler)
-						Proxy.getInvocationHandler(object);
+					(ClassLoaderBeanHandler)Proxy.getInvocationHandler(object);
+
 				object = classLoaderBeanHandler.getBean();
 			}
 			catch (Exception e) {

@@ -109,10 +109,10 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 			return method.invoke(modelService, arg);
 		}
-		catch (NoSuchMethodException e) {
+		catch (NoSuchMethodException nsme) {
 			throw new RuntimeException(
 				"executeMethod: " + methodName + " method not found for " +
-				modelService, e);
+					modelService, nsme);
 		}
 		catch (Exception e) {
 			String cause = StringPool.BLANK;
@@ -123,8 +123,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 			}
 
 			throw new RuntimeException(
-				"executeMethod: " + methodName + " method for " +
-				modelService + ": " + cause, e);
+				"executeMethod: " + methodName + " method for " + modelService +
+					": " + cause, e);
 		}
 	}
 
@@ -144,6 +144,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 			super.init(service);
 			ServicePersistedModelImpl serviceImpl =
 				(ServicePersistedModelImpl)service;
+
 			this.localServiceMethods = serviceImpl.localServiceMethods;
 			this.modelService = serviceImpl.modelService;
 		}
@@ -182,8 +183,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	protected Method getLocalServiceMethod(
-		String methodName, Class<?> parameterType)
-			throws ClassNotFoundException, NoSuchMethodException {
+			String methodName, Class<?> parameterType)
+		throws ClassNotFoundException, NoSuchMethodException {
 
 		String key = methodName;
 
@@ -197,7 +198,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 			try {
 				method = localServiceMethods.get(key).getMethod();
 			}
-			catch (NoSuchMethodException e) {
+			catch (NoSuchMethodException nsme) {
 			}
 		}
 
@@ -223,7 +224,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	protected Map<String, MethodKey> localServiceMethods =
-		new ConcurrentHashMap<String, MethodKey>();
+		new ConcurrentHashMap<>();
 	protected BaseLocalService modelService = null;
 
 	private static Log _log = LogFactoryUtil.getLog(

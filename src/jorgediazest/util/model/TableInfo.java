@@ -34,20 +34,20 @@ public class TableInfo {
 	}
 
 	public TableInfo(Model model, String fieldPrefix) {
-
 		Class<?> classLiferayModelImpl =
 			model.getService().getLiferayModelImplClass();
 
 		attributesArr = (Object[][])ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "_COLUMNS");
+			classLiferayModelImpl, fieldPrefix + "_COLUMNS");
 		name = (String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "_NAME");
+			classLiferayModelImpl, fieldPrefix + "_NAME");
 		sqlCreate = (String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
+			classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
 		attributesStr = ModelUtil.getDatabaseAttributesStr(name, sqlCreate);
 
 		if ((attributesStr != null) && (attributesStr.indexOf('#') > 0)) {
 			String aux = attributesStr.split("#")[1];
+
 			primaryKeyMultiAttribute = aux.split(",");
 
 			for (int i = 0; i < primaryKeyMultiAttribute.length; i++) {
@@ -91,6 +91,7 @@ public class TableInfo {
 		}
 
 		TableInfo tableInfo = ((TableInfo)obj);
+
 		return getName().equals(tableInfo.getName());
 	}
 
@@ -179,7 +180,7 @@ public class TableInfo {
 
 		for (int i = 0; i<attrNames.length; i++) {
 			if ((primaryKey != null) && !primaryKey.equals(attrNames[i]) &&
-					!"companyId".equals(attrNames[i])) {
+				!"companyId".equals(attrNames[i])) {
 
 				destinationAttr = attrNames[i];
 				break;
@@ -225,7 +226,7 @@ public class TableInfo {
 	}
 
 	protected Map<String, Integer> mapAttributePosition =
-		new ConcurrentHashMap<String, Integer>();
+		new ConcurrentHashMap<>();
 
 	private Object[][] attributesArr = null;
 	private String attributesStr = null;
