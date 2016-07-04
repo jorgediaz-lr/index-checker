@@ -1060,6 +1060,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Model groupModel = modelFactory.getModelObject(Group.class);
 
+		if (groupModel == null) {
+			return new ArrayList<Long>();
+		}
+
 		long companyClassNameId = PortalUtil.getClassNameId(Company.class);
 
 		Service groupService = groupModel.getService();
