@@ -14,14 +14,14 @@
 
 package jorgediazest.indexchecker.util;
 
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
-import com.liferay.portlet.asset.model.AssetRendererFactory;
 
 import java.io.IOException;
 import java.io.InputStream;

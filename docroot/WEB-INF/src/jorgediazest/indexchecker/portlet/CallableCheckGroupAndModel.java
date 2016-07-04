@@ -14,10 +14,9 @@
 
 package jorgediazest.indexchecker.portlet;
 
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,8 +75,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			DataUtil.setIgnoreCase(true);
 
 			CompanyThreadLocal.setCompanyId(companyId);
-
-			ShardUtil.pushCompanyService(companyId);
 
 			if (_log.isInfoEnabled()) {
 				String strGroupIds = null;
@@ -178,8 +175,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		}
 		finally {
 			DataUtil.setIgnoreCase(oldIgnoreCase);
-
-			ShardUtil.popCompanyService();
 		}
 	}
 
