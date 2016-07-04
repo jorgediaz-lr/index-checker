@@ -22,15 +22,16 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.Company;
-import com.liferay.portal.model.Group;
-import com.liferay.portal.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Map.Entry;
 
 import javax.portlet.PortletConfig;
@@ -82,6 +83,9 @@ public class IndexCheckerOutput {
 		Map<Company, String> companyError) {
 
 		List<String> out = new ArrayList<String>();
+
+		ResourceBundle resourceBundle = portletConfig.getResourceBundle(
+				locale);
 
 		if (companyResultDataMap != null) {
 			String[] headerKeys;
@@ -135,10 +139,10 @@ public class IndexCheckerOutput {
 
 							if (group == null) {
 								groupIdOutput = LanguageUtil.get(
-									portletConfig, locale,
+									resourceBundle,
 									"output.not-applicable-groupid");
 								groupNameOutput = LanguageUtil.get(
-									portletConfig, locale,
+									resourceBundle,
 									"output.not-applicable-groupname");
 							}
 							else {
@@ -153,7 +157,7 @@ public class IndexCheckerOutput {
 
 					for (Comparison comp : entry.getValue()) {
 						String lineError = OutputUtils.generateCSVRow(
-							portletConfig, comp, companyOutput, groupIdOutput,
+							resourceBundle, comp, companyOutput, groupIdOutput,
 							groupNameOutput, "error", locale, comp.getError(),
 							-1);
 
@@ -170,7 +174,7 @@ public class IndexCheckerOutput {
 							}
 
 							String line = OutputUtils.generateCSVRow(
-									portletConfig, comp, companyOutput,
+									resourceBundle, comp, companyOutput,
 									groupIdOutput, groupNameOutput, type,
 									attribute, locale);
 
@@ -218,6 +222,9 @@ public class IndexCheckerOutput {
 
 		Locale locale = renderRequest.getLocale();
 
+		ResourceBundle resourceBundle = portletConfig.getResourceBundle(
+				locale);
+
 		String[] headerKeys;
 
 		if (groupBySite) {
@@ -254,9 +261,9 @@ public class IndexCheckerOutput {
 
 				if (group == null) {
 					groupIdOutput = LanguageUtil.get(
-						portletConfig, locale, "output.not-applicable-groupid");
+						resourceBundle, "output.not-applicable-groupid");
 					groupNameOutput = LanguageUtil.get(
-						portletConfig, locale,
+						resourceBundle,
 						"output.not-applicable-groupname");
 				}
 				else {
@@ -282,7 +289,7 @@ public class IndexCheckerOutput {
 
 			for (Comparison comp : entry.getValue()) {
 				ResultRow rowError = OutputUtils.generateSearchContainerRow(
-					portletConfig, comp, groupIdOutput, groupNameOutput,
+					resourceBundle, comp, groupIdOutput, groupNameOutput,
 					"error", locale, numberOfRows, comp.getError());
 
 				if (rowError != null) {
@@ -300,7 +307,7 @@ public class IndexCheckerOutput {
 					int maxSize = 50;
 
 					ResultRow row = OutputUtils.generateSearchContainerRow(
-						portletConfig, comp, groupIdOutput, groupNameOutput,
+						resourceBundle, comp, groupIdOutput, groupNameOutput,
 						type, attribute, locale, numberOfRows, maxSize);
 
 					if (row != null) {

@@ -15,22 +15,17 @@
 package jorgediazest.indexchecker.portlet;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.security.auth.CompanyThreadLocal;
-import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
-import com.liferay.portlet.asset.model.AssetCategory;
-import com.liferay.portlet.asset.model.AssetEntry;
-import com.liferay.portlet.asset.model.AssetRendererFactory;
-import com.liferay.portlet.asset.model.AssetTag;
-import com.liferay.portlet.documentlibrary.model.DLFileEntry;
-import com.liferay.portlet.documentlibrary.model.DLFileVersion;
-import com.liferay.portlet.dynamicdatalists.model.DDLRecord;
-import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
-import com.liferay.portlet.messageboards.model.MBMessage;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
+import com.liferay.message.boards.kernel.model.MBMessage;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -97,9 +92,9 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	public Set<String> calculateRelatedAttributesToCheck(Model model) {
 		Set<String> relatedAttributesToCheck = new LinkedHashSet<String>();
 
-		if (model.getName().equals(DDLRecord.class.getName())) {
+		if (model.getName().equals("com.liferay.dynamic.data.lists.model.DDLRecord")) {
 			relatedAttributesToCheck.add(
-				DDLRecordVersion.class.getName() + ":recordId,version-" +
+				"com.liferay.dynamic.data.lists.model.DDLRecordVersion:recordId,version-" +
 				": =recordId,version,status");
 		}
 		else if (model.getName().equals(DLFileEntry.class.getName())) {
@@ -108,7 +103,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				": =fileEntryId, =version,status");
 		}
 
-		AssetRendererFactory assetRendererFactory =
+		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				model.getName());
 
@@ -154,16 +149,16 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		Set<Model> relatedModels = new LinkedHashSet<Model>();
 
-		if (model.getName().equals(DDLRecord.class.getName())) {
+		if (model.getName().equals("com.liferay.dynamic.data.lists.model.DDLRecord")) {
 			relatedModels.add(model.getModelFactory().getModelObject(
-				DDLRecordVersion.class.getName()));
+				"com.liferay.dynamic.data.lists.model.DDLRecordVersion"));
 		}
 		else if (model.getName().equals(DLFileEntry.class.getName())) {
 			relatedModels.add(model.getModelFactory().getModelObject(
 				DLFileVersion.class.getName()));
 		}
 
-		AssetRendererFactory assetRendererFactory =
+		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				model.getName());
 
@@ -198,8 +193,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			DataUtil.setIgnoreCase(true);
 
 			CompanyThreadLocal.setCompanyId(companyId);
-
-			ShardUtil.pushCompanyService(companyId);
 
 			if (_log.isInfoEnabled()) {
 				String strGroupIds = null;
@@ -277,8 +270,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		}
 		finally {
 			DataUtil.setIgnoreCase(oldIgnoreCase);
-
-			ShardUtil.popCompanyService();
 		}
 	}
 
