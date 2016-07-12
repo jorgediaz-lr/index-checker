@@ -15,7 +15,10 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.messageboards.model.MBCategoryConstants;
 
+import jorgediazest.util.data.Data;
 import jorgediazest.util.model.ModelUtil;
 
 /**
@@ -29,5 +32,49 @@ public class MBMessage extends IndexCheckerModel {
 			super.generateQueryFilter(),
 			this.generateCriterionFilter("categoryId<>-1+parentMessageId<>0"));
 	}
+
+	protected String getPermissionsClassName(Data data) {
+
+		long categoryId = data.get("categoryId", 0L);
+
+		if (categoryId != MBCategoryConstants.DISCUSSION_CATEGORY_ID) {
+			return super.getPermissionsClassName(data);
+		}
+
+		long classNameId = data.get("classNameId", 0L);
+
+		String permissionsClassName = null;
+
+		if (classNameId != 0) {
+			permissionsClassName = PortalUtil.getClassName(classNameId);
+		}
+
+		for (String validPermissionsClassName : validPermissionClassNames) {
+			if (validPermissionsClassName.equals(permissionsClassName)) {
+				return permissionsClassName;
+			}
+		}
+
+		return super.getPermissionsClassName(data);
+	}
+
+	protected long getPermissionsClassPK(Data data) {
+
+		String permissionsClassName = this.getPermissionsClassName(data);
+
+		if ("com.liferay.portlet.messageboards.model.MBMessage".equals(
+				permissionsClassName)) {
+
+			return super.getPermissionsClassPK(data);
+		}
+
+		return data.get("classPK", -1L);
+	}
+
+	protected static String[] validPermissionClassNames = new String[] {
+		"com.liferay.portlet.blogs.model.BlogsEntry",
+		"com.liferay.portlet.documentlibrary.model.DLFileEntry",
+		"com.liferay.portlet.messageboards.model.MBMessage",
+		"com.liferay.portlet.wiki.model.WikiPage"};
 
 }

@@ -28,6 +28,7 @@ import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 import com.liferay.portlet.dynamicdatalists.model.DDLRecord;
 import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
+import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.ratings.model.RatingsStats;
 
 import java.util.Arrays;
@@ -66,6 +67,10 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		if (DLFileEntry.class.getName().equals(model.getClassName())) {
 			attributesToCheck.add("version");
+		}
+
+		if (MBMessage.class.getName().equals(model.getClassName())) {
+			attributesToCheck.add("categoryId");
 		}
 
 		return attributesToCheck;
