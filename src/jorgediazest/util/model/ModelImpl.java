@@ -77,7 +77,7 @@ public abstract class ModelImpl implements Model {
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, String classNameRelated,
 			String[] attrRelated, String[] mappings, boolean removeUnmatched,
-			Criterion filter)
+			boolean rawData, Criterion filter)
 		throws Exception {
 
 			String[] attrRelatedOrig = new String[attrRelated.length];
@@ -140,6 +140,32 @@ public abstract class ModelImpl implements Model {
 					if (removeUnmatched) {
 						unmatchedDataKeys.add(entry.getKey());
 					}
+
+					continue;
+				}
+
+				if (rawData) {
+					if (matched.size() == 1) {
+						Object value =
+							getRawRelatedData(
+								matched.get(0), attrRelatedOrig,
+								attrRelatedDest);
+
+						data.set(classNameRelated, value);
+
+						continue;
+					}
+
+					Set<Object> values = new HashSet<Object>(matched.size());
+
+					for (Data m : matched) {
+						Object value =
+							getRawRelatedData(
+								m, attrRelatedOrig, attrRelatedDest);
+						values.add(value);
+					}
+
+					data.set(classNameRelated, values);
 
 					continue;
 				}
@@ -478,9 +504,19 @@ public abstract class ModelImpl implements Model {
 					mappings = mappings.substring(0, mappings.length()-1);
 				}
 
+				boolean rawData = false;
+				String attrRelated = relatedDataArr[2];
+
+				if (attrRelated.startsWith("[") && attrRelated.endsWith("]")) {
+					rawData = true;
+
+					attrRelated = attrRelated.substring(
+						1, attrRelated.length()-1);
+				}
+
 				addRelatedModelData(
-					dataMap, relatedDataArr[0], relatedDataArr[2].split(","),
-					mappings.split(","), removeUnmatched, filter);
+					dataMap, relatedDataArr[0], attrRelated.split(","),
+					mappings.split(","), removeUnmatched, rawData, filter);
 			}
 
 			return dataMap;
@@ -548,7 +584,12 @@ public abstract class ModelImpl implements Model {
 
 		for (Object[] result : results) {
 			Data data = createDataObject(validAttributesArr, result);
-			long mappingAttributeValue = data.get(mapKeyAttribute, i--);
+			Long mappingAttributeValue = DataUtil.castLong(
+				data.get(mapKeyAttribute));
+
+			if (Validator.isNull(mappingAttributeValue)) {
+				mappingAttributeValue = i--;
+			}
 
 			if (!dataMap.containsKey(mappingAttributeValue)) {
 				List<Data> list = new ArrayList<Data>();
@@ -1033,6 +1074,22 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return property;
+	}
+
+	protected Object getRawRelatedData(
+		Data data, String[] attrRelatedOrig, String[] attrRelatedDest) {
+
+		List<Object> list = new ArrayList<Object>();
+
+		for (int k = 0; k<attrRelatedOrig.length; k++) {
+			if (Validator.isNotNull(attrRelatedOrig[k])) {
+				Object value = data.get(attrRelatedDest[k]);
+
+				list.add(value);
+			}
+		}
+
+		return list;
 	}
 
 	protected void splitSourceDest(
