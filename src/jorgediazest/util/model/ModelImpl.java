@@ -408,21 +408,42 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Criterion getCompanyFilter(long companyId) {
-		return getCompanyGroupFilter(companyId, 0);
+		return getCompanyGroupFilter(companyId, null);
 	}
 
-	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
+	public Criterion getCompanyGroupFilter(
+			long companyId, List<Long> groupIds) {
+
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		if (this.hasAttribute("companyId")) {
 			conjunction.add(getProperty("companyId").eq(companyId));
 		}
 
-		if (this.hasAttribute("groupId") && (groupId != 0)) {
-			conjunction.add(getProperty("groupId").eq(groupId));
+		if (this.hasAttribute("groupId") && Validator.isNotNull(groupIds)) {
+			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+			for (Long groupId : groupIds) {
+				disjunction.add(getProperty("groupId").eq(groupId));
+			}
+
+			conjunction.add(disjunction);
 		}
 
 		return conjunction;
+	}
+
+	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
+
+		List<Long> groupIds = null;
+
+		if (groupId != 0) {
+			groupIds = new ArrayList<Long>();
+
+			groupIds.add(groupId);
+		}
+
+		return getCompanyGroupFilter(companyId, groupIds);
 	}
 
 	public final Map<Long, Data> getData() throws Exception {
