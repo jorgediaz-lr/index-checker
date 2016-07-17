@@ -33,7 +33,6 @@
 
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
-<%@ page import="com.liferay.portal.kernel.util.ParamUtil" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.model.Company" %>
 
@@ -88,10 +87,8 @@
 			<aui:input helpMessage="output-index-help" name="outputIndex" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
 		</aui:column>
 		<aui:column>
-			<aui:input name="outputGroupBySite" onClick='<%= renderResponse.getNamespace() + "toogleFilterGroupId(this);" %>' type="checkbox" value="false" />
-			<span class="<%= (ParamUtil.getBoolean(request, "outputGroupBySite") ? "" : "hide") %>" id="filterGroupIdSpan">
+			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
 			<aui:input helpMessage="filter-group-id-help" name="filterGroupId" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value='<%=request.getAttribute("filterGroupId") %>' />
-			</span>
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
 		</aui:column>
 		<aui:column>
@@ -172,17 +169,6 @@
 
 		if (removeOrphansButton != null) {
 			removeOrphansButton.className = 'hide';
-		}
-	}
-
-	function <portlet:namespace />toogleFilterGroupId(event) {
-		var filterGroupId = document.getElementById("filterGroupIdSpan");
-
-		if (event.checked) {
-			filterGroupId.className = '';
-		}
-		else {
-			filterGroupId.className = 'hide';
 		}
 	}
 

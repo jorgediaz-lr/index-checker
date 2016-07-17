@@ -88,6 +88,29 @@ import jorgediazest.util.model.ModelUtil;
  */
 public class IndexCheckerPortlet extends MVCPortlet {
 
+	public static List<Future<Comparison>> executeCallableCheckGroupAndModel(
+		ExecutorService executor, Map<String, Model> modelMap, long companyId,
+		List<Long> groupIds, Set<ExecutionMode> executionMode) {
+
+		List<Future<Comparison>> futureResultList =
+			new ArrayList<Future<Comparison>>();
+
+		for (Model model : modelMap.values()) {
+			if (!model.hasIndexerEnabled()) {
+				continue;
+			}
+
+			CallableCheckGroupAndModel c =
+				new CallableCheckGroupAndModel(
+					companyId, groupIds, (IndexCheckerModel)model,
+					executionMode);
+
+			futureResultList.add(executor.submit(c));
+		}
+
+		return futureResultList;
+	}
+
 	public static Map<Long, List<Comparison>> executeCheck(
 		Company company, List<Long> groupIds, List<String> classNames,
 		Set<ExecutionMode> executionMode, int threadsExecutor)
@@ -182,37 +205,31 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		long companyId = company.getCompanyId();
 
-		List<Long> groupIdsFor = new ArrayList<Long>();
-		groupIdsFor.add(0L);
-
-		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-			groupIdsFor.addAll(groupIds);
-		}
-
 		ExecutorService executor = Executors.newFixedThreadPool(
 			threadsExecutor);
 
 		Map<Long, List<Future<Comparison>>> futureResultDataMap =
 			new LinkedHashMap<Long, List<Future<Comparison>>>();
 
-		for (long groupId : groupIdsFor) {
-			List<Future<Comparison>> futureResultList =
-				new ArrayList<Future<Comparison>>();
+		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			for (long groupId : groupIds) {
+				List<Long> groupIdsAux = new ArrayList<Long>();
+				groupIdsAux.add(groupId);
 
-			for (Model model : modelMap.values()) {
-				if (!model.hasIndexerEnabled()) {
-					continue;
-				}
-
-				CallableCheckGroupAndModel c =
-					new CallableCheckGroupAndModel(
-						companyId, groupId, (IndexCheckerModel)model,
+				List<Future<Comparison>> futureResultList =
+					executeCallableCheckGroupAndModel(
+						executor, modelMap, companyId, groupIdsAux,
 						executionMode);
 
-				futureResultList.add(executor.submit(c));
+				futureResultDataMap.put(groupId, futureResultList);
 			}
+		}
+		else {
+			List<Future<Comparison>> futureResultList =
+				executeCallableCheckGroupAndModel(executor, modelMap,
+					companyId, groupIds, executionMode);
 
-			futureResultDataMap.put(groupId, futureResultList);
+			futureResultDataMap.put(0L, futureResultList);
 		}
 
 		Map<Long, List<Comparison>> resultDataMap =
@@ -318,7 +335,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		if (Validator.isNull(filterGroupId)) {
 			List<Long> siteGroupIds = this.getSiteGroupIds();
 
-			filterGroupId = "";
+			filterGroupId = "0";
 
 			for (Long groupId : siteGroupIds) {
 				if (Validator.isNotNull(filterGroupId)) {
@@ -376,7 +393,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				List<String> classNames = getClassNames(filterClassNameArr);
 
-				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
+				List<Long> groupIds = getGroupIds(
+					company, executionMode, filterGroupIdArr);
 
 				long startTime = System.currentTimeMillis();
 
@@ -461,7 +479,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				List<String> classNames = getClassNames(filterClassNameArr);
 
-				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
+				List<Long> groupIds = getGroupIds(
+					company, executionMode, filterGroupIdArr);
 
 				long startTime = System.currentTimeMillis();
 
@@ -562,7 +581,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				List<String> classNames = getClassNames(filterClassNameArr);
 
-				List<Long> groupIds = getGroupIds(company, filterGroupIdArr);
+				List<Long> groupIds = getGroupIds(
+					company, executionMode, filterGroupIdArr);
 
 				long startTime = System.currentTimeMillis();
 
@@ -659,14 +679,30 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return classNames;
 	}
 
-	public List<Long> getGroupIds(Company company, String[] filterGroupIdArr)
+	public List<Long> getGroupIds(
+			Company company, Set<ExecutionMode> executionMode,
+			String[] filterGroupIdArr)
 		throws SystemException {
+
+		boolean groupBySite = executionMode.contains(
+			ExecutionMode.GROUP_BY_SITE);
+
+		if (!groupBySite && (filterGroupIdArr == null)) {
+			return null;
+		}
 
 		List<Group> groups =
 			GroupLocalServiceUtil.getCompanyGroups(
 				company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		List<Long> groupIds = new ArrayList<Long>();
+
+		for (int i = 0; i < filterGroupIdArr.length; i++) {
+			if ("0".equals(filterGroupIdArr[i])) {
+				groupIds.add(0L);
+				break;
+			}
+		}
 
 		for (Group group : groups) {
 			if (filterGroupIdArr == null) {

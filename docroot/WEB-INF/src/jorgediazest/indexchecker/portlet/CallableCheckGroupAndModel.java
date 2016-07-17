@@ -34,6 +34,7 @@ import com.liferay.portlet.ratings.model.RatingsStats;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -77,11 +78,11 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	}
 
 	public CallableCheckGroupAndModel(
-		long companyId, long groupId, IndexCheckerModel model,
+		long companyId, List<Long> groupIds, IndexCheckerModel model,
 		Set<ExecutionMode> executionMode) {
 
 		this.companyId = companyId;
-		this.groupId = groupId;
+		this.groupIds = groupIds;
 		this.model = model;
 		this.executionMode = executionMode;
 	}
@@ -174,26 +175,28 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			ShardUtil.pushCompanyService(companyId);
 
 			if (_log.isInfoEnabled()) {
+				String strGroupIds = null;
+
+				if (groupIds != null) {
+					strGroupIds = Arrays.toString(groupIds.toArray());
+				}
+
 				_log.info(
 					"Model: " + model.getName() + " - CompanyId: " +
-						companyId + " - GroupId: " + groupId);
+						companyId + " - GroupId: " + strGroupIds);
 			}
 
-			if ((groupId == 0L) &&
-				model.hasAttribute("groupId") &&
-				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+			if ((groupIds != null) && (groupIds.size() == 0)) {
+				return null;
+			}
+
+			if ((groupIds != null) && (!groupIds.contains(0L) &&
+				 !model.hasAttribute("groupId"))) {
 
 				return null;
 			}
 
-			if ((groupId != 0L) &&
-				!model.hasAttribute("groupId") &&
-				executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
-
-				return null;
-			}
-
-			Criterion filter = model.getCompanyGroupFilter(companyId, groupId);
+			Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
 
 			String[] attributesToCheck = calculateAttributesToCheck(
 				model).toArray(new String[0]);
@@ -215,7 +218,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				SearchContext searchContext = model.getIndexSearchContext(
 					companyId);
 				BooleanQuery contextQuery = model.getIndexQuery(
-					groupId, searchContext);
+					groupIds, searchContext);
 
 				indexData = model.getIndexData(
 					relatedModels, attributesToCheck, searchContext,
@@ -253,7 +256,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 	private long companyId = -1;
 	private Set<ExecutionMode> executionMode = null;
-	private long groupId = -1;
+	private List<Long> groupIds = null;
 	private IndexCheckerModel model = null;
 
 }
