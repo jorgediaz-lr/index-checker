@@ -226,8 +226,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 		else {
 			List<Future<Comparison>> futureResultList =
-				executeCallableCheckGroupAndModel(executor, modelMap,
-					companyId, groupIds, executionMode);
+				executeCallableCheckGroupAndModel(
+					executor, modelMap, companyId, groupIds, executionMode);
 
 			futureResultDataMap.put(0L, futureResultList);
 		}
