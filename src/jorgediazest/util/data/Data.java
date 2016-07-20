@@ -249,6 +249,10 @@ public class Data implements Comparable<Data> {
 
 	@SuppressWarnings("rawtypes")
 	public void set(String attribute, Object value) {
+		if ("pk".equals(attribute)) {
+			attribute = model.getPrimaryKeyAttribute();
+		}
+
 		int type = getAttributeType(attribute);
 
 		if (!isValid(attribute, type, value)) {
@@ -274,6 +278,10 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Object[] values) {
+		if ("pk".equals(attribute)) {
+			attribute = model.getPrimaryKeyAttribute();
+		}
+
 		int type = getAttributeType(attribute);
 
 		if (!isValid(attribute, type, values)) {
@@ -288,6 +296,10 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Set<Object> values) {
+		if ("pk".equals(attribute)) {
+			attribute = model.getPrimaryKeyAttribute();
+		}
+
 		int type = getAttributeType(attribute);
 
 		if (!isValid(attribute, type, values)) {
