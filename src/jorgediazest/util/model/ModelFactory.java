@@ -14,6 +14,7 @@
 
 package jorgediazest.util.model;
 
+import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -28,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataModelComparator;
@@ -94,7 +96,7 @@ public class ModelFactory {
 	}
 
 	public Model getModelObject(Class<?> clazz) {
-		return getModelObject(modelFactoryClassLoaders, clazz);
+		return getModelObject(clazz.getName());
 	}
 
 	public final Model getModelObject(ClassLoader classLoader, Class<?> clazz) {
@@ -128,7 +130,7 @@ public class ModelFactory {
 			return null;
 		}
 
-		return getModelObject(classPackageName, classSimpleName, service);
+		return getModelObject(service);
 	}
 
 	public final Model getModelObject(
@@ -201,12 +203,10 @@ public class ModelFactory {
 		return null;
 	}
 
-	public Model getModelObject(String className) {
-		return getModelObject(modelFactoryClassLoaders, className);
-	}
+	public Model getModelObject(Service service) {
 
-	public Model getModelObject(
-		String classPackageName, String classSimpleName, Service service) {
+		String classPackageName = service.getClassPackageName();
+		String classSimpleName = service.getClassSimpleName();
 
 		String className = classPackageName + "." + classSimpleName;
 
@@ -238,6 +238,32 @@ public class ModelFactory {
 			throw new RuntimeException(e);
 		}
 
+		return model;
+	}
+
+	public Model getModelObject(String className) {
+		if (Validator.isNull(className)) {
+			return null;
+		}
+
+		if (cacheNullModelObject.contains(className)) {
+			return null;
+		}
+
+		Model model = cacheModelObject.get(className);
+
+		if (model != null) {
+			return model;
+		}
+
+		model = getModelObject(modelFactoryClassLoaders, className);
+
+		if (model == null) {
+			cacheNullModelObject.add(className);
+			return null;
+		}
+
+		cacheModelObject.put(className, model);
 		return model;
 	}
 
@@ -302,8 +328,13 @@ public class ModelFactory {
 			return null;
 		}
 
-		return getModelObject(classPackageName, classSimpleName, service);
+		return getModelObject(service);
 	}
+
+	protected Map<String, Model> cacheModelObject =
+		new ConcurrentHashMap<String, Model>();
+	protected Set<String> cacheNullModelObject =
+		new ConcurrentHashSet<String>();
 
 	protected DataComparatorFactory dataComparatorFactory =
 		new DataComparatorFactory() {
