@@ -14,40 +14,42 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.NoSuchResourceException;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.model.Layout;
+import com.liferay.portal.model.ResourceAction;
+import com.liferay.portal.model.ResourceBlock;
+import com.liferay.portal.model.ResourceBlockPermission;
 import com.liferay.portal.model.ResourceConstants;
+import com.liferay.portal.model.ResourcePermission;
 import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.security.permission.ActionKeys;
-import com.liferay.portal.security.permission.ResourceActionsUtil;
-import com.liferay.portal.security.permission.ResourceBlockIdsBag;
-import com.liferay.portal.service.GroupLocalServiceUtil;
+import com.liferay.portal.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
-import com.liferay.portal.service.ResourceBlockPermissionLocalServiceUtil;
-import com.liferay.portal.service.ResourcePermissionLocalServiceUtil;
-import com.liferay.portal.service.RoleLocalServiceUtil;
+import com.liferay.portal.util.PortalUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,13 +71,15 @@ import jorgediazest.util.service.Service;
  */
 public class IndexCheckerModel extends ModelImpl {
 
-	public void addPermissionsData(Data data) throws Exception {
+	public void addPermissionsClassNameGroupIdFields(
+			Map<Long, Data> groupMap, Data data)
+		throws SystemException {
 
 		String className = getPermissionsClassName(data);
 		long classPK = getPermissionsClassPK(data);
 
-		if (Validator.isNull(classPK) || (classPK <= 0) ||
-			Validator.isNull(className)) {
+		if (Validator.isNull(classPK) || Validator.isNull(className) ||
+			(classPK <= 0)) {
 
 			return;
 		}
@@ -86,51 +90,22 @@ public class IndexCheckerModel extends ModelImpl {
 			return;
 		}
 
-		long companyId = data.getCompanyId();
-		long groupId = 0;
+		long groupId = data.get("groupId", 0L);
 
-		Group group = GroupLocalServiceUtil.fetchGroup(data.get("groupId", 0L));
+		Data group = groupMap.get(groupId);
 
 		if (group != null) {
-			group = getSiteGroup(group);
+			long layoutClassNameId = PortalUtil.getClassNameId(Layout.class);
 
-			groupId = group.getGroupId();
-		}
-
-		List<Role> roles = ListUtil.copy(
-			ResourceActionsUtil.getRoles(companyId, group, className, null));
-
-		if (groupId > 0) {
-			List<Role> teamRoles = RoleLocalServiceUtil.getTeamRoles(groupId);
-
-			roles.addAll(teamRoles);
-		}
-
-		boolean[] hasResourcePermissions = hasResourcePermissions(
-				companyId, groupId, className, classPK, roles);
-
-		Set<String> roleIds = new HashSet<String>();
-		Set<String> groupRoleIds = new HashSet<String>();
-
-		for (int i = 0; i < hasResourcePermissions.length; i++) {
-			if (!hasResourcePermissions[i]) {
-				continue;
+			if (group.get("classNameId", -1L) == layoutClassNameId) {
+				groupId = group.get("parentGroupId", groupId);
 			}
 
-			Role role = roles.get(i);
-
-			if ((role.getType() == RoleConstants.TYPE_ORGANIZATION) ||
-				(role.getType() == RoleConstants.TYPE_SITE)) {
-
-				groupRoleIds.add(groupId + StringPool.DASH + role.getRoleId());
-			}
-			else {
-				roleIds.add(Long.toString(role.getRoleId()));
-			}
+			data.set("permissionsGroupId", groupId);
 		}
 
-		data.set("roleId", roleIds);
-		data.set("groupRoleId", groupRoleIds);
+		data.set("permissionsClassName", className);
+		data.set("permissionsClassPK", classPK);
 	}
 
 	public void delete(Data value) throws SearchException {
@@ -241,16 +216,7 @@ public class IndexCheckerModel extends ModelImpl {
 		Map<Long, Data> dataMap = super.getData(
 			attributesModel, attributesRelated, filter);
 
-		for (Data data : dataMap.values()) {
-			try {
-				addPermissionsData(data);
-			}
-			catch (NoSuchResourceException nsre) {
-			}
-			catch (Exception e) {
-				_log.error(e, e);
-			}
-		}
+		addPermissionFields(dataMap);
 
 		return dataMap;
 	}
@@ -283,18 +249,44 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public BooleanQuery getIndexQuery(
-		long groupId, SearchContext searchContext) {
+			List<Long> groupIds, SearchContext searchContext)
+		throws ParseException {
 
-		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
-			searchContext);
-		contextQuery.addRequiredTerm(
-			Field.ENTRY_CLASS_NAME, this.getClassName());
+		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
+		query.addRequiredTerm(Field.ENTRY_CLASS_NAME, this.getClassName());
 
-		if (groupId != 0) {
-			contextQuery.addRequiredTerm(Field.SCOPE_GROUP_ID, groupId);
+		if (this.hasAttribute("groupId") && (groupIds != null)) {
+			BooleanQuery groupQuery = BooleanQueryFactoryUtil.create(
+				searchContext);
+
+			for (Long groupId : groupIds) {
+				groupQuery.addTerm(Field.SCOPE_GROUP_ID, groupId);
+			}
+
+			query.add(groupQuery, BooleanClauseOccur.MUST);
 		}
 
-		return contextQuery;
+		return query;
+	}
+
+	public BooleanQuery getIndexQuery(long groupId, SearchContext searchContext)
+		throws ParseException {
+
+		List<Long> groupIds = null;
+
+		if (groupId != 0) {
+			groupIds = new ArrayList<Long>();
+
+			groupIds.add(groupId);
+		}
+
+		return getIndexQuery(groupIds, searchContext);
+	}
+
+	public BooleanQuery getIndexQuery(SearchContext searchContext)
+		throws ParseException {
+
+		return getIndexQuery(null, searchContext);
 	}
 
 	public SearchContext getIndexSearchContext(long companyId) {
@@ -302,6 +294,23 @@ public class IndexCheckerModel extends ModelImpl {
 		searchContext.setCompanyId(companyId);
 		searchContext.setEntryClassNames(new String[] {this.getClassName()});
 		return searchContext;
+	}
+
+	public boolean hasActionId(long actionIds, String name, String actionId)
+		throws PortalException {
+
+		Long bitwiseValue = getActionIdBitwiseValue(name, actionId);
+
+		if (Validator.isNull(bitwiseValue)) {
+			return false;
+		}
+
+		if ((actionIds & bitwiseValue) == bitwiseValue) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -353,6 +362,148 @@ public class IndexCheckerModel extends ModelImpl {
 		getIndexerNullSafe().reindex(getClassName(), value.getPrimaryKey());
 	}
 
+	protected void addPermissionFields(Map<Long, Data> dataMap)
+		throws Exception, PortalException, SystemException {
+
+		Model groupModel = modelFactory.getModelObject(Group.class);
+
+		Map<Long, Data> groupMap = groupModel.getDataWithCache(
+			"pk,classNameId,parentGroupId".split(","));
+
+		for (Data data : dataMap.values()) {
+			addPermissionsClassNameGroupIdFields(groupMap, data);
+		}
+
+		addRelatedModelData(
+			dataMap, ResourcePermission.class.getName(),
+			" =primKey,roleId,actionIds,scope".split(","),
+			"permissionsClassPK=primKey".split(","), false, true);
+
+		addRelatedModelData(
+			dataMap, ResourceBlock.class.getName(),
+			" =groupId, =name,resourceBlockId".split(","),
+			"permissionsGroupId=groupId,permissionsClassName=name".split(","),
+			false, false);
+
+		addRelatedModelData(
+			dataMap, ResourceBlockPermission.class.getName(),
+			" =resourceBlockId,roleId,actionIds".split(","),
+			"resourceBlockId".split(","), false, true);
+
+		Model roleModel = modelFactory.getModelObject(Role.class);
+
+		Map<Long, Data> roleMap = roleModel.getDataWithCache(
+			"pk,type".split(","));
+
+		for (Data data : dataMap.values()) {
+			addRolesFieldsToData(roleMap, data);
+		}
+	}
+
+	protected void addRolesFieldsToData(Map<Long, Data> roleMap, Data data)
+		throws PortalException {
+
+		String className = data.get("permissionsClassName", StringPool.BLANK);
+
+		String permissionsField = ResourceBlockPermission.class.getName();
+
+		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
+			permissionsField = ResourceBlockPermission.class.getName();
+		}
+		else {
+			permissionsField = ResourcePermission.class.getName();
+		}
+
+		addRolesFieldsToData(roleMap, className, data, permissionsField);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void addRolesFieldsToData(
+		Map<Long, Data> roleMap, String className, Data data,
+		String permissionsField) throws PortalException {
+
+		Object aux = data.get(permissionsField);
+
+		Set<List<Object>> resourcePermissions = null;
+
+		if (aux instanceof List) {
+			resourcePermissions = new HashSet<List<Object>>();
+			resourcePermissions.add((List<Object>)aux);
+		}
+		else if (aux instanceof Set) {
+			resourcePermissions = (Set<List<Object>>)aux;
+		}
+
+		if (resourcePermissions == null) {
+			return;
+		}
+
+		Set<String> roleIds = new HashSet<String>();
+		Set<String> groupRoleIds = new HashSet<String>();
+
+		for (List<Object> resourcePermission : resourcePermissions) {
+			long roleId = (Long)resourcePermission.get(0);
+			long actionIds = (Long)resourcePermission.get(1);
+
+			if (resourcePermission.size() > 2) {
+				int scope = (Integer)resourcePermission.get(2);
+
+				if (scope != ResourceConstants.SCOPE_INDIVIDUAL) {
+					continue;
+				}
+			}
+
+			if (hasActionId(actionIds, className, ActionKeys.VIEW)) {
+				Data role = roleMap.get(roleId);
+
+				if (role == null) {
+					continue;
+				}
+
+				long groupId = data.get("permissionsGroupId", 0L);
+
+				int type = role.get("type", -1);
+
+				if ((type == RoleConstants.TYPE_ORGANIZATION) ||
+					(type == RoleConstants.TYPE_SITE)) {
+
+					groupRoleIds.add(groupId + StringPool.DASH + roleId);
+				}
+				else {
+					roleIds.add(Long.toString(roleId));
+				}
+			}
+		}
+
+		data.set("roleId", roleIds);
+		data.set("groupRoleId", groupRoleIds);
+	}
+
+	protected long getActionIdBitwiseValue(String name, String actionId)
+		throws PortalException {
+
+		String key = name + "_" + actionId;
+
+		Long bitwiseValue = cacheActionIdBitwiseValue.get(key);
+
+		if (bitwiseValue == null) {
+			ResourceAction resourceAction =
+				ResourceActionLocalServiceUtil.fetchResourceAction(
+					name, actionId);
+
+			if (resourceAction == null) {
+				bitwiseValue = 0L;
+			}
+			else {
+				bitwiseValue = resourceAction.getBitwiseValue();
+			}
+
+			cacheActionIdBitwiseValue.put(key, bitwiseValue);
+		}
+
+		return bitwiseValue;
+	}
+
 	protected String getPermissionsClassName(Data data) {
 		return data.getEntryClassName();
 	}
@@ -365,69 +516,8 @@ public class IndexCheckerModel extends ModelImpl {
 		return data.getPrimaryKey();
 	}
 
-	protected Group getSiteGroup(Group group) {
-		try {
-			if (group.isLayout()) {
-				return group.getParentGroup();
-			}
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
-
-		return group;
-	}
-
-	protected boolean[] hasResourcePermissions(
-			long companyId, long groupId, String className, long classPK,
-			List<Role> roles)
-		throws PortalException, SystemException {
-
-		long[] roleIdsArray = new long[roles.size()];
-
-		for (int i = 0; i < roleIdsArray.length; i++) {
-			Role role = roles.get(i);
-
-			roleIdsArray[i] = role.getRoleId();
-		}
-
-		boolean[] hasResourcePermissions = null;
-
-		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
-			ResourceBlockIdsBag resourceBlockIdsBag =
-				ResourceBlockLocalServiceUtil.getResourceBlockIdsBag(
-					companyId, groupId, className, roleIdsArray);
-
-			long actionId = ResourceBlockLocalServiceUtil.getActionId(
-				className, ActionKeys.VIEW);
-
-			List<Long> resourceBlockIds =
-				resourceBlockIdsBag.getResourceBlockIds(actionId);
-
-			hasResourcePermissions = new boolean[roleIdsArray.length];
-
-			for (long resourceBlockId : resourceBlockIds) {
-				for (int i = 0; i < roleIdsArray.length; i++) {
-					int count =
-						ResourceBlockPermissionLocalServiceUtil.
-							getResourceBlockPermissionsCount(
-								resourceBlockId, roleIdsArray[i]);
-
-					hasResourcePermissions[i] = (count > 0);
-				}
-			}
-		}
-		else {
-			hasResourcePermissions =
-				ResourcePermissionLocalServiceUtil.hasResourcePermissions(
-					companyId, className, ResourceConstants.SCOPE_INDIVIDUAL,
-					Long.toString(classPK), roleIdsArray, ActionKeys.VIEW);
-		}
-
-		return hasResourcePermissions;
-	}
+	protected Map<String, Long> cacheActionIdBitwiseValue =
+		new HashMap<String, Long>();
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerModel.class);
 
