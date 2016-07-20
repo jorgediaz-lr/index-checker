@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.model.Portlet;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,6 +39,12 @@ import jorgediazest.util.service.Service;
 public interface Model extends Cloneable, Comparable<Model> {
 
 	public void addFilter(Criterion filter);
+
+	public void addRelatedModelData(
+			Map<Long, Data> dataMap, String classNameRelated,
+			String[] attrRelated, String[] mappings, boolean removeNotMatched,
+			boolean rawData)
+		throws Exception;
 
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, String classNameRelated,
@@ -120,7 +125,15 @@ public interface Model extends Cloneable, Comparable<Model> {
 		throws Exception;
 
 	public Map<Long, List<Data>> getDataWithDuplicates(
+		String[] attributes, String mapKeyAttribute)
+	throws Exception;
+
+	public Map<Long, List<Data>> getDataWithDuplicates(
 		String[] attributes, String mapKeyAttribute, Criterion filter)
+	throws Exception;
+
+	public Map<Long, List<Data>> getDataWithDuplicatesCache(
+		String[] attributes, String mapKeyAttribute)
 	throws Exception;
 
 	public String getDisplayName(Locale locale);
@@ -164,7 +177,7 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public TableInfo getTableInfo();
 
-	public HashMap<String, TableInfo> getTableInfoMappings();
+	public Map<String, TableInfo> getTableInfoMappings();
 
 	public TrashHandler getTrashHandler();
 

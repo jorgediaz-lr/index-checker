@@ -51,6 +51,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
@@ -71,6 +72,17 @@ public abstract class ModelImpl implements Model {
 		service.setFilter(
 			ModelUtil.generateConjunctionQueryFilter(
 				service.getFilter(), filter));
+	}
+
+	public void addRelatedModelData(
+			Map<Long, Data> dataMap, String classNameRelated,
+			String[] attrRelated, String[] mappings, boolean removeUnmatched,
+			boolean rawData)
+		throws Exception {
+
+		addRelatedModelData(
+			dataMap, classNameRelated, attrRelated, mappings, removeUnmatched,
+			rawData, null);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -210,6 +222,12 @@ public abstract class ModelImpl implements Model {
 			modelFactory.getPortletSet(this.getWorkflowHandler()));
 
 		return portletsSet;
+	}
+
+	public void clearCache() {
+		cachedDifferentAttributeValues = new HashMap<String, Map<Long, Data>>();
+		cachedDifferentAttributeValuesDup =
+				new HashMap<String, Map<Long, List<Data>>>();
 	}
 
 	public Model clone() {
@@ -552,7 +570,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Map<Long, Data> getDataWithCache(String[] attr) throws Exception {
-		return getDataWithCache(null, "pk");
+		return getDataWithCache(attr, "pk");
 	}
 
 	public Map<Long, Data> getDataWithCache(
@@ -570,6 +588,13 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return values;
+	}
+
+	public final Map<Long, List<Data>> getDataWithDuplicates(
+			String[] attributes, String mapKeyAttribute)
+		throws Exception {
+
+		return getDataWithDuplicates(attributes, mapKeyAttribute, null);
 	}
 
 	public Map<Long, List<Data>> getDataWithDuplicates(
@@ -623,6 +648,23 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return dataMap;
+	}
+
+	public Map<Long, List<Data>> getDataWithDuplicatesCache(
+			String[] attr, String mapKeyAttribute)
+		throws Exception {
+
+		Map<Long, List<Data>> values = cachedDifferentAttributeValuesDup.get(
+			Arrays.toString(attr) + "key: " + mapKeyAttribute);
+
+		if (values == null) {
+			values = this.getDataWithDuplicates(attr, mapKeyAttribute);
+
+			cachedDifferentAttributeValuesDup.put(
+				Arrays.toString(attr) + "key: " + mapKeyAttribute, values);
+		}
+
+		return values;
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -864,6 +906,10 @@ public abstract class ModelImpl implements Model {
 			return new HashMap<Long, List<Data>>();
 		}
 
+		if (filter == null) {
+			return model.getDataWithDuplicatesCache(attributes, mappingAttr);
+		}
+
 		return model.getDataWithDuplicates(attributes, mappingAttr, filter);
 	}
 
@@ -884,9 +930,9 @@ public abstract class ModelImpl implements Model {
 		return tableInfo;
 	}
 
-	public HashMap<String, TableInfo> getTableInfoMappings() {
+	public Map<String, TableInfo> getTableInfoMappings() {
 		if (tableInfoMappings == null) {
-			tableInfoMappings = new HashMap<String, TableInfo>();
+			tableInfoMappings = new ConcurrentHashMap<String, TableInfo>();
 
 			List<String> mappingTables =
 				ReflectionUtil.getLiferayModelImplMappingTablesFields(
@@ -1135,7 +1181,11 @@ public abstract class ModelImpl implements Model {
 	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
 	protected Map<String, Map<Long, Data>> cachedDifferentAttributeValues =
-		new HashMap<String, Map<Long, Data>>();
+		new ConcurrentHashMap<String, Map<Long, Data>>();
+
+	protected Map<String, Map<Long, List<Data>>>
+		cachedDifferentAttributeValuesDup =
+			new ConcurrentHashMap<String, Map<Long, List<Data>>>();
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
@@ -1146,6 +1196,6 @@ public abstract class ModelImpl implements Model {
 	protected Service service = null;
 	protected String suffix = null;
 	protected TableInfo tableInfo = null;
-	protected HashMap<String, TableInfo> tableInfoMappings = null;
+	protected Map<String, TableInfo> tableInfoMappings = null;
 
 }
