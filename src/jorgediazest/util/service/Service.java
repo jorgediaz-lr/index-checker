@@ -44,6 +44,10 @@ public interface Service extends Cloneable {
 
 	public ClassedModel fetchObject(long primaryKey);
 
+	public String getClassPackageName();
+
+	public String getClassSimpleName();
+
 	public Criterion getFilter();
 
 	public Class<?> getLiferayModelImplClass();

@@ -164,6 +164,14 @@ public class ServiceImpl implements Service {
 		return null;
 	}
 
+	public String getClassPackageName() {
+		return classPackageName;
+	}
+
+	public String getClassSimpleName() {
+		return classSimpleName;
+	}
+
 	public Criterion getFilter() {
 		return filter;
 	}
