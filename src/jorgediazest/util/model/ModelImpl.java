@@ -530,7 +530,11 @@ public abstract class ModelImpl implements Model {
 						filter = null;
 					}
 					else {
-						filter = generateCriterionFilter(relatedDataArr[3]);
+						Model relatedModel = modelFactory.getModelObject(
+							relatedDataArr[0]);
+						filter =
+							relatedModel.generateCriterionFilter(
+								relatedDataArr[3]);
 					}
 				}
 

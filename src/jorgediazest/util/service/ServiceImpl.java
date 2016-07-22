@@ -16,78 +16,80 @@ package jorgediazest.util.service;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.ClassedModel;
-import com.liferay.portal.model.Group;
-import com.liferay.portal.service.BaseLocalService;
-
-import java.lang.reflect.Method;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
  */
-public class ServiceImpl implements Service {
+public abstract class ServiceImpl implements Service {
 
 	public ClassedModel addObject(ClassedModel object) {
-		String methodName = "add" + object.getModelClass().getSimpleName();
-
-		return (ClassedModel)executeServiceMethod(
-			methodName, object.getModelClass(), object);
+		throw new UnsupportedOperationException();
 	}
 
-	public ServiceImpl clone() {
-		ServiceImpl service;
-		try {
-			service = this.getClass().newInstance();
-			service.className = this.className;
-			service.classPackageName = this.classPackageName;
-			service.classSimpleName = this.classSimpleName;
-			service.modelService = this.modelService;
-			service.filter = this.filter;
-			service.liferayModelImplClass = this.liferayModelImplClass;
-			service.classInterface = this.classInterface;
-		}
-		catch (Exception e) {
-			_log.error("Error executing clone");
-			throw new RuntimeException(e);
-		}
-
-		return service;
-	}
+	public abstract Service clone();
 
 	public ClassedModel createObject(long primaryKey) {
-		String methodName = "create" + classSimpleName;
-
-		return (ClassedModel)executeServiceMethod(
-			methodName, long.class, (Object)primaryKey);
+		throw new UnsupportedOperationException();
 	}
 
 	public ClassedModel deleteObject(ClassedModel object) {
-		String methodName = "delete" + object.getModelClass().getSimpleName();
-
-		return (ClassedModel)executeServiceMethod(
-			methodName, object.getModelClass(), object);
+		throw new UnsupportedOperationException();
 	}
 
 	public ClassedModel deleteObject(long primaryKey) {
-		String methodName = "delete" + classSimpleName;
-
-		return (ClassedModel)executeServiceMethod(
-			methodName, long.class, (Object)primaryKey);
+		throw new UnsupportedOperationException();
 	}
 
-	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
-		throws Exception {
+	public ClassedModel fetchObject(long primaryKey) {
+		throw new UnsupportedOperationException();
+	}
+
+	public abstract ClassLoader getClassLoader();
+
+	public String getClassPackageName() {
+		return classPackageName;
+	}
+
+	public String getClassSimpleName() {
+		return classSimpleName;
+	}
+
+	public Criterion getFilter() {
+		return filter;
+	}
+
+	public Class<?> getLiferayModelImplClass() {
+		if (liferayModelImplClass == null) {
+			DynamicQuery dynamicQuery = this.newDynamicQuery();
+
+			return ServiceUtil.getLiferayModelImplClass(
+				getClassLoader(), dynamicQuery);
+		}
+
+		return liferayModelImplClass;
+	}
+
+	public void init(Service service) {
+		try {
+			ServiceImpl serviceImpl = (ServiceImpl)service;
+			this.className = serviceImpl.className;
+			this.classPackageName = serviceImpl.classPackageName;
+			this.classSimpleName = serviceImpl.classSimpleName;
+			this.filter = serviceImpl.filter;
+			this.liferayModelImplClass = serviceImpl.liferayModelImplClass;
+		}
+		catch (Exception e) {
+			_log.error("Error executing init");
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void prepareDynamicQuery(DynamicQuery dynamicQuery) {
 
 		if (filter != null) {
 			dynamicQuery.add(filter);
@@ -105,183 +107,21 @@ public class ServiceImpl implements Service {
 
 			_log.debug("executing dynamicQuery: " + filterDynamicQuery);
 		}
-
-		return (List<?>)executeServiceMethod(
-			"dynamicQuery", DynamicQuery.class, dynamicQuery);
 	}
 
-	public Object executeServiceMethod(
-		String methodName, Class<?> parameterType, Object arg) {
-			if (modelService == null) {
-				throw new IllegalArgumentException("service must be not null");
-			}
-
-			try {
-				Method method = getLocalServiceMethod(
-					methodName, parameterType);
-
-				if (method == null) {
-					return null;
-				}
-
-				if (arg == null) {
-					return method.invoke(modelService);
-				}
-
-				return method.invoke(modelService, arg);
-			}
-			catch (NoSuchMethodException e) {
-				throw new RuntimeException(
-					"executeMethod: " + methodName + " method not found for " +
-					modelService, e);
-			}
-			catch (Exception e) {
-				String cause = StringPool.BLANK;
-				Throwable rootException = e.getCause();
-
-				if (rootException != null) {
-					cause = " (root cause: " + rootException.getMessage() + ")";
-				}
-
-				throw new RuntimeException(
-					"executeMethod: " + methodName + " method for " +
-					modelService + ": " + cause, e);
-			}
-		}
-
-	public ClassedModel fetchObject(long primaryKey) {
-		String methodName = "fetch" + classSimpleName;
-
-		return (ClassedModel)executeServiceMethod(
-			methodName, long.class, (Object)primaryKey);
-	}
-
-	public ClassLoader getClassLoader() {
-		if (modelService != null) {
-			return modelService.getClass().getClassLoader();
-		}
-
-		return null;
-	}
-
-	public String getClassPackageName() {
-		return classPackageName;
-	}
-
-	public String getClassSimpleName() {
-		return classSimpleName;
-	}
-
-	public Criterion getFilter() {
-		return filter;
-	}
-
-	public Class<?> getLiferayModelImplClass() {
-		if (liferayModelImplClass == null) {
-			liferayModelImplClass = ServiceUtil.getLiferayModelImplClass(
-				getClassLoader(), classPackageName, classSimpleName);
-		}
-
-		return liferayModelImplClass;
-	}
-
-	public void init(
-		BaseLocalService modelService, String classPackageName,
-		String classSimpleName) {
-
-		if (modelService == null) {
-			throw new NullPointerException("modelService cannot be null");
-		}
-
-		this.modelService = modelService;
-
-		this.classPackageName = classPackageName;
-		this.classSimpleName = classSimpleName;
-		this.className = classPackageName + "." + classSimpleName;
-	}
-
-	public void init(Class<? extends ClassedModel> classInterface) {
-
-		Class<?> clazz = Group.class;
-		this.modelService = ServiceUtil.getLocalService(
-			null, clazz.getPackage().getName(), clazz.getSimpleName());
-
-		this.classPackageName = classInterface.getPackage().getName();
-		this.classSimpleName = classInterface.getSimpleName();
-		this.className = classPackageName + "." + classSimpleName;
-		this.classInterface = classInterface;
-	}
-
-	public DynamicQuery newDynamicQuery() {
-		if (classInterface != null) {
-			return DynamicQueryFactoryUtil.forClass(
-				classInterface, null, classInterface.getClassLoader());
-		}
-
-		return (DynamicQuery)executeServiceMethod("dynamicQuery", null, null);
-	}
-
-	public void setFilter(Criterion filter) {
+	public final void setFilter(Criterion filter) {
 		this.filter = filter;
 	}
 
 	public ClassedModel updateObject(ClassedModel object) {
-		String methodName = "update" + object.getModelClass().getSimpleName();
-
-		return (ClassedModel)executeServiceMethod(
-			methodName, object.getModelClass(), object);
+		throw new UnsupportedOperationException();
 	}
 
-	protected Method getLocalServiceMethod(
-		String methodName, Class<?> parameterType)
-			throws ClassNotFoundException, NoSuchMethodException {
-
-		String key = methodName;
-
-		if (parameterType != null) {
-			key = key + "#" + parameterType.getName();
-		}
-
-		Method method = null;
-
-		if (localServiceMethods.containsKey(key)) {
-			try {
-				method = localServiceMethods.get(key).getMethod();
-			}
-			catch (NoSuchMethodException e) {
-			}
-		}
-
-		if (method == null) {
-			Class<?> classLocalService = modelService.getClass();
-
-			if (parameterType != null) {
-				method = classLocalService.getMethod(methodName, parameterType);
-			}
-			else {
-				method = classLocalService.getMethod(methodName);
-			}
-
-			if (method == null) {
-				localServiceMethods.put(key, new MethodKey());
-			}
-			else {
-				localServiceMethods.put(key, new MethodKey(method));
-			}
-		}
-
-		return method;
-	}
-
-	protected Class<? extends ClassedModel> classInterface = null;
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected Criterion filter = null;
 	protected Class<?> liferayModelImplClass = null;
-	protected Map<String, MethodKey> localServiceMethods =
-		new ConcurrentHashMap<String, MethodKey>();
-	protected BaseLocalService modelService = null;
 
 	private static Log _log = LogFactoryUtil.getLog(ServiceImpl.class);
 

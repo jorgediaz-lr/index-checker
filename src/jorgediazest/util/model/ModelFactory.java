@@ -76,8 +76,6 @@ public class ModelFactory {
 
 	public Map<String, Model> getModelMap(Collection<String> classNames) {
 
-		modelFactoryClassLoaders = ModelUtil.getClassLoaders();
-
 		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
 
 		for (String classname : classNames) {
@@ -97,110 +95,6 @@ public class ModelFactory {
 
 	public Model getModelObject(Class<?> clazz) {
 		return getModelObject(clazz.getName());
-	}
-
-	public final Model getModelObject(ClassLoader classLoader, Class<?> clazz) {
-		return getModelObject(classLoader, clazz.getName());
-	}
-
-	public final Model getModelObject(
-		ClassLoader classLoader, String className) {
-
-		String classPackageName = StringPool.BLANK;
-		String classSimpleName = className;
-
-		int pos = className.lastIndexOf(".");
-
-		if (pos > 0) {
-			classPackageName = className.substring(0, pos);
-			classSimpleName = className.substring(pos + 1, className.length());
-		}
-
-		return getModelObject(classLoader, classPackageName, classSimpleName);
-	}
-
-	public Model getModelObject(
-			ClassLoader classLoader, String classPackageName,
-			String classSimpleName) {
-
-		Service service = ServiceUtil.getService(
-				classLoader, classPackageName, classSimpleName);
-
-		if (service == null) {
-			return null;
-		}
-
-		return getModelObject(service);
-	}
-
-	public final Model getModelObject(
-		List<ClassLoader> classLoaders, Class<?> clazz) {
-
-		return getModelObject(classLoaders, clazz.getName());
-	}
-
-	public Model getModelObject(
-		List<ClassLoader> classLoaders, String className) {
-
-		String classPackageName = StringPool.BLANK;
-		String classSimpleName = className;
-
-		int pos = className.lastIndexOf(".");
-
-		if (pos > 0) {
-			classPackageName = className.substring(0, pos);
-			classSimpleName = className.substring(pos + 1, className.length());
-		}
-
-		try {
-			Model model = this.getModelObjectFromPortal(
-				classPackageName, classSimpleName);
-
-			if ((model != null) && (model.getAttributesName() != null)) {
-				return model;
-			}
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Cannot get model object of " + className +
-					" EXCEPTION: " + e.getClass().getName() + ": " +
-					e.getMessage());
-			}
-
-			if (_log.isTraceEnabled()) {
-				_log.trace(e, e);
-			}
-		}
-
-		for (ClassLoader classLoader : classLoaders) {
-			try {
-				Model model = this.getModelObject(
-					classLoader, classPackageName, classSimpleName);
-
-				if ((model != null) && (model.getAttributesName() != null)) {
-					return model;
-				}
-			}
-			catch (Exception e) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Cannot get model object of " + className +
-						" EXCEPTION: " + e.getClass().getName() + ": " +
-						e.getMessage());
-				}
-
-				if (_log.isTraceEnabled()) {
-					_log.trace(e, e);
-				}
-			}
-		}
-
-		if (_log.isWarnEnabled()) {
-			_log.warn("Model object " + className + " was not found");
-		}
-
-		return null;
 	}
 
 	public Model getModelObject(Service service) {
@@ -227,15 +121,20 @@ public class ModelFactory {
 			model.init(
 				classPackageName, classSimpleName, service,
 				dataComparatorFactory);
+
+			if (model.getAttributesName() == null) {
+				throw new Exception(
+					model.getName() + " error retrieving attributes");
+			}
 		}
 		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
+			if (_log.isWarnEnabled()) {
+				_log.warn(
 					"getModelObject(" + className + ") EXCEPTION " +
 					e.getClass().getName() + ": " + e.getMessage());
 			}
 
-			throw new RuntimeException(e);
+			model = null;
 		}
 
 		return model;
@@ -256,7 +155,22 @@ public class ModelFactory {
 			return model;
 		}
 
-		model = getModelObject(modelFactoryClassLoaders, className);
+		String classPackageName = StringPool.BLANK;
+		String classSimpleName = className;
+
+		int pos = className.lastIndexOf(".");
+
+		if (pos > 0) {
+			classPackageName = className.substring(0, pos);
+			classSimpleName = className.substring(pos + 1, className.length());
+		}
+
+		Service service = ServiceUtil.getService(
+			classPackageName, classSimpleName);
+
+		if (service != null) {
+			model = getModelObject(service);
+		}
 
 		if (model == null) {
 			cacheNullModelObject.add(className);
@@ -300,37 +214,6 @@ public class ModelFactory {
 		}
 	}
 
-	protected final Model getModelObjectFromPortal(Class<?> clazz) {
-		return getModelObjectFromPortal(clazz.getName());
-	}
-
-	protected final Model getModelObjectFromPortal(String className) {
-		String classPackageName = StringPool.BLANK;
-		String classSimpleName = className;
-
-		int pos = className.lastIndexOf(".");
-
-		if (pos > 0) {
-			classPackageName = className.substring(0, pos);
-			classSimpleName = className.substring(pos + 1, className.length());
-		}
-
-		return getModelObjectFromPortal(classPackageName, classSimpleName);
-	}
-
-	protected final Model getModelObjectFromPortal(
-		String classPackageName, String classSimpleName) {
-
-		Service service = ServiceUtil.getServiceFromPortal(
-			classPackageName, classSimpleName);
-
-		if (service == null) {
-			return null;
-		}
-
-		return getModelObject(service);
-	}
-
 	protected Map<String, Model> cacheModelObject =
 		new ConcurrentHashMap<String, Model>();
 	protected Set<String> cacheNullModelObject =
@@ -355,7 +238,6 @@ public class ModelFactory {
 	protected Map<String, Set<Portlet>> handlerPortletMap =
 		new HashMap<String, Set<Portlet>>();
 	protected Map<String, Class<? extends Model>> modelClassMap = null;
-	protected List<ClassLoader> modelFactoryClassLoaders = null;
 
 	private void addHandlersToMap(List<String> handlerList, Portlet portlet) {
 		for (String handler : handlerList) {

@@ -287,6 +287,31 @@ public class ReflectionUtil {
 		return mappingTablesFields;
 	}
 
+	public static Object getPrivateField(Object object, String fieldName) {
+		if (object == null) {
+			return null;
+		}
+
+		try {
+			Class<?> clazz = object.getClass();
+
+			Field field = clazz.getDeclaredField(fieldName);
+
+			field.setAccessible(true);
+
+			if (field != null) {
+				return field.get(object);
+			}
+		}
+		catch (Throwable t) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(t, t);
+			}
+		}
+
+		return null;
+	}
+
 	public static sun.misc.Unsafe getUnsafe()
 		throws IllegalAccessException, IllegalArgumentException,
 		NoSuchFieldException, SecurityException {
@@ -297,7 +322,6 @@ public class ReflectionUtil {
 	}
 
 	public static String getWrappedCriterionString(Criterion criterion) {
-
 		return getWrappedString(criterion, "getWrappedCriterion");
 	}
 
@@ -307,13 +331,23 @@ public class ReflectionUtil {
 		return getWrappedString(dynamicQuery, "getDetachedCriteria");
 	}
 
+	public static String getWrappedModelImpl(DynamicQuery dynamicQuery) {
+		Object detachedCriteria = getPrivateField(
+			dynamicQuery, "_detachedCriteria");
+
+		Object criteria = getPrivateField(detachedCriteria, "impl");
+
+		return (String)getPrivateField(criteria, "entityOrClassName");
+	}
+
 	public static String getWrappedString(Object object, String methodName) {
 		if (object == null) {
 			return null;
 		}
 
 		try {
-			Method method = object.getClass().getMethod(methodName);
+			Class<? extends Object> clazz = object.getClass();
+			Method method = clazz.getMethod(methodName);
 
 			if (method != null) {
 				return method.invoke(object).toString();

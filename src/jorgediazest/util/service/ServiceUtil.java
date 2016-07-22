@@ -14,138 +14,64 @@
 
 package jorgediazest.util.service;
 
+import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.service.BaseLocalService;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 
-import java.lang.reflect.Method;
-
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
  */
 public class ServiceUtil {
 
-	public static String getLiferayLocalServiceClassName(
-		String packageName, String simpleName) {
-
-		int pos = packageName.lastIndexOf(".model");
-
-		if (pos > 0) {
-			packageName = packageName.substring(0, pos);
-		}
-
-		String className =
-			packageName + ".service." + simpleName +
-				"LocalService";
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"LocalServiceUtil of " + packageName + "." + simpleName + ": " +
-				className);
-		}
-
-		return className;
-	}
-
-	public static String getLiferayLocalServiceUtilClassName(
-		String packageName, String simpleName) {
-
-		return getLiferayLocalServiceClassName(packageName, simpleName) +
-			"Util";
-	}
-
 	public static Class<?> getLiferayModelImplClass(
-			ClassLoader classloader, String packageName, String simpleName) {
+		ClassLoader classloader, DynamicQuery dynamicQuery) {
 
-		String liferayModelImpl = ModelUtil.getLiferayModelImplClassName(
-			packageName, simpleName);
+		String liferayModelImpl = ReflectionUtil.getWrappedModelImpl(
+			dynamicQuery);
 
-		Exception exception = null;
+		liferayModelImpl = liferayModelImpl + "ModelImpl";
 
-		Class<?> classLiferayModelImpl = null;
+		liferayModelImpl = liferayModelImpl.replace(
+			"ImplModelImpl", "ModelImpl");
+
 		try {
-			classLiferayModelImpl = getJavaClass(classloader, liferayModelImpl);
+			return ServiceUtil.getJavaClass(classloader, liferayModelImpl);
 		}
-		catch (ClassNotFoundException e) {
-			exception = e;
-		}
-
-		if (classLiferayModelImpl == null) {
+		catch (ClassNotFoundException cnfe) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Class not found: " + liferayModelImpl);
 			}
 
-			if (exception != null) {
-				throw new RuntimeException(exception);
-			}
-
-			throw new RuntimeException("Class not found: " + liferayModelImpl);
+			throw new RuntimeException(cnfe);
 		}
-
-		return classLiferayModelImpl;
 	}
 
 	public static Service getService(
-		ClassLoader classLoader, String classPackageName,
-		String classSimpleName) {
-
-		BaseLocalService modelService = ServiceUtil.getLocalService(
-			classLoader, classPackageName, classSimpleName);
-
-		if (modelService != null) {
-			Service service = new ServiceImpl();
-
-			service.init(modelService, classPackageName, classSimpleName);
-
-			return service;
-		}
-
-		return null;
-	}
-
-	public static Service getServiceFromPortal(
 			String classPackageName, String classSimpleName) {
 
 		String className = classPackageName + "." + classSimpleName;
 
-		Service service = portalServices.get(className);
+		BaseLocalService modelService =
+			(BaseLocalService)PersistedModelLocalServiceRegistryUtil.
+				getPersistedModelLocalService(className);
 
-		if (service == null) {
-			service = getService(null, classPackageName, classSimpleName);
+		if (modelService != null) {
+			return new ServicePersistedModelImpl(
+					modelService, classPackageName, classSimpleName);
 		}
 
-		if (service == null) {
-			service = getServiceFromPortalClassInterface(className);
-		}
-
-		if (service != null) {
-			portalServices.put(className, service);
-		}
-
-		return service;
-	}
-
-	public static Service getServiceFromPortalClassInterface(String classname) {
-
-		Class<? extends ClassedModel> classInterface = getClassModelFromPortal(
-			classname);
-
-		if (classInterface == null) {
-			return null;
-		}
-
-		Service service = new ServiceImpl();
-
-		service.init(classInterface);
-
-		return service;
+		return getServiceFromPortal(className);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -189,65 +115,69 @@ public class ServiceUtil {
 		return clazz;
 	}
 
-	protected static BaseLocalService getLocalService(
-		ClassLoader classLoader, String classPackageName,
-		String classSimpleName) {
+	protected static String getLiferayLocalServiceClassName(
+		String packageName, String simpleName) {
 
-		try {
-			Method method = getLocalServiceUtilMethod(
-				classLoader, classPackageName, classSimpleName, "getService",
-				null);
+		int pos = packageName.lastIndexOf(".model");
 
-			if (method == null) {
-				return null;
-			}
-
-			return (BaseLocalService)method.invoke(null);
+		if (pos > 0) {
+			packageName = packageName.substring(0, pos);
 		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Cannot get service of " + classPackageName + "." +
-					classSimpleName + " in classloader: " + classLoader +
-					" - EXCEPTION: " + e.getClass().getName() +
-					": " + e.getMessage());
-			}
 
-			if (_log.isTraceEnabled()) {
-				_log.trace(e, e);
-			}
+		String className =
+			packageName + ".service." + simpleName +
+				"LocalService";
 
-			return null;
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"LocalServiceUtil of " + packageName + "." + simpleName + ": " +
+				className);
 		}
+
+		return className;
 	}
 
-	protected static Method getLocalServiceUtilMethod(
-		ClassLoader classLoader, String packageName, String simpleName,
-		String methodName, Class<?> parameterType)
-			throws ClassNotFoundException, NoSuchMethodException {
-
-		Method method = null;
-
-		String localServiceUtil =
-			ServiceUtil.getLiferayLocalServiceUtilClassName(
-				packageName, simpleName);
-
-		Class<?> classLocalServiceUtil = getJavaClass(
-			classLoader, localServiceUtil);
-
-		if ((localServiceUtil != null) && (parameterType != null)) {
-			method = classLocalServiceUtil.getMethod(methodName, parameterType);
-		}
-		else if (localServiceUtil != null) {
-			method = classLocalServiceUtil.getMethod(methodName);
+	protected static Service getServiceFromPortal(String className) {
+		if (cacheNullPortalServices.contains(className)) {
+			return null;
 		}
 
-		return method;
+		Service service = cachePortalServices.get(className);
+
+		if (service != null) {
+			return service;
+		}
+
+		Class<? extends ClassedModel> classInterface = getClassModelFromPortal(
+			className);
+
+		if (classInterface != null) {
+			try {
+				service = new ServiceClassInterfaceImpl(classInterface);
+
+				if (service.getLiferayModelImplClass() != null) {
+					cachePortalServices.put(className, service);
+					return service;
+				}
+			}
+			catch (Exception e) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Error creating ServiceClassInterfaceImpl: " +
+							e.getMessage());
+				}
+			}
+		}
+
+		cacheNullPortalServices.add(className);
+		return null;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
 
-	private static Map<String, Service> portalServices =
-		new HashMap<String, Service>();
+	private static Set<String> cacheNullPortalServices =
+		new ConcurrentHashSet<String>();
+	private static Map<String, Service> cachePortalServices =
+		new ConcurrentHashMap<String, Service>();
 
 }

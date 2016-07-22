@@ -198,20 +198,6 @@ public class ModelUtil {
 		return tableAttributes;
 	}
 
-	public static String getLiferayModelImplClassName(
-		String packageName, String simpleName) {
-
-		String className = packageName + ".impl." + simpleName + "ModelImpl";
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"ModelImpl of " + packageName + "." + simpleName + ": " +
-			className);
-		}
-
-		return className;
-	}
-
 	public static DynamicQuery newDynamicQuery(
 		Class<? extends ClassedModel> clazz, String alias) {
 
