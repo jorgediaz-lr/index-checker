@@ -14,57 +14,83 @@
 
 package jorgediazest.indexchecker.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
+import jorgediazest.util.modelquery.DefaultModelQuery;
+import jorgediazest.util.modelquery.ModelQuery;
+import jorgediazest.util.modelquery.ModelQueryFactory;
 
 /**
  * @author Jorge Díaz
  */
-public class IndexCheckerModelFactory extends ModelFactory {
+public class IndexCheckerModelFactory extends ModelQueryFactory {
 
-	public static Class<? extends Model> defaultModelClass =
-		IndexCheckerModel.class;
+	public IndexCheckerModelFactory(ModelFactory modelFactory)
+		throws Exception {
 
-	public static Map<String, Class<? extends Model>> modelClassMap =
-		new HashMap<String, Class<? extends Model>>();
-
-	static {
-		modelClassMap.put(
-			"com.liferay.portlet.asset.model.AssetEntry", NotIndexed.class);
-		modelClassMap.put(
-			"com.liferay.portlet.calendar.model.CalendarBooking",
-			CalendarBooking.class);
-		modelClassMap.put("com.liferay.portal.model.Contact", Contact.class);
-		modelClassMap.put(
-			"com.liferay.portlet.documentlibrary.model.DLFileEntry",
-			DLFileEntry.class);
-		modelClassMap.put(
-			"com.liferay.portlet.journal.model.JournalArticle",
-			JournalArticle.class);
-		modelClassMap.put(
-			"com.liferay.portlet.messageboards.model.MBMessage",
-			MBMessage.class);
-		modelClassMap.put(
-			"com.liferay.portlet.trash.model.TrashEntry", NotIndexed.class);
-		modelClassMap.put("com.liferay.portal.model.User", User.class);
-		modelClassMap.put(
-			"com.liferay.portlet.wiki.model.WikiNode", WikiNode.class);
-		modelClassMap.put(
-			"com.liferay.portlet.wiki.model.WikiPage", WikiPage.class);
+		super(modelFactory, indexCheckerClassFactory);
 	}
 
-	public IndexCheckerModelFactory() {
-		super(defaultModelClass, modelClassMap);
-	}
+	protected static ModelQueryClassFactory indexCheckerClassFactory =
+		new ModelQueryClassFactory() {
 
-	public IndexCheckerModelFactory(
-		Class<? extends Model> defaultModelClass,
-		Map<String, Class<? extends Model>> modelClassMap) {
+		public final String ASSET_ENTRY =
+			"com.liferay.portlet.asset.model.AssetEntry";
+		public final String CALENDAR_BOOKING =
+			"com.liferay.portlet.calendar.model.CalendarBooking";
+		public final String CONTACT = "com.liferay.portal.model.Contact";
+		public final String DL_FILE_ENTRY =
+			"com.liferay.portlet.documentlibrary.model.DLFileEntry";
+		public final String JOURNAL_ARTICLE =
+			"com.liferay.portlet.journal.model.JournalArticle";
+		public final String MB_MESSAGE =
+			"com.liferay.portlet.messageboards.model.MBMessage";
+		public final String TRASH_ENTRY =
+			"com.liferay.portlet.trash.model.TrashEntry";
+		public final String USER = "com.liferay.portal.model.User";
+		public final String WIKI_NODE =
+			"com.liferay.portlet.wiki.model.WikiNode";
+		public final String WIKI_PAGE =
+			"com.liferay.portlet.wiki.model.WikiPage";
 
-		super(defaultModelClass, modelClassMap);
-	}
+		@Override
+		public Class<? extends ModelQuery> getModelQueryClass(
+			String className) {
+
+			if (ASSET_ENTRY.equals(className)) {
+				return NotIndexed.class;
+			}
+			else if (CALENDAR_BOOKING.equals(className)) {
+				return CalendarBooking.class;
+			}
+			else if (CONTACT.equals(className)) {
+				return Contact.class;
+			}
+			else if (DL_FILE_ENTRY.equals(className)) {
+				return DLFileEntry.class;
+			}
+			else if (JOURNAL_ARTICLE.equals(className)) {
+				return JournalArticle.class;
+			}
+			else if (MB_MESSAGE.equals(className)) {
+				return MBMessage.class;
+			}
+			else if (TRASH_ENTRY.equals(className)) {
+				return NotIndexed.class;
+			}
+			else if (USER.equals(className)) {
+				return User.class;
+			}
+			else if (WIKI_NODE.equals(className)) {
+				return WikiNode.class;
+			}
+			else if (WIKI_PAGE.equals(className)) {
+				return WikiPage.class;
+			}
+			else {
+				return DefaultModelQuery.class;
+			}
+		}
+
+	};
 
 }

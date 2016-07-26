@@ -34,8 +34,9 @@ import java.util.Map;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
-import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
+import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 import jorgediazest.util.service.Service;
 
 /**
@@ -48,11 +49,12 @@ public class JournalArticle extends IndexCheckerModel {
 			Map<Long, Data> dataMap)
 		throws Exception {
 
+		Service service = getModel().getService();
 		DynamicQuery query = service.newDynamicQuery();
 
 		List<String> validAttributes = new ArrayList<String>();
 
-		ProjectionList projectionList = this.getPropertyProjection(
+		ProjectionList projectionList = getModel().getPropertyProjection(
 			attributes, validAttributes);
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
@@ -77,7 +79,8 @@ public class JournalArticle extends IndexCheckerModel {
 
 		articleVersionDynamicQuery.add(filterStatus);
 
-		query.add(getProperty("version").eq(articleVersionDynamicQuery));
+		query.add(
+			getModel().getProperty("version").eq(articleVersionDynamicQuery));
 
 		query.add(filterStatus);
 
@@ -146,13 +149,10 @@ public class JournalArticle extends IndexCheckerModel {
 	}
 
 	@Override
-	public void init(
-			String classPackageName, String classSimpleName, Service service,
-			DataComparatorFactory dataComparatorFactory)
+	public void init(Model model, DataComparatorFactory dataComparatorFactory)
 		throws Exception {
 
-		super.init(
-			classPackageName, classSimpleName, service, dataComparatorFactory);
+		super.init(model, dataComparatorFactory);
 
 		try {
 			indexAllVersions =
@@ -178,8 +178,8 @@ public class JournalArticle extends IndexCheckerModel {
 
 	@Override
 	public void reindex(Data value) throws SearchException {
-		getIndexerNullSafe().reindex(
-			this.getClassName(), value.getResourcePrimKey());
+		getModel().getIndexerNullSafe().reindex(
+			getModel().getClassName(), value.getResourcePrimKey());
 	}
 
 	protected boolean indexAllVersions;

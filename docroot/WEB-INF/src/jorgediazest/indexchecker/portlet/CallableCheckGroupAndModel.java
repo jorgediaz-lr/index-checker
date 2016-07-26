@@ -46,13 +46,16 @@ import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.modelquery.ModelQuery;
 
 /**
  * @author Jorge Díaz
  */
 public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
-	public static Set<String> calculateAttributesToCheck(Model model) {
+	public static Set<String> calculateAttributesToCheck(ModelQuery mq) {
+		Model model = mq.getModel();
+
 		Set<String> attributesToCheck = new LinkedHashSet<String>();
 
 		attributesToCheck.add(model.getPrimaryKeyAttribute());
@@ -64,7 +67,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		}
 
 		attributesToCheck.addAll(
-			Arrays.asList(model.getDataComparator().getExactAttributes()));
+			Arrays.asList(mq.getDataComparator().getExactAttributes()));
 
 		if (DLFileEntry.class.getName().equals(model.getClassName())) {
 			attributesToCheck.add("version");
@@ -83,7 +86,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		this.companyId = companyId;
 		this.groupIds = groupIds;
-		this.model = model;
+		this.mq = model;
 		this.executionMode = executionMode;
 	}
 
@@ -182,7 +185,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				}
 
 				_log.info(
-					"Model: " + model.getName() + " - CompanyId: " +
+					"Model: " + mq.getModel().getName() + " - CompanyId: " +
 						companyId + " - GroupId: " + strGroupIds);
 			}
 
@@ -191,23 +194,23 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			}
 
 			if ((groupIds != null) && (!groupIds.contains(0L) &&
-				 !model.hasAttribute("groupId"))) {
+				 !mq.getModel().hasAttribute("groupId"))) {
 
 				return null;
 			}
 
-			Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
+			Criterion filter = mq.getCompanyGroupFilter(companyId, groupIds);
 
 			String[] attributesToCheck = calculateAttributesToCheck(
-				model).toArray(new String[0]);
+				mq).toArray(new String[0]);
 
 			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
-				model).toArray(new String[0]);
+				mq.getModel()).toArray(new String[0]);
 
-			Set<Model> relatedModels = calculateRelatedModels(model);
+			Set<Model> relatedModels = calculateRelatedModels(mq.getModel());
 
 			Set<Data> liferayData = new HashSet<Data>(
-				model.getData(
+				mq.getData(
 					attributesToCheck, relatedAttrToCheck, filter).values());
 
 			Set<Data> indexData;
@@ -215,12 +218,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
 				!liferayData.isEmpty()) {
 
-				SearchContext searchContext = model.getIndexSearchContext(
+				SearchContext searchContext = mq.getIndexSearchContext(
 					companyId);
-				BooleanQuery contextQuery = model.getIndexQuery(
+				BooleanQuery contextQuery = mq.getIndexQuery(
 					groupIds, searchContext);
 
-				indexData = model.getIndexData(
+				indexData = mq.getIndexData(
 					relatedModels, attributesToCheck, searchContext,
 					contextQuery);
 			}
@@ -238,11 +241,11 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				ExecutionMode.SHOW_INDEX);
 
 			return ComparisonUtil.getComparison(
-				model, liferayData, indexData, showBothExact, showBothNotExact,
-				showOnlyLiferay, showOnlyIndex);
+				mq.getModel(), liferayData, indexData, showBothExact,
+				showBothNotExact, showOnlyLiferay, showOnlyIndex);
 		}
 		catch (Throwable t) {
-			return ComparisonUtil.getError(model, t);
+			return ComparisonUtil.getError(mq.getModel(), t);
 		}
 		finally {
 			DataUtil.setIgnoreCase(oldIgnoreCase);
@@ -257,6 +260,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	private long companyId = -1;
 	private Set<ExecutionMode> executionMode = null;
 	private List<Long> groupIds = null;
-	private IndexCheckerModel model = null;
+	private IndexCheckerModel mq = null;
 
 }

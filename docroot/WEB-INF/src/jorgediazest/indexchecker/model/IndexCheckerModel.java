@@ -62,14 +62,10 @@ import jorgediazest.indexchecker.index.IndexSearchUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
-import jorgediazest.util.model.ModelImpl;
-import jorgediazest.util.service.Service;
-
-/**
- * @author Jorge Díaz
- */
-public class IndexCheckerModel extends ModelImpl {
+import jorgediazest.util.modelquery.ModelQuery;
+import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
+import jorgediazest.util.modelquery.ModelQueryImpl;
+public class IndexCheckerModel extends ModelQueryImpl {
 
 	public void addPermissionsClassNameGroupIdFields(
 			Map<Long, Data> groupMap, Data data)
@@ -115,7 +111,8 @@ public class IndexCheckerModel extends ModelImpl {
 			return;
 		}
 
-		getIndexerNullSafe().delete(value.getCompanyId(), uid.toString());
+		getModel().getIndexerNullSafe().delete(
+			value.getCompanyId(), uid.toString());
 	}
 
 	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
@@ -125,7 +122,7 @@ public class IndexCheckerModel extends ModelImpl {
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"Deleting " + dataCollection.size() + " objects of type " +
-					this.getClassName());
+					getModel().getClassName());
 		}
 
 		int i = 0;
@@ -167,7 +164,7 @@ public class IndexCheckerModel extends ModelImpl {
 
 		for (String attribute : attributes) {
 			String attrDoc = IndexSearchUtil.getAttributeForDocument(
-				this, attribute);
+				getModel(), attribute);
 
 			List<Map<Locale, String>> listValueMap = null;
 
@@ -199,12 +196,16 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 	}
 
+	public Criterion generateCriterionFilter(String stringFilter) {
+		return getModel().generateCriterionFilter(stringFilter);
+	}
+
 	public Criterion generateQueryFilter() {
-		if (!this.isWorkflowEnabled()) {
+		if (!getModel().isWorkflowEnabled()) {
 			return null;
 		}
 
-		return this.generateCriterionFilter(
+		return generateCriterionFilter(
 			"status=" + WorkflowConstants.STATUS_APPROVED +"+" +
 			"status=" + WorkflowConstants.STATUS_IN_TRASH);
 	}
@@ -226,7 +227,7 @@ public class IndexCheckerModel extends ModelImpl {
 			SearchContext searchContext, BooleanQuery contextQuery)
 		throws SearchException {
 
-		int size = Math.max((int)this.count() * 2, 50000);
+		int size = Math.max((int)getModel().count() * 2, 50000);
 
 		Document[] docs = IndexSearchUtil.executeSearch(
 			searchContext, contextQuery, size, 50000);
@@ -235,7 +236,7 @@ public class IndexCheckerModel extends ModelImpl {
 
 		if (docs != null) {
 			for (int i = 0; i < docs.length; i++) {
-				Data data = new Data(this, this.dataComparator);
+				Data data = new Data(getModel(), this.dataComparator);
 
 				data.addModelTableInfo(relatedModels);
 
@@ -253,9 +254,10 @@ public class IndexCheckerModel extends ModelImpl {
 		throws ParseException {
 
 		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
-		query.addRequiredTerm(Field.ENTRY_CLASS_NAME, this.getClassName());
+		query.addRequiredTerm(
+			Field.ENTRY_CLASS_NAME, getModel().getClassName());
 
-		if (this.hasAttribute("groupId") && (groupIds != null)) {
+		if (getModel().hasAttribute("groupId") && (groupIds != null)) {
 			BooleanQuery groupQuery = BooleanQueryFactoryUtil.create(
 				searchContext);
 
@@ -292,7 +294,8 @@ public class IndexCheckerModel extends ModelImpl {
 	public SearchContext getIndexSearchContext(long companyId) {
 		SearchContext searchContext = new SearchContext();
 		searchContext.setCompanyId(companyId);
-		searchContext.setEntryClassNames(new String[] {this.getClassName()});
+		searchContext.setEntryClassNames(
+			new String[] {getModel().getClassName()});
 		return searchContext;
 	}
 
@@ -313,16 +316,19 @@ public class IndexCheckerModel extends ModelImpl {
 		}
 	}
 
+	public boolean hasIndexerEnabled() {
+		return getModel().hasIndexerEnabled();
+	}
+
 	@Override
-	public void init(
-			String classPackageName, String classSimpleName, Service service,
-			DataComparatorFactory dataComparatorFactory)
+	public void init(Model model, DataComparatorFactory dataComparatorFactory)
 		throws Exception {
 
-		super.init(
-			classPackageName, classSimpleName, service, dataComparatorFactory);
+		this.model = model;
 
-		this.setFilter(this.generateQueryFilter());
+		Model filtered = model.getFilteredModel(this.generateQueryFilter());
+
+		super.init(filtered, dataComparatorFactory);
 	}
 
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {
@@ -332,7 +338,7 @@ public class IndexCheckerModel extends ModelImpl {
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"Reindexing " + dataCollection.size() + " objects of type " +
-					this.getClassName());
+					getModel().getClassName());
 		}
 
 		int i = 0;
@@ -359,15 +365,16 @@ public class IndexCheckerModel extends ModelImpl {
 	}
 
 	public void reindex(Data value) throws SearchException {
-		getIndexerNullSafe().reindex(getClassName(), value.getPrimaryKey());
+		getModel().getIndexerNullSafe().reindex(
+			getModel().getClassName(), value.getPrimaryKey());
 	}
 
 	protected void addPermissionFields(Map<Long, Data> dataMap)
 		throws Exception, PortalException, SystemException {
 
-		Model groupModel = modelFactory.getModelObject(Group.class);
+		ModelQuery groupMda = mqFactory.getModelQueryObject(Group.class);
 
-		Map<Long, Data> groupMap = groupModel.getDataWithCache(
+		Map<Long, Data> groupMap = groupMda.getDataWithCache(
 			"pk,classNameId,parentGroupId".split(","));
 
 		for (Data data : dataMap.values()) {
@@ -390,9 +397,9 @@ public class IndexCheckerModel extends ModelImpl {
 			" =resourceBlockId,roleId,actionIds".split(","),
 			"resourceBlockId".split(","), false, true);
 
-		Model roleModel = modelFactory.getModelObject(Role.class);
+		ModelQuery roleMda = mqFactory.getModelQueryObject(Role.class);
 
-		Map<Long, Data> roleMap = roleModel.getDataWithCache(
+		Map<Long, Data> roleMap = roleMda.getDataWithCache(
 			"pk,type".split(","));
 
 		for (Data data : dataMap.values()) {

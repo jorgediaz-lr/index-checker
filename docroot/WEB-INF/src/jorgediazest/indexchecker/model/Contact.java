@@ -35,16 +35,18 @@ public class Contact extends IndexCheckerModel {
 
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
-		Model modelUser = this.getModelFactory().getModelObject(User.class);
+		Model modelUser =
+			getModel().getModelFactory().getModelObject(User.class);
 
 		DynamicQuery userDynamicQuery =
 			modelUser.getService().newDynamicQuery();
 
-		userDynamicQuery.setProjection(getPropertyProjection("userId"));
+		userDynamicQuery.setProjection(
+			modelUser.getPropertyProjection("userId"));
 
 		userDynamicQuery.add(
 			modelUser.generateCriterionFilter(
-				"status="+WorkflowConstants.STATUS_APPROVED));
+				"defaultUser=false,status="+WorkflowConstants.STATUS_APPROVED));
 
 		try {
 			@SuppressWarnings("unchecked")
@@ -52,7 +54,7 @@ public class Contact extends IndexCheckerModel {
 					modelUser.getService().executeDynamicQuery(
 						userDynamicQuery);
 
-			conjunction.add(generateInCriteria("classPK",users));
+			conjunction.add(getModel().generateInCriteria("classPK",users));
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
