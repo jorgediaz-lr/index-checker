@@ -44,19 +44,13 @@ import com.liferay.portal.util.PortalUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
-import jorgediazest.util.data.DataUtil;
-import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 
@@ -74,144 +68,6 @@ public abstract class ModelImpl implements Model {
 				service.getFilter(), filter));
 	}
 
-	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attrRelated, String[] mappings, boolean removeUnmatched,
-			boolean rawData)
-		throws Exception {
-
-		addRelatedModelData(
-			dataMap, classNameRelated, attrRelated, mappings, removeUnmatched,
-			rawData, null);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attrRelated, String[] mappings, boolean removeUnmatched,
-			boolean rawData, Criterion filter)
-		throws Exception {
-
-			String[] attrRelatedOrig = new String[attrRelated.length];
-			String[] attrRelatedDest = new String[attrRelated.length];
-			String[] mappingsSource = new String[mappings.length];
-			String[] mappingsDest = new String[mappings.length];
-
-			splitSourceDest(attrRelated, attrRelatedOrig, attrRelatedDest);
-			splitSourceDest(mappings, mappingsSource, mappingsDest);
-
-			Map<Long, List<Data>> relatedMap = getRelatedModelData(
-				classNameRelated, attrRelatedDest, mappingsDest[0], filter);
-
-			Set<Long> unmatchedDataKeys = new HashSet<Long>();
-
-			for (Entry<Long, Data> entry : dataMap.entrySet()) {
-				Data data = entry.getValue();
-
-				List<Data> relatedList = new ArrayList<Data>();
-
-				Object key = data.get(mappingsSource[0]);
-
-				if (key instanceof Set) {
-					for (Object k : (Set<Object>)key) {
-						List<Data> list = relatedMap.get(k);
-
-						if (list != null) {
-							relatedList.addAll(list);
-						}
-					}
-				}
-				else {
-					List<Data> list = relatedMap.get(key);
-
-					if (list != null) {
-						relatedList.addAll(list);
-					}
-				}
-
-				List<Data> matched = new ArrayList<Data>();
-
-				for (Data related : relatedList) {
-					boolean equalsAttributes = true;
-
-					for (int j = 1; j<mappings.length; j++) {
-						equalsAttributes = data.includesValueOfAttribute(
-								related, mappingsSource[j], mappingsDest[j]);
-
-						if (!equalsAttributes) {
-							break;
-						}
-					}
-
-					if (equalsAttributes) {
-						matched.add(related);
-					}
-				}
-
-				if (matched.isEmpty()) {
-					if (removeUnmatched) {
-						unmatchedDataKeys.add(entry.getKey());
-					}
-
-					continue;
-				}
-
-				if (rawData) {
-					if (matched.size() == 1) {
-						Object value =
-							getRawRelatedData(
-								matched.get(0), attrRelatedOrig,
-								attrRelatedDest);
-
-						data.set(classNameRelated, value);
-
-						continue;
-					}
-
-					Set<Object> values = new HashSet<Object>(matched.size());
-
-					for (Data m : matched) {
-						Object value =
-							getRawRelatedData(
-								m, attrRelatedOrig, attrRelatedDest);
-						values.add(value);
-					}
-
-					data.set(classNameRelated, values);
-
-					continue;
-				}
-
-				data.addModelTableInfo(matched.get(0).getModel());
-
-				for (int k = 0; k<attrRelatedOrig.length; k++) {
-					if (Validator.isNotNull(attrRelatedOrig[k])) {
-						if (matched.size() == 1) {
-							Object value = matched.get(
-								0).get(attrRelatedDest[k]);
-
-							data.set(attrRelatedOrig[k], value);
-
-							continue;
-						}
-
-						Set<Object> values = new HashSet<Object>(
-							matched.size());
-
-						for (Data m : matched) {
-							values.add(m.get(attrRelatedDest[k]));
-						}
-
-						data.set(attrRelatedOrig[k], values);
-					}
-				}
-			}
-
-			for (Long key : unmatchedDataKeys) {
-				dataMap.remove(key);
-			}
-		}
-
 	public Set<Portlet> calculatePortlets() {
 		Set<Portlet> portletsSet = new HashSet<Portlet>();
 		portletsSet.addAll(modelFactory.getPortletSet(this.getIndexer()));
@@ -224,12 +80,6 @@ public abstract class ModelImpl implements Model {
 		return portletsSet;
 	}
 
-	public void clearCache() {
-		cachedDifferentAttributeValues = new HashMap<String, Map<Long, Data>>();
-		cachedDifferentAttributeValuesDup =
-				new HashMap<String, Map<Long, List<Data>>>();
-	}
-
 	public Model clone() {
 		ModelImpl model;
 		try {
@@ -238,7 +88,6 @@ public abstract class ModelImpl implements Model {
 			model.className = this.className;
 			model.classPackageName = this.classPackageName;
 			model.classSimpleName = this.classSimpleName;
-			model.dataComparator = this.dataComparator;
 			model.modelFactory = this.modelFactory;
 			model.name = this.name;
 			model.service = this.service.clone();
@@ -283,14 +132,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return -1;
-	}
-
-	public Data createDataObject(String[] attributes, Object[] result) {
-		Model model = this;
-		DataComparator dataComparator = this.dataComparator;
-
-		return DataUtil.createDataObject(
-			model, dataComparator, attributes, result);
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
@@ -464,213 +305,6 @@ public abstract class ModelImpl implements Model {
 		return getCompanyGroupFilter(companyId, groupIds);
 	}
 
-	public final Map<Long, Data> getData() throws Exception {
-		return getData(null, "pk", null);
-	}
-
-	public final Map<Long, Data> getData(Criterion filter) throws Exception {
-		return getData(null, filter);
-	}
-
-	public final Map<Long, Data> getData(String[] attributes) throws Exception {
-		return getData(attributes, "pk", null);
-	}
-
-	public final Map<Long, Data> getData(String[] attributes, Criterion filter)
-		throws Exception {
-
-		return getData(attributes, "pk", filter);
-	}
-
-	public final Map<Long, Data> getData(
-			String[] attributes, String mapKeyAttribute)
-		throws Exception {
-
-		return getData(attributes, mapKeyAttribute, null);
-	}
-
-	public Map<Long, Data> getData(
-			String[] attributes, String mapKeyAttribute, Criterion filter)
-		throws Exception {
-
-		Map<Long, List<Data>> dataMapWithDuplicates = getDataWithDuplicates(
-			attributes, mapKeyAttribute, filter);
-
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
-
-		for (Entry<Long, List<Data>> e : dataMapWithDuplicates.entrySet()) {
-			Data data = e.getValue().get(0);
-			dataMap.put(e.getKey(), data);
-		}
-
-		return dataMap;
-	}
-
-	public Map<Long, Data> getData(
-			String[] attributesModel, String[] attributesRelated,
-			Criterion filter)
-		throws Exception {
-
-		return getData(attributesModel, attributesRelated, "pk", filter);
-	}
-
-	public Map<Long, Data> getData(
-			String[] attributesModel, String[] attributesRelated,
-			String mapKeyAttribute, Criterion filter)
-		throws Exception {
-
-			Map<Long, Data> dataMap = getData(
-				attributesModel, mapKeyAttribute, filter);
-
-			for (String attributeRelated : attributesRelated) {
-				String[] relatedDataArr = attributeRelated.split(":");
-
-				if (relatedDataArr.length > 3) {
-					if (Validator.isNull(relatedDataArr[3])) {
-						filter = null;
-					}
-					else {
-						Model relatedModel = modelFactory.getModelObject(
-							relatedDataArr[0]);
-						filter =
-							relatedModel.generateCriterionFilter(
-								relatedDataArr[3]);
-					}
-				}
-
-				boolean removeUnmatched = false;
-				String mappings = relatedDataArr[1];
-
-				if (mappings.endsWith("-")) {
-					removeUnmatched = true;
-
-					mappings = mappings.substring(0, mappings.length()-1);
-				}
-
-				boolean rawData = false;
-				String attrRelated = relatedDataArr[2];
-
-				if (attrRelated.startsWith("[") && attrRelated.endsWith("]")) {
-					rawData = true;
-
-					attrRelated = attrRelated.substring(
-						1, attrRelated.length()-1);
-				}
-
-				addRelatedModelData(
-					dataMap, relatedDataArr[0], attrRelated.split(","),
-					mappings.split(","), removeUnmatched, rawData, filter);
-			}
-
-			return dataMap;
-		}
-
-	public DataComparator getDataComparator() {
-		return dataComparator;
-	}
-
-	public Map<Long, Data> getDataWithCache() throws Exception {
-		return getDataWithCache(null);
-	}
-
-	public Map<Long, Data> getDataWithCache(String[] attr) throws Exception {
-		return getDataWithCache(attr, "pk");
-	}
-
-	public Map<Long, Data> getDataWithCache(
-			String[] attr, String mapKeyAttribute)
-		throws Exception {
-
-		Map<Long, Data> values = cachedDifferentAttributeValues.get(
-			Arrays.toString(attr) + "key: " + mapKeyAttribute);
-
-		if (values == null) {
-			values = this.getData(attr, mapKeyAttribute);
-
-			cachedDifferentAttributeValues.put(
-				Arrays.toString(attr) + "key: " + mapKeyAttribute, values);
-		}
-
-		return values;
-	}
-
-	public final Map<Long, List<Data>> getDataWithDuplicates(
-			String[] attributes, String mapKeyAttribute)
-		throws Exception {
-
-		return getDataWithDuplicates(attributes, mapKeyAttribute, null);
-	}
-
-	public Map<Long, List<Data>> getDataWithDuplicates(
-			String[] attributes, String mapKeyAttribute, Criterion filter)
-		throws Exception {
-
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
-
-		DynamicQuery query = service.newDynamicQuery();
-
-		if (attributes == null) {
-			attributes = this.getAttributesName();
-		}
-
-		List<String> validAttributes = new ArrayList<String>();
-		ProjectionList projectionList = this.getPropertyProjection(
-			attributes, validAttributes);
-
-		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
-
-		if (filter != null) {
-			query.add(filter);
-		}
-
-		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
-			query);
-
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
-
-		long i = -1;
-
-		for (Object[] result : results) {
-			Data data = createDataObject(validAttributesArr, result);
-			Long mappingAttributeValue = DataUtil.castLong(
-				data.get(mapKeyAttribute));
-
-			if (Validator.isNull(mappingAttributeValue)) {
-				mappingAttributeValue = i--;
-			}
-
-			if (!dataMap.containsKey(mappingAttributeValue)) {
-				List<Data> list = new ArrayList<Data>();
-				list.add(data);
-				dataMap.put(mappingAttributeValue, list);
-			}
-			else {
-				dataMap.get(mappingAttributeValue).add(data);
-			}
-		}
-
-		return dataMap;
-	}
-
-	public Map<Long, List<Data>> getDataWithDuplicatesCache(
-			String[] attr, String mapKeyAttribute)
-		throws Exception {
-
-		Map<Long, List<Data>> values = cachedDifferentAttributeValuesDup.get(
-			Arrays.toString(attr) + "key: " + mapKeyAttribute);
-
-		if (values == null) {
-			values = this.getDataWithDuplicates(attr, mapKeyAttribute);
-
-			cachedDifferentAttributeValuesDup.put(
-				Arrays.toString(attr) + "key: " + mapKeyAttribute, values);
-		}
-
-		return values;
-	}
-
 	public String getDisplayName(Locale locale) {
 		String displayName = ResourceActionsUtil.getModelResource(
 			locale, getClassName());
@@ -692,23 +326,34 @@ public abstract class ModelImpl implements Model {
 		return service.getFilter();
 	}
 
+	public Model getFilteredModel(Criterion filters) {
+		return getFilteredModel(filters, null);
+	}
+
+	public Model getFilteredModel(Criterion filters, String nameSufix) {
+		Model model = this;
+
+		if (filters != null) {
+			model = this.clone();
+			model.setFilter(filters);
+
+			if (Validator.isNotNull(nameSufix)) {
+				model.setNameSuffix(nameSufix);
+			}
+		}
+
+		return model;
+	}
+
 	public Model getFilteredModel(String filters) {
 		return getFilteredModel(filters, filters);
 	}
 
 	public Model getFilteredModel(String filters, String nameSufix) {
 
-		Model model = null;
-
 		Criterion filter = this.generateCriterionFilter(filters);
 
-		if (filter != null) {
-			model = this.clone();
-			model.setFilter(filter);
-			model.setNameSuffix(nameSufix);
-		}
-
-		return model;
+		return getFilteredModel(filter, nameSufix);
 	}
 
 	public Indexer getIndexer() {
@@ -863,60 +508,6 @@ public abstract class ModelImpl implements Model {
 		return projectionList;
 	}
 
-	public Map<Long, Data> getRelatedData(
-		String[] attributes, Criterion filter,
-		String mappingAttributeName) throws Exception {
-
-		Map<Long, Data> dataMap = this.getData(attributes, filter);
-
-		Map <Long, Data> relatedData = new HashMap<Long, Data>();
-
-		for (Data data : dataMap.values()) {
-			long mappingAttributeValue = data.get(mappingAttributeName, -1L);
-
-			if (mappingAttributeValue > 0) {
-				relatedData.put(mappingAttributeValue, data);
-			}
-		}
-
-		return relatedData;
-	}
-
-	public Map<Long, List<Data>> getRelatedModelData(
-			String classNameRelated, String[] attributes, String mappingAttr,
-			Criterion filter)
-		throws Exception {
-
-		Model model = modelFactory.getModelObject(classNameRelated);
-
-		if (model == null) {
-			return new HashMap<Long, List<Data>>();
-		}
-
-		if ("MappingTable".equals(mappingAttr)) {
-			TableInfo tableInfo =
-				model.getTableInfoMappings().get(attributes[0]);
-			return tableInfo.queryTable(model.getPrimaryKeyAttribute());
-		}
-
-		if ("classPK".equals(mappingAttr)) {
-			Criterion classNameIdFilter = model.getProperty(
-				"classNameId").eq(this.getClassNameId());
-			filter = ModelUtil.generateConjunctionQueryFilter(
-				classNameIdFilter, filter);
-		}
-
-		if (this.getClassName().equals(model.getClassName())) {
-			return new HashMap<Long, List<Data>>();
-		}
-
-		if (filter == null) {
-			return model.getDataWithDuplicatesCache(attributes, mappingAttr);
-		}
-
-		return model.getDataWithDuplicates(attributes, mappingAttr, filter);
-	}
-
 	public Service getService() {
 		return service;
 	}
@@ -1001,8 +592,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public void init(
-			String classPackageName, String classSimpleName, Service service,
-			DataComparatorFactory dataComparatorFactory)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception {
 
 		this.service = service;
@@ -1010,8 +600,6 @@ public abstract class ModelImpl implements Model {
 		this.className = classPackageName + "." + classSimpleName;
 		this.classPackageName = classPackageName;
 		this.classSimpleName = classSimpleName;
-
-		this.dataComparator = dataComparatorFactory.getDataComparator(this);
 
 		this.portlets = calculatePortlets();
 	}
@@ -1147,22 +735,6 @@ public abstract class ModelImpl implements Model {
 		return property;
 	}
 
-	protected Object getRawRelatedData(
-		Data data, String[] attrRelatedOrig, String[] attrRelatedDest) {
-
-		List<Object> list = new ArrayList<Object>();
-
-		for (int k = 0; k<attrRelatedOrig.length; k++) {
-			if (Validator.isNotNull(attrRelatedOrig[k])) {
-				Object value = data.get(attrRelatedDest[k]);
-
-				list.add(value);
-			}
-		}
-
-		return list;
-	}
-
 	protected void splitSourceDest(
 		String[] dataArray, String[] dataArrayOrigin, String[] dataArrayDest) {
 
@@ -1184,16 +756,9 @@ public abstract class ModelImpl implements Model {
 
 	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
-	protected Map<String, Map<Long, Data>> cachedDifferentAttributeValues =
-		new ConcurrentHashMap<String, Map<Long, Data>>();
-
-	protected Map<String, Map<Long, List<Data>>>
-		cachedDifferentAttributeValuesDup =
-			new ConcurrentHashMap<String, Map<Long, List<Data>>>();
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
-	protected DataComparator dataComparator;
 	protected ModelFactory modelFactory = null;
 	protected String name = null;
 	protected Set<Portlet> portlets = null;

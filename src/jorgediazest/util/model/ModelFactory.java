@@ -22,17 +22,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.service.PortletLocalServiceUtil;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.data.DataComparator;
-import jorgediazest.util.data.DataModelComparator;
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceUtil;
@@ -43,113 +39,33 @@ import jorgediazest.util.service.ServiceUtil;
 public class ModelFactory {
 
 	public ModelFactory() {
-		this(null, null);
+		this(null);
 	}
 
-	public ModelFactory(Class<? extends Model> defaultModelClass) {
-		this(defaultModelClass, null);
-	}
-
-	public ModelFactory(
-		Class<? extends Model> defaultModelClass,
-		Map<String, Class<? extends Model>> modelClassMap) {
-
-		if (defaultModelClass == null) {
-			this.defaultModelClass = DefaultModel.class;
+	public ModelFactory(ModelClassFactory modelClassFactory) {
+		if (modelClassFactory != null) {
+			this.modelClassFactory = modelClassFactory;
 		}
-		else {
-			this.defaultModelClass = defaultModelClass;
-		}
-
-		this.modelClassMap = modelClassMap;
 
 		fillHandlerPortletIdMap();
-	}
-
-	public ModelFactory(Map<String, Class<? extends Model>> modelClassMap) {
-		this(null, modelClassMap);
-	}
-
-	public DataComparatorFactory getDataComparatorFactory() {
-		return dataComparatorFactory;
-	}
-
-	public Map<String, Model> getModelMap(Collection<String> classNames) {
-
-		Map<String, Model> modelMap = new LinkedHashMap<String, Model>();
-
-		for (String classname : classNames) {
-			if (Validator.isNull(classname) || !classname.contains(".model.")) {
-				continue;
-			}
-
-			Model model = getModelObject(classname);
-
-			if (model != null) {
-				modelMap.put(model.getName(), model);
-			}
-		}
-
-		return modelMap;
 	}
 
 	public Model getModelObject(Class<?> clazz) {
 		return getModelObject(clazz.getName());
 	}
 
-	public Model getModelObject(Service service) {
-
-		String classPackageName = service.getClassPackageName();
-		String classSimpleName = service.getClassSimpleName();
-
-		String className = classPackageName + "." + classSimpleName;
-
-		Class<? extends Model> modelClass = this.defaultModelClass;
-
-		if ((this.modelClassMap != null) &&
-			this.modelClassMap.containsKey(className)) {
-
-			modelClass = this.modelClassMap.get(className);
-		}
-
-		Model model = null;
-		try {
-			model = (Model)modelClass.newInstance();
-
-			model.setModelFactory(this);
-
-			model.init(
-				classPackageName, classSimpleName, service,
-				dataComparatorFactory);
-
-			if (model.getAttributesName() == null) {
-				throw new Exception(
-					model.getName() + " error retrieving attributes");
-			}
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"getModelObject(" + className + ") EXCEPTION " +
-					e.getClass().getName() + ": " + e.getMessage());
-			}
-
-			model = null;
-		}
-
-		return model;
-	}
-
 	public Model getModelObject(String className) {
-		if (Validator.isNull(className)) {
+		String key = className;
+
+		if (Validator.isNull(key)) {
 			return null;
 		}
 
-		if (cacheNullModelObject.contains(className)) {
+		if (cacheNullModelObject.contains(key)) {
 			return null;
 		}
 
-		Model model = cacheModelObject.get(className);
+		Model model = cacheModelObject.get(key);
 
 		if (model != null) {
 			return model;
@@ -173,11 +89,11 @@ public class ModelFactory {
 		}
 
 		if (model == null) {
-			cacheNullModelObject.add(className);
+			cacheNullModelObject.add(key);
 			return null;
 		}
 
-		cacheModelObject.put(className, model);
+		cacheModelObject.put(key, model);
 		return model;
 	}
 
@@ -194,14 +110,8 @@ public class ModelFactory {
 		return handlerPortletMap.get(handlerAux.getClass().getName());
 	}
 
-	public void setDataComparatorFactory(
-		DataComparatorFactory dataComparatorFactory) {
-
-		this.dataComparatorFactory = dataComparatorFactory;
-	}
-
-	public interface DataComparatorFactory {
-		public DataComparator getDataComparator(Model model);
+	public interface ModelClassFactory {
+		public Class<? extends Model> getModelClass(String className);
 	}
 
 	protected void fillHandlerPortletIdMap() {
@@ -214,30 +124,57 @@ public class ModelFactory {
 		}
 	}
 
+	protected Model getModelObject(Service service) {
+		String classPackageName = service.getClassPackageName();
+		String classSimpleName = service.getClassSimpleName();
+
+		String className = classPackageName + "." + classSimpleName;
+
+		Class<? extends Model> modelClass = modelClassFactory.getModelClass(
+			className);
+
+		Model model = null;
+		try {
+			model = (Model)modelClass.newInstance();
+
+			model.setModelFactory(this);
+
+			model.init(classPackageName, classSimpleName, service);
+
+			if (model.getAttributesName() == null) {
+				throw new Exception(
+					model.getName() + " error retrieving attributes");
+			}
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"getModelObject(" + className + ") EXCEPTION " +
+					e.getClass().getName() + ": " + e.getMessage());
+			}
+
+			model = null;
+		}
+
+		return model;
+	}
+
 	protected Map<String, Model> cacheModelObject =
 		new ConcurrentHashMap<String, Model>();
 	protected Set<String> cacheNullModelObject =
 		new ConcurrentHashSet<String>();
-
-	protected DataComparatorFactory dataComparatorFactory =
-		new DataComparatorFactory() {
-
-		protected DataComparator dataComparator = new DataModelComparator(
-			new String[] {
-				"createDate", "status", "version", "name", "title",
-				"description", "size" });
-
-		@Override
-		public DataComparator getDataComparator(Model model) {
-			return dataComparator;
-		}
-
-	};
-
 	protected Class<? extends Model> defaultModelClass = null;
 	protected Map<String, Set<Portlet>> handlerPortletMap =
 		new HashMap<String, Set<Portlet>>();
-	protected Map<String, Class<? extends Model>> modelClassMap = null;
+
+	protected ModelClassFactory modelClassFactory = new ModelClassFactory() {
+
+		@Override
+		public Class<? extends Model> getModelClass(String className) {
+			return DefaultModel.class;
+		}
+
+	};
 
 	private void addHandlersToMap(List<String> handlerList, Portlet portlet) {
 		for (String handler : handlerList) {

@@ -12,7 +12,7 @@
  * details.
  */
 
-package jorgediazest.util.model;
+package jorgediazest.util.modelquery;
 
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
@@ -25,12 +25,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataComparatorMap;
 import jorgediazest.util.data.DataUtil;
+import jorgediazest.util.model.Model;
 
 /**
  * @author Jorge Díaz
@@ -85,6 +87,22 @@ public class DatabaseUtil {
 		}
 
 		return dataSet;
+	}
+
+	public static Set<Data> queryTableWithCache(
+			Map<String, Set<Data>> dataSetCacheMap, Model model, String name,
+			String[] attributes)
+		throws SQLException {
+
+		Set<Data> dataSetCache = dataSetCacheMap.get(name);
+
+		if (dataSetCache == null) {
+			dataSetCache = queryTable(model, name, attributes);
+
+			dataSetCacheMap.put(name, dataSetCache);
+		}
+
+		return dataSetCache;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(DatabaseUtil.class);

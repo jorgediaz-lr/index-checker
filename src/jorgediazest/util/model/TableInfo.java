@@ -18,15 +18,10 @@ import com.liferay.portal.kernel.util.StringPool;
 
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.data.Data;
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
@@ -39,8 +34,6 @@ public class TableInfo {
 	}
 
 	public TableInfo(Model model, String fieldPrefix) {
-
-		this.model = model;
 
 		Class<?> classLiferayModelImpl =
 			model.getService().getLiferayModelImplClass();
@@ -219,37 +212,6 @@ public class TableInfo {
 		return getName().hashCode();
 	}
 
-	public Set<Data> queryTable() throws Exception {
-		if (dataSetCache == null) {
-			dataSetCache = DatabaseUtil.queryTable(
-				model, name, getAttributesName());
-		}
-
-		return dataSetCache;
-	}
-
-	public Map<Long, List<Data>> queryTable(String mappingAttr)
-		throws Exception {
-
-		Set<Data> dataSet = queryTable();
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
-
-		for (Data data : dataSet) {
-			long key = (Long)data.get(mappingAttr);
-
-			if (!dataMap.containsKey(key)) {
-				List<Data> list = new ArrayList<Data>();
-				list.add(data);
-				dataMap.put(key, list);
-			}
-			else {
-				dataMap.get(key).add(data);
-			}
-		}
-
-		return dataMap;
-	}
-
 	protected String getCreateTableAttributes() {
 		String aux = attributesStr;
 
@@ -265,8 +227,6 @@ public class TableInfo {
 
 	private Object[][] attributesArr = null;
 	private String attributesStr = null;
-	private Set<Data> dataSetCache = null;
-	private Model model = null;
 	private String name = null;
 
 	/**

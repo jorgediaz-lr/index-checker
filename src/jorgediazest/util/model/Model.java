@@ -28,9 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
-import jorgediazest.util.model.ModelFactory.DataComparatorFactory;
 import jorgediazest.util.service.Service;
 
 /**
@@ -39,18 +36,6 @@ import jorgediazest.util.service.Service;
 public interface Model extends Cloneable, Comparable<Model> {
 
 	public void addFilter(Criterion filter);
-
-	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attrRelated, String[] mappings, boolean removeNotMatched,
-			boolean rawData)
-		throws Exception;
-
-	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attrRelated, String[] mappings, boolean removeNotMatched,
-			boolean rawData, Criterion filter)
-		throws Exception;
 
 	public Model clone();
 
@@ -87,58 +72,13 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public Criterion getCompanyGroupFilter(long companyId, long groupId);
 
-	public Map<Long, Data> getData() throws Exception;
-
-	public Map<Long, Data> getData(Criterion filter) throws Exception;
-
-	public Map<Long, Data> getData(String[] attributes) throws Exception;
-
-	public Map<Long, Data> getData(String[] attributes, Criterion filter)
-		throws Exception;
-
-	public Map<Long, Data> getData(String[] attributes, String mapKeyAttribute)
-		throws Exception;
-
-	public Map<Long, Data> getData(
-			String[] attributes, String mapKeyAttribute, Criterion filter)
-		throws Exception;
-
-	public Map<Long, Data> getData(
-			String[] attributesModel, String[] attributesRelated,
-			Criterion filter)
-		throws Exception;
-
-	public Map<Long, Data> getData(
-			String[] attributesModel, String[] attributesRelated,
-			String mapKeyAttribute, Criterion filter)
-		throws Exception;
-
-	public DataComparator getDataComparator();
-
-	public Map<Long, Data> getDataWithCache() throws Exception;
-
-	public Map<Long, Data> getDataWithCache(String[] attributes)
-		throws Exception;
-
-	public Map<Long, Data> getDataWithCache(
-			String[] attributes, String mapKeyAttribute)
-		throws Exception;
-
-	public Map<Long, List<Data>> getDataWithDuplicates(
-		String[] attributes, String mapKeyAttribute)
-	throws Exception;
-
-	public Map<Long, List<Data>> getDataWithDuplicates(
-		String[] attributes, String mapKeyAttribute, Criterion filter)
-	throws Exception;
-
-	public Map<Long, List<Data>> getDataWithDuplicatesCache(
-		String[] attributes, String mapKeyAttribute)
-	throws Exception;
-
 	public String getDisplayName(Locale locale);
 
 	public Criterion getFilter();
+
+	public Model getFilteredModel(Criterion filters);
+
+	public Model getFilteredModel(Criterion filters, String nameSufix);
 
 	public Model getFilteredModel(String filters);
 
@@ -190,8 +130,7 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public boolean hasIndexerEnabled();
 
 	public void init(
-			String classPackageName, String classSimpleName, Service service,
-			DataComparatorFactory dataComparatorFactory)
+			String classPackageName, String classSimpleName, Service service)
 		throws Exception;
 
 	public boolean isAuditedModel();
