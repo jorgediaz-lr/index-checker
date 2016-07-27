@@ -62,13 +62,6 @@ public class ModelQueryFactory {
 		return getModelQueryObject(clazz.getName());
 	}
 
-	public ModelQuery getModelQueryObject(Model model) {
-
-		String className = model.getClassName();
-
-		return getModelQueryObject(className);
-	}
-
 	public ModelQuery getModelQueryObject(String className) {
 		if (Validator.isNull(className)) {
 			return null;
@@ -87,7 +80,7 @@ public class ModelQueryFactory {
 		Model model = modelFactory.getModelObject(className);
 
 		if (model != null) {
-			modelDataAccess = this.getModelQueryObjectAux(model);
+			modelDataAccess = this.getModelQueryObjectNoCached(model);
 		}
 
 		if (modelDataAccess == null) {
@@ -99,21 +92,7 @@ public class ModelQueryFactory {
 		return modelDataAccess;
 	}
 
-	public void setDataComparatorFactory(
-		DataComparatorFactory dataComparatorFactory) {
-
-		this.dataComparatorFactory = dataComparatorFactory;
-	}
-
-	public interface DataComparatorFactory {
-		public DataComparator getDataComparator(ModelQuery model);
-	}
-
-	public interface ModelQueryClassFactory {
-		public Class<? extends ModelQuery> getModelQueryClass(String className);
-	}
-
-	protected ModelQuery getModelQueryObjectAux(Model model) {
+	public ModelQuery getModelQueryObjectNoCached(Model model) {
 
 		String className = model.getClassName();
 
@@ -146,6 +125,20 @@ public class ModelQueryFactory {
 		return modelDataAccess;
 	}
 
+	public void setDataComparatorFactory(
+		DataComparatorFactory dataComparatorFactory) {
+
+		this.dataComparatorFactory = dataComparatorFactory;
+	}
+
+	public interface DataComparatorFactory {
+		public DataComparator getDataComparator(ModelQuery query);
+	}
+
+	public interface ModelQueryClassFactory {
+		public Class<? extends ModelQuery> getModelQueryClass(String className);
+	}
+
 	protected Map<String, ModelQuery> cacheModelObject =
 		new ConcurrentHashMap<String, ModelQuery>();
 	protected Set<String> cacheNullModelObject =
@@ -160,7 +153,7 @@ public class ModelQueryFactory {
 				"description", "size" });
 
 		@Override
-		public DataComparator getDataComparator(ModelQuery model) {
+		public DataComparator getDataComparator(ModelQuery query) {
 			return dataComparator;
 		}
 
