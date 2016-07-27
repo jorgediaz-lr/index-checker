@@ -14,32 +14,27 @@
 
 package jorgediazest.indexchecker.model;
 
+import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
-import jorgediazest.util.modelquery.DefaultModelQuery;
-import jorgediazest.util.modelquery.ModelQuery;
-import jorgediazest.util.modelquery.ModelQueryFactory;
+import jorgediazest.util.model.ModelFactory.ModelClassFactory;
 
 /**
  * @author Jorge Díaz
  */
-public class IndexCheckerModelFactory extends ModelQueryFactory {
+public class IndexCheckerModelFactory extends ModelFactory {
 
-	public IndexCheckerModelFactory(ModelFactory modelFactory)
-		throws Exception {
-
-		super(modelFactory, indexCheckerClassFactory);
+	public IndexCheckerModelFactory() throws Exception {
+		super(indexCheckerClassFactory);
 	}
 
-	protected static ModelQueryClassFactory indexCheckerClassFactory =
-		new ModelQueryClassFactory() {
+	protected static ModelClassFactory indexCheckerClassFactory =
+		new ModelClassFactory() {
 
 		public final String ASSET_ENTRY =
 			"com.liferay.portlet.asset.model.AssetEntry";
 		public final String CALENDAR_BOOKING =
 			"com.liferay.portlet.calendar.model.CalendarBooking";
 		public final String CONTACT = "com.liferay.portal.model.Contact";
-		public final String DL_FILE_ENTRY =
-			"com.liferay.portlet.documentlibrary.model.DLFileEntry";
 		public final String JOURNAL_ARTICLE =
 			"com.liferay.portlet.journal.model.JournalArticle";
 		public final String MB_MESSAGE =
@@ -53,9 +48,7 @@ public class IndexCheckerModelFactory extends ModelQueryFactory {
 			"com.liferay.portlet.wiki.model.WikiPage";
 
 		@Override
-		public Class<? extends ModelQuery> getModelQueryClass(
-			String className) {
-
+		public Class<? extends Model> getModelClass(String className) {
 			if (ASSET_ENTRY.equals(className)) {
 				return NotIndexed.class;
 			}
@@ -64,9 +57,6 @@ public class IndexCheckerModelFactory extends ModelQueryFactory {
 			}
 			else if (CONTACT.equals(className)) {
 				return Contact.class;
-			}
-			else if (DL_FILE_ENTRY.equals(className)) {
-				return DLFileEntry.class;
 			}
 			else if (JOURNAL_ARTICLE.equals(className)) {
 				return JournalArticle.class;
@@ -87,7 +77,7 @@ public class IndexCheckerModelFactory extends ModelQueryFactory {
 				return WikiPage.class;
 			}
 			else {
-				return DefaultModelQuery.class;
+				return IndexCheckerModel.class;
 			}
 		}
 

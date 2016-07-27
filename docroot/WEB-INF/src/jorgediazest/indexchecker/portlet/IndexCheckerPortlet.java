@@ -69,8 +69,9 @@ import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
 import jorgediazest.indexchecker.data.DataIndexCheckerResourceModelComparator;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
+import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
+import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
@@ -98,19 +99,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			new ArrayList<Future<Comparison>>();
 
 		for (ModelQuery mq : mqList) {
-			if (!(mq instanceof IndexCheckerModel)) {
-				continue;
-			}
-
-			IndexCheckerModel icm = (IndexCheckerModel)mq;
-
-			if (!icm.hasIndexerEnabled()) {
+			if (!mq.getModel().hasIndexerEnabled()) {
 				continue;
 			}
 
 			CallableCheckGroupAndModel c =
 				new CallableCheckGroupAndModel(
-					companyId, groupIds, icm, executionMode);
+					companyId, groupIds, (IndexCheckerModelQuery)mq,
+					executionMode);
 
 			futureResultList.add(executor.submit(c));
 		}
@@ -174,8 +170,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						categoriesTagsAttributes).split(","));
 
 			@Override
-			public DataComparator getDataComparator(ModelQuery mq) {
-				Model model = mq.getModel();
+			public DataComparator getDataComparator(ModelQuery query) {
+				Model model = query.getModel();
 
 				if (JournalArticle.class.getName().equals(
 						model.getClassName()) && indexAllVersions) {
@@ -333,15 +329,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
-		IndexCheckerModel model =
-			(IndexCheckerModel)mqFactory.getModelQueryObject(
+		IndexCheckerModelQuery modelQuery =
+			(IndexCheckerModelQuery)mqFactory.getModelQueryObjectNoCached(
 				comparison.getModel());
 
-		if (model == null) {
+		if (modelQuery == null) {
 			return null;
 		}
 
-		return model.reindex(objectsToReindex);
+		return modelQuery.reindex(objectsToReindex);
 	}
 
 	public static Map<Data, String> removeIndexOrphans(
@@ -353,20 +349,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return null;
 		}
 
-		IndexCheckerModel model =
-			(IndexCheckerModel)mqFactory.getModelQueryObject(
+		IndexCheckerModelQuery modelQuery =
+			(IndexCheckerModelQuery)mqFactory.getModelQueryObjectNoCached(
 				comparison.getModel());
 
-		if (model == null) {
+		if (modelQuery == null) {
 			return null;
 		}
 
-		return model.deleteAndCheck(indexOnlyData);
+		return modelQuery.deleteAndCheck(indexOnlyData);
 	}
 
 	public ModelQueryFactory createModelQueryFactory() throws Exception {
-		ModelFactory modelFactory = new ModelFactory();
-		return new IndexCheckerModelFactory(modelFactory);
+		ModelFactory modelFactory = new IndexCheckerModelFactory();
+		return new IndexCheckerModelQueryFactory(modelFactory);
 	}
 
 	public void doView(

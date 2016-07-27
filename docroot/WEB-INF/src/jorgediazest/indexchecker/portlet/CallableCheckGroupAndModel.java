@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.model.IndexCheckerModel;
+import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
@@ -81,12 +81,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	}
 
 	public CallableCheckGroupAndModel(
-		long companyId, List<Long> groupIds, IndexCheckerModel model,
+		long companyId, List<Long> groupIds, IndexCheckerModelQuery query,
 		Set<ExecutionMode> executionMode) {
 
 		this.companyId = companyId;
 		this.groupIds = groupIds;
-		this.mq = model;
+		this.mq = query;
 		this.executionMode = executionMode;
 	}
 
@@ -168,6 +168,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	@Override
 	public Comparison call() throws Exception {
 
+		Model model = mq.getModel();
+
 		boolean oldIgnoreCase = DataUtil.getIgnoreCase();
 
 		try {
@@ -185,7 +187,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				}
 
 				_log.info(
-					"Model: " + mq.getModel().getName() + " - CompanyId: " +
+					"Model: " + model.getName() + " - CompanyId: " +
 						companyId + " - GroupId: " + strGroupIds);
 			}
 
@@ -194,7 +196,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			}
 
 			if ((groupIds != null) && (!groupIds.contains(0L) &&
-				 !mq.getModel().hasAttribute("groupId"))) {
+				 !model.hasAttribute("groupId"))) {
 
 				return null;
 			}
@@ -205,9 +207,9 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				mq).toArray(new String[0]);
 
 			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
-				mq.getModel()).toArray(new String[0]);
+				model).toArray(new String[0]);
 
-			Set<Model> relatedModels = calculateRelatedModels(mq.getModel());
+			Set<Model> relatedModels = calculateRelatedModels(model);
 
 			Set<Data> liferayData = new HashSet<Data>(
 				mq.getData(
@@ -241,11 +243,11 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				ExecutionMode.SHOW_INDEX);
 
 			return ComparisonUtil.getComparison(
-				mq.getModel(), liferayData, indexData, showBothExact,
-				showBothNotExact, showOnlyLiferay, showOnlyIndex);
+				model, liferayData, indexData, showBothExact, showBothNotExact,
+				showOnlyLiferay, showOnlyIndex);
 		}
 		catch (Throwable t) {
-			return ComparisonUtil.getError(mq.getModel(), t);
+			return ComparisonUtil.getError(model, t);
 		}
 		finally {
 			DataUtil.setIgnoreCase(oldIgnoreCase);
@@ -260,6 +262,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	private long companyId = -1;
 	private Set<ExecutionMode> executionMode = null;
 	private List<Long> groupIds = null;
-	private IndexCheckerModel mq = null;
+	private IndexCheckerModelQuery mq = null;
 
 }

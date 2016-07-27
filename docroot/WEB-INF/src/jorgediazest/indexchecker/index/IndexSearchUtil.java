@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import jorgediazest.indexchecker.model.IndexCheckerModel;
-
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.modelquery.ModelQuery;
@@ -51,18 +49,14 @@ public class IndexSearchUtil {
 			int indexSearchLimit = Math.max(20000, getIndexSearchLimit());
 
 			for (ModelQuery mq : modelList) {
-				if (mq instanceof IndexCheckerModel) {
-					if (!((IndexCheckerModel)mq).hasIndexerEnabled()) {
-						continue;
-					}
-				}
+				Model model = mq.getModel();
 
-				if (!mq.getModel().hasIndexerEnabled()) {
+				if ((model == null) || !model.hasIndexerEnabled()) {
 					continue;
 				}
 
 				indexSearchLimit = Math.max(
-					indexSearchLimit, (int)mq.getModel().count() * 2);
+					indexSearchLimit, (int)model.count() * 2);
 			}
 
 			setIndexSearchLimit(indexSearchLimit);
