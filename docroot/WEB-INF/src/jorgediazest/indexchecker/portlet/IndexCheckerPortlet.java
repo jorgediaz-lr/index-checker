@@ -744,10 +744,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		List<Long> groupIds = new ArrayList<Long>();
 
-		for (int i = 0; i < filterGroupIdArr.length; i++) {
-			if ("0".equals(filterGroupIdArr[i])) {
-				groupIds.add(0L);
-				break;
+		if (filterGroupIdArr != null) {
+			for (String filterGroupId : filterGroupIdArr) {
+				if ("0".equals(filterGroupId)) {
+					groupIds.add(0L);
+					break;
+				}
 			}
 		}
 
