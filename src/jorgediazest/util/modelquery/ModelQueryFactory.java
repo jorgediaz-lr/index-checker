@@ -62,67 +62,40 @@ public class ModelQueryFactory {
 		return getModelQueryObject(clazz.getName());
 	}
 
-	public ModelQuery getModelQueryObject(String className) {
-		if (Validator.isNull(className)) {
+	public ModelQuery getModelQueryObject(Model model) {
+		if ((model == null) || Validator.isNull(model.getClassName())) {
 			return null;
 		}
 
-		if (cacheNullModelObject.contains(className)) {
+		if (cacheNullModelObject.contains(model.getClassName())) {
 			return null;
 		}
 
-		ModelQuery modelDataAccess = cacheModelObject.get(className);
+		ModelQuery modelQuery = cacheModelObject.get(model);
 
-		if (modelDataAccess != null) {
-			return modelDataAccess;
+		if (modelQuery != null) {
+			return modelQuery;
 		}
 
-		Model model = modelFactory.getModelObject(className);
+		modelQuery = getModelQueryObjectNoCached(model);
 
-		if (model != null) {
-			modelDataAccess = this.getModelQueryObjectNoCached(model);
-		}
-
-		if (modelDataAccess == null) {
-			cacheNullModelObject.add(className);
+		if (modelQuery == null) {
+			cacheNullModelObject.add(model.getClassName());
 			return null;
 		}
 
-		cacheModelObject.put(className, modelDataAccess);
-		return modelDataAccess;
+		cacheModelObject.put(model, modelQuery);
+		return modelQuery;
 	}
 
-	public ModelQuery getModelQueryObjectNoCached(Model model) {
+	public ModelQuery getModelQueryObject(String className) {
+		Model model = modelFactory.getModelObject(className);
 
-		String className = model.getClassName();
-
-		Class<? extends ModelQuery> modelClass = null;
-
-		ModelQuery modelDataAccess = null;
-		try {
-			modelClass = mqClassFactory.getModelQueryClass(className);
-
-			if (modelClass == null) {
-				return null;
-			}
-
-			modelDataAccess = (ModelQuery)modelClass.newInstance();
-
-			modelDataAccess.setModelQueryFactory(this);
-
-			modelDataAccess.init(model, dataComparatorFactory);
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"getModelObject(" + className + ") EXCEPTION " +
-					e.getClass().getName() + ": " + e.getMessage());
-			}
-
-			modelDataAccess = null;
+		if (model == null) {
+			return null;
 		}
 
-		return modelDataAccess;
+		return this.getModelQueryObject(model);
 	}
 
 	public void setDataComparatorFactory(
@@ -139,8 +112,41 @@ public class ModelQueryFactory {
 		public Class<? extends ModelQuery> getModelQueryClass(String className);
 	}
 
-	protected Map<String, ModelQuery> cacheModelObject =
-		new ConcurrentHashMap<String, ModelQuery>();
+	protected ModelQuery getModelQueryObjectNoCached(Model model) {
+
+		String className = model.getClassName();
+
+		Class<? extends ModelQuery> modelClass = null;
+
+		ModelQuery modelQuery = null;
+		try {
+			modelClass = mqClassFactory.getModelQueryClass(className);
+
+			if (modelClass == null) {
+				return null;
+			}
+
+			modelQuery = (ModelQuery)modelClass.newInstance();
+
+			modelQuery.setModelQueryFactory(this);
+
+			modelQuery.init(model, dataComparatorFactory);
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"getModelObject(" + className + ") EXCEPTION " +
+					e.getClass().getName() + ": " + e.getMessage());
+			}
+
+			modelQuery = null;
+		}
+
+		return modelQuery;
+	}
+
+	protected Map<Model, ModelQuery> cacheModelObject =
+		new ConcurrentHashMap<Model, ModelQuery>();
 	protected Set<String> cacheNullModelObject =
 		new ConcurrentHashSet<String>();
 
