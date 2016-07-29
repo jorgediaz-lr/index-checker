@@ -33,6 +33,7 @@ import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataComparatorMap;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -40,7 +41,7 @@ import jorgediazest.util.model.Model;
 public class DatabaseUtil {
 
 	public static Set<Data> queryTable(
-			Model model, String name, String[] attributesName)
+			Model model, TableInfo tableInfo, String[] attributesName)
 		throws SQLException {
 
 		Set<Data> dataSet = new HashSet<Data>();
@@ -58,7 +59,8 @@ public class DatabaseUtil {
 				attributes += ", " + (String) attributesName[i];
 			}
 
-			String sql = "SELECT " + attributes + " FROM " + name;
+			String sql =
+				"SELECT " + attributes + " FROM " + tableInfo.getName();
 
 			sql = PortalUtil.transformSQL(sql);
 
@@ -78,7 +80,8 @@ public class DatabaseUtil {
 				}
 
 				Data data = DataUtil.createDataObject(
-					model, dataComparatorMap, attributesName, result);
+					model, tableInfo, dataComparatorMap, attributesName,
+					result);
 				dataSet.add(data);
 			}
 		}
@@ -90,16 +93,16 @@ public class DatabaseUtil {
 	}
 
 	public static Set<Data> queryTableWithCache(
-			Map<String, Set<Data>> dataSetCacheMap, Model model, String name,
-			String[] attributes)
+			Map<String, Set<Data>> dataSetCacheMap, Model model,
+			TableInfo tableInfo, String[] attributes)
 		throws SQLException {
 
-		Set<Data> dataSetCache = dataSetCacheMap.get(name);
+		Set<Data> dataSetCache = dataSetCacheMap.get(tableInfo.getName());
 
 		if (dataSetCache == null) {
-			dataSetCache = queryTable(model, name, attributes);
+			dataSetCache = queryTable(model, tableInfo, attributes);
 
-			dataSetCacheMap.put(name, dataSetCache);
+			dataSetCacheMap.put(tableInfo.getName(), dataSetCache);
 		}
 
 		return dataSetCache;

@@ -29,17 +29,20 @@ import java.sql.Types;
 
 import java.text.DateFormat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.TableInfo;
 import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
@@ -375,10 +378,14 @@ public class DataUtil {
 	}
 
 	public static Data createDataObject(
-		Model model, DataComparator dataComparator, String[] attributes,
-		Object[] result) {
+		Model model, Collection<TableInfo> tableInfoCol,
+		DataComparator dataComparator, String[] attributes, Object[] result) {
 
 		Data data = new Data(model, dataComparator);
+
+		if (tableInfoCol != null) {
+			data.addTableInfo(tableInfoCol);
+		}
 
 		int i = 0;
 
@@ -387,6 +394,27 @@ public class DataUtil {
 		}
 
 		return data;
+	}
+
+	public static Data createDataObject(
+		Model model, DataComparator dataComparator, String[] attributes,
+		Object[] result) {
+
+		return createDataObject(
+			model, (Collection<TableInfo>)null, dataComparator, attributes,
+			result);
+	}
+
+	public static Data createDataObject(
+		Model model, TableInfo tableInfo, DataComparator dataComparator,
+		String[] attributes, Object[] result) {
+
+		List<TableInfo> tableInfoList = new ArrayList<TableInfo>();
+
+		tableInfoList.add(tableInfo);
+
+		return createDataObject(
+			model, tableInfoList, dataComparator, attributes, result);
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {

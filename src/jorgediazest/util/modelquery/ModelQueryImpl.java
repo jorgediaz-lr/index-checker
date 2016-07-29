@@ -523,8 +523,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 	public Set<Data> queryTable(TableInfo tableInfo) throws Exception {
 		return DatabaseUtil.queryTableWithCache(
-			dataSetCacheMap, model, tableInfo.getName(),
-			tableInfo.getAttributesName());
+			dataSetCacheMap, model, tableInfo, tableInfo.getAttributesName());
 	}
 
 	public Map<Long, List<Data>> queryTable(
@@ -535,7 +534,11 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
 
 		for (Data data : dataSet) {
-			long key = (Long)data.get(mappingAttr);
+			Long key = (Long)data.get(mappingAttr);
+
+			if (key == null) {
+				continue;
+			}
 
 			if (!dataMap.containsKey(key)) {
 				List<Data> list = new ArrayList<Data>();

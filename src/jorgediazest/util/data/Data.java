@@ -50,9 +50,11 @@ public class Data implements Comparable<Data> {
 
 		this.tableInfoSet.add(model.getTableInfo());
 
-		for (TableInfo tableInfo : model.getTableInfoMappings().values()) {
-			this.tableInfoSet.add(tableInfo);
-		}
+		this.addTableInfo(model.getTableInfoMappings().values());
+	}
+
+	public void addTableInfo(Collection<TableInfo> tableInfoCol) {
+		this.tableInfoSet.addAll(tableInfoCol);
 	}
 
 	@Override
