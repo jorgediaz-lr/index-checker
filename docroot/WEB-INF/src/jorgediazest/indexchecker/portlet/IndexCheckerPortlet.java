@@ -330,7 +330,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		IndexCheckerModelQuery modelQuery =
-			(IndexCheckerModelQuery)mqFactory.getModelQueryObjectNoCached(
+			(IndexCheckerModelQuery)mqFactory.getModelQueryObject(
 				comparison.getModel());
 
 		if (modelQuery == null) {
@@ -350,7 +350,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		IndexCheckerModelQuery modelQuery =
-			(IndexCheckerModelQuery)mqFactory.getModelQueryObjectNoCached(
+			(IndexCheckerModelQuery)mqFactory.getModelQueryObject(
 				comparison.getModel());
 
 		if (modelQuery == null) {
