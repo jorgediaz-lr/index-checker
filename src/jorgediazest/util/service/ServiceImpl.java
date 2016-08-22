@@ -64,11 +64,26 @@ public abstract class ServiceImpl implements Service {
 	}
 
 	public Class<?> getLiferayModelImplClass() {
-		if (liferayModelImplClass == null) {
-			DynamicQuery dynamicQuery = this.newDynamicQuery();
+		if (liferayModelImplClassIsNull) {
+			return null;
+		}
 
-			return ServiceUtil.getLiferayModelImplClass(
-				getClassLoader(), dynamicQuery);
+		if (liferayModelImplClass == null) {
+			String liferayModelImpl = ServiceUtil.getLiferayModelImplClassName(
+				this);
+
+			if (liferayModelImpl == null) {
+				liferayModelImplClassIsNull = true;
+				return null;
+			}
+
+			liferayModelImplClass = ServiceUtil.getLiferayModelImplClass(
+				getClassLoader(), liferayModelImpl);
+
+			if (liferayModelImplClass == null) {
+				liferayModelImplClassIsNull = true;
+				return null;
+			}
 		}
 
 		return liferayModelImplClass;
@@ -122,6 +137,7 @@ public abstract class ServiceImpl implements Service {
 	protected String classSimpleName = null;
 	protected Criterion filter = null;
 	protected Class<?> liferayModelImplClass = null;
+	protected boolean liferayModelImplClassIsNull = false;
 
 	private static Log _log = LogFactoryUtil.getLog(ServiceImpl.class);
 

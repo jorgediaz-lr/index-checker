@@ -19,10 +19,13 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.service.BaseLocalService;
 import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,10 +38,11 @@ import jorgediazest.util.reflection.ReflectionUtil;
 public class ServiceUtil {
 
 	public static Class<?> getLiferayModelImplClass(
-		ClassLoader classloader, DynamicQuery dynamicQuery) {
+		ClassLoader classloader, String liferayModelImpl) {
 
-		String liferayModelImpl = ReflectionUtil.getWrappedModelImpl(
-			dynamicQuery);
+		if (Validator.isNull(liferayModelImpl)) {
+			return null;
+		}
 
 		liferayModelImpl = liferayModelImpl + "ModelImpl";
 
@@ -55,6 +59,40 @@ public class ServiceUtil {
 
 			throw new RuntimeException(cnfe);
 		}
+	}
+
+	public static String getLiferayModelImplClassName(Service service) {
+		DynamicQuery dynamicQuery = service.newDynamicQuery();
+
+		String liferayModelImpl = ReflectionUtil.getWrappedModelImpl(
+			dynamicQuery);
+
+		if (liferayModelImpl != null) {
+			return liferayModelImpl;
+		}
+
+		try {
+			dynamicQuery.setLimit(0, 1);
+
+			List<?> list = service.executeDynamicQuery(dynamicQuery);
+
+			Object obj = null;
+
+			if ((list != null) && (list.size() > 0)) {
+				obj = list.get(0);
+			}
+
+			if (obj instanceof ClassedModel) {
+				return obj.getClass().getName();
+			}
+		}
+		catch (Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(e, e);
+			}
+		}
+
+		return null;
 	}
 
 	public static Service getService(
@@ -96,6 +134,10 @@ public class ServiceUtil {
 		throws ClassNotFoundException {
 
 		Class<?> clazz = null;
+
+		if (Validator.isNull(className)) {
+			className = StringPool.NULL;
+		}
 
 		try {
 			clazz = PortalClassLoaderUtil.getClassLoader().loadClass(className);
