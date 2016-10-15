@@ -70,6 +70,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			Arrays.asList(mq.getDataComparator().getExactAttributes()));
 
 		if (DLFileEntry.class.getName().equals(model.getClassName())) {
+			attributesToCheck.add("repositoryId");
 			attributesToCheck.add("version");
 		}
 
