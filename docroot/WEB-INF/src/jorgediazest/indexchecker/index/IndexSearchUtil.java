@@ -56,7 +56,7 @@ public class IndexSearchUtil {
 				}
 
 				indexSearchLimit = Math.max(
-					indexSearchLimit, (int)model.count() * 2);
+					indexSearchLimit, (int)(model.count() * 1.2));
 			}
 
 			setIndexSearchLimit(indexSearchLimit);
