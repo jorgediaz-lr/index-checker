@@ -16,7 +16,6 @@ package jorgediazest.indexchecker.model;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
-import jorgediazest.util.model.ModelFactory.ModelClassFactory;
 
 /**
  * @author Jorge Díaz
