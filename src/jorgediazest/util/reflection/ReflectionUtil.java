@@ -325,13 +325,53 @@ public class ReflectionUtil {
 		return null;
 	}
 
+	public static String getWrappedStaticString(
+			Class<?> clazz, String methodName) {
+
+		if (clazz == null) {
+			return null;
+		}
+
+		try {
+			String result = getWrappedString(clazz, null, methodName);
+
+			if (result != null) {
+				return result;
+			}
+		}
+		catch (Throwable t) {
+		}
+
+		return clazz.toString();
+	}
+
 	public static String getWrappedString(Object object, String methodName) {
 		if (object == null) {
 			return null;
 		}
 
 		try {
-			Class<? extends Object> clazz = object.getClass();
+			String result = getWrappedString(
+				object.getClass(), object, methodName);
+
+			if (result != null) {
+				return result;
+			}
+		}
+		catch (Throwable t) {
+		}
+
+		return object.toString();
+	}
+
+	public static String getWrappedString(
+		Class<? extends Object> clazz, Object object, String methodName) {
+
+		if (clazz == null) {
+			return null;
+		}
+
+		try {
 			Method method = clazz.getMethod(methodName);
 
 			if (method != null) {
@@ -341,7 +381,17 @@ public class ReflectionUtil {
 		catch (Throwable t) {
 		}
 
-		return object.toString();
+		try {
+			Field field = clazz.getField(methodName);
+
+			if (field != null) {
+				return field.get(object).toString();
+			}
+		}
+		catch (Throwable t) {
+		}
+
+		return null;
 	}
 
 	public static Object unWrapProxy(Object object) {
