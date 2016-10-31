@@ -27,7 +27,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserPersonalSite;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
@@ -1177,8 +1180,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	private static String[] ignoreClassNames = new String[] {
 		"com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry",
-		"com.liferay.portal.kernel.repository.model.FileEntry",
-		"com.liferay.portal.kernel.repository.model.Folder",
-		"com.liferay.portal.model.UserPersonalSite"};
+		UserPersonalSite.class.getName(), FileEntry.class.getName(),
+		Folder.class.getName()};
 
 }

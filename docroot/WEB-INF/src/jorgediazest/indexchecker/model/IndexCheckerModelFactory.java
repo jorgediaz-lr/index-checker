@@ -30,21 +30,23 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		new ModelClassFactory() {
 
 		public final String ASSET_ENTRY =
-			"com.liferay.portlet.asset.model.AssetEntry";
+			"com.liferay.asset.kernel.model.AssetEntry";
 		public final String CALENDAR_BOOKING =
-			"com.liferay.portlet.calendar.model.CalendarBooking";
-		public final String CONTACT = "com.liferay.portal.model.Contact";
+			"com.liferay.calendar.model.CalendarBooking";
+		public final String CONTACT = "com.liferay.portal.kernel.model.Contact";
+		public final String DL_FILE_ENTRY_METADATA =
+			"com.liferay.document.library.kernel.model.DLFileEntryMetadata";
+		public final String EXPORT_IMPORT_CONFIGURATION =
+			"com.liferay.exportimport.kernel.model.ExportImportConfiguration";
 		public final String JOURNAL_ARTICLE =
-			"com.liferay.portlet.journal.model.JournalArticle";
+			"com.liferay.journal.model.JournalArticle";
 		public final String MB_MESSAGE =
-			"com.liferay.portlet.messageboards.model.MBMessage";
+			"com.liferay.message.boards.kernel.model.MBMessage";
 		public final String TRASH_ENTRY =
-			"com.liferay.portlet.trash.model.TrashEntry";
-		public final String USER = "com.liferay.portal.model.User";
-		public final String WIKI_NODE =
-			"com.liferay.portlet.wiki.model.WikiNode";
-		public final String WIKI_PAGE =
-			"com.liferay.portlet.wiki.model.WikiPage";
+			"com.liferay.trash.kernel.model.TrashEntry";
+		public final String USER = "com.liferay.portal.kernel.model.User";
+		public final String WIKI_NODE = "com.liferay.wiki.model.WikiNode";
+		public final String WIKI_PAGE = "com.liferay.wiki.model.WikiPage";
 
 		@Override
 		public Class<? extends Model> getModelClass(String className) {
@@ -56,6 +58,12 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			}
 			else if (CONTACT.equals(className)) {
 				return Contact.class;
+			}
+			else if (DL_FILE_ENTRY_METADATA.equals(className)) {
+				return NotIndexed.class;
+			}
+			else if (EXPORT_IMPORT_CONFIGURATION.equals(className)) {
+				return ExportImportConfiguration.class;
 			}
 			else if (JOURNAL_ARTICLE.equals(className)) {
 				return JournalArticle.class;

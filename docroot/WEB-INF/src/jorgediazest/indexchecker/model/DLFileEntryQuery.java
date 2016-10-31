@@ -76,7 +76,7 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 
 		String permissionsClassName = this.getPermissionsClassName(data);
 
-		if ("com.liferay.portlet.documentlibrary.model.DLFileEntry".equals(
+		if ("com.liferay.document.library.kernel.model.DLFileEntry".equals(
 				permissionsClassName)) {
 
 			return super.getPermissionsClassPK(data);
@@ -86,9 +86,9 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 	}
 
 	protected static String[] validPermissionClassNames = new String[] {
-		"com.liferay.portlet.blogs.model.BlogsEntry",
-		"com.liferay.portlet.documentlibrary.model.DLFileEntry",
-		"com.liferay.portlet.messageboards.model.MBMessage",
-		"com.liferay.portlet.wiki.model.WikiPage"};
+		"com.liferay.blogs.model.BlogsEntry",
+		"com.liferay.document.library.kernel.model.DLFileEntry",
+		"com.liferay.message.boards.kernel.model.MBMessage",
+		"com.liferay.wiki.model.WikiPage"};
 
 }

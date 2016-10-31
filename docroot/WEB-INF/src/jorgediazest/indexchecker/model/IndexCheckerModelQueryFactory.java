@@ -33,11 +33,11 @@ public class IndexCheckerModelQueryFactory extends ModelQueryFactory {
 		new ModelQueryClassFactory() {
 
 		public final String DL_FILE_ENTRY =
-			"com.liferay.portlet.documentlibrary.model.DLFileEntry";
+			"com.liferay.document.library.kernel.model.DLFileEntry";
 		public final String JOURNAL_ARTICLE =
-			"com.liferay.portlet.journal.model.JournalArticle";
+			"com.liferay.journal.model.JournalArticle";
 		public final String MB_MESSAGE =
-			"com.liferay.portlet.messageboards.model.MBMessage";
+			"com.liferay.message.boards.kernel.model.MBMessage";
 
 		@Override
 		public Class<? extends ModelQuery> getModelQueryClass(
