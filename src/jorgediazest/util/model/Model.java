@@ -117,6 +117,8 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public TableInfo getTableInfo();
 
+	public TableInfo getTableInfo(String attribute);
+
 	public Map<String, TableInfo> getTableInfoMappings();
 
 	public TrashHandler getTrashHandler();

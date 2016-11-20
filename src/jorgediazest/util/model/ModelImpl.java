@@ -136,6 +136,10 @@ public abstract class ModelImpl implements Model {
 
 	public Criterion generateCriterionFilter(String stringFilter) {
 
+		if (Validator.isNull(stringFilter)) {
+			return null;
+		}
+
 		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
 
 		String[] allFiltersArr = stringFilter.split(",");
@@ -353,6 +357,10 @@ public abstract class ModelImpl implements Model {
 
 		Criterion filter = this.generateCriterionFilter(filters);
 
+		if (filter == null) {
+			return null;
+		}
+
 		return getFilteredModel(filter, nameSufix);
 	}
 
@@ -523,6 +531,14 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return tableInfo;
+	}
+
+	public TableInfo getTableInfo(String attribute) {
+		if (hasAttribute(attribute)) {
+			return getTableInfo();
+		}
+
+		return tableInfoMappings.get(attribute);
 	}
 
 	public Map<String, TableInfo> getTableInfoMappings() {
