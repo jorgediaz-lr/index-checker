@@ -489,8 +489,8 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		}
 
 		if ("MappingTable".equals(mappingAttr)) {
-			TableInfo tableInfo =
-				mq.getModel().getTableInfoMappings().get(attributes[0]);
+			TableInfo tableInfo = mq.getModel().getTableInfo(attributes[0]);
+
 			return queryTable(
 				tableInfo, mq.getModel().getPrimaryKeyAttribute());
 		}
@@ -522,8 +522,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	}
 
 	public Set<Data> queryTable(TableInfo tableInfo) throws Exception {
-		return DatabaseUtil.queryTableWithCache(
-			dataSetCacheMap, model, tableInfo, tableInfo.getAttributesName());
+		return queryTable(tableInfo, tableInfo.getAttributesName());
 	}
 
 	public Map<Long, List<Data>> queryTable(
@@ -551,6 +550,13 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		}
 
 		return dataMap;
+	}
+
+	public Set<Data> queryTable(TableInfo tableInfo, String[] attributesName)
+		throws Exception {
+
+		return DatabaseUtil.queryTableWithCache(
+			dataSetCacheMap, model, tableInfo, attributesName);
 	}
 
 	public void setModelQueryFactory(ModelQueryFactory mqFactory) {
