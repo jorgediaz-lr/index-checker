@@ -538,7 +538,7 @@ public abstract class ModelImpl implements Model {
 			return getTableInfo();
 		}
 
-		return tableInfoMappings.get(attribute);
+		return getTableInfoMappings().get(attribute);
 	}
 
 	public Map<String, TableInfo> getTableInfoMappings() {
