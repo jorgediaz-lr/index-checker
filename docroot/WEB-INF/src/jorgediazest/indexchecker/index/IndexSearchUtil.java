@@ -43,14 +43,24 @@ import jorgediazest.util.reflection.ReflectionUtil;
 public class IndexSearchUtil {
 
 	public static void autoAdjustIndexSearchLimit(
-		Collection<ModelQuery> modelList) {
+		Collection<ModelQuery> modelQueryList) {
+
+		List<Model> modelList = new ArrayList<Model>();
+
+		for (ModelQuery modelQuery : modelQueryList) {
+			modelList.add(modelQuery.getModel());
+		}
+
+		autoAdjustIndexSearchLimitModelList(modelList);
+	}
+
+	public static void autoAdjustIndexSearchLimitModelList(
+		Collection<Model> modelList) {
 
 		try {
 			int indexSearchLimit = Math.max(20000, getIndexSearchLimit());
 
-			for (ModelQuery mq : modelList) {
-				Model model = mq.getModel();
-
+			for (Model model : modelList) {
 				if ((model == null) || !model.hasIndexerEnabled()) {
 					continue;
 				}

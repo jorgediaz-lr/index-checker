@@ -22,7 +22,7 @@ import jorgediazest.util.model.ModelFactory;
  */
 public class IndexCheckerModelFactory extends ModelFactory {
 
-	public IndexCheckerModelFactory() throws Exception {
+	public IndexCheckerModelFactory() {
 		super(indexCheckerClassFactory);
 	}
 

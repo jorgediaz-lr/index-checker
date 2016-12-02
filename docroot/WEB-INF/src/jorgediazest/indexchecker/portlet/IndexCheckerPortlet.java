@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -388,6 +389,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		renderRequest.setAttribute("filterGroupId", filterGroupId);
 
+		try {
+			List<Model> modelList = this.getModelList();
+			renderRequest.setAttribute("modelList", modelList);
+		}
+		catch (SystemException se) {
+			throw new PortletException(se);
+		}
+
 		int numberOfThreads = getNumberOfThreads(renderRequest);
 		renderRequest.setAttribute("numberOfThreads", numberOfThreads);
 
@@ -401,13 +410,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
 
-		String[] filterClassNameArr = null;
-		String filterClassName = ParamUtil.getString(
-			request, "filterClassName");
+		String[] filterClassNameArr = ParamUtil.getParameterValues(
+			request,"filterClassName");
 
-		if (Validator.isNotNull(filterClassName)) {
-			filterClassNameArr = filterClassName.split(",");
-		}
+		response.setRenderParameter("filterClassName", new String[0]);
+
+		request.setAttribute(
+			"filterClassNameSelected", SetUtil.fromArray(filterClassNameArr));
 
 		String[] filterGroupIdArr = null;
 		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
@@ -490,13 +499,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
 
-		String[] filterClassNameArr = null;
-		String filterClassName = ParamUtil.getString(
-			request, "filterClassName");
+		String[] filterClassNameArr = ParamUtil.getParameterValues(
+			request,"filterClassName");
 
-		if (Validator.isNotNull(filterClassName)) {
-			filterClassNameArr = filterClassName.split(",");
-		}
+		response.setRenderParameter("filterClassName", new String[0]);
+
+		request.setAttribute(
+			"filterClassNameSelected", SetUtil.fromArray(filterClassNameArr));
 
 		String[] filterGroupIdArr = null;
 		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
@@ -594,13 +603,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		EnumSet<ExecutionMode> executionMode = getExecutionMode(request);
 
-		String[] filterClassNameArr = null;
-		String filterClassName = ParamUtil.getString(
-			request, "filterClassName");
+		String[] filterClassNameArr = ParamUtil.getParameterValues(
+			request,"filterClassName");
 
-		if (Validator.isNotNull(filterClassName)) {
-			filterClassNameArr = filterClassName.split(",");
-		}
+		response.setRenderParameter("filterClassName", new String[0]);
+
+		request.setAttribute(
+			"filterClassNameSelected", SetUtil.fromArray(filterClassNameArr));
 
 		String[] filterGroupIdArr = null;
 		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
@@ -698,6 +707,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	public List<String> getClassNames(String[] filterClassNameArr)
 		throws SystemException {
 
+		if ((filterClassNameArr == null)||(filterClassNameArr.length == 0)||
+			((filterClassNameArr.length == 1) &&
+			 Validator.isNull(filterClassNameArr[0]))) {
+
+			filterClassNameArr = null;
+		}
+
 		List<String> allClassName =
 			ModelUtil.getClassNameValues(
 				ClassNameLocalServiceUtil.getClassNames(
@@ -716,7 +732,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 
 			for (String filterClassName : filterClassNameArr) {
-				if (className.contains(filterClassName)) {
+				if (className.equals(filterClassName)) {
 					classNames.add(className);
 					break;
 				}
@@ -770,6 +786,32 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return groupIds;
+	}
+
+	public List<Model> getModelList() throws SystemException {
+		return getModelList(null);
+	}
+
+	public List<Model> getModelList(String[] filterClassNameArr)
+		throws SystemException {
+
+		List<String> classNames = getClassNames(filterClassNameArr);
+
+		ModelFactory modelFactory = new IndexCheckerModelFactory();
+
+		List<Model> modelList = new ArrayList<Model>();
+
+		for (String className : classNames) {
+			Model model = modelFactory.getModelObject(className);
+
+			if ((model == null) || !model.hasIndexerEnabled()) {
+				continue;
+			}
+
+			modelList.add(model);
+		}
+
+		return modelList;
 	}
 
 	public int getNumberOfThreads(ActionRequest actionRequest) {
@@ -846,12 +888,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		super.init();
 
 		try {
-			ModelQueryFactory mqFactory = createModelQueryFactory();
-			List<String> classNames = getClassNames();
+			List<Model> modelList = getModelList();
 
-			List<ModelQuery> mqList = getModelQueryList(mqFactory, classNames);
-
-			IndexSearchUtil.autoAdjustIndexSearchLimit(mqList);
+			IndexSearchUtil.autoAdjustIndexSearchLimitModelList(modelList);
 		}
 		catch (Exception e) {
 			_log.error(e, e);

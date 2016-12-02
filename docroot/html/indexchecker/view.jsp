@@ -37,9 +37,12 @@
 <%@ page import="com.liferay.portal.model.Company" %>
 
 <%@ page import="java.util.EnumSet" %>
+<%@ page import="java.util.HashSet" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Locale" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Map.Entry" %>
+<%@ page import="java.util.Set" %>
 
 <%@ page import="javax.portlet.PortletURL" %>
 
@@ -48,6 +51,7 @@
 <%@ page import="jorgediazest.indexchecker.portlet.IndexCheckerPortlet" %>
 
 <%@ page import="jorgediazest.util.data.Comparison" %>
+<%@ page import="jorgediazest.util.model.Model" %>
 <%@ page import="jorgediazest.util.output.OutputUtils" %>
 
 <portlet:defineObjects />
@@ -69,6 +73,12 @@
 	Map<Company, Long> companyProcessTime = (Map<Company, Long>) request.getAttribute("companyProcessTime");
 	Map<Company, Map<Long, List<Comparison>>> companyResultDataMap = (Map<Company, Map<Long, List<Comparison>>>) request.getAttribute("companyResultDataMap");
 	Map<Company, String> companyError = (Map<Company, String>) request.getAttribute("companyError");
+	List<Model> modelList = (List<Model>) request.getAttribute("modelList");
+	Set<String> filterClassNameSelected = (Set<String>) request.getAttribute("filterClassNameSelected");
+	if (filterClassNameSelected == null) {
+		filterClassNameSelected = new HashSet<String>();
+	}
+	Locale locale = renderRequest.getLocale();
 %>
 
 <aui:form action="<%= executeCheckURL %>" method="POST" name="fm">
@@ -78,7 +88,27 @@
 				<aui:option selected="true" value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
 				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
 			</aui:select>
-			<aui:input helpMessage="filter-class-name-help" name="filterClassName" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value="" />
+
+			<aui:select helpMessage="filter-class-name-help" multiple="true" name="filterClassName" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 200px;">
+				<aui:option selected="<%= filterClassNameSelected.isEmpty() %>" value=""><liferay-ui:message key="all" /></aui:option>
+				<aui:option disabled="true" value="-">--------</aui:option>
+
+<%
+				for (Model model : modelList) {
+					String className = model.getClassName();
+					String displayName = model.getDisplayName(locale);
+					if (Validator.isNull(displayName)) {
+						displayName = className;
+					}
+%>
+
+					<aui:option selected="<%= filterClassNameSelected.contains(className) %>" value="<%= className %>"><%= displayName %></aui:option>
+
+<%
+				}
+%>
+
+			</aui:select>
 		</aui:column>
 		<aui:column>
 			<aui:input helpMessage="output-both-exact-help" name="outputBothExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
