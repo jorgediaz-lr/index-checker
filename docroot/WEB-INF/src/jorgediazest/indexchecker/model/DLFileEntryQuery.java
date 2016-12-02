@@ -35,14 +35,12 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 		addRelatedModelData(
 			dataMap, Repository.class.getName(),
 			"repositoryId,repoFolderId=dlFolderId".split(","),
-			"repositoryId".split(","),
-			false, false);
+			"repositoryId".split(","), false, false);
 
 		addRelatedModelData(
 			dataMap, DLFolder.class.getName(),
 			"folderId,hiddenFolder=hidden".split(","),
-			"repoFolderId=folderId".split(","),
-			false, false);
+			"repoFolderId=folderId".split(","), false, false);
 
 		super.addPermissionFields(dataMap);
 	}
@@ -90,4 +88,5 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 		"com.liferay.portlet.documentlibrary.model.DLFileEntry",
 		"com.liferay.portlet.messageboards.model.MBMessage",
 		"com.liferay.portlet.wiki.model.WikiPage"};
+
 }
