@@ -78,6 +78,12 @@
 	if (filterClassNameSelected == null) {
 		filterClassNameSelected = new HashSet<String>();
 	}
+	List<Long> groupIdList = (List<Long>) request.getAttribute("groupIdList");
+	List<String> groupDescriptionList = (List<String>) request.getAttribute("groupDescriptionList");
+	Set<String> filterGroupIdSelected = (Set<String>) request.getAttribute("filterGroupIdSelected");
+	if (filterGroupIdSelected == null) {
+		filterGroupIdSelected = new HashSet<String>();
+	}
 	Locale locale = renderRequest.getLocale();
 %>
 
@@ -118,7 +124,27 @@
 		</aui:column>
 		<aui:column>
 			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
-			<aui:input helpMessage="filter-group-id-help" name="filterGroupId" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="text" value='<%=request.getAttribute("filterGroupId") %>' />
+			<aui:select helpMessage="filter-group-id-help" multiple="true" name="filterGroupId" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 200px;">
+				<aui:option selected='<%= filterGroupIdSelected.contains("-1000") %>' value="-1000"><liferay-ui:message key="filter-group-id-no-filter" /></aui:option>
+				<aui:option disabled="true" value="-">--------</aui:option>
+				<aui:option selected='<%= filterGroupIdSelected.isEmpty() || filterGroupIdSelected.contains("0") %>' value="0"><liferay-ui:message key="filter-group-id-entities-without-groupId" /></aui:option>
+				<aui:option selected='<%= filterGroupIdSelected.isEmpty() || filterGroupIdSelected.contains("-1") %>' value="-1"><liferay-ui:message key="all-sites" /></aui:option>
+				<aui:option disabled="true" value="-">--------</aui:option>
+
+<%
+				for (int i=0;i<groupIdList.size();i++) {
+					String groupIdStr = "" + groupIdList.get(i);
+%>
+
+					<aui:option selected="<%= filterGroupIdSelected.contains(groupIdStr) %>" value="<%= groupIdStr %>"><%= groupDescriptionList.get(i) %></aui:option>
+
+<%
+				}
+%>
+
+				<aui:option disabled="true" value="-">--------</aui:option>
+				<aui:option selected='<%= filterGroupIdSelected.contains("-2") %>' value="-2"><liferay-ui:message key="filter-group-id-user-sites" /></aui:option>
+			</aui:select>
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
 		</aui:column>
 		<aui:column>

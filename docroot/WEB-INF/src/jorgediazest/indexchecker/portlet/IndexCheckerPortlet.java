@@ -370,24 +370,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		RenderRequest renderRequest, RenderResponse renderResponse)
 			throws IOException, PortletException {
 
-		String filterGroupId = ParamUtil.getString(
-			renderRequest, "filterGroupId");
-
-		if (Validator.isNull(filterGroupId)) {
+		try {
 			List<Long> siteGroupIds = this.getSiteGroupIds();
+			renderRequest.setAttribute("groupIdList", siteGroupIds);
 
-			filterGroupId = "0";
-
-			for (Long groupId : siteGroupIds) {
-				if (Validator.isNotNull(filterGroupId)) {
-					filterGroupId += ",";
-				}
-
-				filterGroupId += groupId;
-			}
+			List<String> groupDescriptionList = getSiteGroupDescriptions(
+				siteGroupIds);
+			renderRequest.setAttribute(
+				"groupDescriptionList", groupDescriptionList);
 		}
-
-		renderRequest.setAttribute("filterGroupId", filterGroupId);
+		catch (SystemException se) {
+			throw new PortletException(se);
+		}
 
 		try {
 			List<Model> modelList = this.getModelList();
@@ -418,12 +412,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterClassNameSelected", SetUtil.fromArray(filterClassNameArr));
 
-		String[] filterGroupIdArr = null;
-		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+		String[] filterGroupIdArr = ParamUtil.getParameterValues(
+			request,"filterGroupId");
 
-		if (Validator.isNotNull(filterGroupId)) {
-			filterGroupIdArr = filterGroupId.split(",");
-		}
+		response.setRenderParameter("filterGroupId", new String[0]);
+
+		request.setAttribute(
+			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
@@ -507,12 +502,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterClassNameSelected", SetUtil.fromArray(filterClassNameArr));
 
-		String[] filterGroupIdArr = null;
-		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+		String[] filterGroupIdArr = ParamUtil.getParameterValues(
+			request,"filterGroupId");
 
-		if (Validator.isNotNull(filterGroupId)) {
-			filterGroupIdArr = filterGroupId.split(",");
-		}
+		response.setRenderParameter("filterGroupId", new String[0]);
+
+		request.setAttribute(
+			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
@@ -611,12 +607,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterClassNameSelected", SetUtil.fromArray(filterClassNameArr));
 
-		String[] filterGroupIdArr = null;
-		String filterGroupId = ParamUtil.getString(request, "filterGroupId");
+		String[] filterGroupIdArr = ParamUtil.getParameterValues(
+			request,"filterGroupId");
 
-		if (Validator.isNotNull(filterGroupId)) {
-			filterGroupIdArr = filterGroupId.split(",");
-		}
+		response.setRenderParameter("filterGroupId", new String[0]);
+
+		request.setAttribute(
+			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
@@ -747,6 +744,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			String[] filterGroupIdArr)
 		throws SystemException {
 
+		if ((filterGroupIdArr != null) && (filterGroupIdArr.length == 1) &&
+			(filterGroupIdArr[0].equals("-1000")) ) {
+
+			filterGroupIdArr = null;
+		}
+
 		boolean groupBySite = executionMode.contains(
 			ExecutionMode.GROUP_BY_SITE);
 
@@ -760,17 +763,39 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		List<Long> groupIds = new ArrayList<Long>();
 
+		boolean allSites = false;
+		boolean userSites = false;
+
 		if (filterGroupIdArr != null) {
 			for (String filterGroupId : filterGroupIdArr) {
 				if ("0".equals(filterGroupId)) {
 					groupIds.add(0L);
-					break;
+				}
+
+				if ("-1".equals(filterGroupId)) {
+					allSites = true;
+				}
+
+				if ("-2".equals(filterGroupId)) {
+					userSites = true;
 				}
 			}
 		}
 
 		for (Group group : groups) {
 			if (filterGroupIdArr == null) {
+				groupIds.add(group.getGroupId());
+				continue;
+			}
+
+			if (allSites && (group.isSite() || group.isStagingGroup() ||
+				 group.isCompany())) {
+
+				groupIds.add(group.getGroupId());
+				continue;
+			}
+
+			if (userSites && (group.isUser() || group.isUserGroup())) {
 				groupIds.add(group.getGroupId());
 				continue;
 			}
@@ -830,6 +855,31 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return (num == 0) ? def : num;
 	}
 
+	public List<String> getSiteGroupDescriptions(List<Long> siteGroupIds)
+		throws SystemException {
+
+		List<String> groupDescriptionList = new ArrayList<String>();
+
+		for (Long siteGroupId : siteGroupIds) {
+			Group group = GroupLocalServiceUtil.fetchGroup(siteGroupId);
+			String groupDescription = group.getName();
+			groupDescription = groupDescription.replace(
+				"LFR_ORGANIZATION", "(Org)");
+
+			if (group.isCompany()) {
+				if (!group.isStagingGroup()) {
+					groupDescription = "Global";
+				}
+
+				groupDescription += " - " + group.getCompanyId();
+			}
+
+			groupDescriptionList.add(groupDescription);
+		}
+
+		return groupDescriptionList;
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<Long> getSiteGroupIds() {
 
@@ -847,8 +897,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Conjunction normalSites = RestrictionsFactoryUtil.conjunction();
 		normalSites.add(model.getProperty("site").eq(true));
-		normalSites.add(
-			model.getProperty("classNameId").ne(companyClassNameId));
 
 		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 		disjunction.add(stagingSites);
