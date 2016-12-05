@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -137,6 +139,33 @@ public class ComparisonUtil {
 				t.getClass() + " - " + t.getMessage(),t);
 
 		return new Comparison(model, t.getClass() + " - " + t.getMessage());
+	}
+
+	public static List<Comparison> mergeComparisons(
+		Collection<Comparison> collection) {
+
+		Map<Model, List<Comparison>> modelMap =
+			new HashMap<Model, List<Comparison>>();
+
+		for (Comparison c : collection) {
+			List<Comparison> comparisonList = modelMap.get(c.getModel());
+
+			if (comparisonList == null) {
+				comparisonList = new ArrayList<Comparison>();
+				modelMap.put(c.getModel(), comparisonList);
+			}
+
+			comparisonList.add(c);
+		}
+
+		List<Comparison> resultComparison = new ArrayList<Comparison>();
+
+		for (List<Comparison> comparisonList : modelMap.values()) {
+			resultComparison.addAll(
+				Comparison.mergeComparisons(comparisonList));
+		}
+
+		return resultComparison;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ComparisonUtil.class);

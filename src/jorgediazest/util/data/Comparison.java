@@ -17,8 +17,11 @@ package jorgediazest.util.data;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -29,6 +32,42 @@ import jorgediazest.util.model.Model;
  * @author Jorge Díaz
  */
 public class Comparison {
+
+	public static List<Comparison> mergeComparisons(
+		Collection<Comparison> collection) {
+
+		List<Comparison> result = new ArrayList<Comparison>();
+
+		Comparison merged = null;
+
+		for (Comparison c : collection) {
+			if ((c.data != null) && (merged == null)) {
+				merged = c;
+
+				continue;
+			}
+
+			if ((c.data == null) || !merged.getModel().equals(c.getModel())) {
+				result.add(c);
+
+				continue;
+			}
+
+			for (Entry<String, Set<Data>> e : c.data.entrySet()) {
+				Set<Data> dataSet = merged.data.get(e.getKey());
+
+				if (dataSet == null) {
+					merged.data.put(e.getKey(), new HashSet<Data>());
+				}
+
+				dataSet.addAll(e.getValue());
+			}
+		}
+
+		result.add(merged);
+
+		return result;
+	}
 
 	public void dumpToLog() {
 
@@ -84,6 +123,48 @@ public class Comparison {
 		}
 
 		return outputTypes;
+	}
+
+	public Map<Long, Comparison> splitByAttribute(String attribute) {
+		Map<Long, Comparison> result = new HashMap<Long, Comparison>();
+
+		if (error != null) {
+			result.put(0L, this);
+
+			return result;
+		}
+
+		for (Entry<String, Set<Data>> entry : data.entrySet()) {
+			String key = entry.getKey();
+
+			for (Data d : entry.getValue()) {
+				Long id;
+				try {
+					id = d.get(attribute, 0L);
+				}
+				catch (Exception e) {
+					id = 0L;
+				}
+
+				Comparison c = result.get(id);
+
+				if (c == null) {
+					c = new Comparison(model, new HashMap<String, Set<Data>>());
+					result.put(id, c);
+				}
+
+				Set<Data> set = c.data.get(key);
+
+				if (set == null) {
+					set = new HashSet<Data>();
+					result.get(id).data.put(key, set);
+				}
+
+				set.add(d);
+			}
+		}
+
+		return result;
 	}
 
 	protected Comparison(Model model, Map<String, Set<Data>> data) {
