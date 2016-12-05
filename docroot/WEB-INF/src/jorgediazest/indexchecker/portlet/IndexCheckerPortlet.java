@@ -216,7 +216,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Map<Long, List<Future<Comparison>>> futureResultDataMap =
 			new LinkedHashMap<Long, List<Future<Comparison>>>();
 
-		if (executionMode.contains(ExecutionMode.GROUP_BY_SITE)) {
+		if (executionMode.contains(ExecutionMode.QUERY_BY_SITE)) {
 			for (long groupId : groupIds) {
 				List<Long> groupIdsAux = new ArrayList<Long>();
 				groupIdsAux.add(groupId);
@@ -270,6 +270,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		if (ParamUtil.getBoolean(request, "outputGroupBySite")) {
 			executionMode.add(ExecutionMode.GROUP_BY_SITE);
+		}
+
+		if (ParamUtil.getBoolean(request, "queryBySite")) {
+			executionMode.add(ExecutionMode.QUERY_BY_SITE);
 		}
 
 		if (ParamUtil.getBoolean(request, "outputBothExact")) {
@@ -449,6 +453,50 @@ public class IndexCheckerPortlet extends MVCPortlet {
 						mqf, company, groupIds, classNames, executionMode,
 						getNumberOfThreads(request));
 
+				boolean groupBySite = executionMode.contains(
+					ExecutionMode.GROUP_BY_SITE);
+
+				if (groupBySite && (resultDataMap.keySet().size() == 1)) {
+					List<Comparison> listComparison =
+						(List<Comparison>)resultDataMap.values().toArray()[0];
+
+					resultDataMap = new HashMap<Long, List<Comparison>>();
+
+					for (Comparison c : listComparison) {
+						Map<Long, Comparison> map = c.splitByAttribute(
+							"groupId");
+
+						for (Entry<Long, Comparison> e : map.entrySet()) {
+							List<Comparison> list = resultDataMap.get(
+								e.getKey());
+
+							if (list == null) {
+								list = new ArrayList<Comparison>();
+
+								resultDataMap.put(e.getKey(), list);
+							}
+
+							list.add(e.getValue());
+						}
+					}
+				}
+
+				if (!groupBySite && (resultDataMap.keySet().size() > 1)) {
+					List<Comparison> tempComparisonList =
+						new ArrayList<Comparison>();
+
+					for (List<Comparison> auxList : resultDataMap.values()) {
+						tempComparisonList.addAll(auxList);
+					}
+
+					List<Comparison> resultComparisonLisn =
+						ComparisonUtil.mergeComparisons(tempComparisonList);
+
+					resultDataMap = new HashMap<Long, List<Comparison>>();
+
+					resultDataMap.put(0L, resultComparisonLisn);
+				}
+
 				long endTime = System.currentTimeMillis();
 
 				if (_log.isInfoEnabled() &&
@@ -456,9 +504,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 							ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG)) {
 
 					_log.info("COMPANY: " + company);
-
-					boolean groupBySite = executionMode.contains(
-						ExecutionMode.GROUP_BY_SITE);
 
 					ComparisonUtil.dumpToLog(groupBySite, resultDataMap);
 				}
@@ -745,15 +790,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		throws SystemException {
 
 		if ((filterGroupIdArr != null) && (filterGroupIdArr.length == 1) &&
-			(filterGroupIdArr[0].equals("-1000")) ) {
+			filterGroupIdArr[0].equals("-1000")) {
 
 			filterGroupIdArr = null;
 		}
 
-		boolean groupBySite = executionMode.contains(
-			ExecutionMode.GROUP_BY_SITE);
+		boolean queryBySite = executionMode.contains(
+			ExecutionMode.QUERY_BY_SITE);
 
-		if (!groupBySite && (filterGroupIdArr == null)) {
+		if (!queryBySite && (filterGroupIdArr == null)) {
 			return null;
 		}
 
@@ -780,6 +825,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					userSites = true;
 				}
 			}
+		}
+
+		if (filterGroupIdArr == null) {
+			groupIds.add(0L);
 		}
 
 		for (Group group : groups) {
@@ -882,8 +931,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	@SuppressWarnings("unchecked")
 	public List<Long> getSiteGroupIds() {
-
-		long companyClassNameId = PortalUtil.getClassNameId(Company.class);
 
 		ModelFactory modelFactory = new ModelFactory();
 
