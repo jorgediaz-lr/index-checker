@@ -525,6 +525,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		if (Validator.isNull(tableInfo)) {
 			return null;
 		}
+
 		return queryTable(tableInfo, tableInfo.getAttributesName());
 	}
 
