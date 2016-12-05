@@ -57,7 +57,9 @@ public class Comparison {
 				Set<Data> dataSet = merged.data.get(e.getKey());
 
 				if (dataSet == null) {
-					merged.data.put(e.getKey(), new HashSet<Data>());
+					dataSet = new HashSet<Data>();
+
+					merged.data.put(e.getKey(), dataSet);
 				}
 
 				dataSet.addAll(e.getValue());
