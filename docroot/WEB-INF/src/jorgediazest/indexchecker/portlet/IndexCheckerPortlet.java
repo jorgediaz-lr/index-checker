@@ -444,6 +444,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				List<Long> groupIds = getGroupIds(
 					company, executionMode, filterGroupIdArr);
 
+				if ((groupIds != null) && groupIds.isEmpty()) {
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"Skipping company " + company.getCompanyId() + " " +
+							"because groupId list is empty");
+					}
+
+					continue;
+				}
+
 				long startTime = System.currentTimeMillis();
 
 				ModelQueryFactory mqf = createModelQueryFactory();
@@ -574,6 +584,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				List<Long> groupIds = getGroupIds(
 					company, executionMode, filterGroupIdArr);
 
+				if ((groupIds != null) && groupIds.isEmpty()) {
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"Skipping company " + company.getCompanyId() + " " +
+							"because groupId list is empty");
+					}
+
+					continue;
+				}
+
 				long startTime = System.currentTimeMillis();
 
 				ModelQueryFactory mqf = createModelQueryFactory();
@@ -678,6 +698,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				List<Long> groupIds = getGroupIds(
 					company, executionMode, filterGroupIdArr);
+
+				if ((groupIds != null) && groupIds.isEmpty()) {
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"Skipping company " + company.getCompanyId() + " " +
+							"because groupId list is empty");
+					}
+
+					continue;
+				}
 
 				long startTime = System.currentTimeMillis();
 
