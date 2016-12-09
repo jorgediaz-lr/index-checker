@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -128,7 +129,7 @@ public class Comparison {
 	}
 
 	public Map<Long, Comparison> splitByAttribute(String attribute) {
-		Map<Long, Comparison> result = new HashMap<Long, Comparison>();
+		Map<Long, Comparison> result = new LinkedHashMap<Long, Comparison>();
 
 		if (error != null) {
 			result.put(0L, this);

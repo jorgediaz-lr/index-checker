@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -145,7 +146,7 @@ public class ComparisonUtil {
 		Collection<Comparison> collection) {
 
 		Map<Model, List<Comparison>> modelMap =
-			new HashMap<Model, List<Comparison>>();
+			new LinkedHashMap<Model, List<Comparison>>();
 
 		for (Comparison c : collection) {
 			List<Comparison> comparisonList = modelMap.get(c.getModel());
