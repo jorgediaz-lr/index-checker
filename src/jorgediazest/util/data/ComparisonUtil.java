@@ -22,13 +22,14 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import jorgediazest.util.model.Model;
 
@@ -78,16 +79,16 @@ public class ComparisonUtil {
 		boolean showBothExact, boolean showBothNotExact, boolean showOnlyLeft,
 		boolean showOnlyRight) {
 
-		Map<String, Set<Data>> data = new HashMap<String, Set<Data>>();
+		Map<String, Set<Data>> data = new TreeMap<String, Set<Data>>();
 
 		if (showBothExact) {
-			data.put("both-exact-left", new HashSet<Data>());
-			data.put("both-exact-right", new HashSet<Data>());
+			data.put("both-exact-left", new TreeSet<Data>());
+			data.put("both-exact-right", new TreeSet<Data>());
 		}
 
 		if (showBothNotExact) {
-			data.put("both-notexact-left", new HashSet<Data>());
-			data.put("both-notexact-right", new HashSet<Data>());
+			data.put("both-notexact-left", new TreeSet<Data>());
+			data.put("both-notexact-right", new TreeSet<Data>());
 		}
 
 		Data[] bothArrSetLeft = DataUtil.getArrayCommonData(
@@ -122,13 +123,13 @@ public class ComparisonUtil {
 		if (showOnlyLeft) {
 			Set<Data> leftOnlyData = leftData;
 			leftOnlyData.removeAll(bothDataSet);
-			data.put("only-left", leftOnlyData);
+			data.put("only-left", new TreeSet<Data>(leftOnlyData));
 		}
 
 		if (showOnlyRight) {
 			Set<Data> rightOnlyData = rightData;
 			rightOnlyData.removeAll(bothDataSet);
-			data.put("only-right", rightOnlyData);
+			data.put("only-right", new TreeSet<Data>(rightOnlyData));
 		}
 
 		return new Comparison(model, data);

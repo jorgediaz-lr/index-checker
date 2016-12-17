@@ -19,13 +19,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import jorgediazest.util.model.Model;
 
@@ -58,7 +57,7 @@ public class Comparison {
 				Set<Data> dataSet = merged.data.get(e.getKey());
 
 				if (dataSet == null) {
-					dataSet = new HashSet<Data>();
+					dataSet = new TreeSet<Data>();
 
 					merged.data.put(e.getKey(), dataSet);
 				}
@@ -112,7 +111,7 @@ public class Comparison {
 	}
 
 	public Set<String> getOutputTypes() {
-		Set<String> outputTypes = new HashSet<String>();
+		Set<String> outputTypes = new TreeSet<String>();
 
 		for (String key : data.keySet()) {
 			if (key.startsWith("both-exact")) {
@@ -129,7 +128,7 @@ public class Comparison {
 	}
 
 	public Map<Long, Comparison> splitByAttribute(String attribute) {
-		Map<Long, Comparison> result = new LinkedHashMap<Long, Comparison>();
+		Map<Long, Comparison> result = new TreeMap<Long, Comparison>();
 
 		if (error != null) {
 			result.put(0L, this);
@@ -152,14 +151,14 @@ public class Comparison {
 				Comparison c = result.get(id);
 
 				if (c == null) {
-					c = new Comparison(model, new HashMap<String, Set<Data>>());
+					c = new Comparison(model, new TreeMap<String, Set<Data>>());
 					result.put(id, c);
 				}
 
 				Set<Data> set = c.data.get(key);
 
 				if (set == null) {
-					set = new HashSet<Data>();
+					set = new TreeSet<Data>();
 					result.get(id).data.put(key, set);
 				}
 
@@ -177,7 +176,7 @@ public class Comparison {
 	}
 
 	protected Comparison(Model model, String error) {
-		this.data = new HashMap<String, Set<Data>>();
+		this.data = new TreeMap<String, Set<Data>>();
 		this.error = error;
 		this.model = model;
 	}
