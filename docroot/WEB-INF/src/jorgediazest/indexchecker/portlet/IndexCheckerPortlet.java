@@ -17,6 +17,7 @@ package jorgediazest.indexchecker.portlet;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
@@ -50,11 +51,11 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -214,7 +215,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			threadsExecutor);
 
 		Map<Long, List<Future<Comparison>>> futureResultDataMap =
-			new LinkedHashMap<Long, List<Future<Comparison>>>();
+			new TreeMap<Long, List<Future<Comparison>>>();
 
 		if (executionMode.contains(ExecutionMode.QUERY_BY_SITE)) {
 			for (long groupId : groupIds) {
@@ -238,7 +239,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		Map<Long, List<Comparison>> resultDataMap =
-			new LinkedHashMap<Long, List<Comparison>>();
+			new TreeMap<Long, List<Comparison>>();
 
 		for (
 			Entry<Long, List<Future<Comparison>>> entry :
@@ -470,7 +471,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					List<Comparison> listComparison =
 						(List<Comparison>)resultDataMap.values().toArray()[0];
 
-					resultDataMap = new HashMap<Long, List<Comparison>>();
+					resultDataMap = new TreeMap<Long, List<Comparison>>();
 
 					for (Comparison c : listComparison) {
 						Map<Long, Comparison> map = c.splitByAttribute(
@@ -502,7 +503,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					List<Comparison> resultComparisonLisn =
 						ComparisonUtil.mergeComparisons(tempComparisonList);
 
-					resultDataMap = new HashMap<Long, List<Comparison>>();
+					resultDataMap = new TreeMap<Long, List<Comparison>>();
 
 					resultDataMap.put(0L, resultComparisonLisn);
 				}
@@ -981,6 +982,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		groupDynamicQuery.add(disjunction);
 		groupDynamicQuery.setProjection(model.getPropertyProjection("groupId"));
+
+		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("name"));
 
 		try {
 			return (List<Long>)model.getService().executeDynamicQuery(
