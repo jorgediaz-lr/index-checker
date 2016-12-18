@@ -34,7 +34,6 @@ import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
-import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
@@ -49,8 +48,8 @@ import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -85,6 +84,7 @@ import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.modelquery.ModelQuery;
 import jorgediazest.util.modelquery.ModelQueryFactory;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
+import jorgediazest.util.service.Service;
 
 /**
  * Portlet implementation class IndexCheckerPortlet
@@ -384,8 +384,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			renderRequest.setAttribute(
 				"groupDescriptionList", groupDescriptionList);
 		}
-		catch (SystemException se) {
-			throw new PortletException(se);
+		catch (Exception e) {
+			throw new PortletException(e);
 		}
 
 		try {
@@ -425,16 +425,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
-
 		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap =
-			new HashMap<Company, Map<Long, List<Comparison>>>();
+			new LinkedHashMap<Company, Map<Long, List<Comparison>>>();
 
-		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+		Map<Company, Long> companyProcessTime =
+			new LinkedHashMap<Company, Long>();
 
-		Map<Company, String> companyError = new HashMap<Company, String>();
+		Map<Company, String> companyError =
+			new LinkedHashMap<Company, String>();
 
-		for (Company company : companies) {
+		for (Company company : getCompanyList()) {
 			try {
 				CompanyThreadLocal.setCompanyId(company.getCompanyId());
 
@@ -566,13 +566,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+		Map<Company, Long> companyProcessTime =
+			new LinkedHashMap<Company, Long>();
 
-		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+		Map<Company, String> companyError =
+			new LinkedHashMap<Company, String>();
 
-		Map<Company, String> companyError = new HashMap<Company, String>();
-
-		for (Company company : companies) {
+		for (Company company : getCompanyList()) {
 			StringWriter sw = new StringWriter();
 
 			PrintWriter pw = new PrintWriter(sw);
@@ -681,13 +681,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+		Map<Company, Long> companyProcessTime =
+			new LinkedHashMap<Company, Long>();
 
-		Map<Company, Long> companyProcessTime = new HashMap<Company, Long>();
+		Map<Company, String> companyError =
+			new LinkedHashMap<Company, String>();
 
-		Map<Company, String> companyError = new HashMap<Company, String>();
-
-		for (Company company : companies) {
+		for (Company company : getCompanyList()) {
 			StringWriter sw = new StringWriter();
 
 			PrintWriter pw = new PrintWriter(sw);
@@ -813,6 +813,22 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return classNames;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Company> getCompanyList() throws Exception {
+		ModelFactory modelFactory = new ModelFactory();
+
+		Model companyModel = modelFactory.getModelObject(Company.class);
+
+		Service companyService = companyModel.getService();
+
+		DynamicQuery companyDynamicQuery = companyService.newDynamicQuery();
+
+		companyDynamicQuery.addOrder(OrderFactoryUtil.asc("companyId"));
+
+		return (List<Company>)
+			companyService.executeDynamicQuery(companyDynamicQuery);
 	}
 
 	public List<Long> getGroupIds(
@@ -961,41 +977,84 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Long> getSiteGroupIds() {
+	public List<Long> getSiteGroupIds() throws Exception {
 
 		ModelFactory modelFactory = new ModelFactory();
 
-		Model model = modelFactory.getModelObject(Group.class);
+		Model groupModel = modelFactory.getModelObject(Group.class);
 
-		DynamicQuery groupDynamicQuery = model.getService().newDynamicQuery();
+		long companyClassNameId = PortalUtil.getClassNameId(Company.class);
+
+		Service groupService = groupModel.getService();
+
+		DynamicQuery groupDynamicQuery = null;
+
+		/* Get groupIds of live global groups */
+		groupDynamicQuery = groupService.newDynamicQuery();
+
+		groupDynamicQuery.add(
+			groupModel.getProperty("classNameId").eq(companyClassNameId));
+		groupDynamicQuery.add(groupModel.getProperty("liveGroupId").eq(0L));
+
+		groupDynamicQuery.setProjection(
+			groupModel.getPropertyProjection("groupId"));
+
+		List<Long> liveGlobalGroupIds = (List<Long>)
+			groupService.executeDynamicQuery(groupDynamicQuery);
+
+		/* Get groupIds of staging and live global groups */
+		groupDynamicQuery = groupService.newDynamicQuery();
+
+		Disjunction disjunctionGlobal = RestrictionsFactoryUtil.disjunction();
+		disjunctionGlobal.add(
+			groupModel.getProperty("classNameId").eq(companyClassNameId));
+		disjunctionGlobal.add(
+			groupModel.generateInCriteria("liveGroupId", liveGlobalGroupIds));
+
+		groupDynamicQuery.add(disjunctionGlobal);
+		groupDynamicQuery.setProjection(
+			groupModel.getPropertyProjection("groupId"));
+
+		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("companyId"));
+		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("friendlyURL"));
+
+		List<Long> globalSitesGroupIds =
+			(List<Long>)groupService.executeDynamicQuery(groupDynamicQuery);
+
+		/* Get groupIds of staging and live normal groups */
+		groupDynamicQuery = groupService.newDynamicQuery();
 
 		Conjunction stagingSites = RestrictionsFactoryUtil.conjunction();
-		stagingSites.add(model.getProperty("site").eq(false));
-		stagingSites.add(model.getProperty("liveGroupId").ne(0L));
+		stagingSites.add(groupModel.getProperty("site").eq(false));
+		stagingSites.add(groupModel.getProperty("liveGroupId").ne(0L));
+		stagingSites.add(
+			RestrictionsFactoryUtil.not(
+				groupModel.generateInCriteria(
+					"liveGroupId", liveGlobalGroupIds)));
 
 		Conjunction normalSites = RestrictionsFactoryUtil.conjunction();
-		normalSites.add(model.getProperty("site").eq(true));
+		normalSites.add(groupModel.getProperty("site").eq(true));
+		normalSites.add(
+			groupModel.getProperty("classNameId").ne(companyClassNameId));
 
 		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 		disjunction.add(stagingSites);
 		disjunction.add(normalSites);
 
 		groupDynamicQuery.add(disjunction);
-		groupDynamicQuery.setProjection(model.getPropertyProjection("groupId"));
+		groupDynamicQuery.setProjection(
+			groupModel.getPropertyProjection("groupId"));
 
 		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("name"));
 
-		try {
-			return (List<Long>)model.getService().executeDynamicQuery(
-				groupDynamicQuery);
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
-			}
+		List<Long> normalSitesGroupIds =
+			(List<Long>)groupService.executeDynamicQuery(groupDynamicQuery);
 
-			return new ArrayList<Long>();
-		}
+		List<Long> result = new ArrayList<Long>();
+		result.addAll(globalSitesGroupIds);
+		result.addAll(normalSitesGroupIds);
+
+		return result;
 	}
 
 	public boolean ignoreClassName(String className) {
