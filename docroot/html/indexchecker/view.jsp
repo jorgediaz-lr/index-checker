@@ -52,7 +52,6 @@
 
 <%@ page import="jorgediazest.util.data.Comparison" %>
 <%@ page import="jorgediazest.util.model.Model" %>
-<%@ page import="jorgediazest.util.output.OutputUtils" %>
 
 <portlet:defineObjects />
 
@@ -90,17 +89,13 @@
 <aui:form action="<%= executeCheckURL %>" method="POST" name="fm">
 	<aui:fieldset>
 		<aui:column>
-			<aui:select name="outputFormat">
-				<aui:option selected="true" value="Table"><liferay-ui:message key="output-format-table" /></aui:option>
-				<aui:option value="CSV"><liferay-ui:message key="output-format-csv" /></aui:option>
-			</aui:select>
 			<aui:input helpMessage="output-both-exact-help" name="outputBothExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
 			<aui:input helpMessage="output-both-not-exact-help" name="outputBothNotExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
 			<aui:input helpMessage="output-liferay-help" name="outputLiferay" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
 			<aui:input helpMessage="output-index-help" name="outputIndex" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
 		</aui:column>
 		<aui:column>
-			<aui:select helpMessage="filter-class-name-help" multiple="true" name="filterClassName" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 240px; width: 250px;">
+			<aui:select helpMessage="filter-class-name-help" multiple="true" name="filterClassName" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 180px; width: 250px;">
 				<aui:option selected="<%= filterClassNameSelected.isEmpty() %>" value=""><liferay-ui:message key="all" /></aui:option>
 				<aui:option disabled="true" value="-">--------</aui:option>
 
@@ -122,7 +117,7 @@
 			</aui:select>
 		</aui:column>
 		<aui:column>
-			<aui:select helpMessage="filter-group-id-help" multiple="true" name="filterGroupId" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 240px; width: 250px;">
+			<aui:select helpMessage="filter-group-id-help" multiple="true" name="filterGroupId" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 180px; width: 250px;">
 				<aui:option selected='<%= filterGroupIdSelected.contains("-1000") %>' value="-1000"><liferay-ui:message key="filter-group-id-no-filter" /></aui:option>
 				<aui:option disabled="true" value="-">--------</aui:option>
 				<aui:option selected='<%= filterGroupIdSelected.isEmpty() || filterGroupIdSelected.contains("0") %>' value="0"><liferay-ui:message key="filter-group-id-entities-without-groupId" /></aui:option>
@@ -147,13 +142,25 @@
 		<aui:column>
 			<aui:input name="queryBySite" type="checkbox" value="false" />
 			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
-			<aui:input helpMessage="number-of-threads-help" name="numberOfThreads" type="text" value='<%= request.getAttribute("numberOfThreads") %>' />
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
+			<aui:input helpMessage="number-of-threads-help" name="numberOfThreads" type="text" value='<%= request.getAttribute("numberOfThreads") %>' />
 		</aui:column>
 	</aui:fieldset>
 
 	<aui:button-row>
 		<aui:button type="submit" value="check-index" />
+
+<%
+	String exportCsvResourceURL = (String)request.getAttribute("exportCsvResourceURL");
+	if (exportCsvResourceURL != null) {
+		exportCsvResourceURL = "window.open('" + exportCsvResourceURL + "');";
+%>
+
+		<aui:button onClick="<%= exportCsvResourceURL %>" type="button" value="export-to-csv" />
+
+<%
+	}
+%>
 
 <%
 	if ((companyResultDataMap != null) && (companyResultDataMap.size() > 0)) {
@@ -180,37 +187,61 @@
 %>
 
 		<aui:button onClick="<%= viewURL %>" type="cancel" value="clean" />
+
 	</aui:button-row>
 </aui:form>
 
 <%
 	if ((companyProcessTime != null) && (companyError != null)) {
-
-		String outputFormat = request.getParameter("outputFormat");
-
-		if (Validator.isNotNull(outputFormat)) {
-			if (outputFormat.equals("CSV")) {
 %>
 
-	<%@ include file="/html/indexchecker/output/result_csv.jspf" %>
+<h2><b><%= request.getAttribute("title") %></b></h2>
 
 <%
+		for (Entry<Company, Long> companyEntry : companyProcessTime.entrySet()) {
+			Long processTime = companyEntry.getValue();
+			%>
+
+			<h3>Company: <%= companyEntry.getKey().getCompanyId() %> - <%= companyEntry.getKey().getWebId() %></h3>
+
+			<%
+			if (companyResultDataMap != null) {
+				Map<Long, List<Comparison>> resultDataMap =
+					companyResultDataMap.get(companyEntry.getKey());
+
+				PortletURL serverURL = renderResponse.createRenderURL();
+
+				SearchContainer searchContainer = IndexCheckerOutput.generateSearchContainer(portletConfig, renderRequest, executionMode.contains(ExecutionMode.GROUP_BY_SITE), resultDataMap, serverURL);
+
+				if (searchContainer.getTotal() > 0) {
+				%>
+
+				<liferay-ui:search-iterator paginate="false" searchContainer="<%= searchContainer %>" />
+
+				<%
+				}
+				else {
+				%>
+
+				<b>No results found:</b> your system is ok or perhaps you have to change some filters<br /><br />
+
+				<%
+				}
 			}
-			else if (outputFormat.equals("Table")) {
+			String errorMessage = companyError.get(companyEntry.getKey());
 %>
 
-	<%@ include file="/html/indexchecker/output/result_table.jspf" %>
+<c:if test="<%= Validator.isNotNull(errorMessage) %>">
+	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= errorMessage %>" />
+</c:if>
+
+<i>Executed <b><%= request.getAttribute("title") %></b> for company <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms</i><br />
 
 <%
-			}
-			else {
-%>
-
-	<%@ include file="/html/indexchecker/output/result_error.jspf" %>
-
-<%
-			}
 		}
+%>
+
+<%
 	}
 %>
 

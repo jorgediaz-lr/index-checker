@@ -24,13 +24,17 @@ import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.model.Repository;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
@@ -42,7 +46,9 @@ import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 import com.liferay.util.portlet.PortletProps;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -62,9 +68,13 @@ import java.util.concurrent.Future;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletConfig;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
+import javax.portlet.ResourceURL;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
@@ -73,6 +83,7 @@ import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
+import jorgediazest.indexchecker.output.IndexCheckerOutput;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
@@ -84,6 +95,7 @@ import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.modelquery.ModelQuery;
 import jorgediazest.util.modelquery.ModelQueryFactory;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
+import jorgediazest.util.output.OutputUtils;
 import jorgediazest.util.service.Service;
 
 /**
@@ -372,8 +384,54 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public void doView(
-		RenderRequest renderRequest, RenderResponse renderResponse)
-			throws IOException, PortletException {
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		PortletConfig portletConfig =
+			(PortletConfig)renderRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
+
+		List<String> outputList = IndexCheckerOutput.generateCSVOutput(
+			portletConfig, renderRequest);
+
+		String outputScript = OutputUtils.listStringToString(outputList);
+
+		FileEntry exportCsvFileEntry = null;
+
+		try {
+			InputStream inputStream = null;
+
+			if (Validator.isNotNull(outputScript)) {
+				inputStream = new ByteArrayInputStream(
+					outputScript.getBytes(StringPool.UTF8));
+			}
+
+			String portletId = portletConfig.getPortletName();
+
+			Repository repository = OutputUtils.getPortletRepository(portletId);
+
+			OutputUtils.cleanupPortletFileEntries(repository, 8 * 60);
+
+			long userId = PortalUtil.getUserId(renderRequest);
+
+			String fileName =
+				"output_" + userId + "_" + System.currentTimeMillis() + ".csv";
+
+			exportCsvFileEntry = OutputUtils.addPortletFileEntry(
+				repository, inputStream, userId, fileName, "text/plain");
+
+			if (exportCsvFileEntry != null) {
+				ResourceURL exportCsvResourceURL =
+					renderResponse.createResourceURL();
+				exportCsvResourceURL.setResourceID(
+					exportCsvFileEntry.getTitle());
+				renderRequest.setAttribute(
+					"exportCsvResourceURL", exportCsvResourceURL.toString());
+			}
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+		}
 
 		try {
 			List<Long> siteGroupIds = this.getSiteGroupIds();
@@ -1082,6 +1140,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		catch (Exception e) {
 			_log.error(e, e);
 		}
+	}
+
+	public void serveResource(
+			ResourceRequest request, ResourceResponse response)
+		throws IOException, PortletException {
+
+		PortletConfig portletConfig =
+			(PortletConfig)request.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
+
+		String resourceId = request.getResourceID();
+		String portletId = portletConfig.getPortletName();
+
+		OutputUtils.servePortletFileEntry(portletId, resourceId, response);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);

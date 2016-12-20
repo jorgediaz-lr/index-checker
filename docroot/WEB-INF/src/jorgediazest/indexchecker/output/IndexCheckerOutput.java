@@ -29,6 +29,7 @@ import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,6 +39,8 @@ import java.util.Set;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
+
+import jorgediazest.indexchecker.ExecutionMode;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.Data;
@@ -49,6 +52,34 @@ import jorgediazest.util.output.OutputUtils;
  * @author Jorge Díaz
  */
 public class IndexCheckerOutput {
+
+	@SuppressWarnings("unchecked")
+	public static List<String> generateCSVOutput(
+		PortletConfig portletConfig, RenderRequest renderRequest) {
+
+		String title = (String) renderRequest.getAttribute("title");
+		EnumSet<ExecutionMode> executionMode =
+			(EnumSet<ExecutionMode>)renderRequest.getAttribute("executionMode");
+		Map<Company, Long> companyProcessTime =
+			(Map<Company, Long>)renderRequest.getAttribute(
+				"companyProcessTime");
+		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap =
+			(Map<Company, Map<Long, List<Comparison>>>)
+			renderRequest.getAttribute("companyResultDataMap");
+		Map<Company, String> companyError =
+			(Map<Company, String>) renderRequest.getAttribute("companyError");
+
+		if ((executionMode == null)||(companyProcessTime == null)||
+			(companyResultDataMap == null)) {
+
+			return null;
+		}
+
+		return generateCSVOutput(
+			portletConfig, title, renderRequest.getLocale(),
+			executionMode.contains(ExecutionMode.GROUP_BY_SITE),
+			companyProcessTime, companyResultDataMap, companyError);
+	}
 
 	public static List<String> generateCSVOutput(
 		PortletConfig portletConfig, String title, Locale locale,
@@ -173,6 +204,8 @@ public class IndexCheckerOutput {
 				"Executed " + title + " for company " +
 				companyEntry.getKey().getCompanyId() + " in " + processTime +
 				" ms");
+
+			out.add(StringPool.BLANK);
 		}
 
 		return out;
