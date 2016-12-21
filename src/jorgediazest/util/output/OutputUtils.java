@@ -17,26 +17,25 @@ package jorgediazest.util.output;
 /**
  * @author Jorge Díaz
  */
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.Company;
-import com.liferay.portal.model.Repository;
-import com.liferay.portal.portletfilerepository.PortletFileRepositoryUtil;
-import com.liferay.portal.service.CompanyLocalServiceUtil;
-import com.liferay.portal.service.GroupServiceUtil;
-import com.liferay.portal.service.ServiceContext;
-import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +61,7 @@ public class OutputUtils {
 	public static FileEntry addPortletFileEntry(
 			Repository repository, InputStream inputStream, long userId,
 			String title, String mimeType)
-		throws PortalException, SystemException {
+		throws PortalException {
 
 		if (Validator.isNull(inputStream)) {
 			return null;
@@ -76,7 +75,7 @@ public class OutputUtils {
 
 	public static void cleanupPortletFileEntries(
 			Repository repository, long minutes)
-		throws PortalException, SystemException {
+		throws PortalException {
 
 		if (repository == null) {
 			return;
@@ -273,15 +272,15 @@ public class OutputUtils {
 	}
 
 	public static FileEntry getPortletFileEntry(
-		Repository repository, String title)
-			throws PortalException, SystemException {
+			Repository repository, String title)
+		throws PortalException {
 
 		return PortletFileRepositoryUtil.getPortletFileEntry(
 			repository.getGroupId(), repository.getDlFolderId(), title);
 	}
 
 	public static Repository getPortletRepository(String portletId)
-		throws PortalException, SystemException {
+		throws PortalException {
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies(false);
 
