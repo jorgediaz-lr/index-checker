@@ -17,7 +17,6 @@ package jorgediazest.util.data;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -30,7 +29,6 @@ import java.sql.Types;
 import java.text.DateFormat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -450,28 +448,29 @@ public class DataUtil {
 	}
 
 	public static String[] getListAttr(Collection<Data> data, String attr) {
-		String[] values = new String[data.size()];
+		return getListAttr(data, attr, data.size());
+	}
+
+	public static String[] getListAttr(
+		Collection<Data> data, String attr, int size) {
+
+		if ((size > data.size()) || (size <= 0)) {
+			size = data.size();
+		}
+
+		String[] values = new String[size];
 
 		int i = 0;
 
 		for (Data value : data) {
 			values[i++] = value.get(attr).toString();
+
+			if (i >= size) {
+				break;
+			}
 		}
 
 		return values;
-	}
-
-	public static String getListAttrAsString(Set<Data> data, String attr) {
-		String valuesPK = Arrays.toString(getListAttr(data, attr));
-
-		if (valuesPK.length() <= 1) {
-			valuesPK = StringPool.BLANK;
-		}
-		else {
-			valuesPK = valuesPK.substring(1, valuesPK.length()-1);
-		}
-
-		return valuesPK;
 	}
 
 	public static boolean isNotNull(Object obj) {
