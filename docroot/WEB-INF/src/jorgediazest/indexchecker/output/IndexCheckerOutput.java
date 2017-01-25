@@ -29,6 +29,7 @@ import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -161,7 +162,7 @@ public class IndexCheckerOutput {
 						String lineError = generateCSVRow(
 							portletConfig, comp, companyOutput, groupIdOutput,
 							groupNameOutput, "error", locale, comp.getError(),
-							"");
+							-1);
 
 						if (lineError != null) {
 							numberOfRows++;
@@ -283,7 +284,7 @@ public class IndexCheckerOutput {
 			for (Comparison comp : entry.getValue()) {
 				ResultRow rowError = generateSearchContainerRow(
 					portletConfig, comp, groupIdOutput, groupNameOutput,
-					"error", locale, numberOfRows, comp.getError(), "");
+					"error", locale, numberOfRows, comp.getError());
 
 				if (rowError != null) {
 					numberOfRows++;
@@ -308,7 +309,15 @@ public class IndexCheckerOutput {
 		return searchContainer;
 	}
 
-	static Log _log = LogFactoryUtil.getLog(IndexCheckerOutput.class);
+	public static String stringArrayToString(String[] stringArray) {
+		String string = Arrays.toString(stringArray);
+
+		if (string.length() <= 1) {
+			return StringPool.BLANK;
+		}
+
+		return string.substring(1, string.length()-1);
+	}
 
 	protected static String generateCSVRow(
 		PortletConfig portletConfig, Comparison comp, String companyOutput,
@@ -327,18 +336,19 @@ public class IndexCheckerOutput {
 			attribute = "uid";
 		}
 
-		String output = DataUtil.getListAttrAsString(data, attribute);
-		String outputSize = "" + data.size();
+		String[] output = DataUtil.getListAttr(data, attribute);
+
+		String outputString = stringArrayToString(output);
 
 		return generateCSVRow(
 			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
-			type, locale, output, outputSize);
+			type, locale, outputString, data.size());
 	}
 
 	protected static String generateCSVRow(
 		PortletConfig portletConfig, Comparison comp, String companyOutput,
 		String groupIdOutput, String groupNameOutput, String type,
-		Locale locale, String output, String outputSize) {
+		Locale locale, String output, int outputSize) {
 
 		if (Validator.isNull(output)) {
 			return null;
@@ -360,7 +370,14 @@ public class IndexCheckerOutput {
 		line.add(modelOutput);
 		line.add(modelDisplayNameOutput);
 		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
-		line.add(outputSize);
+
+		if (outputSize < 0) {
+			line.add(StringPool.BLANK);
+		}
+		else {
+			line.add(StringPool.BLANK + outputSize);
+		}
+
 		line.add(output);
 		return OutputUtils.getCSVRow(line);
 	}
@@ -375,26 +392,47 @@ public class IndexCheckerOutput {
 			return null;
 		}
 
+		int maxSize = 100;
+
 		String attribute = "pk";
 
 		if (type.contains("right")) {
 			attribute = "uid";
 		}
 
-		String output = DataUtil.getListAttrAsString(data, attribute);
-		String outputSize = ""+data.size();
+		String[] output = DataUtil.getListAttr(data, attribute, maxSize);
+
+		String outputString = stringArrayToString(output);
+
+		int overflow = data.size() - maxSize;
+
+		if (overflow > 0) {
+			outputString += "... (" + overflow + " more)";
+		}
+
+		outputString = HtmlUtil.escape(outputString);
 
 		return generateSearchContainerRow(
 			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
-			numberOfRows, output, outputSize);
+			numberOfRows, outputString, data.size());
 	}
 
 	protected static ResultRow generateSearchContainerRow(
 		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
 		String groupNameOutput, String type, Locale locale, int numberOfRows,
-		String output, String outputSize) {
+		String errorOutput) {
 
-		if (Validator.isNull(output)) {
+		return generateSearchContainerRow(
+			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
+			numberOfRows, HtmlUtil.escape(errorOutput), -1);
+	}
+
+	protected static ResultRow generateSearchContainerRow(
+		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		String groupNameOutput, String type, Locale locale, int numberOfRows,
+		String htmlOutput, int outputSize) {
+
+		if (Validator.isNull(htmlOutput)) {
 			return null;
 		}
 
@@ -416,9 +454,18 @@ public class IndexCheckerOutput {
 				LanguageUtil.get(
 					portletConfig, locale, "output." + type)).replace(
 						" ", "&nbsp;"));
-		row.addText(HtmlUtil.escape(outputSize));
-		row.addText(HtmlUtil.escape(output));
+
+		if (outputSize < 0) {
+			row.addText(StringPool.BLANK);
+		}
+		else {
+			row.addText(StringPool.BLANK + outputSize);
+		}
+
+		row.addText(htmlOutput);
 		return row;
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(IndexCheckerOutput.class);
 
 }
