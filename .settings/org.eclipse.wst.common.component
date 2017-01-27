@@ -2,6 +2,6 @@
     <wb-module deploy-name="output-utils-shared">
         <wb-resource deploy-path="/classes" source-path="/src"/>
         <property name="context-root" value="index_checker-portlet"/>
-        <property name="java-output-path" value="/servicebuilder-reflection-shared/classes"/>
+        <property name="java-output-path" value="/output-utils-shared/classes"/>
     </wb-module>
 </project-modules>
