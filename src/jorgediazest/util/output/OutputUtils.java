@@ -17,6 +17,7 @@ package jorgediazest.util.output;
 /**
  * @author Jorge Díaz
  */
+import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -24,8 +25,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Repository;
@@ -40,13 +43,20 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.ResourceResponse;
 
 import javax.servlet.http.HttpServletResponse;
+
+import jorgediazest.util.data.Comparison;
+import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
+import jorgediazest.util.model.Model;
 public class OutputUtils {
 
 	public static FileEntry addPortletFileEntry(
@@ -85,6 +95,162 @@ public class OutputUtils {
 					fileEntry.getFileEntryId());
 			}
 		}
+	}
+
+	public static String generateCSVRow(
+		PortletConfig portletConfig, Comparison comp, String companyOutput,
+		String groupIdOutput, String groupNameOutput, String type,
+		Locale locale, String output, int outputSize) {
+
+		if (Validator.isNull(output)) {
+			return null;
+		}
+
+		Model model = comp.getModel();
+
+		String modelOutput = model.getName();
+		String modelDisplayNameOutput = model.getDisplayName(locale);
+
+		List<String> line = new ArrayList<String>();
+		line.add(companyOutput);
+
+		if (groupIdOutput != null) {
+			line.add(groupIdOutput);
+			line.add(groupNameOutput);
+		}
+
+		line.add(modelOutput);
+		line.add(modelDisplayNameOutput);
+		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
+
+		if (outputSize < 0) {
+			line.add(StringPool.BLANK);
+		}
+		else {
+			line.add(StringPool.BLANK + outputSize);
+		}
+
+		line.add(output);
+		return OutputUtils.getCSVRow(line);
+	}
+
+	public static String generateCSVRow(
+		PortletConfig portletConfig, Comparison comp, String companyOutput,
+		String groupIdOutput, String groupNameOutput, String type,
+		String attribute, Locale locale) {
+
+		Set<Data> data = comp.getData(type);
+
+		if ((data == null) || data.isEmpty()) {
+			return null;
+		}
+
+		String[] output = DataUtil.getListAttr(data, attribute);
+
+		String outputString = OutputUtils.stringArrayToString(output);
+
+		return OutputUtils.generateCSVRow(
+			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
+			type, locale, outputString, data.size());
+	}
+
+	public static ResultRow generateSearchContainerRow(
+		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		String groupNameOutput, String type, Locale locale, int numberOfRows,
+		String errorOutput) {
+
+		return generateSearchContainerRow(
+			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
+			numberOfRows, HtmlUtil.escape(errorOutput), -1);
+	}
+
+	public static ResultRow generateSearchContainerRow(
+		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		String groupNameOutput, String type, Locale locale, int numberOfRows,
+		String htmlOutput, int outputSize) {
+
+		if (Validator.isNull(htmlOutput)) {
+			return null;
+		}
+
+		ResultRow row = new ResultRow(comp, type, numberOfRows);
+		Model model = comp.getModel();
+
+		String modelOutput = model.getName();
+		String modelDisplayNameOutput = model.getDisplayName(locale);
+
+		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
+			row.addText(groupIdOutput);
+			row.addText(groupNameOutput);
+		}
+
+		row.addText(HtmlUtil.escape(modelOutput));
+		row.addText(HtmlUtil.escape(modelDisplayNameOutput));
+		row.addText(
+			HtmlUtil.escape(
+				LanguageUtil.get(
+					portletConfig, locale, "output." + type)).replace(
+						" ", "&nbsp;"));
+
+		if (outputSize < 0) {
+			row.addText(StringPool.BLANK);
+		}
+		else {
+			row.addText(StringPool.BLANK + outputSize);
+		}
+
+		row.addText(htmlOutput);
+		return row;
+	}
+
+	public static ResultRow generateSearchContainerRow(
+		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		String groupNameOutput, String type, String attribute, Locale locale,
+		int numberOfRows, int maxSize) {
+
+		Set<Data> data = comp.getData(type);
+
+		if ((data == null) || data.isEmpty()) {
+			return null;
+		}
+
+		String[] output = DataUtil.getListAttr(data, attribute);
+
+		String outputString = OutputUtils.stringArrayToString(output);
+
+		outputString = HtmlUtil.escape(outputString);
+
+		String outputStringTrimmed = null;
+
+		int overflow = data.size() - maxSize;
+
+		if (overflow > 0) {
+			String[] outputTrimmed = DataUtil.getListAttr(
+				data, attribute, maxSize);
+
+			outputStringTrimmed = OutputUtils.stringArrayToString(
+				outputTrimmed);
+
+			outputStringTrimmed = HtmlUtil.escape(outputStringTrimmed);
+
+			String tagId = StringUtil.randomString() + "_" + numberOfRows;
+			String onClick =
+				"onclick=\"showHide('" + tagId + "');return false;\"";
+			String linkMore =
+				"<a href=\"#\"" + onClick + " >(" + overflow + " more)</a>";
+			String linkCollapse =
+				"<a href=\"#\"" + onClick + " >(collapse)</a>";
+
+			outputString =
+				"<span id=\"" + tagId + "-show\" >" + outputStringTrimmed +
+				"... " + linkMore + "</span><span id=\"" + tagId +
+				"\" style=\"display: none;\" >" + outputString + " " +
+				linkCollapse + "</span>";
+		}
+
+		return OutputUtils.generateSearchContainerRow(
+			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
+			numberOfRows, outputString, data.size());
 	}
 
 	public static String getCSVRow(List<String> rowData) {
@@ -198,6 +364,16 @@ public class OutputUtils {
 				ResourceResponse.HTTP_STATUS_CODE,
 				Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
+	}
+
+	public static String stringArrayToString(String[] stringArray) {
+		String string = Arrays.toString(stringArray);
+
+		if (string.length() <= 1) {
+			return StringPool.BLANK;
+		}
+
+		return string.substring(1, string.length()-1);
 	}
 
 	protected static String addCell(String line, String cell, String sep) {
