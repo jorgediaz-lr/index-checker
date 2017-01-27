@@ -61,6 +61,21 @@
 <portlet:actionURL name="executeReindex" var="executeReindexURL" windowState="normal" />
 <portlet:actionURL name="executeRemoveOrphans" var="executeRemoveOrphansURL" windowState="normal" />
 
+<script type="text/javascript">
+	function showHide(shID) {
+		if (document.getElementById(shID)) {
+			if (document.getElementById(shID+'-show').style.display != 'none') {
+				document.getElementById(shID+'-show').style.display = 'none';
+				document.getElementById(shID).style.display = 'block';
+			}
+			else {
+				document.getElementById(shID+'-show').style.display = 'inline';
+				document.getElementById(shID).style.display = 'none';
+			}
+		}
+	}
+</script>
+
 <liferay-ui:header
 	backURL="<%= viewURL %>"
 	title="index-checker"
