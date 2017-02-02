@@ -38,6 +38,10 @@ import jorgediazest.util.model.Model;
  */
 public class ComparisonUtil {
 
+	public static Comparison _getError(Model model, String error) {
+		return new Comparison(model, error);
+	}
+
 	public static void dumpToLog(
 			boolean groupBySite,
 			Map<Long, List<Comparison>> comparisonDataMap)
@@ -135,12 +139,18 @@ public class ComparisonUtil {
 		return new Comparison(model, data);
 	}
 
+	public static Comparison getError(Model model, String error) {
+		_log.error("Model: " + model.getName() + " ERROR: " + error);
+
+		return new Comparison(model, error);
+	}
+
 	public static Comparison getError(Model model, Throwable t) {
 		_log.error(
 			"Model: " + model.getName() + " EXCEPTION: " +
 				t.getClass() + " - " + t.getMessage(),t);
 
-		return new Comparison(model, t.getClass() + " - " + t.getMessage());
+		return _getError(model, t.getClass() + " - " + t.getMessage());
 	}
 
 	public static List<Comparison> mergeComparisons(
