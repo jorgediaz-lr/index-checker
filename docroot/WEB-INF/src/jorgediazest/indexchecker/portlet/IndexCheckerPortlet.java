@@ -79,7 +79,6 @@ import javax.portlet.ResourceURL;
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
 import jorgediazest.indexchecker.data.DataIndexCheckerResourceModelComparator;
-import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
@@ -218,8 +217,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		mqFactory.setDataComparatorFactory(dataComparatorFactory);
 
 		List<ModelQuery> mqList = getModelQueryList(mqFactory, classNames);
-
-		IndexSearchUtil.autoAdjustIndexSearchLimit(mqList);
 
 		long companyId = company.getCompanyId();
 
@@ -1127,19 +1124,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return false;
-	}
-
-	public void init() throws PortletException {
-		super.init();
-
-		try {
-			List<Model> modelList = getModelList();
-
-			IndexSearchUtil.autoAdjustIndexSearchLimitModelList(modelList);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-		}
 	}
 
 	public void serveResource(

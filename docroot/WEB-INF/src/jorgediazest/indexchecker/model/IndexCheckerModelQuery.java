@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -48,7 +49,6 @@ import com.liferay.portal.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -143,7 +143,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 				}
 			}
 
-			/* Reindex object, perhaps we deleted it by error */
+			/* Reindex object, perhaps we deleted it by mistake */
 			try {
 				this.reindex(data);
 			}
@@ -209,16 +209,22 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	public Set<Data> getIndexData(
 			Set<Model> relatedModels, String[] attributes,
 			SearchContext searchContext, BooleanQuery contextQuery)
-		throws SearchException {
+		throws ParseException, SearchException {
 
-		int size = Math.max((int)getModel().count() * 2, 50000);
+		int size = Math.min((int)getModel().count() * 2, 20000);
 
-		Document[] docs = IndexSearchUtil.executeSearch(
-			searchContext, contextQuery, size, 50000);
+		String startUID = null;
 
 		Set<Data> indexData = new HashSet<Data>();
 
-		if (docs != null) {
+		while (true) {
+			Document[] docs = IndexSearchUtil.executeSearch(
+				searchContext, contextQuery, startUID, size);
+
+			if ((docs == null) || (docs.length == 0)) {
+				break;
+			}
+
 			for (int i = 0; i < docs.length; i++) {
 				Data data = new Data(getModel(), this.dataComparator);
 
@@ -228,6 +234,8 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 				indexData.add(data);
 			}
+
+			startUID = docs[docs.length - 1].get(Field.UID);
 		}
 
 		return indexData;
@@ -255,31 +263,13 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		return query;
 	}
 
-	public BooleanQuery getIndexQuery(long groupId, SearchContext searchContext)
-		throws ParseException {
-
-		List<Long> groupIds = null;
-
-		if (groupId != 0) {
-			groupIds = new ArrayList<Long>();
-
-			groupIds.add(groupId);
-		}
-
-		return getIndexQuery(groupIds, searchContext);
-	}
-
-	public BooleanQuery getIndexQuery(SearchContext searchContext)
-		throws ParseException {
-
-		return getIndexQuery(null, searchContext);
-	}
-
 	public SearchContext getIndexSearchContext(long companyId) {
 		SearchContext searchContext = new SearchContext();
 		searchContext.setCompanyId(companyId);
 		searchContext.setEntryClassNames(
 			new String[] {getModel().getClassName()});
+		searchContext.setSorts(new Sort(Field.UID, false));
+
 		return searchContext;
 	}
 

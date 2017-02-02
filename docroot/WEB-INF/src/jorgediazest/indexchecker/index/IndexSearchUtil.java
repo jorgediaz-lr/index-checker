@@ -16,96 +16,69 @@ package jorgediazest.indexchecker.index;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
+import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.search.TermRangeQuery;
+import com.liferay.portal.kernel.search.TermRangeQueryFactoryUtil;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.modelquery.ModelQuery;
-import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
  */
 public class IndexSearchUtil {
 
-	public static void autoAdjustIndexSearchLimit(
-		Collection<ModelQuery> modelQueryList) {
-
-		List<Model> modelList = new ArrayList<Model>();
-
-		for (ModelQuery modelQuery : modelQueryList) {
-			modelList.add(modelQuery.getModel());
-		}
-
-		autoAdjustIndexSearchLimitModelList(modelList);
-	}
-
-	public static void autoAdjustIndexSearchLimitModelList(
-		Collection<Model> modelList) {
-
-		try {
-			int indexSearchLimit = Math.max(20000, getIndexSearchLimit());
-
-			for (Model model : modelList) {
-				if ((model == null) || !model.hasIndexerEnabled()) {
-					continue;
-				}
-
-				indexSearchLimit = Math.max(
-					indexSearchLimit, (int)(model.count() * 1.2));
-			}
-
-			setIndexSearchLimit(indexSearchLimit);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-		}
-	}
-
 	public static Document[] executeSearch(
-			SearchContext searchContext, BooleanQuery contextQuery, int size,
-			int step)
-		throws SearchException {
+			SearchContext searchContext, BooleanQuery query, String startUID,
+			int size)
+		throws ParseException, SearchException {
+
+		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
+			searchContext);
+
+		contextQuery.add(query, BooleanClauseOccur.MUST);
+
+		if (startUID != null) {
+			TermRangeQuery termRangeQuery =
+				TermRangeQueryFactoryUtil.create(
+					searchContext, Field.UID, startUID, null, false, false);
+
+			contextQuery.add(termRangeQuery, BooleanClauseOccur.MUST);
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("startUID: " + startUID);
+			_log.debug("size: " + size);
+			_log.debug("Executing search: " + contextQuery);
+		}
 
 		searchContext.setStart(0);
+		searchContext.setEnd(size);
 
-		for (int i = 0;; i++) {
-			if (_log.isDebugEnabled()) {
-				_log.debug("searchContext.setEnd: " + (size + step*i));
-			}
+		Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
 
-			searchContext.setEnd(size + step*i);
+		Document[] docs = hits.getDocs();
 
-			if (_log.isDebugEnabled()) {
-				_log.debug("Executing search: " + contextQuery);
-			}
-
-			Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
-
-			Document[] docs = hits.getDocs();
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(docs.length + " hits returned");
-			}
-
-			if (docs.length < (size + step*i)) {
-				return docs;
-			}
+		if (_log.isDebugEnabled()) {
+			_log.debug(docs.length + " hits returned");
 		}
+
+		return docs;
 	}
 
 	public static String getAttributeForDocument(
@@ -146,23 +119,6 @@ public class IndexSearchUtil {
 		return attribute;
 	}
 
-	public static int getIndexSearchLimit() {
-		try {
-			Class<?> propsValues =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-					"com.liferay.portal.util.PropsValues");
-
-			java.lang.reflect.Field indexSearchLimitFiled =
-				propsValues.getDeclaredField("INDEX_SEARCH_LIMIT");
-
-			return (Integer)indexSearchLimitFiled.get(null);
-		}
-		catch (Throwable t) {
-			_log.error("Error at getIndexSearchLimit: " + t);
-			return -1;
-		}
-	}
-
 	public static List<Map<Locale, String>> getLocalizedMap(
 		Locale[] locales, Document doc, String attribute) {
 
@@ -182,57 +138,6 @@ public class IndexSearchUtil {
 		}
 
 		return listValueMap;
-	}
-
-	public static void setIndexSearchLimit(int indexSearchLimit) {
-
-		try {
-			if (_log.isDebugEnabled()) {
-				_log.debug("SetIndexSearchLimit: " + indexSearchLimit);
-			}
-
-			Class<?> propsValues =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-					"com.liferay.portal.util.PropsValues");
-
-			java.lang.reflect.Field indexSearchLimitField =
-				propsValues.getDeclaredField("INDEX_SEARCH_LIMIT");
-
-			ReflectionUtil.updateStaticFinalInt(
-				indexSearchLimitField, indexSearchLimit);
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"New value of INDEX_SEARCH_LIMIT: " +
-						getIndexSearchLimit());
-			}
-		}
-		catch (Throwable t) {
-			_log.error("Error at setIndexSearchLimit: " + t);
-		}
-
-		try {
-			ClassLoader classLoader = ModelUtil.getClassLoaderAggregate();
-
-			Class<?> solrIndexSearcher = classLoader.loadClass(
-				"com.liferay.portal.search.solr.SolrIndexSearcher");
-
-			if (solrIndexSearcher != null) {
-				java.lang.reflect.Field solrIndexSearchLimitField =
-					solrIndexSearcher.getDeclaredField("INDEX_SEARCH_LIMIT");
-
-				if (solrIndexSearchLimitField != null) {
-					ReflectionUtil.updateStaticFinalInt(
-						solrIndexSearchLimitField, indexSearchLimit);
-				}
-			}
-		}
-		catch (Throwable t) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"EXCEPTION: " + t.getClass() + " - " + t.getMessage(), t);
-			}
-		}
 	}
 
 	protected static Map<Locale, String> getLocalizedMap(
