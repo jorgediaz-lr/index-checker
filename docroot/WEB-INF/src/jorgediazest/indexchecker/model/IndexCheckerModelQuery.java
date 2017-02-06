@@ -49,6 +49,7 @@ import com.liferay.portal.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -207,19 +208,32 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	}
 
 	public Set<Data> getIndexData(
-			Set<Model> relatedModels, String[] attributes,
+		Set<Model> relatedModels, String[] attributes,
+		SearchContext searchContext, BooleanQuery contextQuery)
+	throws ParseException, SearchException {
+
+		String[] sortAttributes = {"createDate", "modifiedDate"};
+
+		Sort[] sorts = getIndexSorting(sortAttributes);
+
+		return getIndexData(
+			relatedModels, attributes, sorts, searchContext, contextQuery);
+	}
+
+	public Set<Data> getIndexData(
+			Set<Model> relatedModels, String[] attributes, Sort[] sorts,
 			SearchContext searchContext, BooleanQuery contextQuery)
 		throws ParseException, SearchException {
 
 		int size = Math.min((int)getModel().count() * 2, 20000);
 
-		String startUID = null;
-
 		Set<Data> indexData = new HashSet<Data>();
+
+		String[] lowerTerms = new String[sorts.length];
 
 		while (true) {
 			Document[] docs = IndexSearchUtil.executeSearch(
-				searchContext, contextQuery, startUID, size);
+				searchContext, contextQuery, sorts, lowerTerms, size);
 
 			if ((docs == null) || (docs.length == 0)) {
 				break;
@@ -235,7 +249,14 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 				indexData.add(data);
 			}
 
-			startUID = docs[docs.length - 1].get(Field.UID);
+			if (sorts.length == 0) {
+				break;
+			}
+
+			for (int i = 0; i<sorts.length; i++) {
+				lowerTerms[i] = docs[docs.length - 1].get(
+					sorts[i].getFieldName());
+			}
 		}
 
 		return indexData;
@@ -268,9 +289,30 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		searchContext.setCompanyId(companyId);
 		searchContext.setEntryClassNames(
 			new String[] {getModel().getClassName()});
-		searchContext.setSorts(new Sort(Field.UID, false));
 
 		return searchContext;
+	}
+
+	public Sort[] getIndexSorting(String[] attributes) {
+		List<String> sortAttributesList = new ArrayList<String>();
+
+		for (String attribute : attributes) {
+			if (model.hasAttribute(attribute)) {
+				String sortableFieldName =
+					IndexSearchUtil.getAttributeForDocument(model, attribute);
+
+				sortAttributesList.add(sortableFieldName);
+			}
+		}
+
+		Sort[] sorts = new Sort[sortAttributesList.size()];
+
+		for (int i = 0; i<sortAttributesList.size(); i++) {
+			sorts[i] = new Sort(
+				sortAttributesList.get(i), Sort.LONG_TYPE, false);
+		}
+
+		return sorts;
 	}
 
 	public boolean hasActionId(long actionIds, String name, String actionId)

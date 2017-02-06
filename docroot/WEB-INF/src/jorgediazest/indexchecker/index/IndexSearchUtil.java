@@ -21,14 +21,16 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
-import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.ParseException;
+import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.TermRangeQuery;
 import com.liferay.portal.kernel.search.TermRangeQueryFactoryUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,8 +46,8 @@ import jorgediazest.util.model.Model;
 public class IndexSearchUtil {
 
 	public static Document[] executeSearch(
-			SearchContext searchContext, BooleanQuery query, String startUID,
-			int size)
+			SearchContext searchContext, BooleanQuery query, Sort[] sorts,
+			String[] lowerTermArray, int size)
 		throws ParseException, SearchException {
 
 		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
@@ -53,22 +55,40 @@ public class IndexSearchUtil {
 
 		contextQuery.add(query, BooleanClauseOccur.MUST);
 
-		if (startUID != null) {
+		for (int i = 0; (i<sorts.length && i<lowerTermArray.length); i++) {
+			if (Validator.isNull(lowerTermArray[i])) {
+				continue;
+			}
+
 			TermRangeQuery termRangeQuery =
 				TermRangeQueryFactoryUtil.create(
-					searchContext, Field.UID, startUID, null, false, false);
+					searchContext, sorts[i].getFieldName(), lowerTermArray[i],
+					null, false, false);
 
 			contextQuery.add(termRangeQuery, BooleanClauseOccur.MUST);
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("sorts[" + i + "]=" + sorts[i]);
+				_log.debug("lowerTerm[" + i + "]=" + lowerTermArray[i]);
+			}
+		}
+
+		if (sorts.length > 0) {
+			searchContext.setSorts(sorts);
 		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("startUID: " + startUID);
 			_log.debug("size: " + size);
 			_log.debug("Executing search: " + contextQuery);
 		}
 
 		searchContext.setStart(0);
 		searchContext.setEnd(size);
+
+		QueryConfig queryConfig = new QueryConfig();
+		queryConfig.setHighlightEnabled(false);
+		queryConfig.setScoreEnabled(false);
+		searchContext.setQueryConfig(queryConfig);
 
 		Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
 
