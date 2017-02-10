@@ -185,6 +185,10 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 				if (groupIds != null) {
 					strGroupIds = Arrays.toString(groupIds.toArray());
+
+					if (strGroupIds.length() > 100) {
+						strGroupIds = strGroupIds.substring(0, 97) + "...";
+					}
 				}
 
 				_log.info(
