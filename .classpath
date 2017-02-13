@@ -17,5 +17,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/servicebuilder-reflection-shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/output-utils-shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/servicebuilder-query-data-shared"/>
+	<classpathentry kind="lib" path="/com.liferay.portal.plugins.sdk-7.0/lib/util-java.jar"/>
+	<classpathentry kind="lib" path="/com.liferay.portal.plugins.sdk-7.0/lib/util-taglib.jar"/>
 	<classpathentry kind="output" path="docroot/WEB-INF/classes"/>
 </classpath>
