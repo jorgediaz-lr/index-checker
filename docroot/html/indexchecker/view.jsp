@@ -34,7 +34,7 @@
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
-<%@ page import="com.liferay.portal.model.Company" %>
+<%@ page import="com.liferay.portal.kernel.model.Company" %>
 
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.util.HashSet" %>
