@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -44,7 +43,6 @@ import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.bridges.mvc.MVCPortlet;
-import com.liferay.util.portlet.PortletProps;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -83,6 +81,7 @@ import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
+import jorgediazest.indexchecker.util.PortletPropsValues;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
@@ -133,18 +132,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		int threadsExecutor)
 	throws ExecutionException, InterruptedException, SystemException {
 
-		final String dateAttributes = PortletProps.get(
-			"data-comparator.date.attributes");
-		final String dateAttributesUser = PortletProps.get(
-			"data-comparator.date.attributes.user");
-		final String basicAttributes = PortletProps.get(
-			"data-comparator.basic.attributes");
-		final String basicAttributesNoVersion = PortletProps.get(
-			"data-comparator.basic.attributes.noversion");
-		final String categoriesTagsAttributes = PortletProps.get(
-			"data-comparator.categories-tags.attributes");
-		final String assetEntryAttributes = PortletProps.get(
-			"data-comparator.assetentry.attributes");
+		final String dateAttributes =
+			PortletPropsValues.DATA_COMPARATOR_DATE_ATTRIBUTES;
+		final String dateAttributesUser =
+			PortletPropsValues.DATA_COMPARATOR_DATE_ATTRIBUTES_USER;
+		final String basicAttributes =
+			PortletPropsValues.DATA_COMPARATOR_BASIC_ATTRIBUTES;
+		final String basicAttributesNoVersion =
+			PortletPropsValues.DATA_COMPARATOR_BASIC_ATTRIBUTES_NOVERSION;
+		final String categoriesTagsAttributes =
+			PortletPropsValues.DATA_COMPARATOR_CATEGORIESTAGS_ATTRIBUTES;
+		final String assetEntryAttributes =
+			PortletPropsValues.DATA_COMPARATOR_ASSETENTRY_ATTRIBUTES;
 
 		DataComparatorFactory dataComparatorFactory =
 			new DataComparatorFactory() {
@@ -991,7 +990,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public int getNumberOfThreads(ActionRequest actionRequest) {
-		int def = GetterUtil.getInteger(PortletProps.get("number.threads"),1);
+		int def = PortletPropsValues.NUMBER_THREADS;
 
 		int num = ParamUtil.getInteger(actionRequest, "numberOfThreads", def);
 
@@ -999,7 +998,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public int getNumberOfThreads(RenderRequest renderRequest) {
-		int def = GetterUtil.getInteger(PortletProps.get("number.threads"), 1);
+		int def = PortletPropsValues.NUMBER_THREADS;
 
 		int num = ParamUtil.getInteger(renderRequest, "numberOfThreads", def);
 
