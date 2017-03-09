@@ -12,6 +12,7 @@
 		<control-panel-entry-class>
 			jorgediazest.indexchecker.portlet.IndexCheckerControlPanelEntry
 		</control-panel-entry-class>
+		<single-page-application>false</single-page-application>
 		<header-portlet-css>/css/main.css</header-portlet-css>
 		<footer-portlet-javascript>
 			/js/main.js
