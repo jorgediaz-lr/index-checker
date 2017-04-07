@@ -104,7 +104,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	}
 
 	public void delete(Data value) throws SearchException {
-		Object uid = value.get("uid");
+		Object uid = value.get(Field.UID);
 
 		if (uid == null) {
 			return;
@@ -133,7 +133,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
-						"Deleting " + (i++) + " uid: " + data.get("uid"));
+						"Deleting " + (i++) + " uid: " + data.get(Field.UID));
 				}
 			}
 			catch (SearchException e) {
@@ -156,7 +156,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	}
 
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
-		data.set("uid", doc.getUID());
+		data.set(Field.UID, doc.getUID());
 
 		Locale[] locales = LanguageUtil.getAvailableLocales();
 		Locale siteLocale = LocaleUtil.getSiteDefault();

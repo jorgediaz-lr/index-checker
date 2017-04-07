@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -164,8 +165,8 @@ public class IndexCheckerOutput {
 						for (String type : comp.getOutputTypes()) {
 							String attribute = "pk";
 
-							if (type.contains("index")) {
-								attribute = "uid";
+							if (type.contains("right")) {
+								attribute = Field.UID;
 							}
 
 							String line = OutputUtils.generateCSVRow(
@@ -293,7 +294,7 @@ public class IndexCheckerOutput {
 					String attribute = "pk";
 
 					if (type.contains("right")) {
-						attribute = "uid";
+						attribute = Field.UID;
 					}
 
 					int maxSize = 50;
