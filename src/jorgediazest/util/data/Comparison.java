@@ -37,7 +37,7 @@ public class Comparison {
 	public static List<Comparison> mergeComparisons(
 		Collection<Comparison> collection) {
 
-		List<Comparison> result = new ArrayList<Comparison>();
+		List<Comparison> result = new ArrayList<>();
 
 		Comparison merged = null;
 
@@ -58,7 +58,7 @@ public class Comparison {
 				Set<Data> dataSet = merged.data.get(e.getKey());
 
 				if (dataSet == null) {
-					dataSet = new TreeSet<Data>();
+					dataSet = new TreeSet<>();
 
 					merged.data.put(e.getKey(), dataSet);
 				}
@@ -136,7 +136,7 @@ public class Comparison {
 	}
 
 	public Map<Long, Comparison> splitByAttribute(String attribute) {
-		Map<Long, Comparison> result = new TreeMap<Long, Comparison>();
+		Map<Long, Comparison> result = new TreeMap<>();
 
 		if (error != null) {
 			result.put(0L, this);
@@ -149,6 +149,7 @@ public class Comparison {
 
 			for (Data d : entry.getValue()) {
 				Long id;
+
 				try {
 					id = d.get(attribute, 0L);
 				}
@@ -166,7 +167,7 @@ public class Comparison {
 				Set<Data> set = c.data.get(key);
 
 				if (set == null) {
-					set = new TreeSet<Data>();
+					set = new TreeSet<>();
 					result.get(id).data.put(key, set);
 				}
 

@@ -116,7 +116,7 @@ public class DatabaseUtil {
 
 	public static Map<Integer, String> getJdbcTypeNames() {
 		if (jdbcTypeNames == null) {
-			Map<Integer, String> aux = new HashMap<Integer, String>();
+			Map<Integer, String> aux = new HashMap<>();
 
 			for (Field field : Types.class.getFields()) {
 				try {

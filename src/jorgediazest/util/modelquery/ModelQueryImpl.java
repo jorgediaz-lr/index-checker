@@ -524,7 +524,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 	public Set<Data> queryTable(TableInfo tableInfo) throws Exception {
 		if (Validator.isNull(tableInfo)) {
-			return new HashSet<Data>();
+			return new HashSet<>();
 		}
 
 		return queryTable(tableInfo, tableInfo.getAttributesName());

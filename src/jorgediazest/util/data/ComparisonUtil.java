@@ -43,7 +43,7 @@ public class ComparisonUtil {
 		boolean showBothExact, boolean showBothNotExact, boolean showOnlyLeft,
 		boolean showOnlyRight) {
 
-		Map<String, Set<Data>> data = new TreeMap<String, Set<Data>>();
+		Map<String, Set<Data>> data = new TreeMap<>();
 
 		if (showBothExact) {
 			data.put("both-exact-left", new TreeSet<Data>());
@@ -81,7 +81,7 @@ public class ComparisonUtil {
 			}
 		}
 
-		Set<Data> bothDataSet = new HashSet<Data>(rightData);
+		Set<Data> bothDataSet = new HashSet<>(rightData);
 		bothDataSet.retainAll(leftData);
 
 		if (showOnlyLeft) {
@@ -116,21 +116,20 @@ public class ComparisonUtil {
 	public static List<Comparison> mergeComparisons(
 		Collection<Comparison> collection) {
 
-		Map<Model, List<Comparison>> modelMap =
-			new LinkedHashMap<Model, List<Comparison>>();
+		Map<Model, List<Comparison>> modelMap = new LinkedHashMap<>();
 
 		for (Comparison c : collection) {
 			List<Comparison> comparisonList = modelMap.get(c.getModel());
 
 			if (comparisonList == null) {
-				comparisonList = new ArrayList<Comparison>();
+				comparisonList = new ArrayList<>();
 				modelMap.put(c.getModel(), comparisonList);
 			}
 
 			comparisonList.add(c);
 		}
 
-		List<Comparison> resultComparison = new ArrayList<Comparison>();
+		List<Comparison> resultComparison = new ArrayList<>();
 
 		for (List<Comparison> comparisonList : modelMap.values()) {
 			resultComparison.addAll(
