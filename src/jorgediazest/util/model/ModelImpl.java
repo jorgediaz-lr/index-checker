@@ -44,7 +44,6 @@ import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,18 +65,6 @@ public abstract class ModelImpl implements Model {
 		service.setFilter(
 			ModelUtil.generateConjunctionQueryFilter(
 				service.getFilter(), filter));
-	}
-
-	public Set<Portlet> calculatePortlets() {
-		Set<Portlet> portletsSet = new HashSet<>();
-		portletsSet.addAll(modelFactory.getPortletSet(this.getIndexer()));
-		portletsSet.addAll(
-			modelFactory.getPortletSet(this.getStagedModelDataHandler()));
-		portletsSet.addAll(modelFactory.getPortletSet(this.getTrashHandler()));
-		portletsSet.addAll(
-			modelFactory.getPortletSet(this.getWorkflowHandler()));
-
-		return portletsSet;
 	}
 
 	public Model clone() {
@@ -619,7 +606,7 @@ public abstract class ModelImpl implements Model {
 		this.classPackageName = classPackageName;
 		this.classSimpleName = classSimpleName;
 
-		this.portlets = calculatePortlets();
+		this.portlets = modelFactory.getPortletSet(this.getClassName());
 	}
 
 	public boolean isAuditedModel() {

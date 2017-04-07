@@ -14,6 +14,9 @@
 
 package jorgediazest.util.model;
 
+import com.liferay.exportimport.kernel.lar.PortletDataException;
+import com.liferay.exportimport.kernel.lar.PortletDataHandler;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,12 +27,10 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceUtil;
 
@@ -47,7 +48,7 @@ public class ModelFactory {
 			this.modelClassFactory = modelClassFactory;
 		}
 
-		fillHandlerPortletIdMap();
+		fillClassNamePortletMapping();
 	}
 
 	public Model getModelObject(Class<?> clazz) {
@@ -97,16 +98,12 @@ public class ModelFactory {
 		return model;
 	}
 
-	public Set<Portlet> getPortletSet(Object handler) {
-		Object handlerAux = ReflectionUtil.unWrapProxy(handler);
-
-		if ((handlerAux == null) ||
-			!handlerPortletMap.containsKey(handlerAux.getClass().getName())) {
-
+	public Set<Portlet> getPortletSet(String className) {
+		if (!classNamePortletMap.containsKey(className)) {
 			return new HashSet<>();
 		}
 
-		return handlerPortletMap.get(handlerAux.getClass().getName());
+		return classNamePortletMap.get(className);
 	}
 
 	public interface ModelClassFactory {
@@ -115,13 +112,25 @@ public class ModelFactory {
 
 	}
 
-	protected void fillHandlerPortletIdMap() {
+	protected void fillClassNamePortletMapping() {
 		for (Portlet portlet : PortletLocalServiceUtil.getPortlets()) {
-			addHandlersToMap(portlet.getIndexerClasses(), portlet);
-			addHandlersToMap(
-				portlet.getStagedModelDataHandlerClasses(), portlet);
-			addHandlersToMap(portlet.getTrashHandlerClasses(), portlet);
-			addHandlersToMap(portlet.getWorkflowHandlerClasses(), portlet);
+			PortletDataHandler portletDataHandler =
+				portlet.getPortletDataHandlerInstance();
+
+			PortletDataHandlerControl[] pdhControlArr;
+
+			try {
+				pdhControlArr = portletDataHandler.getExportControls();
+			}
+			catch (PortletDataException pde) {
+				_log.warn(pde, pde);
+
+				continue;
+			}
+
+			for (PortletDataHandlerControl pdhControl : pdhControlArr) {
+				addClassNamePortletMapping(pdhControl.getClassName(), portlet);
+			}
 		}
 	}
 
@@ -163,8 +172,8 @@ public class ModelFactory {
 
 	protected Map<String, Model> cacheModelObject = new ConcurrentHashMap<>();
 	protected Set<String> cacheNullModelObject = new ConcurrentHashSet<>();
+	protected Map<String, Set<Portlet>> classNamePortletMap = new HashMap<>();
 	protected Class<? extends Model> defaultModelClass = null;
-	protected Map<String, Set<Portlet>> handlerPortletMap = new HashMap<>();
 
 	protected ModelClassFactory modelClassFactory = new ModelClassFactory() {
 
@@ -175,20 +184,18 @@ public class ModelFactory {
 
 	};
 
-	private void addHandlersToMap(List<String> handlerList, Portlet portlet) {
-		for (String handler : handlerList) {
-			if (!handlerPortletMap.containsKey(handler)) {
-				handlerPortletMap.put(handler, new HashSet<Portlet>());
-			}
+	private void addClassNamePortletMapping(String className, Portlet portlet) {
+		if (!classNamePortletMap.containsKey(className)) {
+			classNamePortletMap.put(className, new HashSet<Portlet>());
+		}
 
-			Set<Portlet> portletSet = handlerPortletMap.get(handler);
+		Set<Portlet> portletSet = classNamePortletMap.get(className);
 
-			if (!portletSet.contains(portlet)) {
-				portletSet.add(portlet);
+		if (!portletSet.contains(portlet)) {
+			portletSet.add(portlet);
 
-				if (_log.isDebugEnabled()) {
-					_log.debug("Adding: " + handler + " portlet " + portlet);
-				}
+			if (_log.isDebugEnabled()) {
+				_log.debug("Adding: " + className + " portlet " + portlet);
 			}
 		}
 	}
