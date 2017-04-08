@@ -76,10 +76,7 @@
 	}
 </script>
 
-<liferay-ui:header
-	backURL="<%= viewURL %>"
-	title="index-checker"
-/>
+<div class="container-fluid-1280"><div class="card-horizontal main-content-card"><div class="panel-body">
 
 <%
 	Log _log = IndexCheckerPortlet.getLogger();
@@ -201,7 +198,7 @@
 	}
 %>
 
-		<aui:button onClick='<%= viewURL %>' type="button" value="clean" />
+		<aui:button onClick="<%= viewURL %>" type="button" value="clean" />
 
 	</aui:button-row>
 </aui:form>
@@ -259,6 +256,8 @@
 <%
 	}
 %>
+
+</div></div></div>
 
 <aui:script>
 	function <portlet:namespace />disableReindexAndRemoveOrphansButtons(event) {
