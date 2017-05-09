@@ -20,8 +20,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileVersion;
@@ -74,6 +76,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 		if (MBMessage.class.getName().equals(model.getClassName())) {
 			attributesToCheck.add("categoryId");
+		}
+
+		if ("com.liferay.dynamic.data.lists.model.DDLRecord".equals(
+			model.getClassName())) {
+
+			attributesToCheck.add("recordSetId");
 		}
 
 		return attributesToCheck;

@@ -32,6 +32,8 @@ public class IndexCheckerModelQueryFactory extends ModelQueryFactory {
 	protected static ModelQueryClassFactory indexCheckerClassFactory =
 		new ModelQueryClassFactory() {
 
+		public final String DDL_RECORD =
+			"com.liferay.dynamic.data.lists.model.DDLRecord";
 		public final String DL_FILE_ENTRY =
 			"com.liferay.document.library.kernel.model.DLFileEntry";
 		public final String JOURNAL_ARTICLE =
@@ -43,7 +45,10 @@ public class IndexCheckerModelQueryFactory extends ModelQueryFactory {
 		public Class<? extends ModelQuery> getModelQueryClass(
 			String className) {
 
-			if (DL_FILE_ENTRY.equals(className)) {
+			if (DDL_RECORD.equals(className)) {
+				return DDLRecordQuery.class;
+			}
+			else if (DL_FILE_ENTRY.equals(className)) {
 				return DLFileEntryQuery.class;
 			}
 			else if (JOURNAL_ARTICLE.equals(className)) {
