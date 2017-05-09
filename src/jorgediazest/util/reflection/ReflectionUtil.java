@@ -36,8 +36,6 @@ import java.util.Map;
 
 import jorgediazest.util.model.Model;
 
-import sun.misc.Unsafe;
-
 /**
  * @author Jorge Díaz
  */
@@ -287,38 +285,16 @@ public class ReflectionUtil {
 		return mappingTablesFields;
 	}
 
-	public static Object getPrivateField(Object object, String fieldName) {
-		if (object == null) {
-			return null;
-		}
+	public static Object getPrivateField(Object object, String fieldName)
+		throws Exception {
 
-		try {
-			Class<?> clazz = object.getClass();
+		Class<?> clazz = object.getClass();
 
-			Field field = clazz.getDeclaredField(fieldName);
+		Field field =
+			com.liferay.portal.kernel.util.ReflectionUtil.getDeclaredField(
+				clazz, fieldName);
 
-			field.setAccessible(true);
-
-			if (field != null) {
-				return field.get(object);
-			}
-		}
-		catch (Throwable t) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(t, t);
-			}
-		}
-
-		return null;
-	}
-
-	public static sun.misc.Unsafe getUnsafe()
-		throws IllegalAccessException, IllegalArgumentException,
-		NoSuchFieldException, SecurityException {
-
-		Field field = Unsafe.class.getDeclaredField("theUnsafe");
-		field.setAccessible(true);
-		return (Unsafe)field.get(null);
+		return field.get(object);
 	}
 
 	public static String getWrappedCriterionString(Criterion criterion) {
@@ -332,12 +308,21 @@ public class ReflectionUtil {
 	}
 
 	public static String getWrappedModelImpl(DynamicQuery dynamicQuery) {
-		Object detachedCriteria = getPrivateField(
-			dynamicQuery, "_detachedCriteria");
+		try {
+			Object detachedCriteria = getPrivateField(
+				dynamicQuery, "_detachedCriteria");
 
-		Object criteria = getPrivateField(detachedCriteria, "impl");
+			Object criteria = getPrivateField(detachedCriteria, "impl");
 
-		return (String)getPrivateField(criteria, "entityOrClassName");
+			return (String)getPrivateField(criteria, "entityOrClassName");
+		}
+		catch (Throwable t) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(t, t);
+			}
+		}
+
+		return null;
 	}
 
 	public static String getWrappedString(Object object, String methodName) {
@@ -379,42 +364,6 @@ public class ReflectionUtil {
 		}
 
 		return object;
-	}
-
-	public static void updateStaticFinal(Field field, Object value)
-		throws IllegalArgumentException, IllegalAccessException,
-			NoSuchFieldException, SecurityException {
-
-		/* see:
-		 * http://java-performance.info/updating-final-and-static-final-fields/
-		 */
-
-		Unsafe unsafe = getUnsafe();
-
-		//this is a 'base'. Usually a Class object will be returned here.
-		Object base = unsafe.staticFieldBase(field);
-		//this is an 'offset'
-		long offset = unsafe.staticFieldOffset(field);
-		//actual update
-		unsafe.putObject(base, offset, value);
-	}
-
-	public static void updateStaticFinalInt(Field field, int value)
-		throws IllegalArgumentException, IllegalAccessException,
-			NoSuchFieldException, SecurityException {
-
-		/* see:
-		 * http://java-performance.info/updating-final-and-static-final-fields/
-		 */
-
-		Unsafe unsafe = getUnsafe();
-
-		//this is a 'base'. Usually a Class object will be returned here.
-		Object base = unsafe.staticFieldBase(field);
-		//this is an 'offset'
-		long offset = unsafe.staticFieldOffset(field);
-		//actual update
-		unsafe.putInt( base, offset, value);
 	}
 
 	static Log _log = LogFactoryUtil.getLog(ReflectionUtil.class);
