@@ -21,15 +21,16 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
+import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
 import com.liferay.portlet.asset.model.AssetCategory;
 import com.liferay.portlet.asset.model.AssetEntry;
+import com.liferay.portlet.asset.model.AssetRendererFactory;
 import com.liferay.portlet.asset.model.AssetTag;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileVersion;
 import com.liferay.portlet.dynamicdatalists.model.DDLRecord;
 import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
 import com.liferay.portlet.messageboards.model.MBMessage;
-import com.liferay.portlet.ratings.model.RatingsStats;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -105,20 +106,29 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				": =fileEntryId, =version,status");
 		}
 
-		String attributeClassPK = "pk";
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				model.getName());
 
-		if (model.isResourcedModel()) {
-			attributeClassPK = "resourcePrimKey";
+		if ((assetRendererFactory == null) ||
+			!assetRendererFactory.isSelectable()) {
+
+			return relatedAttributesToCheck;
 		}
 
-		String mapping = attributeClassPK+"=classPK";
+		//AssetEntry attributes
 
-		relatedAttributesToCheck.add(
-			AssetEntry.class.getName() + ":" + mapping +
-			":AssetEntry.entryId=entryId, =classPK,priority,viewCount,visible");
-		relatedAttributesToCheck.add(
-			RatingsStats.class.getName() + ":" + mapping +
-			":statsId, =classPK,averageScore: ");
+		if (model.isResourcedModel()) {
+			relatedAttributesToCheck.add(
+					AssetEntry.class.getName() + ":resourcePrimKey=classPK" +
+				":AssetEntry.entryId=entryId, =classPK,priority,visible");
+		}
+		else {
+			relatedAttributesToCheck.add(
+					AssetEntry.class.getName() + ":pk=classPK" +
+				":AssetEntry.entryId=entryId, =classPK,priority,visible");
+		}
+
 		relatedAttributesToCheck.add(
 			AssetEntry.class.getName() + ":" +
 			"AssetEntry.entryId=MappingTable:" +
@@ -151,11 +161,20 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				DLFileVersion.class.getName()));
 		}
 
-		relatedModels.add(model.getModelFactory().getModelObject(
-			AssetEntry.class.getName()));
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				model.getName());
+
+		if ((assetRendererFactory == null) ||
+			!assetRendererFactory.isSelectable()) {
+
+			return relatedModels;
+		}
+
+		//AssetEntry and related models
 
 		relatedModels.add(model.getModelFactory().getModelObject(
-			RatingsStats.class.getName()));
+			AssetEntry.class.getName()));
 
 		relatedModels.add(model.getModelFactory().getModelObject(
 			AssetCategory.class.getName()));
