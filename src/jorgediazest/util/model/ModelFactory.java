@@ -113,9 +113,20 @@ public class ModelFactory {
 	}
 
 	protected void fillClassNamePortletMapping() {
+		Set<String> portletDataHandlersAdded = new HashSet<>();
+
 		for (Portlet portlet : PortletLocalServiceUtil.getPortlets()) {
 			PortletDataHandler portletDataHandler =
 				portlet.getPortletDataHandlerInstance();
+
+			String pdhName = portletDataHandler.getClass().getName();
+
+			if (portletDataHandlersAdded.contains(pdhName))
+			{
+				continue;
+			}
+
+			portletDataHandlersAdded.add(pdhName);
 
 			PortletDataHandlerControl[] pdhControlArr;
 
