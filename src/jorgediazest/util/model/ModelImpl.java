@@ -348,11 +348,11 @@ public abstract class ModelImpl implements Model {
 		return getFilteredModel(filter, nameSufix);
 	}
 
-	public Indexer getIndexer() {
+	public Indexer<?> getIndexer() {
 		return IndexerRegistryUtil.getIndexer(getClassName());
 	}
 
-	public Indexer getIndexerNullSafe() {
+	public Indexer<?> getIndexerNullSafe() {
 		return IndexerRegistryUtil.nullSafeGetIndexer(getClassName());
 	}
 
@@ -550,7 +550,7 @@ public abstract class ModelImpl implements Model {
 		return TrashHandlerRegistryUtil.getTrashHandler(getClassName());
 	}
 
-	public WorkflowHandler getWorkflowHandler() {
+	public WorkflowHandler<?> getWorkflowHandler() {
 		return WorkflowHandlerRegistryUtil.getWorkflowHandler(getClassName());
 	}
 
@@ -581,7 +581,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public boolean hasIndexerEnabled() {
-		Indexer indexer = getIndexer();
+		Indexer<?> indexer = getIndexer();
 
 		if (indexer == null) {
 			return false;
@@ -593,7 +593,7 @@ public abstract class ModelImpl implements Model {
 			return false;
 		}
 
-		return ((BaseIndexer)aux).isIndexerEnabled();
+		return ((BaseIndexer<?>)aux).isIndexerEnabled();
 	}
 
 	public void init(
