@@ -31,6 +31,8 @@ import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.TermRangeQuery;
+import com.liferay.portal.kernel.search.TermRangeQueryFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -225,39 +227,44 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			SearchContext searchContext, BooleanQuery contextQuery)
 		throws ParseException, SearchException {
 
-		int size = Math.min((int)getModel().count() * 2, 20000);
+		int size = Math.min((int)getModel().count() * 2, 10000);
 
 		Set<Data> indexData = new HashSet<Data>();
 
-		String[] lowerTerms = new String[sorts.length];
+		TermRangeQuery termRangeQuery = null;
 
-		while (true) {
+		do {
 			Document[] docs = IndexSearchUtil.executeSearch(
-				searchContext, contextQuery, sorts, lowerTerms, size);
+				searchContext, contextQuery, sorts, termRangeQuery, size);
 
 			if ((docs == null) || (docs.length == 0)) {
 				break;
 			}
 
-			for (int i = 0; i < docs.length; i++) {
+			for (Document doc : docs) {
+				String entryClassName = doc.get(Field.ENTRY_CLASS_NAME);
+
+				if ((entryClassName == null) ||
+					!entryClassName.equals(getModel().getClassName())) {
+
+					_log.error("Wrong entryClassName: " + entryClassName);
+
+					continue;
+				}
+
 				Data data = new Data(getModel(), this.dataComparator);
 
 				data.addModelTableInfo(relatedModels);
 
-				fillDataObject(data, attributes, docs[i]);
+				fillDataObject(data, attributes, doc);
 
 				indexData.add(data);
 			}
 
-			if (sorts.length == 0) {
-				break;
+			termRangeQuery = getTermRangeQuery(
+				docs[docs.length - 1], sorts, searchContext);
 			}
-
-			for (int i = 0; i<sorts.length; i++) {
-				lowerTerms[i] = docs[docs.length - 1].get(
-					sorts[i].getFieldName());
-			}
-		}
+		while (termRangeQuery != null);
 
 		return indexData;
 	}
@@ -522,6 +529,29 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		}
 
 		return data.getPrimaryKey();
+	}
+
+	protected TermRangeQuery getTermRangeQuery(
+		Document lastDocument, Sort[] sorts, SearchContext searchContext) {
+
+		for (Sort sort : sorts) {
+			String fieldName = sort.getFieldName();
+			String lowerTerm = lastDocument.get(fieldName);
+
+			if (Validator.isNull(lowerTerm)) {
+				continue;
+			}
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("fieldName=" + fieldName);
+				_log.debug("lowerTerm=" + lowerTerm);
+			}
+
+			return TermRangeQueryFactoryUtil.create(
+					searchContext, fieldName, lowerTerm, null, false, false);
+		}
+
+		return null;
 	}
 
 	protected Map<String, Long> cacheActionIdBitwiseValue =

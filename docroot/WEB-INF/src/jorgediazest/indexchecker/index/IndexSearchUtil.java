@@ -29,8 +29,6 @@ import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.TermRangeQuery;
-import com.liferay.portal.kernel.search.TermRangeQueryFactoryUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +45,7 @@ public class IndexSearchUtil {
 
 	public static Document[] executeSearch(
 			SearchContext searchContext, BooleanQuery query, Sort[] sorts,
-			String[] lowerTermArray, int size)
+			TermRangeQuery termRangeQuery, int size)
 		throws ParseException, SearchException {
 
 		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
@@ -55,22 +53,8 @@ public class IndexSearchUtil {
 
 		contextQuery.add(query, BooleanClauseOccur.MUST);
 
-		for (int i = 0; (i<sorts.length && i<lowerTermArray.length); i++) {
-			if (Validator.isNull(lowerTermArray[i])) {
-				continue;
-			}
-
-			TermRangeQuery termRangeQuery =
-				TermRangeQueryFactoryUtil.create(
-					searchContext, sorts[i].getFieldName(), lowerTermArray[i],
-					null, false, false);
-
+		if (termRangeQuery != null) {
 			contextQuery.add(termRangeQuery, BooleanClauseOccur.MUST);
-
-			if (_log.isDebugEnabled()) {
-				_log.debug("sorts[" + i + "]=" + sorts[i]);
-				_log.debug("lowerTerm[" + i + "]=" + lowerTermArray[i]);
-			}
 		}
 
 		if (sorts.length > 0) {
