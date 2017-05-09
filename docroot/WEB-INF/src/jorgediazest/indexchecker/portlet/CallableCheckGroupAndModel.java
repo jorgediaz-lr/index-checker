@@ -62,6 +62,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		attributesToCheck.add(model.getPrimaryKeyAttribute());
 		attributesToCheck.add("companyId");
 		attributesToCheck.add("groupId");
+		attributesToCheck.add("classPK");
+		attributesToCheck.add("classNameId");
 
 		if (model.isResourcedModel()) {
 			attributesToCheck.add("resourcePrimKey");
