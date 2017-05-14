@@ -84,6 +84,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			attributesToCheck.add("recordSetId");
 		}
 
+		if ("com.liferay.calendar.model.CalendarBooking".equals(
+			model.getClassName())) {
+
+			attributesToCheck.add("calendarId");
+		}
+
 		return attributesToCheck;
 	}
 

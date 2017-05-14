@@ -32,6 +32,8 @@ public class IndexCheckerModelQueryFactory extends ModelQueryFactory {
 	protected static ModelQueryClassFactory indexCheckerClassFactory =
 		new ModelQueryClassFactory() {
 
+		public final String CALENDAR_BOOKING =
+			"com.liferay.calendar.model.CalendarBooking";
 		public final String DDL_RECORD =
 			"com.liferay.dynamic.data.lists.model.DDLRecord";
 		public final String DL_FILE_ENTRY =
@@ -45,7 +47,10 @@ public class IndexCheckerModelQueryFactory extends ModelQueryFactory {
 		public Class<? extends ModelQuery> getModelQueryClass(
 			String className) {
 
-			if (DDL_RECORD.equals(className)) {
+			if (CALENDAR_BOOKING.equals(className)) {
+				return CalendarBookingQuery.class;
+			}
+			else if (DDL_RECORD.equals(className)) {
 				return DDLRecordQuery.class;
 			}
 			else if (DL_FILE_ENTRY.equals(className)) {
