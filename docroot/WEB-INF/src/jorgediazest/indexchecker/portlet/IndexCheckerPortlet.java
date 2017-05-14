@@ -57,6 +57,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -428,7 +429,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			renderRequest.setAttribute("groupIdList", siteGroupIds);
 
 			List<String> groupDescriptionList = getSiteGroupDescriptions(
-				siteGroupIds);
+				siteGroupIds, renderRequest.getLocale());
 			renderRequest.setAttribute(
 				"groupDescriptionList", groupDescriptionList);
 		}
@@ -978,14 +979,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return (num == 0) ? def : num;
 	}
 
-	public List<String> getSiteGroupDescriptions(List<Long> siteGroupIds)
+	public List<String> getSiteGroupDescriptions(
+			List<Long> siteGroupIds, Locale locale)
 		throws SystemException {
 
 		List<String> groupDescriptionList = new ArrayList<String>();
 
 		for (Long siteGroupId : siteGroupIds) {
 			Group group = GroupLocalServiceUtil.fetchGroup(siteGroupId);
-			String groupDescription = group.getName();
+			String groupDescription = group.getName(locale);
 			groupDescription = groupDescription.replace(
 				"LFR_ORGANIZATION", "(Org)");
 
