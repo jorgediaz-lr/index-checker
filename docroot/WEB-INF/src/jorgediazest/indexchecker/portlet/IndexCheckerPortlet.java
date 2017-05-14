@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.model.GroupConstants;
 import com.liferay.portal.model.Repository;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
@@ -1016,10 +1017,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			groupDescription = groupDescription.replace(
 				"LFR_ORGANIZATION", "(Org)");
 
-			if (group.isCompany()) {
-				if (!group.isStagingGroup()) {
-					groupDescription = "Global";
+			if (group.isCompany() && !group.isStagingGroup()) {
+				groupDescription = GroupConstants.GLOBAL;
 				}
+
+			if (GroupConstants.GUEST.equals(groupDescription) ||
+				group.isCompany()) {
 
 				groupDescription += " - " + group.getCompanyId();
 			}
