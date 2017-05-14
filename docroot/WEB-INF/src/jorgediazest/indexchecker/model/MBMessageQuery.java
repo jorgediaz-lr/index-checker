@@ -24,6 +24,7 @@ import jorgediazest.util.data.Data;
  */
 public class MBMessageQuery extends IndexCheckerModelQuery {
 
+	@Override
 	protected String getPermissionsClassName(Data data) {
 
 		long categoryId = data.get("categoryId", 0L);
@@ -49,6 +50,7 @@ public class MBMessageQuery extends IndexCheckerModelQuery {
 		return super.getPermissionsClassName(data);
 	}
 
+	@Override
 	protected long getPermissionsClassPK(Data data) {
 
 		String permissionsClassName = this.getPermissionsClassName(data);

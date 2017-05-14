@@ -45,6 +45,7 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 		super.addPermissionFields(dataMap);
 	}
 
+	@Override
 	protected String getPermissionsClassName(Data data) {
 
 		boolean hidden = data.get("hiddenFolder", false);
@@ -70,6 +71,7 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 		return super.getPermissionsClassName(data);
 	}
 
+	@Override
 	protected long getPermissionsClassPK(Data data) {
 
 		String permissionsClassName = this.getPermissionsClassName(data);
