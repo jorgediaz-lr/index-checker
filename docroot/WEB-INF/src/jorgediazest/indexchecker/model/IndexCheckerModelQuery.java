@@ -262,7 +262,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			}
 
 			termRangeQuery = getTermRangeQuery(
-				docs[docs.length - 1], sorts, searchContext);
+				docs[docs.length - 1], termRangeQuery, sorts, searchContext);
 		}
 		while (termRangeQuery != null);
 
@@ -539,7 +539,8 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	}
 
 	protected TermRangeQuery getTermRangeQuery(
-		Document lastDocument, Sort[] sorts, SearchContext searchContext) {
+		Document lastDocument, TermRangeQuery previousTermRangeQuery,
+		Sort[] sorts, SearchContext searchContext) {
 
 		for (Sort sort : sorts) {
 			String fieldName = sort.getFieldName();
@@ -554,8 +555,18 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 				_log.debug("lowerTerm=" + lowerTerm);
 			}
 
+			boolean includesLower = true;
+
+			if ((previousTermRangeQuery != null) &&
+				fieldName.equals(previousTermRangeQuery.getField())) {
+
+				includesLower = !lowerTerm.equals(
+					previousTermRangeQuery.getLowerTerm());
+			}
+
 			return TermRangeQueryFactoryUtil.create(
-					searchContext, fieldName, lowerTerm, null, false, false);
+					searchContext, fieldName, lowerTerm, null, includesLower,
+					true);
 		}
 
 		return null;
