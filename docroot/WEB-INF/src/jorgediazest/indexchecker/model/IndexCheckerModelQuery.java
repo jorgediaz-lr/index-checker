@@ -263,7 +263,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 			termRangeQuery = getTermRangeQuery(
 				docs[docs.length - 1], sorts, searchContext);
-			}
+		}
 		while (termRangeQuery != null);
 
 		return indexData;
@@ -420,7 +420,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 		String className = data.get("permissionsClassName", StringPool.BLANK);
 
-		String permissionsField = ResourceBlockPermission.class.getName();
+		String permissionsField;
 
 		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
 			permissionsField = ResourceBlockPermission.class.getName();
@@ -434,8 +434,11 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 	@SuppressWarnings("unchecked")
 	protected void addRolesFieldsToData(
-		Map<Long, Data> roleMap, String className, Data data,
-		String permissionsField) throws PortalException {
+			Map<Long, Data> roleMap, String className, Data data,
+			String permissionsField)
+		throws PortalException {
+
+		String actionId = getPermissionsActionId(data);
 
 		Object aux = data.get(permissionsField);
 
@@ -468,7 +471,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 				}
 			}
 
-			if (hasActionId(actionIds, className, ActionKeys.VIEW)) {
+			if (hasActionId(actionIds, className, actionId)) {
 				Data role = roleMap.get(roleId);
 
 				if (role == null) {
@@ -517,6 +520,10 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		}
 
 		return bitwiseValue;
+	}
+
+	protected String getPermissionsActionId(Data data) {
+		return ActionKeys.VIEW;
 	}
 
 	protected String getPermissionsClassName(Data data) {
