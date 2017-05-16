@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import jorgediazest.indexchecker.util.ConfigurationUtil;
 import jorgediazest.util.data.Data;
 
 /**
@@ -30,8 +31,8 @@ import jorgediazest.util.data.Data;
 public class JournalArticleIndexSearchHelper extends IndexSearchHelper {
 
 	public JournalArticleIndexSearchHelper() throws Exception {
-		indexAllVersions = PrefsPropsUtil.getBoolean(
-			"journal.articles.index.all.versions");
+		indexAllVersions =
+			ConfigurationUtil.getJournalArticleIndexAllVersions();
 	}
 
 	@Override

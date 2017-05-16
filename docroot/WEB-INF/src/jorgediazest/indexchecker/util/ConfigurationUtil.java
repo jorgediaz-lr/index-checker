@@ -19,7 +19,10 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.patcher.PatcherUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -38,6 +41,8 @@ import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
 import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
 
 import jorgediazest.util.model.Model;
+import jorgediazest.util.service.Service;
+import jorgediazest.util.service.ServiceUtil;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -299,9 +304,18 @@ public class ConfigurationUtil {
 
 		String configuration = StringUtil.read(inputStream);
 
+		boolean indexAllVersions;
+
+		try {
+			indexAllVersions = getJournalArticleIndexAllVersions();
+		}
+		catch(Exception e) {
+			throw new SystemException(e);
+		}
+
 		String journalArticleIndexPrimaryKeyAttribute;
 
-		if (PrefsPropsUtil.getBoolean("journal.articles.index.all.versions")) {
+		if (indexAllVersions) {
 			journalArticleIndexPrimaryKeyAttribute = "pk";
 		}
 		else {
@@ -315,6 +329,69 @@ public class ConfigurationUtil {
 		Yaml yaml = new Yaml();
 
 		return (Map<String, Object>)yaml.load(configuration);
+	}
+
+	protected static boolean isOldJournalArticleConfiguration() {
+
+		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
+			if (installedPatch.startsWith("de-")) {
+				String[] fixpackNumber = installedPatch.split("\\-");
+				try {
+					long fixpackNum = Long.parseLong(fixpackNumber[1]);
+
+					if (fixpackNum>=13) {
+						return false;
+					}
+
+					return true;
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+
+		try {
+			String releaseVersion = ReleaseInfo.getVersion();
+	
+			long minorVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
+
+			if ((minorVersion>=3) && (minorVersion != 10)) {
+				return false;
+			}
+
+			return true;
+		}
+		catch (Exception e) {
+		}
+
+		return true;
+	}
+
+	public static boolean getJournalArticleIndexAllVersions()
+		throws Exception {
+
+		boolean indexAllVersions;
+
+		Service journalArticleService = ServiceUtil.getService(
+				"com.liferay.journal.model.JournalArticle");
+
+		if (isOldJournalArticleConfiguration()) {
+			String configurationValue =
+				IndexCheckerUtil.getPortletPropertiesKey(
+					journalArticleService.getClassLoader(),
+					"com.liferay.journal.configuration.JournalServiceConfigurationValues",
+					"JOURNAL_ARTICLE_INDEX_ALL_VERSIONS");
+			indexAllVersions = GetterUtil.getBoolean(configurationValue);
+		}
+		else {
+			indexAllVersions =
+				(boolean) IndexCheckerUtil.getCompanyConfigurationKey(
+					CompanyThreadLocal.getCompanyId(),
+					journalArticleService.getClassLoader(),
+					"com.liferay.journal.configuration.JournalServiceConfiguration",
+					"indexAllArticleVersionsEnabled");
+		}
+		return indexAllVersions;
 	}
 
 	private static final String CONFIGURATION_FILE = "configuration.yml";
