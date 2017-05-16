@@ -14,11 +14,11 @@
 
 package jorgediazest.indexchecker.model;
 
+import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.model.Repository;
-import com.liferay.portal.util.PortalUtil;
-import com.liferay.portlet.documentlibrary.model.DLFolder;
+import com.liferay.portal.kernel.repository.Repository;
+import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.Map;
 

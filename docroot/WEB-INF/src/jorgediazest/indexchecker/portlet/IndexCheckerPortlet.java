@@ -14,19 +14,28 @@
 
 package jorgediazest.indexchecker.portlet;
 
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -222,7 +231,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			public DataComparator getDataComparator(ModelQuery query) {
 				Model model = query.getModel();
 
-				if (JournalArticle.class.getName().equals(
+				if ("com.liferay.journal.model.JournalArticle".equals(
 						model.getClassName()) && indexAllVersions) {
 
 					return defaultComparator;
@@ -235,7 +244,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 					return dlFileEntryComparator;
 				}
-				else if (WikiPage.class.getName().equals(
+				else if ("com.liferay.wiki.model.WikiPage".equals(
 							model.getClassName())) {
 
 					return wikiPageComparator;
@@ -530,8 +539,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			try {
 				CompanyThreadLocal.setCompanyId(company.getCompanyId());
 
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
 				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
@@ -623,9 +630,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
-			finally {
-				ShardUtil.popCompanyService();
-			}
 		}
 
 		request.setAttribute("title", "Check Index");
@@ -670,8 +674,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			PrintWriter pw = new PrintWriter(sw);
 
 			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
 				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
@@ -736,9 +738,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
-			finally {
-				ShardUtil.popCompanyService();
-			}
 
 			companyError.put(company, sw.toString());
 		}
@@ -785,8 +784,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			PrintWriter pw = new PrintWriter(sw);
 
 			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
 				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
@@ -851,9 +848,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				t.printStackTrace(pwt);
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
-			}
-			finally {
-				ShardUtil.popCompanyService();
 			}
 
 			companyError.put(company, sw.toString());
