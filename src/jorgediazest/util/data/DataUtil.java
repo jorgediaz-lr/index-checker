@@ -15,6 +15,7 @@
 package jorgediazest.util.data;
 
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -62,6 +63,10 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
+			if (Validator.isNull(value)) {
+				return null;
+			}
+
 			try {
 				return new java.math.BigDecimal((String)value);
 			}
@@ -73,7 +78,7 @@ public class DataUtil {
 	}
 
 	public static Boolean castBoolean(Object value) {
-		if (value == null) {
+		if (Validator.isNull(value)) {
 			return null;
 		}
 
@@ -106,6 +111,10 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
+			if (Validator.isNull(value)) {
+				return null;
+			}
+
 			try {
 				return Byte.parseByte((String)value);
 			}
@@ -117,7 +126,7 @@ public class DataUtil {
 	}
 
 	public static byte[] castBytes(Object value) {
-		if (value == null) {
+		if (Validator.isNull(value)) {
 			return null;
 		}
 
@@ -137,7 +146,7 @@ public class DataUtil {
 	}
 
 	public static Long castDateToEpoch(Object value) {
-		if (value == null) {
+		if (Validator.isNull(value)) {
 			return null;
 		}
 
@@ -171,6 +180,10 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
+			if (Validator.isNull(value)) {
+				return null;
+			}
+
 			try {
 				return Double.parseDouble((String)value);
 			}
@@ -195,6 +208,10 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
+			if (Validator.isNull(value)) {
+				return null;
+			}
+
 			try {
 				return Float.parseFloat((String)value);
 			}
@@ -219,11 +236,7 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
-			try {
-				return Integer.parseInt((String)value);
-			}
-			catch (Exception e) {
-			}
+			return _parseInt((String)value);
 		}
 
 		return null;
@@ -243,11 +256,7 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
-			try {
-				return Long.parseLong((String)value);
-			}
-			catch (Exception e) {
-			}
+			return _parseLong((String)value);
 		}
 
 		return null;
@@ -337,11 +346,7 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
-			try {
-				return Short.parseShort((String)value);
-			}
-			catch (Exception e) {
-			}
+			return _parseShort((String)value);
 		}
 
 		return null;
@@ -621,6 +626,142 @@ public class DataUtil {
 		}
 
 		return cleanMap;
+	}
+
+	private static Integer _parseInt(String value) {
+		int length = value.length();
+
+		if (length <= 0) {
+			return null;
+		}
+
+		int pos = 0;
+		int limit = -Integer.MAX_VALUE;
+		boolean negative = false;
+
+		char c = value.charAt(0);
+
+		if (c < CharPool.NUMBER_0) {
+			if (c == CharPool.MINUS) {
+				limit = Integer.MIN_VALUE;
+				negative = true;
+			}
+			else if (c != CharPool.PLUS) {
+				return null;
+			}
+
+			if (length == 1) {
+				return null;
+			}
+
+			pos++;
+		}
+
+		int smallLimit = limit / 10;
+
+		int result = 0;
+
+		while (pos < length) {
+			if (result < smallLimit) {
+				return null;
+			}
+
+			c = value.charAt(pos++);
+
+			if ((c < CharPool.NUMBER_0) || (c > CharPool.NUMBER_9)) {
+				return null;
+			}
+
+			int number = c - CharPool.NUMBER_0;
+
+			result *= 10;
+
+			if (result < (limit + number)) {
+				return null;
+			}
+
+			result -= number;
+		}
+
+		if (negative) {
+			return result;
+		}
+		else {
+			return -result;
+		}
+	}
+
+	private static Long _parseLong(String value) {
+		int length = value.length();
+
+		if (length <= 0) {
+			return null;
+		}
+
+		int pos = 0;
+		long limit = -Long.MAX_VALUE;
+		boolean negative = false;
+
+		char c = value.charAt(0);
+
+		if (c < CharPool.NUMBER_0) {
+			if (c == CharPool.MINUS) {
+				limit = Long.MIN_VALUE;
+				negative = true;
+			}
+			else if (c != CharPool.PLUS) {
+				return null;
+			}
+
+			if (length == 1) {
+				return null;
+			}
+
+			pos++;
+		}
+
+		long smallLimit = limit / 10;
+
+		long result = 0;
+
+		while (pos < length) {
+			if (result < smallLimit) {
+				return null;
+			}
+
+			c = value.charAt(pos++);
+
+			if ((c < CharPool.NUMBER_0) || (c > CharPool.NUMBER_9)) {
+				return null;
+			}
+
+			int number = c - CharPool.NUMBER_0;
+
+			result *= 10;
+
+			if (result < (limit + number)) {
+				return null;
+			}
+
+			result -= number;
+		}
+
+		if (negative) {
+			return result;
+		}
+		else {
+			return -result;
+		}
+	}
+
+	private static Short _parseShort(String value) {
+		Integer i = _parseInt(value);
+
+		if ((i == null) || (i < Short.MIN_VALUE) || (i > Short.MAX_VALUE)) {
+			return null;
+		}
+
+		return (short)i.shortValue();
 	}
 
 	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
