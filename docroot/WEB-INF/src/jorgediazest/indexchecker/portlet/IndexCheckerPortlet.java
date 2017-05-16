@@ -35,10 +35,10 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -79,7 +79,9 @@ import jorgediazest.indexchecker.data.DataIndexCheckerResourceModelComparator;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
+import jorgediazest.indexchecker.model.JournalArticleQuery;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
+import jorgediazest.indexchecker.util.IndexCheckerUtil;
 import jorgediazest.indexchecker.util.PortletPropsValues;
 
 import jorgediazest.util.data.Comparison;
@@ -183,10 +185,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		DataComparatorFactory dataComparatorFactory =
 			new DataComparatorFactory() {
 
-			protected boolean indexAllVersions =
-				PrefsPropsUtil.getBoolean(
-					"journal.articles.index.all.versions");
-
 			protected DataComparator defaultComparator =
 				new DataIndexCheckerModelComparator(
 					(dateAttributes + "," + basicAttributes + "," +
@@ -221,9 +219,35 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				Model model = query.getModel();
 
 				if ("com.liferay.journal.model.JournalArticle".equals(
-						model.getClassName()) && indexAllVersions) {
+						model.getClassName())) {
 
-					return defaultComparator;
+					boolean indexAllVersions;
+
+					try {
+						if (JournalArticleQuery.isOldConfiguration()) {
+							String configurationValue =
+								IndexCheckerUtil.getPortletPropertiesKey(
+									model.getService().getClassLoader(),
+									"com.liferay.journal.configuration.JournalServiceConfigurationValues",
+									"JOURNAL_ARTICLE_INDEX_ALL_VERSIONS");
+							indexAllVersions = GetterUtil.getBoolean(configurationValue);
+						}
+						else {
+							indexAllVersions =
+								(boolean) IndexCheckerUtil.getCompanyConfigurationKey(
+									CompanyThreadLocal.getCompanyId(),
+									model.getService().getClassLoader(),
+									"com.liferay.journal.configuration.JournalServiceConfiguration",
+									"indexAllArticleVersionsEnabled");
+						}
+					}
+					catch (Exception e) {
+						throw new SystemException(e);
+					}
+
+					if (indexAllVersions) {
+						return defaultComparator;
+					}
 				}
 				else if (User.class.getName().equals(model.getClassName())) {
 					return userComparator;

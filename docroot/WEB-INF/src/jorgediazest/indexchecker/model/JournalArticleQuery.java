@@ -19,11 +19,13 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import jorgediazest.indexchecker.util.IndexCheckerUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
@@ -148,14 +152,58 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 
 		super.init(model, dataComparatorFactory);
 
-		try {
+		if (JournalArticleQuery.isOldConfiguration()) {
+			String configurationValue =
+				IndexCheckerUtil.getPortletPropertiesKey(
+					model.getService().getClassLoader(),
+					"com.liferay.journal.configuration.JournalServiceConfigurationValues",
+					"JOURNAL_ARTICLE_INDEX_ALL_VERSIONS");
+			indexAllVersions = GetterUtil.getBoolean(configurationValue);
+		}
+		else {
 			indexAllVersions =
-				PrefsPropsUtil.getBoolean(
-					"journal.articles.index.all.versions");
+				(boolean) IndexCheckerUtil.getCompanyConfigurationKey(
+					CompanyThreadLocal.getCompanyId(),
+					model.getService().getClassLoader(),
+					"com.liferay.journal.configuration.JournalServiceConfiguration",
+					"indexAllArticleVersionsEnabled");
 		}
-		catch (SystemException e) {
-			throw new RuntimeException(e);
+	}
+
+	public static boolean isOldConfiguration() {
+
+		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
+			if (installedPatch.startsWith("de-")) {
+				String[] fixpackNumber = installedPatch.split("\\-");
+				try {
+					long fixpackNum = Long.parseLong(fixpackNumber[1]);
+
+					if (fixpackNum>=13) {
+						return false;
+					}
+
+					return true;
+				}
+				catch (Exception e) {
+				}
+			}
 		}
+
+		try {
+			String releaseVersion = ReleaseInfo.getVersion();
+	
+			long minorVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
+
+			if ((minorVersion>=3) && (minorVersion != 10)) {
+				return false;
+			}
+
+			return true;
+		}
+		catch (Exception e) {
+		}
+
+		return true;
 	}
 
 	@Override
