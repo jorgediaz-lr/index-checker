@@ -22,13 +22,20 @@ import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.deploy.DeployManagerUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.LiferayPortletContext;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -487,8 +494,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			try {
 				CompanyThreadLocal.setCompanyId(company.getCompanyId());
 
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
 				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
@@ -578,10 +583,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
-			finally {
-				ShardUtil.popCompanyService();
 			}
-		}
 
 		request.setAttribute("title", "Check Index");
 		request.setAttribute("executionMode", executionMode);
@@ -625,8 +627,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			PrintWriter pw = new PrintWriter(sw);
 
 			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
 				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
@@ -689,9 +689,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
-			finally {
-				ShardUtil.popCompanyService();
-			}
 
 			companyError.put(company, sw.toString());
 		}
@@ -738,8 +735,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			PrintWriter pw = new PrintWriter(sw);
 
 			try {
-				ShardUtil.pushCompanyService(company.getCompanyId());
-
 				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
@@ -801,9 +796,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				t.printStackTrace(pwt);
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
-			}
-			finally {
-				ShardUtil.popCompanyService();
 			}
 
 			companyError.put(company, sw.toString());

@@ -15,8 +15,8 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.util.PortalUtil;
-import com.liferay.portlet.messageboards.model.MBCategoryConstants;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.message.boards.kernel.model.MBCategoryConstants;
 
 import jorgediazest.util.data.Data;
 

@@ -110,7 +110,8 @@ public class IndexSearchHelper {
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
 		data.set(Field.UID, doc.getUID());
 
-		Locale[] locales = LanguageUtil.getAvailableLocales();
+		Locale[] locales = LanguageUtil.getAvailableLocales().toArray(
+				new Locale[0]);
 		Locale siteLocale = LocaleUtil.getSiteDefault();
 
 		for (String attribute : attributes) {
