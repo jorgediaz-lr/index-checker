@@ -35,7 +35,6 @@ import java.util.Map;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 import jorgediazest.util.service.Service;
 
@@ -61,8 +60,7 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 
 		query.add(filter);
 
-		DynamicQuery articleVersionDynamicQuery = ModelUtil.newDynamicQuery(
-			com.liferay.portlet.journal.model.JournalArticle.class,
+		DynamicQuery articleVersionDynamicQuery = service.newDynamicQuery(
 			"articleVersion");
 
 		articleVersionDynamicQuery.setProjection(
@@ -110,6 +108,7 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 		}
 	}
 
+	@Override
 	public Map<Long, Data> getData(
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
