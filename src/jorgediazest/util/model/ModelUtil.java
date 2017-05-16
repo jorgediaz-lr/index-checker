@@ -16,8 +16,6 @@ package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -28,7 +26,6 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
-import com.liferay.portal.model.ClassedModel;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -196,13 +193,6 @@ public class ModelUtil {
 		}
 
 		return tableAttributes;
-	}
-
-	public static DynamicQuery newDynamicQuery(
-		Class<? extends ClassedModel> clazz, String alias) {
-
-		return DynamicQueryFactoryUtil.forClass(
-			clazz, alias, clazz.getClassLoader());
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);

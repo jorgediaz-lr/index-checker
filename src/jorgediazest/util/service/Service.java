@@ -50,6 +50,8 @@ public interface Service extends Cloneable {
 
 	public DynamicQuery newDynamicQuery();
 
+	public DynamicQuery newDynamicQuery(String alias);
+
 	public void prepareDynamicQuery(DynamicQuery dynamicQuery);
 
 	public void setFilter(Criterion filter);

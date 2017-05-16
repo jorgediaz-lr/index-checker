@@ -77,6 +77,11 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 			classInterface, null, classInterface.getClassLoader());
 	}
 
+	public DynamicQuery newDynamicQuery(String alias) {
+		return DynamicQueryFactoryUtil.forClass(
+			classInterface, alias, classInterface.getClassLoader());
+	}
+
 	protected Class<? extends ClassedModel> classInterface = null;
 
 	static Log _log = LogFactoryUtil.getLog(ServiceClassInterfaceImpl.class);

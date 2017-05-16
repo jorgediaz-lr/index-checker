@@ -15,6 +15,7 @@
 package jorgediazest.util.service;
 
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MethodKey;
@@ -154,6 +155,23 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 	public DynamicQuery newDynamicQuery() {
 		return (DynamicQuery)executeServiceMethod("dynamicQuery", null, null);
+	}
+
+	public DynamicQuery newDynamicQuery(String alias) {
+		try {
+			Class<?> modelImplClass = getLiferayModelImplClass();
+
+			String className = modelImplClass.getName();
+
+			className = className.replace("ModelImpl", "Impl");
+
+			Class<?> clazz = getClassLoader().loadClass(className);
+
+			return DynamicQueryFactoryUtil.forClass(clazz, alias);
+		}
+		catch (ClassNotFoundException cnfe) {
+			throw new RuntimeException(cnfe);
+		}
 	}
 
 	public ClassedModel updateObject(ClassedModel object) {
