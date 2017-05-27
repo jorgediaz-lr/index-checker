@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -108,6 +109,14 @@ public class Comparison {
 
 	public Model getModel() {
 		return model;
+	}
+
+	public String getModelDisplayName(Locale locale) {
+		return model.getDisplayName(locale);
+	}
+
+	public String getModelName() {
+		return model.getName();
 	}
 
 	public Set<String> getOutputTypes() {

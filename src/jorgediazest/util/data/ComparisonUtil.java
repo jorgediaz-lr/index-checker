@@ -14,11 +14,8 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.model.Group;
-import com.liferay.portal.service.GroupLocalServiceUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -40,42 +36,6 @@ public class ComparisonUtil {
 
 	public static Comparison _getError(Model model, String error) {
 		return new Comparison(model, error);
-	}
-
-	public static void dumpToLog(
-			boolean groupBySite,
-			Map<Long, List<Comparison>> comparisonDataMap)
-		throws SystemException {
-
-		if (!_log.isInfoEnabled()) {
-			return;
-		}
-
-		for (
-			Entry<Long, List<Comparison>> entry :
-				comparisonDataMap.entrySet()) {
-
-			String groupTitle = null;
-			Group group = GroupLocalServiceUtil.fetchGroup(entry.getKey());
-
-			if ((group == null) && groupBySite) {
-				groupTitle = "N/A";
-			}
-			else if (group != null) {
-				groupTitle = group.getGroupId() + " - " + group.getName();
-			}
-
-			if (groupTitle != null) {
-				_log.info("");
-				_log.info("---------------");
-				_log.info("GROUP: " + groupTitle);
-				_log.info("---------------");
-			}
-
-			for (Comparison comparison : entry.getValue()) {
-				comparison.dumpToLog();
-			}
-		}
 	}
 
 	public static Comparison getComparison(

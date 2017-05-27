@@ -18,9 +18,7 @@ import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.Portlet;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -165,8 +163,6 @@ public class ModelQueryFactory {
 
 	};
 
-	protected Map<String, Set<Portlet>> handlerPortletMap =
-		new HashMap<String, Set<Portlet>>();
 	protected ModelFactory modelFactory = null;
 
 	protected ModelQueryClassFactory mqClassFactory =

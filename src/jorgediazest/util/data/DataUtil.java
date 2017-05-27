@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 
 import java.text.DateFormat;
 
@@ -42,7 +41,7 @@ import java.util.TreeSet;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.TableInfo;
-import jorgediazest.util.reflection.ReflectionUtil;
+import jorgediazest.util.modelquery.DatabaseUtil;
 
 /**
  * @author Jorge Díaz
@@ -260,76 +259,6 @@ public class DataUtil {
 		}
 
 		return null;
-	}
-
-	public static Object castObjectToJdbcTypeObject(int type, Object value) {
-		Object result = null;
-
-		switch (type) {
-			case Types.NULL:
-				result = value;
-				break;
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.CLOB:
-				result = castString(value);
-				break;
-
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				result = castBigDecimal(value);
-				break;
-
-			case Types.BIT:
-			case Types.BOOLEAN:
-				result = castBoolean(value);
-				break;
-
-			case Types.TINYINT:
-				result = castByte(value);
-				break;
-
-			case Types.SMALLINT:
-				result = castShort(value);
-				break;
-
-			case Types.INTEGER:
-				result = castInt(value);
-				break;
-
-			case Types.BIGINT:
-				result = castLong(value);
-				break;
-
-			case Types.REAL:
-			case Types.FLOAT:
-				result = castFloat(value);
-				break;
-
-			case Types.DOUBLE:
-				result = castDouble(value);
-				break;
-
-			case Types.BINARY:
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				result = castBytes(value);
-				break;
-
-			case Types.DATE:
-			case Types.TIME:
-			case Types.TIMESTAMP:
-				result = castDateToEpoch(value);
-				break;
-
-			default:
-				throw new RuntimeException(
-					"Unsupported conversion for " +
-						ReflectionUtil.getJdbcTypeNames().get(type));
-		}
-
-		return result;
 	}
 
 	public static Short castShort(Object value) {
@@ -575,7 +504,8 @@ public class DataUtil {
 			return o;
 		}
 
-		Object transformObject = castObjectToJdbcTypeObject(type, o);
+		Object transformObject = DatabaseUtil.castObjectToJdbcTypeObject(
+			type, o);
 
 		if (transformObject instanceof String) {
 			String str = (String)transformObject.toString();

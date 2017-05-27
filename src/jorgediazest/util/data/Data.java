@@ -24,7 +24,6 @@ import java.util.Set;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.TableInfo;
-import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
@@ -153,13 +152,23 @@ public class Data implements Comparable<Data> {
 	}
 
 	public Class<?> getAttributeTypeClass(String attribute) {
-		int type = this.getAttributeType(attribute);
+		String prefix = null;
+		int pos = attribute.indexOf(".");
 
-		if (type == 0) {
-			return Object.class;
+		if (pos != -1) {
+			prefix = attribute.substring(0, pos);
+			attribute = attribute.substring(pos+1);
 		}
 
-		return ReflectionUtil.getJdbcTypeClass(type);
+		for (TableInfo tableInfo : tableInfoSet) {
+			if ((prefix != null) && !tableInfo.getName().equals(prefix)) {
+				continue;
+			}
+
+			return tableInfo.getAttributeTypeClass(attribute);
+		}
+
+		return Object.class;
 	}
 
 	public Long getCompanyId() {
