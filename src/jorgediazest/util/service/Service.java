@@ -40,6 +40,8 @@ public interface Service extends Cloneable {
 
 	public ClassedModel fetchObject(long primaryKey);
 
+	public ClassLoader getClassLoader();
+
 	public String getClassPackageName();
 
 	public String getClassSimpleName();
