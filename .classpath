@@ -12,6 +12,6 @@
 			<attribute name="org.eclipse.jst.component.nondependency" value=""/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/servicebuilder-reflection-shared"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/servicebuilder-query-data-shared"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

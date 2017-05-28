@@ -56,7 +56,6 @@ import javax.servlet.http.HttpServletResponse;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
-import jorgediazest.util.model.Model;
 public class OutputUtils {
 
 	public static FileEntry addPortletFileEntry(
@@ -106,11 +105,6 @@ public class OutputUtils {
 			return null;
 		}
 
-		Model model = comp.getModel();
-
-		String modelOutput = model.getName();
-		String modelDisplayNameOutput = model.getDisplayName(locale);
-
 		List<String> line = new ArrayList<String>();
 		line.add(companyOutput);
 
@@ -119,8 +113,8 @@ public class OutputUtils {
 			line.add(groupNameOutput);
 		}
 
-		line.add(modelOutput);
-		line.add(modelDisplayNameOutput);
+		line.add(comp.getModelName());
+		line.add(comp.getModelDisplayName(locale));
 		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
 
 		if (outputSize < 0) {
@@ -174,18 +168,14 @@ public class OutputUtils {
 		}
 
 		ResultRow row = new ResultRow(comp, type, numberOfRows);
-		Model model = comp.getModel();
-
-		String modelOutput = model.getName();
-		String modelDisplayNameOutput = model.getDisplayName(locale);
 
 		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
 			row.addText(groupIdOutput);
 			row.addText(groupNameOutput);
 		}
 
-		row.addText(HtmlUtil.escape(modelOutput));
-		row.addText(HtmlUtil.escape(modelDisplayNameOutput));
+		row.addText(HtmlUtil.escape(comp.getModelName()));
+		row.addText(HtmlUtil.escape(comp.getModelDisplayName(locale)));
 		row.addText(
 			HtmlUtil.escape(
 				LanguageUtil.get(
