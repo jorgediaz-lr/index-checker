@@ -448,7 +448,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			long userId = PortalUtil.getUserId(renderRequest);
 
 			String fileName =
-				"output_" + userId + "_" + System.currentTimeMillis() + ".csv";
+				"index-checker_output_" + userId + "_" +
+				System.currentTimeMillis() + ".csv";
 
 			exportCsvFileEntry = OutputUtils.addPortletFileEntry(
 				repository, inputStream, userId, fileName, "text/plain");
