@@ -244,10 +244,14 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			for (Document doc : docs) {
 				String entryClassName = doc.get(Field.ENTRY_CLASS_NAME);
 
-				if ((entryClassName == null) ||
-					!entryClassName.equals(getModel().getClassName())) {
+				if (Validator.isNull(entryClassName)) {
+					_log.warn("entryClassName is null");
 
-					_log.error("Wrong entryClassName: " + entryClassName);
+					continue;
+				}
+				else if (!entryClassName.equals(getModel().getClassName())) {
+
+					_log.warn("entryClassName is wrong: " + entryClassName);
 
 					continue;
 				}
@@ -275,7 +279,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
 		query.addRequiredTerm(
-			Field.ENTRY_CLASS_NAME, getModel().getClassName());
+			Field.ENTRY_CLASS_NAME, "\"" + getModel().getClassName() + "\"");
 
 		if (getModel().hasAttribute("groupId") && (groupIds != null)) {
 			BooleanQuery groupQuery = BooleanQueryFactoryUtil.create(
