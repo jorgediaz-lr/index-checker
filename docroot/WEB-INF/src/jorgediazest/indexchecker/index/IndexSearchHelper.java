@@ -192,12 +192,14 @@ public class IndexSearchHelper {
 			for (Document doc : docs) {
 				String entryClassName = doc.get(Field.ENTRY_CLASS_NAME);
 
-				if ((entryClassName == null) ||
-					!entryClassName.equals(model.getClassName())) {
-
-					_log.error("Wrong entryClassName: " + entryClassName);
+				if (Validator.isNull(entryClassName)) {
+					_log.warn("entryClassName is null");
 
 					continue;
+				}
+				else if (!entryClassName.equals(model.getClassName())) {
+
+					_log.warn("Wrong entryClassName: " + entryClassName);
 				}
 
 				Data data = new Data(model);
@@ -324,7 +326,8 @@ public class IndexSearchHelper {
 		throws ParseException {
 
 		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
-		query.addRequiredTerm(Field.ENTRY_CLASS_NAME, model.getClassName());
+		query.addRequiredTerm(
+			Field.ENTRY_CLASS_NAME, "\"" + model.getClassName() + "\"");
 
 		if (model.hasAttribute("groupId") && (groupIds != null)) {
 			BooleanQuery groupQuery = BooleanQueryFactoryUtil.create(
