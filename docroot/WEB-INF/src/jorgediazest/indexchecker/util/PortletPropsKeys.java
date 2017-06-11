@@ -19,24 +19,6 @@ package jorgediazest.indexchecker.util;
  */
 public interface PortletPropsKeys {
 
-	public static final String DATA_COMPARATOR_ASSETENTRY_ATTRIBUTES =
-		"data-comparator.assetentry.attributes";
-
-	public static final String DATA_COMPARATOR_BASIC_ATTRIBUTES =
-		"data-comparator.basic.attributes";
-
-	public static final String DATA_COMPARATOR_BASIC_ATTRIBUTES_NOVERSION =
-		"data-comparator.basic.attributes.noversion";
-
-	public static final String DATA_COMPARATOR_CATEGORIESTAGS_ATTRIBUTES =
-		"data-comparator.categories-tags.attributes";
-
-	public static final String DATA_COMPARATOR_DATE_ATTRIBUTES =
-		"data-comparator.date.attributes";
-
-	public static final String DATA_COMPARATOR_DATE_ATTRIBUTES_USER =
-		"data-comparator.date.attributes.user";
-
 	public static final String NUMBER_THREADS = "number.threads";
 
 }

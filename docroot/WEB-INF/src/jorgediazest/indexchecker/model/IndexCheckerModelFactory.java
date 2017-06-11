@@ -14,6 +14,8 @@
 
 package jorgediazest.indexchecker.model;
 
+import jorgediazest.indexchecker.util.ConfigurationUtil;
+
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 
@@ -22,64 +24,19 @@ import jorgediazest.util.model.ModelFactory;
  */
 public class IndexCheckerModelFactory extends ModelFactory {
 
-	public IndexCheckerModelFactory() {
-		super(indexCheckerClassFactory);
-	}
+	@Override
+	public Model getModelObject(String className) {
+		Model model = super.getModelObject(className);
 
-	protected static ModelClassFactory indexCheckerClassFactory =
-		new ModelClassFactory() {
-
-		public final String ASSET_ENTRY =
-			"com.liferay.portlet.asset.model.AssetEntry";
-		public final String CALENDAR_BOOKING =
-			"com.liferay.portlet.calendar.model.CalendarBooking";
-		public final String CONTACT = "com.liferay.portal.model.Contact";
-		public final String JOURNAL_ARTICLE =
-			"com.liferay.portlet.journal.model.JournalArticle";
-		public final String MB_MESSAGE =
-			"com.liferay.portlet.messageboards.model.MBMessage";
-		public final String TRASH_ENTRY =
-			"com.liferay.portlet.trash.model.TrashEntry";
-		public final String USER = "com.liferay.portal.model.User";
-		public final String WIKI_NODE =
-			"com.liferay.portlet.wiki.model.WikiNode";
-		public final String WIKI_PAGE =
-			"com.liferay.portlet.wiki.model.WikiPage";
-
-		@Override
-		public Class<? extends Model> getModelClass(String className) {
-			if (ASSET_ENTRY.equals(className)) {
-				return NotIndexed.class;
-			}
-			else if (CALENDAR_BOOKING.equals(className)) {
-				return CalendarBooking.class;
-			}
-			else if (CONTACT.equals(className)) {
-				return Contact.class;
-			}
-			else if (JOURNAL_ARTICLE.equals(className)) {
-				return JournalArticle.class;
-			}
-			else if (MB_MESSAGE.equals(className)) {
-				return MBMessage.class;
-			}
-			else if (TRASH_ENTRY.equals(className)) {
-				return NotIndexed.class;
-			}
-			else if (USER.equals(className)) {
-				return User.class;
-			}
-			else if (WIKI_NODE.equals(className)) {
-				return WikiNode.class;
-			}
-			else if (WIKI_PAGE.equals(className)) {
-				return WikiPage.class;
-			}
-			else {
-				return IndexCheckerModel.class;
-			}
+		if (model == null) {
+			return null;
 		}
 
-	};
+		String stringFilter = ConfigurationUtil.getStringFilter(model);
+
+		model.setFilter(model.generateCriterionFilter(stringFilter));
+
+		return model;
+	}
 
 }

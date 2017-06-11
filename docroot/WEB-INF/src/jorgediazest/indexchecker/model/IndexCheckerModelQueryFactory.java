@@ -14,6 +14,8 @@
 
 package jorgediazest.indexchecker.model;
 
+import jorgediazest.indexchecker.util.ConfigurationUtil;
+
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.modelquery.ModelQuery;
 import jorgediazest.util.modelquery.ModelQueryFactory;
@@ -32,29 +34,11 @@ public class IndexCheckerModelQueryFactory extends ModelQueryFactory {
 	protected static ModelQueryClassFactory indexCheckerClassFactory =
 		new ModelQueryClassFactory() {
 
-		public final String DL_FILE_ENTRY =
-			"com.liferay.portlet.documentlibrary.model.DLFileEntry";
-		public final String JOURNAL_ARTICLE =
-			"com.liferay.portlet.journal.model.JournalArticle";
-		public final String MB_MESSAGE =
-			"com.liferay.portlet.messageboards.model.MBMessage";
-
 		@Override
 		public Class<? extends ModelQuery> getModelQueryClass(
 			String className) {
 
-			if (DL_FILE_ENTRY.equals(className)) {
-				return DLFileEntryQuery.class;
-			}
-			else if (JOURNAL_ARTICLE.equals(className)) {
-				return JournalArticleQuery.class;
-			}
-			else if (MB_MESSAGE.equals(className)) {
-				return MBMessageQuery.class;
-			}
-			else {
-				return IndexCheckerModelQuery.class;
-			}
+			return ConfigurationUtil.getModelQueryClass(className);
 		}
 
 	};

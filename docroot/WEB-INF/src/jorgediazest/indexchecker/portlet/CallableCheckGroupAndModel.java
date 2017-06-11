@@ -22,17 +22,10 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
 import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
-import com.liferay.portlet.asset.model.AssetCategory;
-import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.model.AssetRendererFactory;
-import com.liferay.portlet.asset.model.AssetTag;
-import com.liferay.portlet.documentlibrary.model.DLFileEntry;
-import com.liferay.portlet.documentlibrary.model.DLFileVersion;
-import com.liferay.portlet.dynamicdatalists.model.DDLRecord;
-import com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion;
-import com.liferay.portlet.messageboards.model.MBMessage;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,12 +34,14 @@ import java.util.concurrent.Callable;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
+import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.modelquery.ModelQuery;
 
 /**
@@ -54,32 +49,14 @@ import jorgediazest.util.modelquery.ModelQuery;
  */
 public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
-	public static Set<String> calculateAttributesToCheck(ModelQuery mq) {
+	public static Set<String> calculateAttributesToQuery(ModelQuery mq) {
 		Model model = mq.getModel();
 
-		Set<String> attributesToCheck = new LinkedHashSet<String>();
-
-		attributesToCheck.add(model.getPrimaryKeyAttribute());
-		attributesToCheck.add("companyId");
-		attributesToCheck.add("groupId");
-		attributesToCheck.add("classPK");
-		attributesToCheck.add("classNameId");
-
-		if (model.isResourcedModel()) {
-			attributesToCheck.add("resourcePrimKey");
-		}
+		Set<String> attributesToCheck = new LinkedHashSet<String>(
+			ConfigurationUtil.getModelAttributesToQuery(model));
 
 		attributesToCheck.addAll(
 			Arrays.asList(mq.getDataComparator().getExactAttributes()));
-
-		if (DLFileEntry.class.getName().equals(model.getClassName())) {
-			attributesToCheck.add("repositoryId");
-			attributesToCheck.add("version");
-		}
-
-		if (MBMessage.class.getName().equals(model.getClassName())) {
-			attributesToCheck.add("categoryId");
-		}
 
 		return attributesToCheck;
 	}
@@ -94,95 +71,45 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		this.executionMode = executionMode;
 	}
 
-	public Set<String> calculateRelatedAttributesToCheck(Model model) {
-		Set<String> relatedAttributesToCheck = new LinkedHashSet<String>();
+	public Collection<String> calculateRelatedAttributesToCheck(Model model) {
 
-		if (model.getName().equals(DDLRecord.class.getName())) {
-			relatedAttributesToCheck.add(
-				DDLRecordVersion.class.getName() + ":recordId,version-" +
-				": =recordId,version,status");
-		}
-		else if (model.getName().equals(DLFileEntry.class.getName())) {
-			relatedAttributesToCheck.add(
-				DLFileVersion.class.getName() + ":fileEntryId,version-" +
-				": =fileEntryId, =version,status");
-		}
+		Collection<String> relatedAttributesToCheck =
+			ConfigurationUtil.getRelatedAttributesToCheck(model);
 
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				model.getName());
-
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSelectable()) {
-
+		if (checkAssetEntryRelations(model)) {
 			return relatedAttributesToCheck;
 		}
 
-		//AssetEntry attributes
+		Collection<String> relatedAttributesToCheckFiltered =
+			new LinkedHashSet<String>();
 
-		if (model.isResourcedModel()) {
-			relatedAttributesToCheck.add(
-					AssetEntry.class.getName() + ":resourcePrimKey=classPK" +
-				":AssetEntry.entryId=entryId, =classPK,priority,visible");
-		}
-		else {
-			relatedAttributesToCheck.add(
-					AssetEntry.class.getName() + ":pk=classPK" +
-				":AssetEntry.entryId=entryId, =classPK,priority,visible");
+		for (String relatedAttributeToCheck : relatedAttributesToCheck) {
+			if (!relatedAttributeToCheck.startsWith(
+					"com.liferay.portlet.asset.model.Asset")) {
+
+				relatedAttributesToCheckFiltered.add(relatedAttributeToCheck);
+			}
 		}
 
-		relatedAttributesToCheck.add(
-			AssetEntry.class.getName() + ":" +
-			"AssetEntry.entryId=MappingTable:" +
-			"AssetEntries_AssetCategories.categoryId=categoryId");
-		relatedAttributesToCheck.add(
-			AssetCategory.class.getName() + ":" +
-			"AssetEntries_AssetCategories.categoryId=categoryId:" +
-			" =categoryId,AssetCategory.title=title");
-		relatedAttributesToCheck.add(
-			AssetEntry.class.getName() + ":" +
-			"AssetEntry.entryId=MappingTable:" +
-			"AssetEntries_AssetTags.tagId=tagId");
-		relatedAttributesToCheck.add(
-			AssetTag.class.getName() + ":" +
-			"AssetEntries_AssetTags.tagId=tagId: =tagId,AssetTag.name=name");
-
-		return relatedAttributesToCheck;
+		return relatedAttributesToCheckFiltered;
 	}
 
-	public Set<Model> calculateRelatedModels(Model model) {
+	public Set<Model> calculateRelatedModels(
+		ModelFactory modelFactory, String[] relatedAttributesToCheck) {
+
+		Set<String> relatedClassNames = new LinkedHashSet<String>();
+
+		for (String relatedAttributeToCheck : relatedAttributesToCheck) {
+			relatedClassNames.add(relatedAttributeToCheck.split(":")[0]);
+		}
 
 		Set<Model> relatedModels = new LinkedHashSet<Model>();
 
-		if (model.getName().equals(DDLRecord.class.getName())) {
-			relatedModels.add(model.getModelFactory().getModelObject(
-				DDLRecordVersion.class.getName()));
+		for (String relatedClassName : relatedClassNames) {
+			Model relatedModel = modelFactory.getModelObject(relatedClassName);
+
+			relatedModels.add(relatedModel);
 		}
-		else if (model.getName().equals(DLFileEntry.class.getName())) {
-			relatedModels.add(model.getModelFactory().getModelObject(
-				DLFileVersion.class.getName()));
-		}
-
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				model.getName());
-
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSelectable()) {
-
-			return relatedModels;
-		}
-
-		//AssetEntry and related models
-
-		relatedModels.add(model.getModelFactory().getModelObject(
-			AssetEntry.class.getName()));
-
-		relatedModels.add(model.getModelFactory().getModelObject(
-			AssetCategory.class.getName()));
-
-		relatedModels.add(model.getModelFactory().getModelObject(
-			AssetTag.class.getName()));
 
 		return relatedModels;
 	}
@@ -229,17 +156,18 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 			Criterion filter = mq.getCompanyGroupFilter(companyId, groupIds);
 
-			String[] attributesToCheck = calculateAttributesToCheck(
+			String[] attributesToQuery = calculateAttributesToQuery(
 				mq).toArray(new String[0]);
 
 			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
 				model).toArray(new String[0]);
 
-			Set<Model> relatedModels = calculateRelatedModels(model);
+			Set<Model> relatedModels = calculateRelatedModels(
+				model.getModelFactory(), relatedAttrToCheck);
 
 			Set<Data> liferayData = new HashSet<Data>(
 				mq.getData(
-					attributesToCheck, relatedAttrToCheck, filter).values());
+					attributesToQuery, relatedAttrToCheck, filter).values());
 
 			Set<Data> indexData;
 
@@ -252,7 +180,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 					groupIds, searchContext);
 
 				indexData = mq.getIndexData(
-					relatedModels, attributesToCheck, searchContext,
+					relatedModels, attributesToQuery, searchContext,
 					contextQuery);
 			}
 			else {
@@ -280,6 +208,22 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 			ShardUtil.popCompanyService();
 		}
+	}
+
+	protected boolean checkAssetEntryRelations(Model model) {
+		boolean assetEntryRelations = true;
+
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				model.getClassName());
+
+		if ((assetRendererFactory == null) ||
+			!assetRendererFactory.isSelectable()) {
+
+			assetEntryRelations = false;
+		}
+
+		return assetEntryRelations;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

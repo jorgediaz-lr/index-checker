@@ -22,27 +22,6 @@ import com.liferay.util.portlet.PortletProps;
  */
 public class PortletPropsValues {
 
-	public static final String DATA_COMPARATOR_ASSETENTRY_ATTRIBUTES =
-		PortletProps.get(
-			PortletPropsKeys.DATA_COMPARATOR_ASSETENTRY_ATTRIBUTES);
-
-	public static final String DATA_COMPARATOR_BASIC_ATTRIBUTES =
-		PortletProps.get(PortletPropsKeys.DATA_COMPARATOR_BASIC_ATTRIBUTES);
-
-	public static final String DATA_COMPARATOR_BASIC_ATTRIBUTES_NOVERSION =
-		PortletProps.get(
-			PortletPropsKeys.DATA_COMPARATOR_BASIC_ATTRIBUTES_NOVERSION);
-
-	public static final String DATA_COMPARATOR_CATEGORIESTAGS_ATTRIBUTES =
-		PortletProps.get(
-			PortletPropsKeys.DATA_COMPARATOR_CATEGORIESTAGS_ATTRIBUTES);
-
-	public static final String DATA_COMPARATOR_DATE_ATTRIBUTES =
-		PortletProps.get(PortletPropsKeys.DATA_COMPARATOR_DATE_ATTRIBUTES);
-
-	public static final String DATA_COMPARATOR_DATE_ATTRIBUTES_USER =
-		PortletProps.get(PortletPropsKeys.DATA_COMPARATOR_DATE_ATTRIBUTES_USER);
-
 	public static final int NUMBER_THREADS =
 		GetterUtil.getInteger(
 				PortletProps.get(PortletPropsKeys.NUMBER_THREADS), 1);

@@ -1,0 +1,45 @@
+ignoreClassNames: [com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry, com.liferay.portal.kernel.repository.model.FileEntry, com.liferay.portal.kernel.repository.model.Folder, com.liferay.portal.model.UserPersonalSite]
+modelNotIndexed: [com.liferay.portlet.asset.model.AssetEntry, com.liferay.portlet.trash.model.TrashEntry]
+modelInfo:
+  - model: default
+    modelQueryClass: !!jorgediazest.indexchecker.model.IndexCheckerModelQuery {}
+    filter: ""
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId]
+    exactAttributesToCheck: [createDate,modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+    relatedAttributesToCheck: ["com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible", "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId", "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title", "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetTags.tagId=tagId", "com.liferay.portlet.asset.model.AssetTag:AssetEntries_AssetTags.tagId=tagId: =tagId,AssetTag.name=name"]
+    indexPrimaryKeyAttribute: pk
+    indexAttributeNameMapping:  {pk: entryClassPK, groupId: scopeGroupId,  modifiedDate: modified,  averageScore: ratings,  AssetEntries_AssetCategories.categoryId: assetCategoryIds,  AssetCategory.title: assetCategoryTitles,  AssetEntries_AssetTags.tagId: assetTagIds,  AssetTag.name: assetTagNames}
+  - model: workflowedModel
+    filter: status=0+status=8
+  - model: resourcedModel
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,resourcePrimKey]
+    relatedAttributesToCheck: ["com.liferay.portlet.asset.model.AssetEntry:resourcePrimKey=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible","com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId","com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title","com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetTags.tagId=tagId","com.liferay.portlet.asset.model.AssetTag:AssetEntries_AssetTags.tagId=tagId: =tagId,AssetTag.name=name"]
+    indexPrimaryKeyAttribute: resourcePrimKey
+    indexAttributeNameMapping:  {resourcePrimKey: entryClassPK, groupId: scopeGroupId,  modifiedDate: modified,  averageScore: ratings,  AssetEntries_AssetCategories.categoryId: assetCategoryIds,  AssetCategory.title: assetCategoryTitles,  AssetEntries_AssetTags.tagId: assetTagIds,  AssetTag.name: assetTagNames}
+  - model: com.liferay.portlet.calendar.model.CalendarBooking
+    filter: status=0+status=9
+  - model: com.liferay.portal.model.Contact
+    modelQueryClass: !!jorgediazest.indexchecker.model.ContactQuery {}
+  - model: com.liferay.portlet.documentlibrary.model.DLFileEntry
+    modelQueryClass: !!jorgediazest.indexchecker.model.DLFileEntryQuery {}
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,repositoryId,version]
+    exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+    relatedAttributesToCheck: ["com.liferay.portlet.documentlibrary.model.DLFileVersion:fileEntryId,version-: =fileEntryId, =version,status", "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible", "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId", "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title", "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetTags.tagId=tagId", "com.liferay.portlet.asset.model.AssetTag:AssetEntries_AssetTags.tagId=tagId: =tagId,AssetTag.name=name"]
+  - model: com.liferay.portlet.dynamicdatalists.model.DDLRecord
+    relatedAttributesToCheck: ["com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion:recordId,version-: =recordId,version,status", "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible", "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId", "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title", "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetTags.tagId=tagId", "com.liferay.portlet.asset.model.AssetTag:AssetEntries_AssetTags.tagId=tagId: =tagId,AssetTag.name=name"]
+  - model: com.liferay.portlet.journal.model.JournalArticle
+    modelQueryClass: !!jorgediazest.indexchecker.model.JournalArticleQuery {}
+    filter: classNameId=0
+    indexPrimaryKeyAttribute: $$JOURNAL_ARTICLE_INDEX_PRIMARY_KEY_ATTRIBUTE$$
+  - model: com.liferay.portlet.messageboards.model.MBMessage
+    modelQueryClass: !!jorgediazest.indexchecker.model.MBMessageQuery {}
+    filter: status=0+status=8,categoryId<>-1+parentMessageId<>0
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,categoryId]
+  - model: com.liferay.portal.model.User
+    filter: defaultUser=false
+    exactAttributesToCheck: [modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+  - model: com.liferay.portlet.wiki.model.WikiNode
+    filter: status=8
+  - model: com.liferay.portlet.wiki.model.WikiPage
+    filter: status=0+status=8,head=true,redirectTitle=
+    exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]

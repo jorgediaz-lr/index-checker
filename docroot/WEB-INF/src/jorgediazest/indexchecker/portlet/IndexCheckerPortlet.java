@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -35,14 +34,10 @@ import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.GroupConstants;
 import com.liferay.portal.model.Repository;
-import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portlet.documentlibrary.model.DLFileEntry;
-import com.liferay.portlet.journal.model.JournalArticle;
-import com.liferay.portlet.wiki.model.WikiPage;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
 import java.io.ByteArrayInputStream;
@@ -76,13 +71,11 @@ import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
-import jorgediazest.indexchecker.data.DataIndexCheckerResourceModelComparator;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
-import jorgediazest.indexchecker.util.PortletPropsValues;
+import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
@@ -148,7 +141,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			new ArrayList<Future<Comparison>>();
 
 		for (ModelQuery mq : mqList) {
-			if (!mq.getModel().hasIndexerEnabled()) {
+			Model model = mq.getModel();
+
+			if (!model.hasIndexerEnabled()) {
+				continue;
+			}
+
+			if (ConfigurationUtil.modelNotIndexed(model.getClassName())) {
 				continue;
 			}
 
@@ -169,83 +168,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		int threadsExecutor)
 	throws ExecutionException, InterruptedException, SystemException {
 
-		final String dateAttributes =
-			PortletPropsValues.DATA_COMPARATOR_DATE_ATTRIBUTES;
-		final String dateAttributesUser =
-			PortletPropsValues.DATA_COMPARATOR_DATE_ATTRIBUTES_USER;
-		final String basicAttributes =
-			PortletPropsValues.DATA_COMPARATOR_BASIC_ATTRIBUTES;
-		final String basicAttributesNoVersion =
-			PortletPropsValues.DATA_COMPARATOR_BASIC_ATTRIBUTES_NOVERSION;
-		final String categoriesTagsAttributes =
-			PortletPropsValues.DATA_COMPARATOR_CATEGORIESTAGS_ATTRIBUTES;
-		final String assetEntryAttributes =
-			PortletPropsValues.DATA_COMPARATOR_ASSETENTRY_ATTRIBUTES;
-
 		DataComparatorFactory dataComparatorFactory =
 			new DataComparatorFactory() {
 
-			protected boolean indexAllVersions =
-				PrefsPropsUtil.getBoolean(
-					"journal.articles.index.all.versions");
-
-			protected DataComparator defaultComparator =
-				new DataIndexCheckerModelComparator(
-					(dateAttributes + "," + basicAttributes + "," +
-						assetEntryAttributes + "," +
-						categoriesTagsAttributes).split(","));
-
-			protected DataComparator userComparator =
-				new DataIndexCheckerModelComparator(
-					(dateAttributesUser + "," + basicAttributes + "," +
-						categoriesTagsAttributes).split(","));
-
-			protected DataComparator dlFileEntryComparator =
-				new DataIndexCheckerModelComparator(
-					(dateAttributes + "," + basicAttributesNoVersion + "," +
-						assetEntryAttributes + "," +
-							categoriesTagsAttributes).split(","));
-
-			protected DataComparator wikiPageComparator =
-				new DataIndexCheckerResourceModelComparator(
-					(dateAttributes + "," + basicAttributesNoVersion + "," +
-						assetEntryAttributes + "," +
-							categoriesTagsAttributes).split(","));
-
-			protected DataComparator resourceComparator =
-				new DataIndexCheckerResourceModelComparator(
-					(dateAttributes + "," + basicAttributes + "," +
-						assetEntryAttributes + "," +
-						categoriesTagsAttributes).split(","));
-
 			@Override
 			public DataComparator getDataComparator(ModelQuery query) {
-				Model model = query.getModel();
-
-				if (JournalArticle.class.getName().equals(
-						model.getClassName()) && indexAllVersions) {
-
-					return defaultComparator;
-				}
-				else if (User.class.getName().equals(model.getClassName())) {
-					return userComparator;
-				}
-				else if (DLFileEntry.class.getName().equals(
-							model.getClassName())) {
-
-					return dlFileEntryComparator;
-				}
-				else if (WikiPage.class.getName().equals(
-							model.getClassName())) {
-
-					return wikiPageComparator;
-				}
-
-				if (model.isResourcedModel()) {
-					return resourceComparator;
-				}
-
-				return defaultComparator;
+				return ConfigurationUtil.getDataComparator(query.getModel());
 			}
 
 		};
@@ -887,7 +815,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		List<String> classNames = new ArrayList<String>();
 
 		for (String className : allClassName) {
-			if (ignoreClassName(className)) {
+			if (ConfigurationUtil.ignoreClassName(className)) {
 				continue;
 			}
 
@@ -1021,6 +949,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				continue;
 			}
 
+			if (ConfigurationUtil.modelNotIndexed(model.getClassName())) {
+				continue;
+			}
+
 			modelList.add(model);
 		}
 
@@ -1028,7 +960,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public int getNumberOfThreads(ActionRequest actionRequest) {
-		int def = PortletPropsValues.NUMBER_THREADS;
+		int def = ConfigurationUtil.getDefaultNumberThreads();
 
 		int num = ParamUtil.getInteger(actionRequest, "numberOfThreads", def);
 
@@ -1036,7 +968,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public int getNumberOfThreads(RenderRequest renderRequest) {
-		int def = PortletPropsValues.NUMBER_THREADS;
+		int def = ConfigurationUtil.getDefaultNumberThreads();
 
 		int num = ParamUtil.getInteger(renderRequest, "numberOfThreads", def);
 
@@ -1151,20 +1083,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return result;
 	}
 
-	public boolean ignoreClassName(String className) {
-		if (Validator.isNull(className)) {
-			return true;
-		}
-
-		for (String ignoreClassName : ignoreClassNames) {
-			if (ignoreClassName.equals(className)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public void serveResource(
 			ResourceRequest request, ResourceResponse response)
 		throws IOException, PortletException {
@@ -1180,11 +1098,5 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
-
-	private static String[] ignoreClassNames = new String[] {
-		"com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry",
-		"com.liferay.portal.kernel.repository.model.FileEntry",
-		"com.liferay.portal.kernel.repository.model.Folder",
-		"com.liferay.portal.model.UserPersonalSite"};
 
 }

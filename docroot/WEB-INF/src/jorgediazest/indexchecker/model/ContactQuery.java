@@ -22,20 +22,26 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.User;
 
 import java.util.List;
+import java.util.Map;
 
+import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.modelquery.ModelQuery;
 
 /**
  * @author Jorge Díaz
  */
-public class Contact extends IndexCheckerModel {
+public class ContactQuery extends IndexCheckerModelQuery {
 
-	@Override
 	public Criterion generateQueryFilter() {
 
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
-		Model modelUser = getModelFactory().getModelObject(User.class);
+		ModelQuery modelQueryUser = mqFactory.getModelQueryObject(
+			User.class.getName());
+
+		Model modelUser = modelQueryUser.getModel();
 
 		DynamicQuery userDynamicQuery =
 			modelUser.getService().newDynamicQuery();
@@ -53,13 +59,24 @@ public class Contact extends IndexCheckerModel {
 					modelUser.getService().executeDynamicQuery(
 						userDynamicQuery);
 
-			conjunction.add(generateInCriteria("classPK",users));
+			conjunction.add(getModel().generateInCriteria("classPK",users));
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 
 		return conjunction;
+	}
+
+	@Override
+	public Map<Long, Data> getData(
+			String[] attributes, String mapKeyAttribute, Criterion filter)
+		throws Exception {
+
+		filter = ModelUtil.generateConjunctionQueryFilter(
+			filter, generateQueryFilter());
+
+		return super.getData(attributes, mapKeyAttribute, filter);
 	}
 
 }

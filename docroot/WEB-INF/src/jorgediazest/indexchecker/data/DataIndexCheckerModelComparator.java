@@ -24,14 +24,34 @@ import java.util.Set;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataModelComparator;
+import jorgediazest.util.data.DataUtil;
 
 /**
  * @author Jorge Díaz
  */
 public class DataIndexCheckerModelComparator extends DataModelComparator {
 
-	public DataIndexCheckerModelComparator(String[] exactAttributes) {
+	public DataIndexCheckerModelComparator(
+		String primaryKeyAttribute, String[] exactAttributes) {
+
 		super(exactAttributes);
+
+		this.primaryKeyAttribute = primaryKeyAttribute;
+	}
+
+	@Override
+	public int compare(Data data1, Data data2) {
+		return DataUtil.compareLongs(
+				data1.get(primaryKeyAttribute, -1L),
+				data2.get(primaryKeyAttribute, -1L));
+	}
+
+	@Override
+	public boolean equals(Data data1, Data data2) {
+		long primaryKey1 = data1.get(primaryKeyAttribute, -1L);
+		long primaryKey2 = data2.get(primaryKeyAttribute, -1L);
+
+		return (primaryKey1 == primaryKey2);
 	}
 
 	public boolean equalsAttributes(
@@ -92,5 +112,19 @@ public class DataIndexCheckerModelComparator extends DataModelComparator {
 
 		return true;
 	}
+
+	@Override
+	public Integer hashCode(Data data) {
+		long primaryKey = data.get(primaryKeyAttribute, -1L);
+
+		if (primaryKey == -1L) {
+			return null;
+		}
+
+		return -1 * data.getEntryClassName().hashCode() *
+			Long.valueOf(primaryKey).hashCode();
+	}
+
+	protected String primaryKeyAttribute = null;
 
 }

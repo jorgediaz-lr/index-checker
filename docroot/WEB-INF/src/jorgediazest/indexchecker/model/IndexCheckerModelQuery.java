@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.indexchecker.index.IndexSearchUtil;
+import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
@@ -164,7 +165,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		Locale siteLocale = LocaleUtil.getSiteDefault();
 
 		for (String attribute : attributes) {
-			String attrDoc = IndexSearchUtil.getAttributeForDocument(
+			String attrDoc = ConfigurationUtil.getIndexAttributeName(
 				getModel(), attribute);
 
 			List<Map<Locale, String>> listValueMap = null;
@@ -306,7 +307,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		for (String attribute : attributes) {
 			if (model.hasAttribute(attribute)) {
 				String sortableFieldName =
-					IndexSearchUtil.getAttributeForDocument(model, attribute);
+					ConfigurationUtil.getIndexAttributeName(model, attribute);
 
 				sortAttributesList.add(sortableFieldName);
 			}

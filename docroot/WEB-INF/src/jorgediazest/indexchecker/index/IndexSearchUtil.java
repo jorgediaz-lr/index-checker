@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import jorgediazest.util.model.Model;
-
 /**
  * @author Jorge Díaz
  */
@@ -83,44 +81,6 @@ public class IndexSearchUtil {
 		}
 
 		return docs;
-	}
-
-	public static String getAttributeForDocument(
-		Model model, String attribute) {
-
-		if ("groupId".equals(attribute)) {
-			attribute = "scopeGroupId";
-		}
-		else if ("modifiedDate".equals(attribute)) {
-			attribute = "modified";
-		}
-		else if ("averageScore".equals(attribute)) {
-			attribute = "ratings";
-		}
-		else if ("AssetEntries_AssetCategories.categoryId".equals(attribute)) {
-			attribute = "assetCategoryIds";
-		}
-		else if ("AssetCategory.title".equals(attribute)) {
-			attribute = "assetCategoryTitles";
-		}
-		else if ("AssetEntries_AssetTags.tagId".equals(attribute)) {
-			attribute = "assetTagIds";
-		}
-		else if ("AssetTag.name".equals(attribute)) {
-			attribute = "assetTagNames";
-		}
-		else if ("resourcePrimKey".equals(attribute) &&
-				 model.isResourcedModel()) {
-
-			attribute = "entryClassPK";
-		}
-		else if (model.getPrimaryKeyAttribute().equals(attribute) &&
-				 !model.isResourcedModel()) {
-
-			attribute = "entryClassPK";
-		}
-
-		return attribute;
 	}
 
 	public static List<Map<Locale, String>> getLocalizedMap(
