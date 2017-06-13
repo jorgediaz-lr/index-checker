@@ -362,6 +362,11 @@ public class ModelWrapper implements Model, Cloneable {
 		this.name = getClassName() + "_" + this.suffix;
 	}
 
+	@Override
+	public String toString() {
+		return model.toString();
+	}
+
 	protected Model model;
 	protected String name = null;
 	protected ServiceWrapper serviceWrapper = null;

@@ -655,6 +655,7 @@ public class ModelImpl implements Model {
 		return this.getClassName().equals(clazz.getName());
 	}
 
+	@Override
 	public String toString() {
 		return getName();
 	}
