@@ -363,10 +363,18 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			Arrays.toString(attr) + "key: " + mapKeyAttribute);
 
 		if (values == null) {
-			values = this.getData(attr, mapKeyAttribute);
+			synchronized(this) {
+				values = cachedDifferentAttributeValues.get(
+					Arrays.toString(attr) + "key: " + mapKeyAttribute);
 
-			cachedDifferentAttributeValues.put(
-				Arrays.toString(attr) + "key: " + mapKeyAttribute, values);
+				if (values == null) {
+					values = this.getData(attr, mapKeyAttribute);
+
+					cachedDifferentAttributeValues.put(
+						Arrays.toString(attr) + "key: " + mapKeyAttribute,
+						values);
+				}
+			}
 		}
 
 		return values;
@@ -441,10 +449,18 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			Arrays.toString(attr) + "key: " + mapKeyAttribute);
 
 		if (values == null) {
-			values = this.getDataWithDuplicates(attr, mapKeyAttribute);
+			synchronized(this) {
+				values = cachedDifferentAttributeValuesDup.get(
+					Arrays.toString(attr) + "key: " + mapKeyAttribute);
 
-			cachedDifferentAttributeValuesDup.put(
-				Arrays.toString(attr) + "key: " + mapKeyAttribute, values);
+				if (values == null) {
+					values = this.getDataWithDuplicates(attr, mapKeyAttribute);
+
+					cachedDifferentAttributeValuesDup.put(
+						Arrays.toString(attr) + "key: " + mapKeyAttribute,
+						values);
+				}
+			}
 		}
 
 		return values;
