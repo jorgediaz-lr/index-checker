@@ -14,10 +14,13 @@
 
 package jorgediazest.indexchecker.model;
 
+import com.liferay.portal.kernel.dao.orm.Criterion;
+
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
+import jorgediazest.util.model.ModelWrapper;
 
 /**
  * @author Jorge Díaz
@@ -34,9 +37,17 @@ public class IndexCheckerModelFactory extends ModelFactory {
 
 		String stringFilter = ConfigurationUtil.getStringFilter(model);
 
-		model.setFilter(model.generateCriterionFilter(stringFilter));
+		Criterion filter = model.generateCriterionFilter(stringFilter);
 
-		return model;
+		if (filter == null) {
+			return model;
+		}
+
+		ModelWrapper modelWrapper = new ModelWrapper(model);
+
+		modelWrapper.setFilter(filter);
+
+		return modelWrapper;
 	}
 
 }
