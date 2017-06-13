@@ -33,11 +33,7 @@ import jorgediazest.util.service.Service;
 /**
  * @author Jorge Díaz
  */
-public interface Model extends Cloneable, Comparable<Model> {
-
-	public void addFilter(Criterion filter);
-
-	public Model clone();
+public interface Model extends Comparable<Model> {
 
 	public long count();
 
@@ -73,8 +69,6 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public Criterion getCompanyGroupFilter(long companyId, long groupId);
 
 	public String getDisplayName(Locale locale);
-
-	public Criterion getFilter();
 
 	public Model getFilteredModel(Criterion filters);
 
@@ -131,10 +125,6 @@ public interface Model extends Cloneable, Comparable<Model> {
 
 	public boolean hasIndexerEnabled();
 
-	public void init(
-			String classPackageName, String classSimpleName, Service service)
-		throws Exception;
-
 	public boolean isAuditedModel();
 
 	public boolean isGroupedModel();
@@ -150,11 +140,5 @@ public interface Model extends Cloneable, Comparable<Model> {
 	public boolean isWorkflowEnabled();
 
 	public boolean modelEqualsClass(Class<?> clazz);
-
-	public void setFilter(Criterion filter);
-
-	public void setModelFactory(ModelFactory modelFactory);
-
-	public void setNameSuffix(String suffix);
 
 }

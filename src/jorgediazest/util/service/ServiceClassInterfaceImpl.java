@@ -38,38 +38,14 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 		this.classInterface = classInterface;
 	}
 
-	public ServiceClassInterfaceImpl(ServiceClassInterfaceImpl service) {
-		this.init(service);
-	}
-
-	@Override
-	public Service clone() {
-		return new ServiceClassInterfaceImpl(this);
-	}
-
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery)
 		throws SystemException {
-
-		prepareDynamicQuery(dynamicQuery);
 
 		return GroupLocalServiceUtil.dynamicQuery(dynamicQuery);
 	}
 
 	public ClassLoader getClassLoader() {
 		return classInterface.getClassLoader();
-	}
-
-	public void init(Service service) {
-		try {
-			super.init(service);
-			ServiceClassInterfaceImpl serviceImpl =
-				(ServiceClassInterfaceImpl)service;
-			this.classInterface = serviceImpl.classInterface;
-		}
-		catch (Exception e) {
-			_log.error("Error executing init");
-			throw new RuntimeException(e);
-		}
 	}
 
 	public DynamicQuery newDynamicQuery() {

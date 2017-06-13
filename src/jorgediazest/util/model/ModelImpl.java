@@ -57,15 +57,25 @@ import jorgediazest.util.service.Service;
 /**
  * @author Jorge Díaz
  */
-public abstract class ModelImpl implements Model {
+public class ModelImpl implements Model {
 
 	/* Oracle limitation */
 	public static final int MAX_NUMBER_OF_CLAUSES = 1000;
 
-	public void addFilter(Criterion filter) {
-		service.setFilter(
-			ModelUtil.generateConjunctionQueryFilter(
-				service.getFilter(), filter));
+	public ModelImpl(
+			ModelFactory modelFactory, String classPackageName,
+			String classSimpleName, Service service)
+		throws Exception {
+
+		this.modelFactory = modelFactory;
+
+		this.service = service;
+
+		this.className = classPackageName + "." + classSimpleName;
+		this.classPackageName = classPackageName;
+		this.classSimpleName = classSimpleName;
+
+		this.portlets = calculatePortlets();
 	}
 
 	public Set<Portlet> calculatePortlets() {
@@ -78,29 +88,6 @@ public abstract class ModelImpl implements Model {
 			modelFactory.getPortletSet(this.getWorkflowHandler()));
 
 		return portletsSet;
-	}
-
-	public Model clone() {
-		ModelImpl model;
-		try {
-			model = this.getClass().newInstance();
-
-			model.className = this.className;
-			model.classPackageName = this.classPackageName;
-			model.classSimpleName = this.classSimpleName;
-			model.modelFactory = this.modelFactory;
-			model.name = this.name;
-			model.service = this.service.clone();
-			model.suffix = this.suffix;
-			model.tableInfo = this.tableInfo;
-			model.tableInfoMappings = this.tableInfoMappings;
-		}
-		catch (Exception e) {
-			_log.error("Error executing clone");
-			throw new RuntimeException(e);
-		}
-
-		return model;
 	}
 
 	public int compareTo(Model o) {
@@ -319,15 +306,7 @@ public abstract class ModelImpl implements Model {
 			return StringPool.BLANK;
 		}
 
-		if (Validator.isNull(this.suffix)) {
-			return displayName;
-		}
-
-		return displayName + " (" + suffix + ")";
-	}
-
-	public Criterion getFilter() {
-		return service.getFilter();
+		return displayName;
 	}
 
 	public Model getFilteredModel(Criterion filters) {
@@ -335,18 +314,18 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public Model getFilteredModel(Criterion filters, String nameSufix) {
-		Model model = this;
-
-		if (filters != null) {
-			model = this.clone();
-			model.setFilter(filters);
-
-			if (Validator.isNotNull(nameSufix)) {
-				model.setNameSuffix(nameSufix);
-			}
+		if (filters == null) {
+			return this;
 		}
 
-		return model;
+		ModelWrapper modelWrapper = new ModelWrapper(this);
+		modelWrapper.setFilter(filters);
+
+		if (Validator.isNotNull(nameSufix)) {
+			modelWrapper.setNameSuffix(nameSufix);
+		}
+
+		return modelWrapper;
 	}
 
 	public Model getFilteredModel(String filters) {
@@ -377,11 +356,7 @@ public abstract class ModelImpl implements Model {
 	}
 
 	public String getName() {
-		if (name == null) {
-			return getClassName();
-		}
-
-		return name;
+		return getClassName();
 	}
 
 	public Portlet getPortlet() {
@@ -547,7 +522,7 @@ public abstract class ModelImpl implements Model {
 
 			List<String> mappingTables =
 				ReflectionUtil.getLiferayModelImplMappingTablesFields(
-					service.getLiferayModelImplClass());
+					getService().getLiferayModelImplClass());
 
 			for (String mappingTable : mappingTables) {
 				String prefix = StringUtil.replace(
@@ -605,19 +580,6 @@ public abstract class ModelImpl implements Model {
 		}
 
 		return ((BaseIndexer)aux).isIndexerEnabled();
-	}
-
-	public void init(
-			String classPackageName, String classSimpleName, Service service)
-		throws Exception {
-
-		this.service = service;
-
-		this.className = classPackageName + "." + classSimpleName;
-		this.classPackageName = classPackageName;
-		this.classSimpleName = classSimpleName;
-
-		this.portlets = calculatePortlets();
 	}
 
 	public boolean isAuditedModel() {
@@ -693,19 +655,6 @@ public abstract class ModelImpl implements Model {
 		return this.getClassName().equals(clazz.getName());
 	}
 
-	public void setFilter(Criterion filter) {
-		service.setFilter(filter);
-	}
-
-	public void setModelFactory(ModelFactory modelFactory) {
-		this.modelFactory = modelFactory;
-	}
-
-	public void setNameSuffix(String suffix) {
-		this.suffix = suffix;
-		this.name = getClassName() + "_" + this.suffix;
-	}
-
 	public String toString() {
 		return getName();
 	}
@@ -776,10 +725,8 @@ public abstract class ModelImpl implements Model {
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected ModelFactory modelFactory = null;
-	protected String name = null;
 	protected Set<Portlet> portlets = null;
 	protected Service service = null;
-	protected String suffix = null;
 	protected TableInfo tableInfo = null;
 	protected Map<String, TableInfo> tableInfoMappings = null;
 

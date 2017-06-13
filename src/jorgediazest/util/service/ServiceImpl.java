@@ -14,13 +14,9 @@
 
 package jorgediazest.util.service;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.ClassedModel;
-
-import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * @author Jorge Díaz
@@ -30,8 +26,6 @@ public abstract class ServiceImpl implements Service {
 	public ClassedModel addObject(ClassedModel object) {
 		throw new UnsupportedOperationException();
 	}
-
-	public abstract Service clone();
 
 	public ClassedModel createObject(long primaryKey) {
 		throw new UnsupportedOperationException();
@@ -57,10 +51,6 @@ public abstract class ServiceImpl implements Service {
 
 	public String getClassSimpleName() {
 		return classSimpleName;
-	}
-
-	public Criterion getFilter() {
-		return filter;
 	}
 
 	public Class<?> getLiferayModelImplClass() {
@@ -89,45 +79,6 @@ public abstract class ServiceImpl implements Service {
 		return liferayModelImplClass;
 	}
 
-	public void init(Service service) {
-		try {
-			ServiceImpl serviceImpl = (ServiceImpl)service;
-			this.className = serviceImpl.className;
-			this.classPackageName = serviceImpl.classPackageName;
-			this.classSimpleName = serviceImpl.classSimpleName;
-			this.filter = serviceImpl.filter;
-			this.liferayModelImplClass = serviceImpl.liferayModelImplClass;
-		}
-		catch (Exception e) {
-			_log.error("Error executing init");
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void prepareDynamicQuery(DynamicQuery dynamicQuery) {
-
-		if (filter != null) {
-			dynamicQuery.add(filter);
-		}
-
-		if (_log.isDebugEnabled()) {
-			if (filter != null) {
-				String filterString = ReflectionUtil.getWrappedCriterionString(
-					filter);
-				_log.debug("added filter: " + filterString);
-			}
-
-			String filterDynamicQuery =
-				ReflectionUtil.getWrappedDynamicQueryString(dynamicQuery);
-
-			_log.debug("executing dynamicQuery: " + filterDynamicQuery);
-		}
-	}
-
-	public final void setFilter(Criterion filter) {
-		this.filter = filter;
-	}
-
 	public ClassedModel updateObject(ClassedModel object) {
 		throw new UnsupportedOperationException();
 	}
@@ -135,7 +86,6 @@ public abstract class ServiceImpl implements Service {
 	protected String className = null;
 	protected String classPackageName = null;
 	protected String classSimpleName = null;
-	protected Criterion filter = null;
 	protected Class<?> liferayModelImplClass = null;
 	protected boolean liferayModelImplClassIsNull = false;
 

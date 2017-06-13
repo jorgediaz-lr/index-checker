@@ -14,7 +14,6 @@
 
 package jorgediazest.util.service;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.model.ClassedModel;
 
@@ -23,11 +22,9 @@ import java.util.List;
 /**
  * @author Jorge Díaz
  */
-public interface Service extends Cloneable {
+public interface Service {
 
 	public ClassedModel addObject(ClassedModel object);
-
-	public Service clone();
 
 	public ClassedModel createObject(long primaryKey);
 
@@ -46,17 +43,11 @@ public interface Service extends Cloneable {
 
 	public String getClassSimpleName();
 
-	public Criterion getFilter();
-
 	public Class<?> getLiferayModelImplClass();
 
 	public DynamicQuery newDynamicQuery();
 
 	public DynamicQuery newDynamicQuery(String alias);
-
-	public void prepareDynamicQuery(DynamicQuery dynamicQuery);
-
-	public void setFilter(Criterion filter);
 
 	public ClassedModel updateObject(ClassedModel object);
 

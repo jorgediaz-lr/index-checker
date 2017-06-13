@@ -39,14 +39,6 @@ import jorgediazest.util.service.ServiceUtil;
 public class ModelFactory {
 
 	public ModelFactory() {
-		this(null);
-	}
-
-	public ModelFactory(ModelClassFactory modelClassFactory) {
-		if (modelClassFactory != null) {
-			this.modelClassFactory = modelClassFactory;
-		}
-
 		fillHandlerPortletIdMap();
 	}
 
@@ -110,10 +102,6 @@ public class ModelFactory {
 		return handlerPortletMap.get(handlerAux.getClass().getName());
 	}
 
-	public interface ModelClassFactory {
-		public Class<? extends Model> getModelClass(String className);
-	}
-
 	protected void fillHandlerPortletIdMap() {
 		for (Portlet portlet : PortletLocalServiceUtil.getPortlets()) {
 			addHandlersToMap(portlet.getIndexerClasses(), portlet);
@@ -130,16 +118,10 @@ public class ModelFactory {
 
 		String className = classPackageName + "." + classSimpleName;
 
-		Class<? extends Model> modelClass = modelClassFactory.getModelClass(
-			className);
-
 		Model model = null;
 		try {
-			model = (Model)modelClass.newInstance();
-
-			model.setModelFactory(this);
-
-			model.init(classPackageName, classSimpleName, service);
+			model = new ModelImpl(
+				this, classPackageName, classSimpleName, service);
 
 			if (model.getAttributesName() == null) {
 				throw new Exception(
@@ -166,15 +148,6 @@ public class ModelFactory {
 	protected Class<? extends Model> defaultModelClass = null;
 	protected Map<String, Set<Portlet>> handlerPortletMap =
 		new HashMap<String, Set<Portlet>>();
-
-	protected ModelClassFactory modelClassFactory = new ModelClassFactory() {
-
-		@Override
-		public Class<? extends Model> getModelClass(String className) {
-			return DefaultModel.class;
-		}
-
-	};
 
 	private void addHandlersToMap(List<String> handlerList, Portlet portlet) {
 		for (String handler : handlerList) {

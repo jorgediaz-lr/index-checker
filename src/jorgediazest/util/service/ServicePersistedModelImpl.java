@@ -49,20 +49,11 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 		this.className = classPackageName + "." + classSimpleName;
 	}
 
-	public ServicePersistedModelImpl(ServicePersistedModelImpl service) {
-		this.init(service);
-	}
-
 	public ClassedModel addObject(ClassedModel object) {
 		String methodName = "add" + object.getModelClass().getSimpleName();
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
-	}
-
-	@Override
-	public Service clone() {
-		return new ServicePersistedModelImpl(this);
 	}
 
 	public ClassedModel createObject(long primaryKey) {
@@ -87,8 +78,6 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery) {
-		prepareDynamicQuery(dynamicQuery);
-
 		return (List<?>)executeServiceMethod(
 			"dynamicQuery", DynamicQuery.class, dynamicQuery);
 	}
@@ -137,20 +126,6 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 	public ClassLoader getClassLoader() {
 		return modelService.getClass().getClassLoader();
-	}
-
-	public void init(Service service) {
-		try {
-			super.init(service);
-			ServicePersistedModelImpl serviceImpl =
-				(ServicePersistedModelImpl)service;
-			this.localServiceMethods = serviceImpl.localServiceMethods;
-			this.modelService = serviceImpl.modelService;
-		}
-		catch (Exception e) {
-			_log.error("Error executing init");
-			throw new RuntimeException(e);
-		}
 	}
 
 	public DynamicQuery newDynamicQuery() {
