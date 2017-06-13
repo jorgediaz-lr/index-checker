@@ -35,18 +35,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServicePersistedModelImpl extends ServiceImpl {
 
 	public ServicePersistedModelImpl(
-		BaseLocalService modelService, String classPackageName,
-		String classSimpleName) {
+			BaseLocalService modelService, String className) {
 
 		if (modelService == null) {
 			throw new NullPointerException("modelService cannot be null");
 		}
 
 		this.modelService = modelService;
+		this.className = className;
+		this.classSimpleName = className;
 
-		this.classPackageName = classPackageName;
-		this.classSimpleName = classSimpleName;
-		this.className = classPackageName + "." + classSimpleName;
+		int pos = className.lastIndexOf(".");
+
+		if (pos > 0) {
+			classSimpleName = className.substring(pos + 1, className.length());
+		}
 	}
 
 	public ClassedModel addObject(ClassedModel object) {

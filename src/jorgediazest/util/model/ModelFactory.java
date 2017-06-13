@@ -17,19 +17,12 @@ package jorgediazest.util.model;
 import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.Portlet;
-import com.liferay.portal.service.PortletLocalServiceUtil;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceUtil;
 
@@ -37,10 +30,6 @@ import jorgediazest.util.service.ServiceUtil;
  * @author Jorge Díaz
  */
 public class ModelFactory {
-
-	public ModelFactory() {
-		fillHandlerPortletIdMap();
-	}
 
 	public Model getModelObject(Class<?> clazz) {
 		return getModelObject(clazz.getName());
@@ -63,18 +52,7 @@ public class ModelFactory {
 			return model;
 		}
 
-		String classPackageName = StringPool.BLANK;
-		String classSimpleName = className;
-
-		int pos = className.lastIndexOf(".");
-
-		if (pos > 0) {
-			classPackageName = className.substring(0, pos);
-			classSimpleName = className.substring(pos + 1, className.length());
-		}
-
-		Service service = ServiceUtil.getService(
-			classPackageName, classSimpleName);
+		Service service = ServiceUtil.getService(className);
 
 		if (service != null) {
 			model = getModelObject(service);
@@ -89,39 +67,12 @@ public class ModelFactory {
 		return model;
 	}
 
-	public Set<Portlet> getPortletSet(Object handler) {
-
-		Object handlerAux = ReflectionUtil.unWrapProxy(handler);
-
-		if ((handlerAux == null) ||
-			!handlerPortletMap.containsKey(handlerAux.getClass().getName())) {
-
-			return new HashSet<Portlet>();
-		}
-
-		return handlerPortletMap.get(handlerAux.getClass().getName());
-	}
-
-	protected void fillHandlerPortletIdMap() {
-		for (Portlet portlet : PortletLocalServiceUtil.getPortlets()) {
-			addHandlersToMap(portlet.getIndexerClasses(), portlet);
-			addHandlersToMap(
-				portlet.getStagedModelDataHandlerClasses(), portlet);
-			addHandlersToMap(portlet.getTrashHandlerClasses(), portlet);
-			addHandlersToMap(portlet.getWorkflowHandlerClasses(), portlet);
-		}
-	}
-
 	protected Model getModelObject(Service service) {
-		String classPackageName = service.getClassPackageName();
-		String classSimpleName = service.getClassSimpleName();
-
-		String className = classPackageName + "." + classSimpleName;
+		String className = service.getClassName();
 
 		Model model = null;
 		try {
-			model = new ModelImpl(
-				this, classPackageName, classSimpleName, service);
+			model = new ModelImpl(this, className, service);
 
 			if (model.getAttributesName() == null) {
 				throw new Exception(
@@ -145,27 +96,6 @@ public class ModelFactory {
 		new ConcurrentHashMap<String, Model>();
 	protected Set<String> cacheNullModelObject =
 		new ConcurrentHashSet<String>();
-	protected Class<? extends Model> defaultModelClass = null;
-	protected Map<String, Set<Portlet>> handlerPortletMap =
-		new HashMap<String, Set<Portlet>>();
-
-	private void addHandlersToMap(List<String> handlerList, Portlet portlet) {
-		for (String handler : handlerList) {
-			if (!handlerPortletMap.containsKey(handler)) {
-				handlerPortletMap.put(handler, new HashSet<Portlet>());
-			}
-
-			Set<Portlet> portletSet = handlerPortletMap.get(handler);
-
-			if (!portletSet.contains(portlet)) {
-				portletSet.add(portlet);
-
-				if (_log.isDebugEnabled()) {
-					_log.debug("Adding: " + handler + " portlet " + portlet);
-				}
-			}
-		}
-	}
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 

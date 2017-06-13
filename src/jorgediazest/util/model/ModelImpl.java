@@ -18,37 +18,27 @@ import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.lar.StagedModelDataHandler;
-import com.liferay.portal.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.BaseIndexer;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.trash.TrashHandler;
-import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.workflow.WorkflowHandler;
-import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
-import com.liferay.portal.model.Portlet;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.util.PortalUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.reflection.ReflectionUtil;
@@ -63,31 +53,14 @@ public class ModelImpl implements Model {
 	public static final int MAX_NUMBER_OF_CLAUSES = 1000;
 
 	public ModelImpl(
-			ModelFactory modelFactory, String classPackageName,
-			String classSimpleName, Service service)
+			ModelFactory modelFactory, String className, Service service)
 		throws Exception {
 
 		this.modelFactory = modelFactory;
 
 		this.service = service;
 
-		this.className = classPackageName + "." + classSimpleName;
-		this.classPackageName = classPackageName;
-		this.classSimpleName = classSimpleName;
-
-		this.portlets = calculatePortlets();
-	}
-
-	public Set<Portlet> calculatePortlets() {
-		Set<Portlet> portletsSet = new HashSet<Portlet>();
-		portletsSet.addAll(modelFactory.getPortletSet(this.getIndexer()));
-		portletsSet.addAll(
-			modelFactory.getPortletSet(this.getStagedModelDataHandler()));
-		portletsSet.addAll(modelFactory.getPortletSet(this.getTrashHandler()));
-		portletsSet.addAll(
-			modelFactory.getPortletSet(this.getWorkflowHandler()));
-
-		return portletsSet;
+		this.className = className;
 	}
 
 	public int compareTo(Model o) {
@@ -119,6 +92,57 @@ public class ModelImpl implements Model {
 		}
 
 		return -1;
+	}
+
+	public List<?> executeDynamicQuery(Criterion filter) throws Exception {
+
+		return executeDynamicQuery(filter, null, null);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
+		throws Exception {
+
+		return executeDynamicQuery(filter, null, orders);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter, Order order)
+		throws Exception {
+
+		List<Order> orders = Collections.singletonList(order);
+
+		return executeDynamicQuery(filter, null, orders);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
+		throws Exception {
+
+		return executeDynamicQuery(filter, projection, null);
+	}
+
+	public List<?> executeDynamicQuery(
+			Criterion filter, Projection projection, List<Order> orders)
+		throws Exception {
+
+		DynamicQuery query = getService().newDynamicQuery();
+
+		if (projection != null) {
+			query.setProjection(ProjectionFactoryUtil.distinct(projection));
+		}
+
+		if (orders != null) {
+			for (Order order : orders) {
+				query.addOrder(order);
+			}
+		}
+
+		if (filter != null) {
+			query.add(filter);
+		}
+
+		return getService().executeDynamicQuery(query);
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {
@@ -249,14 +273,6 @@ public class ModelImpl implements Model {
 		return PortalUtil.getClassNameId(getClassName());
 	}
 
-	public String getClassPackageName() {
-		return classPackageName;
-	}
-
-	public String getClassSimpleName() {
-		return classSimpleName;
-	}
-
 	public Criterion getCompanyFilter(long companyId) {
 		return getCompanyGroupFilter(companyId, null);
 	}
@@ -343,42 +359,12 @@ public class ModelImpl implements Model {
 		return getFilteredModel(filter, nameSufix);
 	}
 
-	public Indexer getIndexer() {
-		return IndexerRegistryUtil.getIndexer(getClassName());
-	}
-
-	public Indexer getIndexerNullSafe() {
-		return IndexerRegistryUtil.nullSafeGetIndexer(getClassName());
-	}
-
 	public ModelFactory getModelFactory() {
 		return modelFactory;
 	}
 
 	public String getName() {
 		return getClassName();
-	}
-
-	public Portlet getPortlet() {
-		if (portlets.isEmpty()) {
-			return null;
-		}
-
-		return portlets.toArray(new Portlet[portlets.size()])[0];
-	}
-
-	public String getPortletId() {
-		Portlet portlet = this.getPortlet();
-
-		if (portlet == null) {
-			return null;
-		}
-
-		return portlet.getPortletId();
-	}
-
-	public Set<Portlet> getPortlets() {
-		return portlets;
 	}
 
 	public String getPrimaryKeyAttribute() {
@@ -495,11 +481,6 @@ public class ModelImpl implements Model {
 		return service;
 	}
 
-	public StagedModelDataHandler<?> getStagedModelDataHandler() {
-		return StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
-			getClassName());
-	}
-
 	public TableInfo getTableInfo() {
 		if (tableInfo == null) {
 			tableInfo = new TableInfo(this);
@@ -539,14 +520,6 @@ public class ModelImpl implements Model {
 		return tableInfoMappings;
 	}
 
-	public TrashHandler getTrashHandler() {
-		return TrashHandlerRegistryUtil.getTrashHandler(getClassName());
-	}
-
-	public WorkflowHandler getWorkflowHandler() {
-		return WorkflowHandlerRegistryUtil.getWorkflowHandler(getClassName());
-	}
-
 	public boolean hasAttribute(String attribute) {
 
 		return (getAttributePos(attribute) != -1);
@@ -560,26 +533,6 @@ public class ModelImpl implements Model {
 		}
 
 		return true;
-	}
-
-	public boolean hasIndexer() {
-		return getIndexer() != null;
-	}
-
-	public boolean hasIndexerEnabled() {
-		Indexer indexer = getIndexer();
-
-		if (indexer == null) {
-			return false;
-		}
-
-		Object aux = ReflectionUtil.unWrapProxy(indexer);
-
-		if ((aux == null) || !(aux instanceof BaseIndexer)) {
-			return false;
-		}
-
-		return ((BaseIndexer)aux).isIndexerEnabled();
 	}
 
 	public boolean isAuditedModel() {
@@ -635,10 +588,6 @@ public class ModelImpl implements Model {
 		}
 
 		return false;
-	}
-
-	public boolean isTrashEnabled() {
-		return (getTrashHandler() != null);
 	}
 
 	public boolean isWorkflowEnabled() {
@@ -701,32 +650,11 @@ public class ModelImpl implements Model {
 		return property;
 	}
 
-	protected void splitSourceDest(
-		String[] dataArray, String[] dataArrayOrigin, String[] dataArrayDest) {
-
-		int i = 0;
-
-		for (String data : dataArray) {
-			String[] aux = data.split("=");
-			dataArrayOrigin[i] = aux[0];
-			int posDest = 0;
-
-			if (aux.length > 1) {
-				posDest = 1;
-			}
-
-			dataArrayDest[i] = aux[posDest];
-			i++;
-		}
-	}
-
 	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
 	protected String className = null;
-	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected ModelFactory modelFactory = null;
-	protected Set<Portlet> portlets = null;
 	protected Service service = null;
 	protected TableInfo tableInfo = null;
 	protected Map<String, TableInfo> tableInfoMappings = null;

@@ -39,7 +39,7 @@ public interface Service {
 
 	public ClassLoader getClassLoader();
 
-	public String getClassPackageName();
+	public String getClassName();
 
 	public String getClassSimpleName();
 

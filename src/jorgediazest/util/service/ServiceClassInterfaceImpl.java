@@ -32,7 +32,8 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 	public ServiceClassInterfaceImpl(
 		Class<? extends ClassedModel> classInterface) {
 
-		this.classPackageName = classInterface.getPackage().getName();
+		String classPackageName = classInterface.getPackage().getName();
+
 		this.classSimpleName = classInterface.getSimpleName();
 		this.className = classPackageName + "." + classSimpleName;
 		this.classInterface = classInterface;

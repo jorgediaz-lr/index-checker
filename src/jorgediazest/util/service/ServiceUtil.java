@@ -95,18 +95,14 @@ public class ServiceUtil {
 		return null;
 	}
 
-	public static Service getService(
-			String classPackageName, String classSimpleName) {
-
-		String className = classPackageName + "." + classSimpleName;
+	public static Service getService(String className) {
 
 		BaseLocalService modelService =
 			(BaseLocalService)PersistedModelLocalServiceRegistryUtil.
 				getPersistedModelLocalService(className);
 
 		if (modelService != null) {
-			return new ServicePersistedModelImpl(
-					modelService, classPackageName, classSimpleName);
+			return new ServicePersistedModelImpl(modelService, className);
 		}
 
 		return getServiceFromPortal(className);

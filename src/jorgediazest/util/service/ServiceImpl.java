@@ -45,8 +45,8 @@ public abstract class ServiceImpl implements Service {
 
 	public abstract ClassLoader getClassLoader();
 
-	public String getClassPackageName() {
-		return classPackageName;
+	public String getClassName() {
+		return className;
 	}
 
 	public String getClassSimpleName() {
@@ -84,7 +84,6 @@ public abstract class ServiceImpl implements Service {
 	}
 
 	protected String className = null;
-	protected String classPackageName = null;
 	protected String classSimpleName = null;
 	protected Class<?> liferayModelImplClass = null;
 	protected boolean liferayModelImplClassIsNull = false;

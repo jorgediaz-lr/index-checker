@@ -88,8 +88,8 @@ public class ServiceWrapper implements Service {
 	}
 
 	@Override
-	public String getClassPackageName() {
-		return service.getClassPackageName();
+	public String getClassName() {
+		return service.getClassName();
 	}
 
 	@Override

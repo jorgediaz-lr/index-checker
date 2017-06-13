@@ -15,19 +15,15 @@
 package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.lar.StagedModelDataHandler;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.Portlet;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceWrapper;
@@ -75,6 +71,40 @@ public class ModelWrapper implements Model, Cloneable {
 	@Override
 	public long count(Criterion condition) {
 		return model.count(condition);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter) throws Exception {
+		return model.executeDynamicQuery(filter);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
+		throws Exception {
+
+		return model.executeDynamicQuery(filter, orders);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter, Order order)
+		throws Exception {
+
+		return model.executeDynamicQuery(filter, order);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
+		throws Exception {
+
+		return model.executeDynamicQuery(filter, projection);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(
+			Criterion filter, Projection projection, List<Order> orders)
+		throws Exception {
+
+		return model.executeDynamicQuery(filter, projection, orders);
 	}
 
 	@Override
@@ -180,16 +210,6 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public Indexer getIndexer() {
-		return model.getIndexer();
-	}
-
-	@Override
-	public Indexer getIndexerNullSafe() {
-		return model.getIndexerNullSafe();
-	}
-
-	@Override
 	public ModelFactory getModelFactory() {
 		return model.getModelFactory();
 	}
@@ -201,21 +221,6 @@ public class ModelWrapper implements Model, Cloneable {
 		}
 
 		return name;
-	}
-
-	@Override
-	public Portlet getPortlet() {
-		return model.getPortlet();
-	}
-
-	@Override
-	public String getPortletId() {
-		return model.getPortletId();
-	}
-
-	@Override
-	public Set<Portlet> getPortlets() {
-		return model.getPortlets();
 	}
 
 	@Override
@@ -260,11 +265,6 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public StagedModelDataHandler<?> getStagedModelDataHandler() {
-		return model.getStagedModelDataHandler();
-	}
-
-	@Override
 	public TableInfo getTableInfo() {
 		return model.getTableInfo();
 	}
@@ -280,11 +280,6 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
-	}
-
-	@Override
 	public boolean hasAttribute(String attribute) {
 		return model.hasAttribute(attribute);
 	}
@@ -292,16 +287,6 @@ public class ModelWrapper implements Model, Cloneable {
 	@Override
 	public boolean hasAttributes(String[] attributes) {
 		return model.hasAttributes(attributes);
-	}
-
-	@Override
-	public boolean hasIndexer() {
-		return model.hasIndexer();
-	}
-
-	@Override
-	public boolean hasIndexerEnabled() {
-		return model.hasIndexerEnabled();
 	}
 
 	@Override
@@ -327,11 +312,6 @@ public class ModelWrapper implements Model, Cloneable {
 	@Override
 	public boolean isStagedModel() {
 		return model.isStagedModel();
-	}
-
-	@Override
-	public boolean isTrashEnabled() {
-		return model.isTrashEnabled();
 	}
 
 	@Override

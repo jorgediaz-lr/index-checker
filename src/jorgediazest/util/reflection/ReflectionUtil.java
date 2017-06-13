@@ -14,7 +14,6 @@
 
 package jorgediazest.util.reflection;
 
-import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
@@ -25,7 +24,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 import java.sql.Types;
 
@@ -342,28 +340,6 @@ public class ReflectionUtil {
 		}
 
 		return object.toString();
-	}
-
-	public static Object unWrapProxy(Object object) {
-		if (object == null) {
-			return null;
-		}
-
-		if (object instanceof Proxy) {
-			try {
-				ClassLoaderBeanHandler classLoaderBeanHandler =
-					(ClassLoaderBeanHandler)
-						Proxy.getInvocationHandler(object);
-				object = classLoaderBeanHandler.getBean();
-			}
-			catch (Exception e) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
-				}
-			}
-		}
-
-		return object;
 	}
 
 	static Log _log = LogFactoryUtil.getLog(ReflectionUtil.class);

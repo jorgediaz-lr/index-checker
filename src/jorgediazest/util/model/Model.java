@@ -15,18 +15,14 @@
 package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.lar.StagedModelDataHandler;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.trash.TrashHandler;
-import com.liferay.portal.model.Portlet;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import jorgediazest.util.service.Service;
 
@@ -38,6 +34,21 @@ public interface Model extends Comparable<Model> {
 	public long count();
 
 	public long count(Criterion condition);
+
+	public List<?> executeDynamicQuery(Criterion filter) throws Exception;
+
+	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
+		throws Exception;
+
+	public List<?> executeDynamicQuery(Criterion filter, Order order)
+		throws Exception;
+
+	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
+		throws Exception;
+
+	public List<?> executeDynamicQuery(
+		Criterion filter, Projection projection, List<Order> order)
+	throws Exception;
 
 	public Criterion generateCriterionFilter(String stringFilter);
 
@@ -78,19 +89,9 @@ public interface Model extends Comparable<Model> {
 
 	public Model getFilteredModel(String filters, String nameSufix);
 
-	public Indexer getIndexer();
-
-	public Indexer getIndexerNullSafe();
-
 	public ModelFactory getModelFactory();
 
 	public String getName();
-
-	public Portlet getPortlet();
-
-	public String getPortletId();
-
-	public Set<Portlet> getPortlets();
 
 	public String getPrimaryKeyAttribute();
 
@@ -107,23 +108,15 @@ public interface Model extends Comparable<Model> {
 
 	public Service getService();
 
-	public StagedModelDataHandler<?> getStagedModelDataHandler();
-
 	public TableInfo getTableInfo();
 
 	public TableInfo getTableInfo(String attribute);
 
 	public Map<String, TableInfo> getTableInfoMappings();
 
-	public TrashHandler getTrashHandler();
-
 	public boolean hasAttribute(String attribute);
 
 	public boolean hasAttributes(String[] attributes);
-
-	public boolean hasIndexer();
-
-	public boolean hasIndexerEnabled();
 
 	public boolean isAuditedModel();
 
@@ -134,8 +127,6 @@ public interface Model extends Comparable<Model> {
 	public boolean isResourcedModel();
 
 	public boolean isStagedModel();
-
-	public boolean isTrashEnabled();
 
 	public boolean isWorkflowEnabled();
 
