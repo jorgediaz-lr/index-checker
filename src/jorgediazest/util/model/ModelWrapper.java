@@ -17,10 +17,14 @@ package jorgediazest.util.model;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
+import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,38 +69,53 @@ public class ModelWrapper implements Model, Cloneable {
 
 	@Override
 	public long count() {
-		return model.count();
+		return count(null);
 	}
 
 	@Override
 	public long count(Criterion condition) {
-		return model.count(condition);
+		try {
+			List<?> list = executeDynamicQuery(
+				condition, ProjectionFactoryUtil.rowCount());
+
+			if (list != null) {
+				return (Long)list.get(0);
+			}
+		}
+		catch (Exception e) {
+			_log.error("Error executing count");
+			throw new RuntimeException(e);
+		}
+
+		return -1;
 	}
 
-	@Override
 	public List<?> executeDynamicQuery(Criterion filter) throws Exception {
-		return model.executeDynamicQuery(filter);
+
+		return executeDynamicQuery(filter, null, null);
 	}
 
 	@Override
 	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
 		throws Exception {
 
-		return model.executeDynamicQuery(filter, orders);
+		return executeDynamicQuery(filter, null, orders);
 	}
 
 	@Override
 	public List<?> executeDynamicQuery(Criterion filter, Order order)
 		throws Exception {
 
-		return model.executeDynamicQuery(filter, order);
+		List<Order> orders = Collections.singletonList(order);
+
+		return executeDynamicQuery(filter, null, orders);
 	}
 
 	@Override
 	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
 		throws Exception {
 
-		return model.executeDynamicQuery(filter, projection);
+		return executeDynamicQuery(filter, projection, null);
 	}
 
 	@Override
@@ -104,7 +123,8 @@ public class ModelWrapper implements Model, Cloneable {
 			Criterion filter, Projection projection, List<Order> orders)
 		throws Exception {
 
-		return model.executeDynamicQuery(filter, projection, orders);
+		return ModelUtil.executeDynamicQuery(
+			getService(), filter, projection, orders);
 	}
 
 	@Override
@@ -346,6 +366,8 @@ public class ModelWrapper implements Model, Cloneable {
 	public String toString() {
 		return model.toString();
 	}
+
+	protected static Log _log = LogFactoryUtil.getLog(ModelWrapper.class);
 
 	protected Model model;
 	protected String name = null;

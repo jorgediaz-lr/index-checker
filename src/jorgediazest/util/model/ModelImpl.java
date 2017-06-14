@@ -17,7 +17,6 @@ package jorgediazest.util.model;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
@@ -72,15 +71,9 @@ public class ModelImpl implements Model {
 	}
 
 	public long count(Criterion condition) {
-		DynamicQuery dynamicQuery = this.getService().newDynamicQuery();
-		dynamicQuery.setProjection(ProjectionFactoryUtil.rowCount());
-
-		if (condition != null) {
-			dynamicQuery.add(condition);
-		}
-
 		try {
-			List<?> list = this.getService().executeDynamicQuery(dynamicQuery);
+			List<?> list = executeDynamicQuery(
+				condition, ProjectionFactoryUtil.rowCount());
 
 			if (list != null) {
 				return (Long)list.get(0);
@@ -122,27 +115,13 @@ public class ModelImpl implements Model {
 		return executeDynamicQuery(filter, projection, null);
 	}
 
+	@Override
 	public List<?> executeDynamicQuery(
 			Criterion filter, Projection projection, List<Order> orders)
 		throws Exception {
 
-		DynamicQuery query = getService().newDynamicQuery();
-
-		if (projection != null) {
-			query.setProjection(ProjectionFactoryUtil.distinct(projection));
-		}
-
-		if (orders != null) {
-			for (Order order : orders) {
-				query.addOrder(order);
-			}
-		}
-
-		if (filter != null) {
-			query.add(filter);
-		}
-
-		return getService().executeDynamicQuery(query);
+		return ModelUtil.executeDynamicQuery(
+			getService(), filter, projection, orders);
 	}
 
 	public Criterion generateCriterionFilter(String stringFilter) {

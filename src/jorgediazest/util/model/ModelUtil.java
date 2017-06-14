@@ -16,6 +16,9 @@ package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Order;
+import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -33,10 +36,36 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import jorgediazest.util.service.Service;
+
 /**
  * @author Jorge Díaz
  */
 public class ModelUtil {
+
+	public static List<?> executeDynamicQuery(
+			Service service, Criterion filter, Projection projection,
+			List<Order> orders)
+		throws Exception {
+
+		DynamicQuery query = service.newDynamicQuery();
+
+		if (projection != null) {
+			query.setProjection(projection);
+		}
+
+		if (orders != null) {
+			for (Order order : orders) {
+				query.addOrder(order);
+			}
+		}
+
+		if (filter != null) {
+			query.add(filter);
+		}
+
+		return service.executeDynamicQuery(query);
+	}
 
 	public static Criterion generateConjunctionQueryFilter(
 		Criterion criterion1, Criterion criterion2) {
