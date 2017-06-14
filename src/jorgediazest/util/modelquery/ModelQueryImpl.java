@@ -17,8 +17,6 @@ package jorgediazest.util.modelquery;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -42,7 +40,6 @@ import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.model.TableInfo;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
-import jorgediazest.util.service.Service;
 
 /**
  * @author Jorge Díaz
@@ -194,11 +191,10 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	}
 
 	public Data createDataObject(String[] attributes, Object[] result) {
-		Model model = this.model;
 		DataComparator dataComparator = this.dataComparator;
 
 		return DataUtil.createDataObject(
-			model, dataComparator, attributes, result);
+			getModel(), dataComparator, attributes, result);
 	}
 
 	public Criterion getCompanyFilter(long companyId) {
@@ -391,28 +387,21 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
+		Model model = getModel();
+
 		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
 
-		DynamicQuery query = model.getService().newDynamicQuery();
-
 		if (attributes == null) {
-			attributes = getModel().getAttributesName();
+			attributes = model.getAttributesName();
 		}
 
 		List<String> validAttributes = new ArrayList<String>();
-		ProjectionList projectionList = getModel().getPropertyProjection(
+		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes);
 
-		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
-
-		if (filter != null) {
-			query.add(filter);
-		}
-
-		Service service = model.getService();
 		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
-			query);
+		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
+			filter, projectionList);
 
 		String[] validAttributesArr = validAttributes.toArray(
 			new String[validAttributes.size()]);
@@ -576,7 +565,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		throws Exception {
 
 		return DatabaseUtil.queryTableWithCache(
-			dataSetCacheMap, model, tableInfo, attributesName);
+			dataSetCacheMap, getModel(), tableInfo, attributesName);
 	}
 
 	public void setModelQueryFactory(ModelQueryFactory mqFactory) {
