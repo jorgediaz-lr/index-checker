@@ -22,6 +22,8 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -172,8 +174,10 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 
 	@Override
 	public void reindex(Data value) throws SearchException {
-		getModel().getIndexerNullSafe().reindex(
-			getModel().getClassName(), value.getResourcePrimKey());
+		String className = getModel().getClassName();
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+
+		indexer.reindex(className, value.getResourcePrimKey());
 	}
 
 	protected boolean indexAllVersions;

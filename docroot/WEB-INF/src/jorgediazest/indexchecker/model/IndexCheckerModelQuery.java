@@ -113,8 +113,10 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			return;
 		}
 
-		getModel().getIndexerNullSafe().delete(
-			value.getCompanyId(), uid.toString());
+		String className = getModel().getClassName();
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+
+		indexer.delete(value.getCompanyId(), uid.toString());
 	}
 
 	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
@@ -304,6 +306,8 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	public Sort[] getIndexSorting(String[] attributes) {
 		List<String> sortAttributesList = new ArrayList<String>();
 
+		Model model = getModel();
+
 		for (String attribute : attributes) {
 			if (model.hasAttribute(attribute)) {
 				String sortableFieldName =
@@ -374,8 +378,10 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	}
 
 	public void reindex(Data value) throws SearchException {
-		getModel().getIndexerNullSafe().reindex(
-			getModel().getClassName(), value.getPrimaryKey());
+		String className = getModel().getClassName();
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+
+		indexer.reindex(className, value.getPrimaryKey());
 	}
 
 	protected void addPermissionFields(Map<Long, Data> dataMap)

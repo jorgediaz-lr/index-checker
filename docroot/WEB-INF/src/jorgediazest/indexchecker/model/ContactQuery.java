@@ -16,7 +16,7 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.User;
@@ -43,21 +43,15 @@ public class ContactQuery extends IndexCheckerModelQuery {
 
 		Model modelUser = modelQueryUser.getModel();
 
-		DynamicQuery userDynamicQuery =
-			modelUser.getService().newDynamicQuery();
+		Criterion filter = modelUser.generateCriterionFilter(
+			"defaultUser=false,status=" + WorkflowConstants.STATUS_APPROVED);
 
-		userDynamicQuery.setProjection(
-			modelUser.getPropertyProjection("userId"));
-
-		userDynamicQuery.add(
-			modelUser.generateCriterionFilter(
-				"defaultUser=false,status="+WorkflowConstants.STATUS_APPROVED));
+		Projection projection = modelUser.getPropertyProjection("userId");
 
 		try {
 			@SuppressWarnings("unchecked")
-			List<Long> users = (List<Long>)
-					modelUser.getService().executeDynamicQuery(
-						userDynamicQuery);
+			List<Long> users = (List<Long>)modelUser.executeDynamicQuery(
+				filter, projection);
 
 			conjunction.add(getModel().generateInCriteria("classPK",users));
 		}

@@ -14,10 +14,12 @@
 
 package jorgediazest.indexchecker.portlet;
 
+import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
@@ -25,6 +27,8 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.search.BaseIndexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -46,7 +50,10 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import java.lang.reflect.Proxy;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -88,7 +95,6 @@ import jorgediazest.util.modelquery.ModelQuery;
 import jorgediazest.util.modelquery.ModelQueryFactory;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 import jorgediazest.util.output.OutputUtils;
-import jorgediazest.util.service.Service;
 
 /**
  * Portlet implementation class IndexCheckerPortlet
@@ -141,13 +147,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			new ArrayList<Future<Comparison>>();
 
 		for (ModelQuery mq : mqList) {
-			Model model = mq.getModel();
+			String className = mq.getModel().getClassName();
 
-			if (!model.hasIndexerEnabled()) {
+			if (!hasIndexerEnabled(className)) {
 				continue;
 			}
 
-			if (ConfigurationUtil.modelNotIndexed(model.getClassName())) {
+			if (ConfigurationUtil.modelNotIndexed(className)) {
 				continue;
 			}
 
@@ -291,6 +297,39 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		return mqList;
+	}
+
+	public static boolean hasIndexerEnabled(String className) {
+		Object indexer = IndexerRegistryUtil.getIndexer(className);
+
+		if (indexer == null) {
+			return false;
+		}
+
+		if (indexer instanceof Proxy) {
+			try {
+				ClassLoaderBeanHandler classLoaderBeanHandler =
+					(ClassLoaderBeanHandler)
+						Proxy.getInvocationHandler(indexer);
+				indexer = classLoaderBeanHandler.getBean();
+
+				if (indexer == null) {
+					return false;
+				}
+			}
+			catch (Exception e) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(e, e);
+				}
+			}
+		}
+
+		if (indexer instanceof BaseIndexer) {
+			BaseIndexer baseIndexer = (BaseIndexer)indexer;
+			return baseIndexer.isIndexerEnabled();
+		}
+
+		return false;
 	}
 
 	public static Map<Data, String> reindex(
@@ -841,14 +880,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Model companyModel = modelFactory.getModelObject(Company.class);
 
-		Service companyService = companyModel.getService();
-
-		DynamicQuery companyDynamicQuery = companyService.newDynamicQuery();
-
-		companyDynamicQuery.addOrder(OrderFactoryUtil.asc("companyId"));
-
 		return (List<Company>)
-			companyService.executeDynamicQuery(companyDynamicQuery);
+			companyModel.executeDynamicQuery(
+				null, OrderFactoryUtil.asc("companyId"));
 	}
 
 	public List<Long> getGroupIds(
@@ -943,17 +977,19 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		List<Model> modelList = new ArrayList<Model>();
 
 		for (String className : classNames) {
+			if (!hasIndexerEnabled(className)) {
+				continue;
+			}
+
+			if (ConfigurationUtil.modelNotIndexed(className)) {
+				continue;
+			}
+
 			Model model = modelFactory.getModelObject(className);
 
-			if ((model == null) || !model.hasIndexerEnabled()) {
-				continue;
+			if (model != null) {
+				modelList.add(model);
 			}
-
-			if (ConfigurationUtil.modelNotIndexed(model.getClassName())) {
-				continue;
-			}
-
-			modelList.add(model);
 		}
 
 		return modelList;
@@ -1009,47 +1045,36 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Model groupModel = modelFactory.getModelObject(Group.class);
 
+		Projection projection = groupModel.getPropertyProjection("groupId");
+
 		long companyClassNameId = PortalUtil.getClassNameId(Company.class);
 
-		Service groupService = groupModel.getService();
+		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
 
-		DynamicQuery groupDynamicQuery = null;
+		conjuntion.add(
+			groupModel.getProperty("classNameId").eq(companyClassNameId));
+		conjuntion.add(groupModel.getProperty("liveGroupId").eq(0L));
 
 		/* Get groupIds of live global groups */
-		groupDynamicQuery = groupService.newDynamicQuery();
-
-		groupDynamicQuery.add(
-			groupModel.getProperty("classNameId").eq(companyClassNameId));
-		groupDynamicQuery.add(groupModel.getProperty("liveGroupId").eq(0L));
-
-		groupDynamicQuery.setProjection(
-			groupModel.getPropertyProjection("groupId"));
-
 		List<Long> liveGlobalGroupIds = (List<Long>)
-			groupService.executeDynamicQuery(groupDynamicQuery);
+			groupModel.executeDynamicQuery(conjuntion, projection);
 
 		/* Get groupIds of staging and live global groups */
-		groupDynamicQuery = groupService.newDynamicQuery();
-
 		Disjunction disjunctionGlobal = RestrictionsFactoryUtil.disjunction();
 		disjunctionGlobal.add(
 			groupModel.getProperty("classNameId").eq(companyClassNameId));
 		disjunctionGlobal.add(
 			groupModel.generateInCriteria("liveGroupId", liveGlobalGroupIds));
 
-		groupDynamicQuery.add(disjunctionGlobal);
-		groupDynamicQuery.setProjection(
-			groupModel.getPropertyProjection("groupId"));
-
-		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("companyId"));
-		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("friendlyURL"));
+		List<Order> orders = new ArrayList<Order>();
+		orders.add(OrderFactoryUtil.asc("companyId"));
+		orders.add(OrderFactoryUtil.asc("friendlyURL"));
 
 		List<Long> globalSitesGroupIds =
-			(List<Long>)groupService.executeDynamicQuery(groupDynamicQuery);
+			(List<Long>)groupModel.executeDynamicQuery(
+				disjunctionGlobal, projection, orders);
 
 		/* Get groupIds of staging and live normal groups */
-		groupDynamicQuery = groupService.newDynamicQuery();
-
 		Conjunction stagingSites = RestrictionsFactoryUtil.conjunction();
 		stagingSites.add(groupModel.getProperty("site").eq(false));
 		stagingSites.add(groupModel.getProperty("liveGroupId").ne(0L));
@@ -1067,14 +1092,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		disjunction.add(stagingSites);
 		disjunction.add(normalSites);
 
-		groupDynamicQuery.add(disjunction);
-		groupDynamicQuery.setProjection(
-			groupModel.getPropertyProjection("groupId"));
-
-		groupDynamicQuery.addOrder(OrderFactoryUtil.asc("name"));
+		orders = Collections.singletonList(OrderFactoryUtil.asc("name"));
 
 		List<Long> normalSitesGroupIds =
-			(List<Long>)groupService.executeDynamicQuery(groupDynamicQuery);
+			(List<Long>)groupModel.executeDynamicQuery(
+				disjunction, projection, orders);
 
 		List<Long> result = new ArrayList<Long>();
 		result.addAll(globalSitesGroupIds);
