@@ -7,9 +7,9 @@ modelInfo: [{
     attributesToQuery: [pk,companyId,groupId,classPK,classNameId],
     exactAttributesToCheck: [createDate,modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedAttributesToCheck: [
-        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]:",
-        "com.liferay.portal.model.ResourceBlock:permissionsGroupId=groupId,permissionsClassName=name: =groupId, =name,resourceBlockId:",
-        "com.liferay.portal.model.ResourceBlockPermission:resourceBlockId:[  =resourceBlockId,roleId,actionIds]:",
+        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]: ",
+        "com.liferay.portal.model.ResourceBlock:permissionsGroupId=groupId,permissionsClassName=name: =groupId, =name,resourceBlockId: ",
+        "com.liferay.portal.model.ResourceBlockPermission:resourceBlockId:[  =resourceBlockId,roleId,actionIds]: ",
         "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible",
         "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId",
         "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title",
@@ -35,7 +35,7 @@ modelInfo: [{
     model: resourcedModel,
     attributesToQuery: [pk,companyId,groupId,classPK,classNameId,resourcePrimKey],
     relatedAttributesToCheck: [
-        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]:",
+        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]: ",
         "com.liferay.portlet.asset.model.AssetEntry:resourcePrimKey=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible",
         "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId",
         "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title",
@@ -68,7 +68,7 @@ modelInfo: [{
     exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedAttributesToCheck: [
         "com.liferay.portlet.documentlibrary.model.DLFileVersion:fileEntryId,version-: =fileEntryId, =version,status",
-        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]:",
+        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]: ",
         "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible",
         "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId",
         "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title",
@@ -79,7 +79,7 @@ modelInfo: [{
     model: com.liferay.portlet.dynamicdatalists.model.DDLRecord,
     relatedAttributesToCheck: [
         "com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion:recordId,version-: =recordId,version,status",
-        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]:",
+        "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[ =primKey,roleId,actionIds,scope]: ",
         "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId=entryId, =classPK,priority,visible",
         "com.liferay.portlet.asset.model.AssetEntry:AssetEntry.entryId=MappingTable:AssetEntries_AssetCategories.categoryId=categoryId",
         "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=categoryId: =categoryId,AssetCategory.title=title",
