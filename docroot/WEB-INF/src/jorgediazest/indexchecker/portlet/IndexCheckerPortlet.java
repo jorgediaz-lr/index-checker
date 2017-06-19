@@ -53,8 +53,10 @@ import java.io.StringWriter;
 import java.lang.reflect.Proxy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,6 +80,7 @@ import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 
 import jorgediazest.indexchecker.ExecutionMode;
+import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
@@ -355,7 +358,28 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return null;
 		}
 
-		return modelQuery.reindex(objectsToReindex);
+		Model model = modelQuery.getModel();
+
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		for (Data data : objectsToReindex) {
+			if (model.isResourcedModel()) {
+				dataMap.put(data.getResourcePrimKey(), data);
+			}
+			else {
+				dataMap.put(data.getPrimaryKey(), data);
+			}
+		}
+
+		Collection<Data> dataCollection = dataMap.values();
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Reindexing " + dataCollection.size() + " objects of type " +
+					model.getClassName());
+		}
+
+		return IndexSearchUtil.reindex(dataCollection);
 	}
 
 	public static Map<Data, String> removeIndexOrphans(
@@ -375,7 +399,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return null;
 		}
 
-		return modelQuery.deleteAndCheck(indexOnlyData);
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Deleting " + indexOnlyData.size() + " objects of type " +
+					modelQuery.getModel().getClassName());
+		}
+
+		return IndexSearchUtil.deleteAndCheck(indexOnlyData);
 	}
 
 	public ModelQueryFactory createModelQueryFactory() throws Exception {

@@ -26,8 +26,8 @@ import java.util.Map;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.modelquery.ModelQuery;
 
 /**
  * @author Jorge Díaz
@@ -38,10 +38,9 @@ public class ContactQuery extends IndexCheckerModelQuery {
 
 		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
-		ModelQuery modelQueryUser = mqFactory.getModelQueryObject(
-			User.class.getName());
+		ModelFactory modelFactory = mqFactory.getModelFactory();
 
-		Model modelUser = modelQueryUser.getModel();
+		Model modelUser = modelFactory.getModelObject(User.class);
 
 		Criterion filter = modelUser.generateCriterionFilter(
 			"defaultUser=false,status=" + WorkflowConstants.STATUS_APPROVED);

@@ -21,7 +21,10 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -31,15 +34,68 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.TermRangeQuery;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
+
 /**
  * @author Jorge Díaz
  */
 public class IndexSearchUtil {
+
+	public static void delete(Data value) throws SearchException {
+		Object uid = value.get(Field.UID);
+
+		if (uid == null) {
+			return;
+		}
+
+		String className = value.getModel().getClassName();
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+
+		indexer.delete(value.getCompanyId(), uid.toString());
+	}
+
+	public static Map<Data, String> deleteAndCheck(
+		Collection<Data> dataCollection) {
+
+		Map<Data, String> errors = new HashMap<Data, String>();
+
+		int i = 0;
+
+		for (Data data : dataCollection) {
+			/* Delete object from index */
+			try {
+				delete(data);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Deleting " + (i++) + " uid: " + data.get(Field.UID));
+				}
+			}
+			catch (SearchException e) {
+				errors.put(data, e.getClass() + " - " + e.getMessage());
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(e.getClass() + " - " + e.getMessage(), e);
+				}
+			}
+
+			/* Reindex object, perhaps we deleted it by mistake */
+			try {
+				reindex(data);
+			}
+			catch (Exception e) {
+			}
+		}
+
+		return errors;
+	}
 
 	public static Document[] executeSearch(
 			SearchContext searchContext, BooleanQuery query, Sort[] sorts,
@@ -83,6 +139,24 @@ public class IndexSearchUtil {
 		return docs;
 	}
 
+	public static long getIdFromUID(String strValue) {
+		long id = -1;
+		String[] uidArr = strValue.split("_");
+
+		if ((uidArr != null) && (uidArr.length >= 3)) {
+			int pos = uidArr.length-2;
+			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
+				pos = pos - 2;
+			}
+
+			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
+				id = DataUtil.castLong(uidArr[pos+1]);
+			}
+		}
+
+		return id;
+	}
+
 	public static List<Map<Locale, String>> getLocalizedMap(
 		Locale[] locales, Document doc, String attribute) {
 
@@ -102,6 +176,40 @@ public class IndexSearchUtil {
 		}
 
 		return listValueMap;
+	}
+
+	public static Map<Data, String> reindex(Collection<Data> dataCollection) {
+
+		Map<Data, String> errors = new HashMap<Data, String>();
+
+		int i = 0;
+
+		for (Data data : dataCollection) {
+			try {
+				reindex(data);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Reindexing " + (i++) + " pk: " + data.getPrimaryKey());
+				}
+			}
+			catch (SearchException e) {
+				errors.put(data, e.getClass() + " - " + e.getMessage());
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(e.getClass() + " - " + e.getMessage(), e);
+				}
+			}
+		}
+
+		return errors;
+	}
+
+	public static void reindex(Data value) throws SearchException {
+		String className = value.getModel().getClassName();
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+
+		indexer.reindex(className, value.getPrimaryKey());
 	}
 
 	protected static Map<Locale, String> getLocalizedMap(

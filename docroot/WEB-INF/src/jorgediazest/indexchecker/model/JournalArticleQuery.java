@@ -22,17 +22,15 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import jorgediazest.indexchecker.index.IndexSearchUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
@@ -92,7 +90,8 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 			new String[validAttributes.size()]);
 
 		for (Object[] result : results) {
-			Data data = createDataObject(validAttributesArr, result);
+			Data data = DataUtil.createDataObject(
+				model, dataComparator, validAttributesArr, result);
 
 			if (!dataMap.containsKey(data.getResourcePrimKey())) {
 				dataMap.put(data.getResourcePrimKey(), data);
@@ -105,7 +104,7 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 		super.fillDataObject(data, attributes, doc);
 
 		if (indexAllVersions) {
-			long id = DataUtil.getIdFromUID(doc.get(Field.UID));
+			long id = IndexSearchUtil.getIdFromUID(doc.get(Field.UID));
 			data.setPrimaryKey(id);
 		}
 	}
@@ -158,26 +157,6 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 		catch (SystemException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	@Override
-	public Map<Data, String> reindex(Collection<Data> dataCollection) {
-
-		Map<Long, Data> articles = new HashMap<Long, Data>();
-
-		for (Data data : dataCollection) {
-			articles.put(data.getResourcePrimKey(), data);
-		}
-
-		return super.reindex(articles.values());
-	}
-
-	@Override
-	public void reindex(Data value) throws SearchException {
-		String className = getModel().getClassName();
-		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
-
-		indexer.reindex(className, value.getResourcePrimKey());
 	}
 
 	protected boolean indexAllVersions;

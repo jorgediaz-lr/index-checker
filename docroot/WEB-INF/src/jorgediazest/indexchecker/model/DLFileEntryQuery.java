@@ -14,13 +14,14 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.Repository;
+import com.liferay.portal.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
-
-import java.util.Map;
+import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
 
 import jorgediazest.util.data.Data;
 
@@ -29,28 +30,15 @@ import jorgediazest.util.data.Data;
  */
 public class DLFileEntryQuery extends IndexCheckerModelQuery {
 
-	protected void addPermissionFields(Map<Long, Data> dataMap)
-		throws Exception, PortalException, SystemException {
-
-		addRelatedModelData(
-			dataMap, Repository.class.getName(),
-			"repositoryId,repoFolderId=dlFolderId".split(","),
-			"repositoryId".split(","), false, false);
-
-		addRelatedModelData(
-			dataMap, DLFolder.class.getName(),
-			"folderId,hiddenFolder=hidden".split(","),
-			"repoFolderId=folderId".split(","), false, false);
-
-		super.addPermissionFields(dataMap);
-	}
-
 	@Override
 	protected String getPermissionsClassName(Data data) {
 
-		boolean hidden = data.get("hiddenFolder", false);
+		long groupId = data.getGroupId();
+		long repositoryId = data.get("repositoryId", -1L);
 
-		if (!hidden) {
+		boolean hiddenFolder = isHiddenFolder(groupId, repositoryId);
+
+		if (!hiddenFolder) {
 			return super.getPermissionsClassName(data);
 		}
 
@@ -90,5 +78,37 @@ public class DLFileEntryQuery extends IndexCheckerModelQuery {
 		"com.liferay.portlet.documentlibrary.model.DLFileEntry",
 		"com.liferay.portlet.messageboards.model.MBMessage",
 		"com.liferay.portlet.wiki.model.WikiPage"};
+
+	private boolean isHiddenFolder(long groupId, long repositoryId) {
+
+		try {
+			if (groupId == repositoryId) {
+				return false;
+			}
+
+			Repository repository = RepositoryLocalServiceUtil.fetchRepository(
+				repositoryId);
+
+			if (repository == null) {
+				return false;
+			}
+
+			DLFolder dlFolder = DLFolderLocalServiceUtil.fetchDLFolder(
+				repository.getDlFolderId());
+
+			if (dlFolder == null) {
+				return false;
+			}
+
+			return dlFolder.isHidden();
+		}
+		catch (SystemException se) {
+			_log.error(se);
+
+			return false;
+		}
+	}
+
+	private static Log _log = LogFactoryUtil.getLog(DLFileEntryQuery.class);
 
 }

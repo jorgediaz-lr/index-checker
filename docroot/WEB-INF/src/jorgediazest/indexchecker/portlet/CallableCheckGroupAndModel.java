@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -154,20 +155,29 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				return null;
 			}
 
-			Criterion filter = mq.getCompanyGroupFilter(companyId, groupIds);
+			Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
 
 			String[] attributesToQuery = calculateAttributesToQuery(
 				mq).toArray(new String[0]);
 
+			Map<Long, Data> liferayDataMap;
+
+			liferayDataMap = mq.getData(attributesToQuery, filter);
+
+			for (Data data : liferayDataMap.values()) {
+				mq.addPermissionsClassNameGroupIdFields(data);
+			}
+
 			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
 				model).toArray(new String[0]);
 
-			Set<Model> relatedModels = calculateRelatedModels(
-				model.getModelFactory(), relatedAttrToCheck);
+			mq.addRelatedModelData(liferayDataMap, relatedAttrToCheck, filter);
 
-			Set<Data> liferayData = new HashSet<Data>(
-				mq.getData(
-					attributesToQuery, relatedAttrToCheck, filter).values());
+			for (Data data : liferayDataMap.values()) {
+				mq.addRolesFields(data);
+			}
+
+			Set<Data> liferayData = new HashSet<Data>(liferayDataMap.values());
 
 			Set<Data> indexData;
 
@@ -178,6 +188,9 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 					companyId);
 				BooleanQuery contextQuery = mq.getIndexQuery(
 					groupIds, searchContext);
+
+				Set<Model> relatedModels = calculateRelatedModels(
+					model.getModelFactory(), relatedAttrToCheck);
 
 				indexData = mq.getIndexData(
 					relatedModels, attributesToQuery, searchContext,

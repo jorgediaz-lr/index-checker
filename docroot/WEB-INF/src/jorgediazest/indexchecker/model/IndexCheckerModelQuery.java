@@ -14,7 +14,6 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -38,21 +37,19 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.ResourceAction;
-import com.liferay.portal.model.ResourceBlock;
 import com.liferay.portal.model.ResourceBlockPermission;
 import com.liferay.portal.model.ResourceConstants;
 import com.liferay.portal.model.ResourcePermission;
 import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.security.permission.ActionKeys;
+import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
-import com.liferay.portal.util.PortalUtil;
+import com.liferay.portal.service.RoleLocalServiceUtil;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -65,12 +62,10 @@ import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.modelquery.ModelQuery;
 import jorgediazest.util.modelquery.ModelQueryImpl;
 public class IndexCheckerModelQuery extends ModelQueryImpl {
 
-	public void addPermissionsClassNameGroupIdFields(
-			Map<Long, Data> groupMap, Data data)
+	public void addPermissionsClassNameGroupIdFields(Data data)
 		throws SystemException {
 
 		String className = getPermissionsClassName(data);
@@ -90,74 +85,32 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 		long groupId = data.get("groupId", 0L);
 
-		Data group = groupMap.get(groupId);
+		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
 
-		if (group != null) {
-			long layoutClassNameId = PortalUtil.getClassNameId(Layout.class);
-
-			if (group.get("classNameId", -1L) == layoutClassNameId) {
-				groupId = group.get("parentGroupId", groupId);
-			}
-
-			data.set("permissionsGroupId", groupId);
+		if ((group != null) && group.isLayout()) {
+			groupId = group.getParentGroupId();
 		}
 
 		data.set("permissionsClassName", className);
 		data.set("permissionsClassPK", classPK);
+		data.set("permissionsGroupId", groupId);
 	}
 
-	public void delete(Data value) throws SearchException {
-		Object uid = value.get(Field.UID);
+	public void addRolesFields(Data data)
+		throws PortalException, SystemException {
 
-		if (uid == null) {
-			return;
+		String className = data.get("permissionsClassName", StringPool.BLANK);
+
+		String permissionsField;
+
+		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
+			permissionsField = ResourceBlockPermission.class.getName();
+		}
+		else {
+			permissionsField = ResourcePermission.class.getName();
 		}
 
-		String className = getModel().getClassName();
-		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
-
-		indexer.delete(value.getCompanyId(), uid.toString());
-	}
-
-	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
-
-		Map<Data, String> errors = new HashMap<Data, String>();
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Deleting " + dataCollection.size() + " objects of type " +
-					getModel().getClassName());
-		}
-
-		int i = 0;
-
-		for (Data data : dataCollection) {
-			/* Delete object from index */
-			try {
-				this.delete(data);
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Deleting " + (i++) + " uid: " + data.get(Field.UID));
-				}
-			}
-			catch (SearchException e) {
-				errors.put(data, e.getClass() + " - " + e.getMessage());
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(e.getClass() + " - " + e.getMessage(), e);
-				}
-			}
-
-			/* Reindex object, perhaps we deleted it by mistake */
-			try {
-				this.reindex(data);
-			}
-			catch (Exception e) {
-			}
-		}
-
-		return errors;
+		addRolesFieldsToData(className, data, permissionsField);
 	}
 
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
@@ -168,7 +121,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 		for (String attribute : attributes) {
 			String attrDoc = ConfigurationUtil.getIndexAttributeName(
-				getModel(), attribute);
+				data.getModel(), attribute);
 
 			List<Map<Locale, String>> listValueMap = null;
 
@@ -198,18 +151,6 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 				data.set(attribute, doc.getField(attrDoc).getValues());
 			}
 		}
-	}
-
-	public Map<Long, Data> getData(
-		String[] attributesModel, String[] attributesRelated, Criterion filter)
-	throws Exception {
-
-		Map<Long, Data> dataMap = super.getData(
-			attributesModel, attributesRelated, filter);
-
-		addPermissionFields(dataMap);
-
-		return dataMap;
 	}
 
 	public Set<Data> getIndexData(
@@ -344,106 +285,44 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		}
 	}
 
-	public Map<Data, String> reindex(Collection<Data> dataCollection) {
+	protected static TermRangeQuery getTermRangeQuery(
+		Document lastDocument, TermRangeQuery previousTermRangeQuery,
+		Sort[] sorts, SearchContext searchContext) {
 
-		Map<Data, String> errors = new HashMap<Data, String>();
+		for (Sort sort : sorts) {
+			String fieldName = sort.getFieldName();
+			String lowerTerm = lastDocument.get(fieldName);
 
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Reindexing " + dataCollection.size() + " objects of type " +
-					getModel().getClassName());
-		}
-
-		int i = 0;
-
-		for (Data data : dataCollection) {
-			try {
-				this.reindex(data);
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Reindexing " + (i++) + " pk: " + data.getPrimaryKey());
-				}
+			if (Validator.isNull(lowerTerm)) {
+				continue;
 			}
-			catch (SearchException e) {
-				errors.put(data, e.getClass() + " - " + e.getMessage());
 
-				if (_log.isDebugEnabled()) {
-					_log.debug(e.getClass() + " - " + e.getMessage(), e);
-				}
+			if (_log.isDebugEnabled()) {
+				_log.debug("fieldName=" + fieldName);
+				_log.debug("lowerTerm=" + lowerTerm);
 			}
+
+			boolean includesLower = true;
+
+			if ((previousTermRangeQuery != null) &&
+				fieldName.equals(previousTermRangeQuery.getField())) {
+
+				includesLower = !lowerTerm.equals(
+					previousTermRangeQuery.getLowerTerm());
+			}
+
+			return TermRangeQueryFactoryUtil.create(
+					searchContext, fieldName, lowerTerm, null, includesLower,
+					true);
 		}
 
-		return errors;
-	}
-
-	public void reindex(Data value) throws SearchException {
-		String className = getModel().getClassName();
-		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
-
-		indexer.reindex(className, value.getPrimaryKey());
-	}
-
-	protected void addPermissionFields(Map<Long, Data> dataMap)
-		throws Exception, PortalException, SystemException {
-
-		ModelQuery groupQuery = mqFactory.getModelQueryObject(Group.class);
-
-		Map<Long, Data> groupMap = groupQuery.getDataWithCache(
-			"pk,classNameId,parentGroupId".split(","));
-
-		for (Data data : dataMap.values()) {
-			addPermissionsClassNameGroupIdFields(groupMap, data);
-		}
-
-		addRelatedModelData(
-			dataMap, ResourcePermission.class.getName(),
-			" =primKey,roleId,actionIds,scope".split(","),
-			"permissionsClassPK=primKey".split(","), false, true);
-
-		addRelatedModelData(
-			dataMap, ResourceBlock.class.getName(),
-			" =groupId, =name,resourceBlockId".split(","),
-			"permissionsGroupId=groupId,permissionsClassName=name".split(","),
-			false, false);
-
-		addRelatedModelData(
-			dataMap, ResourceBlockPermission.class.getName(),
-			" =resourceBlockId,roleId,actionIds".split(","),
-			"resourceBlockId".split(","), false, true);
-
-		ModelQuery roleQuery = mqFactory.getModelQueryObject(Role.class);
-
-		Map<Long, Data> roleMap = roleQuery.getDataWithCache(
-			"pk,type".split(","));
-
-		for (Data data : dataMap.values()) {
-			addRolesFieldsToData(roleMap, data);
-		}
-	}
-
-	protected void addRolesFieldsToData(Map<Long, Data> roleMap, Data data)
-		throws PortalException {
-
-		String className = data.get("permissionsClassName", StringPool.BLANK);
-
-		String permissionsField;
-
-		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
-			permissionsField = ResourceBlockPermission.class.getName();
-		}
-		else {
-			permissionsField = ResourcePermission.class.getName();
-		}
-
-		addRolesFieldsToData(roleMap, className, data, permissionsField);
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
 	protected void addRolesFieldsToData(
-			Map<Long, Data> roleMap, String className, Data data,
-			String permissionsField)
-		throws PortalException {
+			String className, Data data, String permissionsField)
+		throws PortalException, SystemException {
 
 		String actionId = getPermissionsActionId(data);
 
@@ -479,7 +358,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			}
 
 			if (hasActionId(actionIds, className, actionId)) {
-				Data role = roleMap.get(roleId);
+				Role role = RoleLocalServiceUtil.fetchRole(roleId);
 
 				if (role == null) {
 					continue;
@@ -487,7 +366,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 				long groupId = data.get("permissionsGroupId", 0L);
 
-				int type = role.get("type", -1);
+				int type = role.getType();
 
 				if ((type == RoleConstants.TYPE_ORGANIZATION) ||
 					(type == RoleConstants.TYPE_SITE)) {
@@ -543,40 +422,6 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		}
 
 		return data.getPrimaryKey();
-	}
-
-	protected TermRangeQuery getTermRangeQuery(
-		Document lastDocument, TermRangeQuery previousTermRangeQuery,
-		Sort[] sorts, SearchContext searchContext) {
-
-		for (Sort sort : sorts) {
-			String fieldName = sort.getFieldName();
-			String lowerTerm = lastDocument.get(fieldName);
-
-			if (Validator.isNull(lowerTerm)) {
-				continue;
-			}
-
-			if (_log.isDebugEnabled()) {
-				_log.debug("fieldName=" + fieldName);
-				_log.debug("lowerTerm=" + lowerTerm);
-			}
-
-			boolean includesLower = true;
-
-			if ((previousTermRangeQuery != null) &&
-				fieldName.equals(previousTermRangeQuery.getField())) {
-
-				includesLower = !lowerTerm.equals(
-					previousTermRangeQuery.getLowerTerm());
-			}
-
-			return TermRangeQueryFactoryUtil.create(
-					searchContext, fieldName, lowerTerm, null, includesLower,
-					true);
-		}
-
-		return null;
 	}
 
 	protected Map<String, Long> cacheActionIdBitwiseValue =
