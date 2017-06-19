@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.TableInfo;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz

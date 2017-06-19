@@ -37,7 +37,7 @@ import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataComparatorMap;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.TableInfo;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
