@@ -12,7 +12,7 @@
  * details.
  */
 
-package jorgediazest.util.model;
+package jorgediazest.util.table;
 
 import com.liferay.portal.kernel.util.StringPool;
 
@@ -29,22 +29,13 @@ import jorgediazest.util.reflection.ReflectionUtil;
  */
 public class TableInfo {
 
-	public TableInfo(Model model) {
-		this(model, "TABLE");
-	}
+	public TableInfo(String name, Object[][] attributesArr, String sqlCreate) {
 
-	public TableInfo(Model model, String fieldPrefix) {
+		this.attributesArr = attributesArr;
+		this.name = name;
+		this.sqlCreate = sqlCreate;
 
-		Class<?> classLiferayModelImpl =
-			model.getService().getLiferayModelImplClass();
-
-		attributesArr = (Object[][])ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "_COLUMNS");
-		name = (String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "_NAME");
-		sqlCreate = (String)ReflectionUtil.getLiferayModelImplField(
-				classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
-		attributesStr = ModelUtil.getDatabaseAttributesStr(name, sqlCreate);
+		attributesStr = TableUtil.getDatabaseAttributesStr(name, sqlCreate);
 
 		if ((attributesStr != null) && (attributesStr.indexOf('#') > 0)) {
 			String aux = attributesStr.split("#")[1];

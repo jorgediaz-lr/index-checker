@@ -24,6 +24,7 @@ import java.util.List;
 
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.reflection.ReflectionUtil;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -102,8 +103,18 @@ public class ServiceWrapper implements Service {
 	}
 
 	@Override
-	public Class<?> getLiferayModelImplClass() {
-		return service.getLiferayModelImplClass();
+	public List<String> getMappingTables() {
+		return service.getMappingTables();
+	}
+
+	@Override
+	public TableInfo getTableInfo() {
+		return service.getTableInfo();
+	}
+
+	@Override
+	public TableInfo getTableInfo(String fieldPrefix) {
+		return service.getTableInfo(fieldPrefix);
 	}
 
 	@Override

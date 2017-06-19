@@ -16,7 +16,15 @@ package jorgediazest.util.service;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.ClassedModel;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import jorgediazest.util.reflection.ReflectionUtil;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -77,6 +85,54 @@ public abstract class ServiceImpl implements Service {
 		}
 
 		return liferayModelImplClass;
+	}
+
+	public List<String> getMappingTables() {
+		List<String> mappingTablesFields =
+			ReflectionUtil.getLiferayModelImplMappingTablesFields(
+				getLiferayModelImplClass());
+
+		List<String> mappingTables = new ArrayList<String>(
+			mappingTablesFields.size());
+
+		for (String mappingTablesField : mappingTablesFields) {
+			String mappingTable = StringUtil.replaceFirst(
+				mappingTablesField, "MAPPING_TABLE_", StringPool.BLANK);
+
+			mappingTable = StringUtil.replace(
+				mappingTable, "_NAME", StringPool.BLANK);
+
+			mappingTable = StringUtil.toLowerCase(mappingTable);
+
+			mappingTables.add(mappingTable);
+		}
+
+		return mappingTables;
+	}
+
+	public TableInfo getTableInfo() {
+		return getTableInfo(null);
+	}
+
+	public TableInfo getTableInfo(String mappingTable) {
+		Class<?> classLiferayModelImpl = getLiferayModelImplClass();
+
+		String fieldPrefix = "TABLE";
+
+		if (mappingTable != null) {
+			fieldPrefix =
+				"MAPPING_TABLE_" + StringUtil.toUpperCase(mappingTable);
+		}
+
+		Object[][] attributesArr =
+			(Object[][])ReflectionUtil.getLiferayModelImplField(
+				classLiferayModelImpl, fieldPrefix + "_COLUMNS");
+		String name = (String)ReflectionUtil.getLiferayModelImplField(
+			classLiferayModelImpl, fieldPrefix + "_NAME");
+		String sqlCreate = (String)ReflectionUtil.getLiferayModelImplField(
+			classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
+
+		return new TableInfo(name, attributesArr, sqlCreate);
 	}
 
 	public ClassedModel updateObject(ClassedModel object) {

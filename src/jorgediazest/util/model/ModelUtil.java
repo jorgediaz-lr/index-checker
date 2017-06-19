@@ -192,38 +192,6 @@ public class ModelUtil {
 		return classNameStr;
 	}
 
-	public static String getDatabaseAttributesStr(
-			String tableName, String tableSqlCreate) {
-
-		int posTableName = tableSqlCreate.indexOf(tableName);
-
-		if (posTableName <= 0) {
-			_log.error("Error, TABLE_NAME not found at TABLE_SQL_CREATE");
-			return null;
-		}
-
-		posTableName = posTableName + tableName.length() + 2;
-
-		String tableAttributes = tableSqlCreate.substring(
-			posTableName, tableSqlCreate.length() - 1);
-
-		int posPrimaryKeyMultiAttr = tableAttributes.indexOf(",primary key (");
-
-		if (posPrimaryKeyMultiAttr > 0) {
-			tableAttributes = tableAttributes.replaceAll(
-				",primary key \\(", "#");
-			tableAttributes = tableAttributes.substring(
-				0, tableAttributes.length() - 1);
-		}
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Database attributes of " + tableName + ": " + tableAttributes);
-		}
-
-		return tableAttributes;
-	}
-
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
 
 }

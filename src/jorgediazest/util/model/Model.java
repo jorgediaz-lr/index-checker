@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import jorgediazest.util.service.Service;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -76,6 +77,8 @@ public interface Model extends Comparable<Model> {
 	public long getClassNameId();
 
 	public Criterion getCompanyFilter(long companyId);
+
+	public Criterion getCompanyGroupFilter(long companyId, List<Long> groupIds);
 
 	public Criterion getCompanyGroupFilter(long companyId, long groupId);
 

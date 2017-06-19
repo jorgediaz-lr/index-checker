@@ -31,6 +31,7 @@ import java.util.Map;
 
 import jorgediazest.util.service.Service;
 import jorgediazest.util.service.ServiceWrapper;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -195,6 +196,13 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
+	public Criterion getCompanyGroupFilter(
+		long companyId, List<Long> groupIds) {
+
+		return model.getCompanyGroupFilter(companyId, groupIds);
+	}
+
+	@Override
 	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
 		return model.getCompanyGroupFilter(companyId, groupId);
 	}
@@ -211,22 +219,34 @@ public class ModelWrapper implements Model, Cloneable {
 
 	@Override
 	public Model getFilteredModel(Criterion filters) {
-		return model.getFilteredModel(filters);
+		return getFilteredModel(filters, null);
 	}
 
 	@Override
 	public Model getFilteredModel(Criterion filters, String nameSufix) {
+		if (serviceWrapper != null) {
+			filters = ModelUtil.generateConjunctionQueryFilter(
+				filters, serviceWrapper.getFilter());
+		}
+
 		return model.getFilteredModel(filters, nameSufix);
 	}
 
 	@Override
 	public Model getFilteredModel(String filters) {
-		return model.getFilteredModel(filters);
+		return getFilteredModel(filters, filters);
 	}
 
 	@Override
 	public Model getFilteredModel(String filters, String nameSufix) {
-		return model.getFilteredModel(filters, nameSufix);
+
+		Criterion filter = this.generateCriterionFilter(filters);
+
+		if (filter == null) {
+			return null;
+		}
+
+		return getFilteredModel(filter, nameSufix);
 	}
 
 	@Override

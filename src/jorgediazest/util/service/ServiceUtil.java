@@ -180,7 +180,7 @@ public class ServiceUtil {
 			return null;
 		}
 
-		Service service = cachePortalServices.get(className);
+		ServiceClassInterfaceImpl service = cachePortalServices.get(className);
 
 		if (service != null) {
 			return service;
@@ -215,7 +215,7 @@ public class ServiceUtil {
 
 	private static Set<String> cacheNullPortalServices =
 		new ConcurrentHashSet<String>();
-	private static Map<String, Service> cachePortalServices =
-		new ConcurrentHashMap<String, Service>();
+	private static Map<String, ServiceClassInterfaceImpl> cachePortalServices =
+		new ConcurrentHashMap<String, ServiceClassInterfaceImpl>();
 
 }

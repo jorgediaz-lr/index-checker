@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.util.PortalUtil;
@@ -42,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -462,7 +462,7 @@ public class ModelImpl implements Model {
 
 	public TableInfo getTableInfo() {
 		if (tableInfo == null) {
-			tableInfo = new TableInfo(this);
+			tableInfo = service.getTableInfo();
 		}
 
 		return tableInfo;
@@ -480,15 +480,10 @@ public class ModelImpl implements Model {
 		if (tableInfoMappings == null) {
 			tableInfoMappings = new ConcurrentHashMap<String, TableInfo>();
 
-			List<String> mappingTables =
-				ReflectionUtil.getLiferayModelImplMappingTablesFields(
-					getService().getLiferayModelImplClass());
+			List<String> mappingTables = service.getMappingTables();
 
 			for (String mappingTable : mappingTables) {
-				String prefix = StringUtil.replace(
-					mappingTable, "_NAME", StringPool.BLANK);
-
-				TableInfo tableInfo = new TableInfo(this, prefix);
+				TableInfo tableInfo = service.getTableInfo(mappingTable);
 
 				String destinationAttr = tableInfo.getDestinationAttr(
 					getPrimaryKeyAttribute());

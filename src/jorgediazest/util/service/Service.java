@@ -19,6 +19,8 @@ import com.liferay.portal.model.ClassedModel;
 
 import java.util.List;
 
+import jorgediazest.util.table.TableInfo;
+
 /**
  * @author Jorge Díaz
  */
@@ -43,7 +45,11 @@ public interface Service {
 
 	public String getClassSimpleName();
 
-	public Class<?> getLiferayModelImplClass();
+	public List<String> getMappingTables();
+
+	public TableInfo getTableInfo();
+
+	public TableInfo getTableInfo(String fieldPrefix);
 
 	public DynamicQuery newDynamicQuery();
 
