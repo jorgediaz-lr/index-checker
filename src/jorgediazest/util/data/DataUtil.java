@@ -14,6 +14,8 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
@@ -40,8 +42,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.TableInfo;
 import jorgediazest.util.modelquery.DatabaseUtil;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -355,22 +357,94 @@ public class DataUtil {
 		return both.toArray(new Data[0]);
 	}
 
-	public static long getIdFromUID(String strValue) {
-		long id = -1;
-		String[] uidArr = strValue.split("_");
+	public static Map<Long, Data> getData(
+			Model model, DataComparator dataComparator, String[] attributes,
+			String mapKeyAttribute, Criterion filter)
+		throws Exception {
 
-		if ((uidArr != null) && (uidArr.length >= 3)) {
-			int pos = uidArr.length-2;
-			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
-				pos = pos - 2;
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		if (attributes == null) {
+			attributes = model.getAttributesName();
+		}
+
+		List<String> validAttributes = new ArrayList<String>();
+		ProjectionList projectionList = model.getPropertyProjection(
+			attributes, validAttributes);
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
+			filter, projectionList);
+
+		String[] validAttributesArr = validAttributes.toArray(
+			new String[validAttributes.size()]);
+
+		long i = -1;
+
+		for (Object[] result : results) {
+			Data data = DataUtil.createDataObject(
+				model, dataComparator, validAttributesArr, result);
+
+			Long mappingAttributeValue = DataUtil.castLong(
+				data.get(mapKeyAttribute));
+
+			if (Validator.isNull(mappingAttributeValue)) {
+				mappingAttributeValue = i--;
 			}
 
-			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
-				id = DataUtil.castLong(uidArr[pos+1]);
+			if (!dataMap.containsKey(mappingAttributeValue)) {
+				dataMap.put(mappingAttributeValue, data);
 			}
 		}
 
-		return id;
+		return dataMap;
+	}
+
+	public static Map<Long, List<Data>> getDataWithDuplicates(
+			Model model, DataComparator dataComparator, String[] attributes,
+			String mapKeyAttribute, Criterion filter)
+		throws Exception {
+
+		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+
+		if (attributes == null) {
+			attributes = model.getAttributesName();
+		}
+
+		List<String> validAttributes = new ArrayList<String>();
+		ProjectionList projectionList = model.getPropertyProjection(
+			attributes, validAttributes);
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
+			filter, projectionList);
+
+		String[] validAttributesArr = validAttributes.toArray(
+			new String[validAttributes.size()]);
+
+		long i = -1;
+
+		for (Object[] result : results) {
+			Data data = createDataObject(
+				model, dataComparator, validAttributesArr, result);
+
+			Long mappingAttributeValue = castLong(data.get(mapKeyAttribute));
+
+			if (Validator.isNull(mappingAttributeValue)) {
+				mappingAttributeValue = i--;
+			}
+
+			if (!dataMap.containsKey(mappingAttributeValue)) {
+				List<Data> list = new ArrayList<Data>();
+				list.add(data);
+				dataMap.put(mappingAttributeValue, list);
+			}
+			else {
+				dataMap.get(mappingAttributeValue).add(data);
+			}
+		}
+
+		return dataMap;
 	}
 
 	public static ThreadLocal<Boolean> getIgnorecase() {
@@ -405,6 +479,31 @@ public class DataUtil {
 		}
 
 		return values;
+	}
+
+	public static Map<Long, List<Data>> getMapFromSetData(
+		Set<Data> dataSet, String keyAttribute) {
+
+		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+
+		for (Data data : dataSet) {
+			Long key = (Long)data.get(keyAttribute);
+
+			if (key == null) {
+				continue;
+			}
+
+			if (!dataMap.containsKey(key)) {
+				List<Data> list = new ArrayList<Data>();
+				list.add(data);
+				dataMap.put(key, list);
+			}
+			else {
+				dataMap.get(key).add(data);
+			}
+		}
+
+		return dataMap;
 	}
 
 	public static boolean isNotNull(Object obj) {

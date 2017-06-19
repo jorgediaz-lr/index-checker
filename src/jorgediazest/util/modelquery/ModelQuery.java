@@ -23,8 +23,8 @@ import java.util.Set;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.TableInfo;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
+import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -32,15 +32,21 @@ import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 public interface ModelQuery extends Comparable<ModelQuery> {
 
 	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String classNameRelated,
-			String[] attrRelated, String[] mappings, boolean removeNotMatched,
-			boolean rawData)
+			Map<Long, Data> dataMap, ModelQuery relatedModelQuery,
+			String[] attrRelatedOrig, String[] attrRelatedDest,
+			String[] mappingsSource, String[] mappingsDest,
+			boolean removeUnmatched, boolean rawData, Criterion filter)
 		throws Exception;
 
 	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String classNameRelated,
+			Map<Long, Data> dataMap, String relatedClassName,
 			String[] attrRelated, String[] mappings, boolean removeNotMatched,
 			boolean rawData, Criterion filter)
+		throws Exception;
+
+	public void addRelatedModelData(
+			Map<Long, Data> dataMap, String[] attributesRelated,
+			Criterion filter)
 		throws Exception;
 
 	public Map<Long, Data> getData() throws Exception;
@@ -59,23 +65,13 @@ public interface ModelQuery extends Comparable<ModelQuery> {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception;
 
-	public Map<Long, Data> getData(
-			String[] attributesModel, String[] attributesRelated,
-			Criterion filter)
-		throws Exception;
-
-	public Map<Long, Data> getData(
-			String[] attributesModel, String[] attributesRelated,
-			String mapKeyAttribute, Criterion filter)
-		throws Exception;
-
 	public DataComparator getDataComparator();
 
-	public Map<Long, Data> getDataWithCache() throws Exception;
-
+	@Deprecated
 	public Map<Long, Data> getDataWithCache(String[] attributes)
 		throws Exception;
 
+	@Deprecated
 	public Map<Long, Data> getDataWithCache(
 			String[] attributes, String mapKeyAttribute)
 		throws Exception;
@@ -88,6 +84,7 @@ public interface ModelQuery extends Comparable<ModelQuery> {
 		String[] attributes, String mapKeyAttribute, Criterion filter)
 	throws Exception;
 
+	@Deprecated
 	public Map<Long, List<Data>> getDataWithDuplicatesCache(
 		String[] attributes, String mapKeyAttribute)
 	throws Exception;
@@ -100,10 +97,6 @@ public interface ModelQuery extends Comparable<ModelQuery> {
 		throws Exception;
 
 	public Set<Data> queryTable(TableInfo tableInfo) throws Exception;
-
-	public Map<Long, List<Data>> queryTable(
-			TableInfo tableInfo, String mappingAttr)
-		throws Exception;
 
 	public Set<Data> queryTable(TableInfo tableInfo, String[] attributesName)
 		throws Exception;

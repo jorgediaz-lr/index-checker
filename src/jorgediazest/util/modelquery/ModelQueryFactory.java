@@ -56,6 +56,10 @@ public class ModelQueryFactory {
 		return dataComparatorFactory;
 	}
 
+	public ModelFactory getModelFactory() {
+		return modelFactory;
+	}
+
 	public ModelQuery getModelQueryObject(Class<?> clazz) {
 		return getModelQueryObject(clazz.getName());
 	}
