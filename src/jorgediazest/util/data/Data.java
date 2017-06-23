@@ -123,7 +123,7 @@ public class Data implements Comparable<Data> {
 		return map.keySet();
 	}
 
-	public String[] getAttributesArr() {
+	public String[] getAttributesArray() {
 		return map.keySet().toArray(new String[map.keySet().size()]);
 	}
 
@@ -245,19 +245,6 @@ public class Data implements Comparable<Data> {
 		return eq;
 	}
 
-	public boolean isValid(String attribute, int type, Object value) {
-		if (value == null) {
-			return false;
-		}
-
-		if (type != 0) {
-			return true;
-		}
-
-		return !("companyId".equals(attribute) || "groupId".equals(attribute) ||
-			 "resourcePrimKey".equals(attribute));
-	}
-
 	@SuppressWarnings("rawtypes")
 	public void set(String attribute, Object value) {
 		if ("pk".equals(attribute)) {
@@ -343,6 +330,19 @@ public class Data implements Comparable<Data> {
 
 		return this.getEntryClassName() + " " + pk + " " + rpk + " " +
 			this.getUuid();
+	}
+
+	protected boolean isValid(String attribute, int type, Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		if (type != 0) {
+			return true;
+		}
+
+		return !("companyId".equals(attribute) || "groupId".equals(attribute) ||
+			 "resourcePrimKey".equals(attribute));
 	}
 
 	protected DataComparator comparator = null;
