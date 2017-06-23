@@ -295,16 +295,6 @@ public class ReflectionUtil {
 		return field.get(object);
 	}
 
-	public static String getWrappedCriterionString(Criterion criterion) {
-		return getWrappedString(criterion, "getWrappedCriterion");
-	}
-
-	public static String getWrappedDynamicQueryString(
-		DynamicQuery dynamicQuery) {
-
-		return getWrappedString(dynamicQuery, "getDetachedCriteria");
-	}
-
 	public static String getWrappedModelImpl(DynamicQuery dynamicQuery) {
 		try {
 			Object detachedCriteria = getPrivateField(
@@ -323,7 +313,7 @@ public class ReflectionUtil {
 		return null;
 	}
 
-	public static String getWrappedString(Object object, String methodName) {
+	public static Object getWrappedObject(Object object, String methodName) {
 		if (object == null) {
 			return null;
 		}
@@ -333,16 +323,30 @@ public class ReflectionUtil {
 			Method method = clazz.getMethod(methodName);
 
 			if (method != null) {
-				return method.invoke(object).toString();
+				return method.invoke(object);
 			}
 		}
 		catch (Throwable t) {
 		}
 
-		return object.toString();
+		return null;
 	}
 
 	static Log _log = LogFactoryUtil.getLog(ReflectionUtil.class);
+
+	public static String getWrappedString(Object object, String methodName) {
+		if (object == null) {
+			return null;
+		}
+
+		Object result = getWrappedObject(object, methodName);
+
+		if (result != null) {
+			return result.toString();
+		}
+
+		return object.toString();
+	}
 
 	private static Constructor<?> contructorCriterionImpl;
 	private static Constructor<?> contructorPropertyExpression;

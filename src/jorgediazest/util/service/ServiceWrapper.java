@@ -135,13 +135,14 @@ public class ServiceWrapper implements Service {
 
 		if (_log.isDebugEnabled()) {
 			if (filter != null) {
-				String filterString = ReflectionUtil.getWrappedCriterionString(
-					filter);
+				String filterString = ReflectionUtil.getWrappedString(
+					filter, "getWrappedCriterion");
 				_log.debug("added filter: " + filterString);
 			}
 
 			String filterDynamicQuery =
-				ReflectionUtil.getWrappedDynamicQueryString(dynamicQuery);
+				ReflectionUtil.getWrappedString(
+					dynamicQuery, "getDetachedCriteria");
 
 			_log.debug("executing dynamicQuery: " + filterDynamicQuery);
 		}
