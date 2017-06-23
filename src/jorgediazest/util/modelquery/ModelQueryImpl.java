@@ -17,13 +17,12 @@ package jorgediazest.util.modelquery;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,27 +52,15 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 		String mappingAttr = mappingsDest[0];
 
-		if ("classPK".equals(mappingAttr)) {
-			Criterion classNameIdFilter = relatedModel.getProperty(
-				"classNameId").eq(model.getClassNameId());
-			filter = ModelUtil.generateConjunctionQueryFilter(
-				classNameIdFilter, filter);
+		if (model.getClassName().equals(relatedModel.getClassName()) &&
+			!"MappingTable".equals(mappingAttr)) {
+
+			return;
 		}
 
 		Map<Long, List<Data>> relatedMap;
 
-		if ("MappingTable".equals(mappingAttr)) {
-			TableInfo tableInfo = relatedModel.getTableInfo(attrRelatedDest[0]);
-
-			Set<Data> dataSet = queryTable(tableInfo);
-
-			relatedMap = DataUtil.getMapFromSetData(
-				dataSet, relatedModel.getPrimaryKeyAttribute());
-		}
-		else if (model.getClassName().equals(relatedModel.getClassName())) {
-			return;
-		}
-		else if (filter == null) {
+		if ((filter == null)||"MappingTable".equals(mappingAttr)) {
 			relatedMap = relatedModelQuery.getDataWithDuplicatesCache(
 				attrRelatedDest, mappingAttr);
 		}
@@ -82,12 +69,25 @@ public abstract class ModelQueryImpl implements ModelQuery {
 				attrRelatedDest, mappingAttr, filter);
 		}
 
-		String classNameRelated = relatedModel.getClassName();
+		Map<Long, List<Data>> matchedMap = ModelQueryUtil.getMatchingEntriesMap(
+			dataMap, relatedMap, mappingsSource, mappingsDest);
 
-		ModelQueryUtil.addRelatedModelData(
-			dataMap, relatedMap, classNameRelated, attrRelatedOrig,
-			attrRelatedDest, mappingsSource, mappingsDest, removeUnmatched,
-			rawData);
+		if (rawData) {
+			ModelQueryUtil.addRelatedModelDataRaw(
+				dataMap, matchedMap, attrRelatedOrig, attrRelatedDest);
+		}
+		else {
+			ModelQueryUtil.addRelatedModelData(
+				dataMap, matchedMap, attrRelatedOrig, attrRelatedDest);
+		}
+
+		if (removeUnmatched) {
+			for (Entry<Long, List<Data>> entry : matchedMap.entrySet()) {
+				if (entry.getValue().isEmpty()) {
+					dataMap.remove(entry.getKey());
+				}
+			}
+		}
 	}
 
 	public void addRelatedModelData(
@@ -111,6 +111,15 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		ModelQueryUtil.splitSourceDest(
 			attrRelated, attrRelatedOrig, attrRelatedDest);
 		ModelQueryUtil.splitSourceDest(mappings, mappingsSource, mappingsDest);
+
+		Model relatedModel = relatedModelQuery.getModel();
+
+		if ("classPK".equals(mappingsDest[0])) {
+			Criterion classNameIdFilter = relatedModel.getProperty(
+				"classNameId").eq(model.getClassNameId());
+			filter = ModelUtil.generateConjunctionQueryFilter(
+				classNameIdFilter, filter);
+		}
 
 		addRelatedModelData(
 			dataMap, relatedModelQuery, attrRelatedOrig, attrRelatedDest,
@@ -253,6 +262,17 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
+		if ("MappingTable".equals(mapKeyAttribute) &&
+			(attributes.length == 1)) {
+
+			TableInfo tableInfo = model.getTableInfo(attributes[0]);
+
+			Set<Data> dataSet = DatabaseUtil.queryTable(model, tableInfo);
+
+			return DataUtil.getMapFromSetData(
+				dataSet, model.getPrimaryKeyAttribute());
+		}
+
 		return DataUtil.getDataWithDuplicates(
 			model, dataComparator, attributes, mapKeyAttribute, filter);
 	}
@@ -318,21 +338,6 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		this.dataComparator = dataComparatorFactory.getDataComparator(this);
 	}
 
-	public Set<Data> queryTable(TableInfo tableInfo) throws Exception {
-		if (Validator.isNull(tableInfo)) {
-			return new HashSet<Data>();
-		}
-
-		return queryTable(tableInfo, tableInfo.getAttributesName());
-	}
-
-	public Set<Data> queryTable(TableInfo tableInfo, String[] attributesName)
-		throws Exception {
-
-		return DatabaseUtil.queryTableWithCache(
-			dataSetCacheMap, getModel(), tableInfo, attributesName);
-	}
-
 	public void setModelQueryFactory(ModelQueryFactory mqFactory) {
 		this.mqFactory = mqFactory;
 	}
@@ -351,8 +356,5 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	protected DataComparator dataComparator;
 	protected Model model = null;
 	protected ModelQueryFactory mqFactory = null;
-
-	private Map<String, Set<Data>> dataSetCacheMap =
-		new ConcurrentHashMap<String, Set<Data>>();
 
 }

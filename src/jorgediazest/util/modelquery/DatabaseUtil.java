@@ -17,6 +17,7 @@ package jorgediazest.util.modelquery;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PortalUtil;
 
 import java.lang.reflect.Field;
@@ -135,6 +136,16 @@ public class DatabaseUtil {
 		return jdbcTypeNames;
 	}
 
+	public static Set<Data> queryTable(Model model, TableInfo tableInfo)
+		throws Exception {
+
+		if (Validator.isNull(tableInfo)) {
+			return new HashSet<Data>();
+		}
+
+		return queryTable(model, tableInfo, tableInfo.getAttributesName());
+	}
+
 	public static Set<Data> queryTable(
 			Model model, TableInfo tableInfo, String[] attributesName)
 		throws SQLException {
@@ -185,22 +196,6 @@ public class DatabaseUtil {
 		}
 
 		return dataSet;
-	}
-
-	public static Set<Data> queryTableWithCache(
-			Map<String, Set<Data>> dataSetCacheMap, Model model,
-			TableInfo tableInfo, String[] attributes)
-		throws SQLException {
-
-		Set<Data> dataSetCache = dataSetCacheMap.get(tableInfo.getName());
-
-		if (dataSetCache == null) {
-			dataSetCache = queryTable(model, tableInfo, attributes);
-
-			dataSetCacheMap.put(tableInfo.getName(), dataSetCache);
-		}
-
-		return dataSetCache;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(DatabaseUtil.class);

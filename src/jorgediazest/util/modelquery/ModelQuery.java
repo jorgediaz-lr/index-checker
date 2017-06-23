@@ -18,13 +18,11 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
-import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -94,11 +92,6 @@ public interface ModelQuery extends Comparable<ModelQuery> {
 	public ModelQueryFactory getModelQueryFactory();
 
 	public void init(Model model, DataComparatorFactory dataComparatorFactory)
-		throws Exception;
-
-	public Set<Data> queryTable(TableInfo tableInfo) throws Exception;
-
-	public Set<Data> queryTable(TableInfo tableInfo, String[] attributesName)
 		throws Exception;
 
 	public void setModelQueryFactory(ModelQueryFactory modelDataAccessFactory);
