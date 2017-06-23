@@ -62,6 +62,7 @@ import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.modelquery.ModelQueryImpl;
 public class IndexCheckerModelQuery extends ModelQueryImpl {
 
@@ -101,16 +102,16 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 		String className = data.get("permissionsClassName", StringPool.BLANK);
 
-		String permissionsField;
+		String permissionsClassName;
 
 		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
-			permissionsField = ResourceBlockPermission.class.getName();
+			permissionsClassName = ResourceBlockPermission.class.getName();
 		}
 		else {
-			permissionsField = ResourcePermission.class.getName();
+			permissionsClassName = ResourcePermission.class.getName();
 		}
 
-		addRolesFieldsToData(className, data, permissionsField);
+		addRolesFieldsToData(className, data, permissionsClassName);
 	}
 
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
@@ -321,12 +322,12 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 
 	@SuppressWarnings("unchecked")
 	protected void addRolesFieldsToData(
-			String className, Data data, String permissionsField)
+			String className, Data data, String permissionsClassName)
 		throws PortalException, SystemException {
 
 		String actionId = getPermissionsActionId(data);
 
-		Object aux = data.get(permissionsField);
+		Object aux = data.get(permissionsClassName);
 
 		Set<List<Object>> resourcePermissions = null;
 
@@ -342,7 +343,7 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			return;
 		}
 
-		Set<String> roleIds = new HashSet<String>();
+		Set<Long> roleIds = new HashSet<Long>();
 		Set<String> groupRoleIds = new HashSet<String>();
 
 		for (List<Object> resourcePermission : resourcePermissions) {
@@ -374,13 +375,20 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 					groupRoleIds.add(groupId + StringPool.DASH + roleId);
 				}
 				else {
-					roleIds.add(Long.toString(roleId));
+					roleIds.add(roleId);
 				}
 			}
 		}
 
 		data.set("roleId", roleIds);
 		data.set("groupRoleId", groupRoleIds);
+
+		ModelFactory modelFactory = model.getModelFactory();
+
+		Model permissionsModel = modelFactory.getModelObject(
+			permissionsClassName);
+
+		data.addModelTableInfo(permissionsModel);
 	}
 
 	protected long getActionIdBitwiseValue(String name, String actionId)
