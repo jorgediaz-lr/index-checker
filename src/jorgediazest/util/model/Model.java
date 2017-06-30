@@ -76,6 +76,8 @@ public interface Model extends Comparable<Model> {
 
 	public long getClassNameId();
 
+	public String getClassSimpleName();
+
 	public Criterion getCompanyFilter(long companyId);
 
 	public Criterion getCompanyGroupFilter(long companyId, List<Long> groupIds);
@@ -107,7 +109,8 @@ public interface Model extends Comparable<Model> {
 	public ProjectionList getPropertyProjection(String[] attributes);
 
 	public ProjectionList getPropertyProjection(
-		String[] attributes, List<String> validAttributes);
+		String[] attributes, List<String> validAttributes,
+		List<String> notValidAttributes);
 
 	public Service getService();
 

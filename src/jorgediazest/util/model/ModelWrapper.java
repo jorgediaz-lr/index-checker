@@ -191,6 +191,11 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
+	public String getClassSimpleName() {
+		return model.getClassSimpleName();
+	}
+
+	@Override
 	public Criterion getCompanyFilter(long companyId) {
 		return model.getCompanyFilter(companyId);
 	}
@@ -290,9 +295,11 @@ public class ModelWrapper implements Model, Cloneable {
 
 	@Override
 	public ProjectionList getPropertyProjection(
-		String[] attributes, List<String> validAttributes) {
+		String[] attributes, List<String> validAttributes,
+		List<String> notValidAttributes) {
 
-		return model.getPropertyProjection(attributes, validAttributes);
+		return model.getPropertyProjection(
+			attributes, validAttributes, notValidAttributes);
 	}
 
 	@Override

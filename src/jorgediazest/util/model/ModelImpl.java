@@ -60,6 +60,14 @@ public class ModelImpl implements Model {
 		this.service = service;
 
 		this.className = className;
+
+		this.classSimpleName = className;
+
+		int pos = className.lastIndexOf(".");
+
+		if (pos != -1) {
+			this.classSimpleName = className.substring(pos + 1);
+		}
 	}
 
 	public int compareTo(Model o) {
@@ -216,6 +224,8 @@ public class ModelImpl implements Model {
 	public Criterion generateSingleCriterion(
 		String attrName, String attrValue, String op) {
 
+		attrName = cleanAttributeName(attrName);
+
 		return ReflectionUtil.generateSingleCriterion(
 			this, attrName, attrValue, op);
 	}
@@ -250,6 +260,10 @@ public class ModelImpl implements Model {
 
 	public long getClassNameId() {
 		return PortalUtil.getClassNameId(getClassName());
+	}
+
+	public String getClassSimpleName() {
+		return classSimpleName;
 	}
 
 	public Criterion getCompanyFilter(long companyId) {
@@ -355,6 +369,8 @@ public class ModelImpl implements Model {
 	}
 
 	public Property getProperty(String attribute) {
+		attribute = cleanAttributeName(attribute);
+
 		if (isPartOfPrimaryKeyMultiAttribute(attribute)) {
 			attribute = "primaryKey." + attribute;
 		}
@@ -379,7 +395,7 @@ public class ModelImpl implements Model {
 
 		List<String> validAttributes = new ArrayList<String>();
 		ProjectionList projectionList = getPropertyProjection(
-			attributes, validAttributes);
+			attributes, validAttributes, null);
 
 		if (attributes.length != validAttributes.size()) {
 			throw new IllegalArgumentException(Arrays.toString(attributes));
@@ -389,7 +405,8 @@ public class ModelImpl implements Model {
 	}
 
 	public ProjectionList getPropertyProjection(
-		String[] attributes, List<String> validAttributes) {
+		String[] attributes, List<String> validAttributes,
+		List<String> notValidAttributes) {
 
 		String[] op = new String[attributes.length];
 		String[] attributesAux = new String[attributes.length];
@@ -434,18 +451,24 @@ public class ModelImpl implements Model {
 			Projection projection = getPropertyProjection(
 				attributesAux[i], op[i]);
 
-			if (projection != null) {
-				projectionList.add(projection);
+			if ((projection == null) && (notValidAttributes != null)) {
+				notValidAttributes.add(attributes[i]);
+			}
 
-				numProjections++;
+			if (projection == null) {
+				continue;
+			}
 
-				if (firstProjection == null) {
-					firstProjection = projection;
-				}
+			projectionList.add(projection);
 
-				if (validAttributes != null) {
-					validAttributes.add(attributes[i]);
-				}
+			numProjections++;
+
+			if (firstProjection == null) {
+				firstProjection = projection;
+			}
+
+			if (validAttributes != null) {
+				validAttributes.add(attributes[i]);
 			}
 		}
 
@@ -473,7 +496,27 @@ public class ModelImpl implements Model {
 			return getTableInfo();
 		}
 
-		return getTableInfoMappings().get(attribute);
+		String prefix = null;
+		String attrWithoutPrefix = attribute;
+
+		int pos = attribute.indexOf(".");
+
+		if (pos != -1) {
+			prefix = attribute.substring(0, pos);
+			attrWithoutPrefix = attribute.substring(pos+1);
+		}
+
+		TableInfo tableInfo = getTableInfoMappings().get(attrWithoutPrefix);
+
+		if (tableInfo == null) {
+			return null;
+		}
+
+		if ((prefix != null) && !prefix.equals(tableInfo.getName())) {
+			return null;
+		}
+
+		return tableInfo;
 	}
 
 	public Map<String, TableInfo> getTableInfoMappings() {
@@ -495,6 +538,8 @@ public class ModelImpl implements Model {
 	}
 
 	public boolean hasAttribute(String attribute) {
+
+		attribute = cleanAttributeName(attribute);
 
 		return (getAttributePos(attribute) != -1);
 	}
@@ -583,11 +628,35 @@ public class ModelImpl implements Model {
 		return getName();
 	}
 
+	protected String cleanAttributeName(String attribute) {
+		if (Validator.isNull(attribute)) {
+			return StringPool.BLANK;
+		}
+
+		int pos = attribute.indexOf(".");
+
+		if (pos == -1) {
+			return attribute;
+		}
+
+		String prefix = attribute.substring(0, pos);
+
+		if (prefix.equals(this.getClassName()) ||
+			prefix.equals(this.getClassSimpleName())) {
+
+			return attribute.substring(pos + 1); /* TODO Cachear en un Map para evitar consumo de memoria */
+		}
+
+		return attribute;
+	}
+
 	protected Projection getPropertyProjection(String attribute, String op) {
 
 		if ("rowCount".equals(op)) {
 			return ProjectionFactoryUtil.rowCount();
 		}
+
+		attribute = cleanAttributeName(attribute);
 
 		if (!this.hasAttribute(attribute)) {
 			return null;
