@@ -22,7 +22,6 @@ import java.util.Map;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 
 /**
  * @author Jorge Díaz
@@ -31,8 +30,7 @@ public interface ModelQuery extends Comparable<ModelQuery> {
 
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, ModelQuery relatedModelQuery,
-			String[] attrRelatedOrig, String[] attrRelatedDest,
-			String[] mappingsSource, String[] mappingsDest,
+			String[] attributes, String[] mappingsSource, String[] mappingsDest,
 			boolean removeUnmatched, boolean rawData, Criterion filter)
 		throws Exception;
 
@@ -91,7 +89,7 @@ public interface ModelQuery extends Comparable<ModelQuery> {
 
 	public ModelQueryFactory getModelQueryFactory();
 
-	public void init(Model model, DataComparatorFactory dataComparatorFactory)
+	public void init(Model model, DataComparator dataComparator)
 		throws Exception;
 
 	public void setModelQueryFactory(ModelQueryFactory modelDataAccessFactory);

@@ -43,6 +43,7 @@ import java.util.TreeSet;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.modelquery.DatabaseUtil;
+import jorgediazest.util.modelquery.ModelQueryUtil;
 import jorgediazest.util.table.TableInfo;
 
 /**
@@ -363,14 +364,20 @@ public class DataUtil {
 		throws Exception {
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+		Map<Long, Data> dataMapByPK = new HashMap<Long, Data>();
+
+		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
+			dataMapByPK = null;
+		}
 
 		if (attributes == null) {
 			attributes = model.getAttributesName();
 		}
 
 		List<String> validAttributes = new ArrayList<String>();
+		List<String> notValidAttributes = new ArrayList<String>();
 		ProjectionList projectionList = model.getPropertyProjection(
-			attributes, validAttributes);
+			attributes, validAttributes, notValidAttributes);
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
@@ -385,16 +392,26 @@ public class DataUtil {
 			Data data = DataUtil.createDataObject(
 				model, dataComparator, validAttributesArr, result);
 
-			Long mappingAttributeValue = DataUtil.castLong(
-				data.get(mapKeyAttribute));
+			addDataToMap(dataMap, mapKeyAttribute, data, i--);
 
-			if (Validator.isNull(mappingAttributeValue)) {
-				mappingAttributeValue = i--;
+			addDataToMap(
+				dataMapByPK, model.getPrimaryKeyAttribute(), data, null);
+		}
+
+		if (dataMapByPK == null) {
+			dataMapByPK = dataMap;
+		}
+
+		for (String notValidAttribute : notValidAttributes) {
+			Map<Long, List<Data>> relatedDataMap =
+				getRelatedDataFromMappingTable(model, notValidAttribute);
+
+			if (relatedDataMap == null) {
+				continue;
 			}
 
-			if (!dataMap.containsKey(mappingAttributeValue)) {
-				dataMap.put(mappingAttributeValue, data);
-			}
+			ModelQueryUtil.addRelatedModelData(
+				dataMapByPK, relatedDataMap, new String[]{notValidAttribute});
 		}
 
 		return dataMap;
@@ -406,14 +423,20 @@ public class DataUtil {
 		throws Exception {
 
 		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+		Map<Long, List<Data>> dataMapByPK = new HashMap<Long, List<Data>>();
+
+		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
+			dataMapByPK = null;
+		}
 
 		if (attributes == null) {
 			attributes = model.getAttributesName();
 		}
 
 		List<String> validAttributes = new ArrayList<String>();
+		List<String> notValidAttributes = new ArrayList<String>();
 		ProjectionList projectionList = model.getPropertyProjection(
-			attributes, validAttributes);
+			attributes, validAttributes, notValidAttributes);
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
@@ -428,20 +451,26 @@ public class DataUtil {
 			Data data = createDataObject(
 				model, dataComparator, validAttributesArr, result);
 
-			Long mappingAttributeValue = castLong(data.get(mapKeyAttribute));
+			addDataToMapValueList(dataMap, mapKeyAttribute, data, i--);
 
-			if (Validator.isNull(mappingAttributeValue)) {
-				mappingAttributeValue = i--;
+			addDataToMapValueList(
+				dataMapByPK, model.getPrimaryKeyAttribute(), data, null);
+		}
+
+		if (dataMapByPK == null) {
+			dataMapByPK = dataMap;
+		}
+
+		for (String notValidAttribute : notValidAttributes) {
+			Map<Long, List<Data>> relatedDataMap =
+				getRelatedDataFromMappingTable(model, notValidAttribute);
+
+			if (relatedDataMap == null) {
+				continue;
 			}
 
-			if (!dataMap.containsKey(mappingAttributeValue)) {
-				List<Data> list = new ArrayList<Data>();
-				list.add(data);
-				dataMap.put(mappingAttributeValue, list);
-			}
-			else {
-				dataMap.get(mappingAttributeValue).add(data);
-			}
+			ModelQueryUtil.addRelatedModelData(
+				dataMapByPK, relatedDataMap, new String[]{notValidAttribute});
 		}
 
 		return dataMap;
@@ -615,6 +644,75 @@ public class DataUtil {
 		}
 
 		return transformObject;
+	}
+
+	protected static void addDataToMap(
+		Map<Long, Data> dataMap, String mapKeyAttribute, Data data,
+		Long defaultValue) {
+
+		if ((dataMap == null) || (data == null)) {
+			return;
+		}
+
+		Long mappingAttributeValue = castLong(data.get(mapKeyAttribute));
+
+		if (Validator.isNull(mappingAttributeValue)) {
+			if (defaultValue == null) {
+				return;
+			}
+
+			mappingAttributeValue = defaultValue;
+		}
+
+		if (!dataMap.containsKey(mappingAttributeValue)) {
+			dataMap.put(mappingAttributeValue, data);
+		}
+	}
+
+	protected static void addDataToMapValueList(
+			Map<Long, List<Data>> dataMap, String mapKeyAttribute, Data data,
+			Long defaultValue) {
+
+		if ((dataMap == null) || (data == null)) {
+			return;
+		}
+
+		Long mappingAttributeValue = castLong(data.get(mapKeyAttribute));
+
+		if (Validator.isNull(mappingAttributeValue)) {
+			if (defaultValue == null) {
+				return;
+			}
+
+			mappingAttributeValue = defaultValue;
+		}
+
+		if (!dataMap.containsKey(mappingAttributeValue)) {
+			List<Data> list = new ArrayList<Data>();
+			list.add(data);
+			dataMap.put(mappingAttributeValue, list);
+		}
+		else {
+			dataMap.get(mappingAttributeValue).add(data);
+		}
+	}
+
+	protected static Map<Long, List<Data>> getRelatedDataFromMappingTable(
+			Model model, String attribute)
+		throws Exception {
+
+		TableInfo tableInfo = model.getTableInfo(attribute);
+
+		if (tableInfo == null) {
+			return null;
+		}
+
+		Set<Data> relateDataSet = DatabaseUtil.queryTable(
+			model, tableInfo,
+			new String[] {model.getPrimaryKeyAttribute(), attribute});
+
+		return DataUtil.getMapFromSetData(
+			relateDataSet, model.getPrimaryKeyAttribute());
 	}
 
 	protected static Set<Object> transformArrayToSet(

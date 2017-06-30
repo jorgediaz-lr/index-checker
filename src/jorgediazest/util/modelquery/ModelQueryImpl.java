@@ -17,13 +17,13 @@ package jorgediazest.util.modelquery;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.data.Data;
@@ -32,8 +32,6 @@ import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
-import jorgediazest.util.table.TableInfo;
 
 /**
  * @author Jorge Díaz
@@ -42,8 +40,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 	public void addRelatedModelData(
 			Map<Long, Data> dataMap, ModelQuery relatedModelQuery,
-			String[] attrRelatedOrig, String[] attrRelatedDest,
-			String[] mappingsSource, String[] mappingsDest,
+			String[] attributes, String[] mappingsSource, String[] mappingsDest,
 			boolean removeUnmatched, boolean rawData, Criterion filter)
 		throws Exception {
 
@@ -52,21 +49,20 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 		String mappingAttr = mappingsDest[0];
 
-		if (model.getClassName().equals(relatedModel.getClassName()) &&
-			!"MappingTable".equals(mappingAttr)) {
-
+		if (model.getClassName().equals(relatedModel.getClassName())) {
 			return;
 		}
 
 		Map<Long, List<Data>> relatedMap;
 
-		if ((filter == null)||"MappingTable".equals(mappingAttr)) {
+		if (filter == null) {
 			relatedMap = relatedModelQuery.getDataWithDuplicatesCache(
-				attrRelatedDest, mappingAttr);
+				ArrayUtil.append(attributes, mappingsDest), mappingAttr);
 		}
 		else {
 			relatedMap = relatedModelQuery.getDataWithDuplicates(
-				attrRelatedDest, mappingAttr, filter);
+				ArrayUtil.append(attributes, mappingsDest), mappingAttr,
+				filter);
 		}
 
 		Map<Long, List<Data>> matchedMap = ModelQueryUtil.getMatchingEntriesMap(
@@ -74,11 +70,10 @@ public abstract class ModelQueryImpl implements ModelQuery {
 
 		if (rawData) {
 			ModelQueryUtil.addRelatedModelDataRaw(
-				dataMap, matchedMap, attrRelatedOrig, attrRelatedDest);
+				dataMap, matchedMap, attributes);
 		}
 		else {
-			ModelQueryUtil.addRelatedModelData(
-				dataMap, matchedMap, attrRelatedOrig, attrRelatedDest);
+			ModelQueryUtil.addRelatedModelData(dataMap, matchedMap, attributes);
 		}
 
 		if (removeUnmatched) {
@@ -103,13 +98,9 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			return;
 		}
 
-		String[] attrRelatedOrig = new String[attrRelated.length];
-		String[] attrRelatedDest = new String[attrRelated.length];
 		String[] mappingsSource = new String[mappings.length];
 		String[] mappingsDest = new String[mappings.length];
 
-		ModelQueryUtil.splitSourceDest(
-			attrRelated, attrRelatedOrig, attrRelatedDest);
 		ModelQueryUtil.splitSourceDest(mappings, mappingsSource, mappingsDest);
 
 		Model relatedModel = relatedModelQuery.getModel();
@@ -122,8 +113,8 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		}
 
 		addRelatedModelData(
-			dataMap, relatedModelQuery, attrRelatedOrig, attrRelatedDest,
-			mappingsSource, mappingsDest, removeUnmatched, rawData, filter);
+			dataMap, relatedModelQuery, attrRelated, mappingsSource,
+			mappingsDest, removeUnmatched, rawData, filter);
 	}
 
 	public void addRelatedModelData(
@@ -262,17 +253,6 @@ public abstract class ModelQueryImpl implements ModelQuery {
 			String[] attributes, String mapKeyAttribute, Criterion filter)
 		throws Exception {
 
-		if ("MappingTable".equals(mapKeyAttribute) &&
-			(attributes.length == 1)) {
-
-			TableInfo tableInfo = model.getTableInfo(attributes[0]);
-
-			Set<Data> dataSet = DatabaseUtil.queryTable(model, tableInfo);
-
-			return DataUtil.getMapFromSetData(
-				dataSet, model.getPrimaryKeyAttribute());
-		}
-
 		return DataUtil.getDataWithDuplicates(
 			model, dataComparator, attributes, mapKeyAttribute, filter);
 	}
@@ -330,12 +310,11 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		return relatedData;
 	}
 
-	public void init(Model model, DataComparatorFactory dataComparatorFactory)
+	public void init(Model model, DataComparator dataComparator)
 		throws Exception {
 
+		this.dataComparator = dataComparator;
 		this.model = model;
-
-		this.dataComparator = dataComparatorFactory.getDataComparator(this);
 	}
 
 	public void setModelQueryFactory(ModelQueryFactory mqFactory) {

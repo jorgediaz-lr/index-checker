@@ -107,7 +107,7 @@ public class ModelQueryFactory {
 	}
 
 	public interface DataComparatorFactory {
-		public DataComparator getDataComparator(ModelQuery query);
+		public DataComparator getDataComparator(Model model);
 	}
 
 	public interface ModelQueryClassFactory {
@@ -132,7 +132,8 @@ public class ModelQueryFactory {
 
 			modelQuery.setModelQueryFactory(this);
 
-			modelQuery.init(model, dataComparatorFactory);
+			modelQuery.init(
+				model, dataComparatorFactory.getDataComparator(model));
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -161,7 +162,7 @@ public class ModelQueryFactory {
 				"description", "size" });
 
 		@Override
-		public DataComparator getDataComparator(ModelQuery query) {
+		public DataComparator getDataComparator(Model model) {
 			return dataComparator;
 		}
 

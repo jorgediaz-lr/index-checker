@@ -19,6 +19,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import jorgediazest.util.data.Data;
+import jorgediazest.util.model.Model;
 
 /**
  * @author Jorge Díaz
@@ -34,66 +37,78 @@ import jorgediazest.util.data.Data;
 public class ModelQueryUtil {
 
 	public static void addRelatedModelData(
-		Map<Long, Data> dataMap, Map<Long, List<Data>> matchedMap,
-		String[] attrRelatedOrig, String[] attrRelatedDest) {
+		Map<Long, ?> dataMap, Map<Long, List<Data>> matchedMap,
+		String[] attributes) {
 
-		for (Entry<Long, Data> entry : dataMap.entrySet()) {
+		if (dataMap == null) {
+			return;
+		}
+
+		for (Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
-			if (matched.isEmpty()) {
+			if ((matched == null) || matched.isEmpty()) {
 				continue;
 			}
 
-			Data data = entry.getValue();
+			Collection<Data> dataCollection = castToDataCollection(
+				entry.getValue());
 
-			data.addModelTableInfo(matched.get(0).getModel());
+			for (Data data : dataCollection) {
+				Model model = matched.get(0).getModel();
 
-			addMatchedData(data, matched, attrRelatedOrig, attrRelatedDest);
+				data.addModelTableInfo(model);
+
+				addMatchedData(data, matched, attributes);
+			}
 		}
 	}
 
 	public static void addRelatedModelDataRaw(
-		Map<Long, Data> dataMap, Map<Long, List<Data>> matchedMap,
-		String[] attrRelatedOrig, String[] attrRelatedDest) {
+		Map<Long, ?> dataMap, Map<Long, List<Data>> matchedMap,
+		String[] attributes) {
 
-		for (Entry<Long, Data> entry : dataMap.entrySet()) {
+		for (Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
 			if (matched.isEmpty()) {
 				continue;
 			}
 
-			Data data = entry.getValue();
+			Collection<Data> dataCollection = castToDataCollection(
+				entry.getValue());
 
 			String classNameRelated = matched.get(0).getEntryClassName();
 
-			Object rawDataObject = getRawRelatedData(
-				matched, attrRelatedOrig, attrRelatedDest);
+			Object rawDataObject = getRawRelatedData(matched, attributes);
 
-			data.set(classNameRelated, rawDataObject);
+			for (Data data : dataCollection) {
+				data.set(classNameRelated, rawDataObject);
+			}
 		}
 	}
 
 	protected static void addMatchedData(
-		Data data, List<Data> matched, String[] attrRelatedOrig,
-		String[] attrRelatedDest) {
+		Data data, List<Data> matched, String[] attributes) {
 
-		for (int k = 0; k<attrRelatedOrig.length; k++) {
-			if (Validator.isNull(attrRelatedOrig[k])) {
+		for (int k = 0; k<attributes.length; k++) {
+			String attribute = attributes[k];
+
+			if (Validator.isNull(attribute)) {
 				continue;
 			}
 
 			Set<Object> values = new HashSet<Object>(matched.size());
 
 			for (Data m : matched) {
-				values.add(m.get(attrRelatedDest[k]));
+				values.add(m.get(attribute));
 			}
 
 			if (values.size() == 1) {
-				data.set(attrRelatedOrig[k], values.toArray()[0]);
+				data.set(attribute, values.toArray()[0]);
 			}
 			else {
-				data.set(attrRelatedOrig[k], values);
+				data.set(attribute, values);
 			}
 		}
 	}
@@ -155,8 +170,7 @@ public class ModelQueryUtil {
 		for (Entry<Long, Data> entry : dataMap.entrySet()) {
 			Data data = entry.getValue();
 
-			List<Data> matched =
-				getMatchingEntries(
+			List<Data> matched = getMatchingEntries(
 					data, relatedMap, mappingsSource, mappingsDest);
 
 			matchedMap.put(entry.getKey(), matched);
@@ -166,17 +180,16 @@ public class ModelQueryUtil {
 	}
 
 	protected static Object getRawRelatedData(
-		List<Data> matched, String[] attrRelatedOrig,
-		String[] attrRelatedDest) {
+		List<Data> matched, String[] attributes) {
 
 		Set<Object> values = new HashSet<Object>(matched.size());
 
 		for (Data m : matched) {
 			List<Object> list = new ArrayList<Object>();
 
-			for (int k = 0; k<attrRelatedOrig.length; k++) {
-				if (Validator.isNotNull(attrRelatedOrig[k])) {
-					Object value = m.get(attrRelatedDest[k]);
+			for (int k = 0; k<attributes.length; k++) {
+				if (Validator.isNotNull(attributes[k])) {
+					Object value = m.get(attributes[k]);
 
 					list.add(value);
 				}
@@ -209,6 +222,23 @@ public class ModelQueryUtil {
 			dataArrayDest[i] = aux[posDest];
 			i++;
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Collection<Data> castToDataCollection(Object object) {
+		if (object instanceof Data) {
+			return Collections.singletonList((Data)object);
+		}
+
+		if (Collection.class.isAssignableFrom(object.getClass())) {
+			return (Collection<Data>)object;
+		}
+
+		if (Map.class.isAssignableFrom(object.getClass())) {
+			return ((Map<?, Data>)object).values();
+		}
+
+		return Collections.emptyList();
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ModelQueryUtil.class);

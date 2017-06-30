@@ -17,6 +17,7 @@ package jorgediazest.util.modelquery;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PortalUtil;
 
@@ -159,10 +160,14 @@ public class DatabaseUtil {
 		try {
 			con = DataAccess.getConnection();
 
-			String attributes = (String)attributesName[0];
+			String attributes = cleanAttributeName(
+				tableInfo.getName(), (String)attributesName[0]);
 
 			for (int i = 1; i<attributesName.length; i++) {
-				attributes += ", " + (String) attributesName[i];
+				String attribute = cleanAttributeName(
+					tableInfo.getName(), (String)attributesName[i]);
+
+				attributes += ", " + attribute;
 			}
 
 			String sql =
@@ -196,6 +201,28 @@ public class DatabaseUtil {
 		}
 
 		return dataSet;
+	}
+
+	protected static String cleanAttributeName(
+			String tableName, String attribute) {
+
+		if (Validator.isNull(attribute)) {
+			return StringPool.BLANK;
+		}
+
+		int pos = attribute.indexOf(".");
+
+		if (pos == -1) {
+			return attribute;
+		}
+
+		String prefix = attribute.substring(0, pos);
+
+		if (prefix.equals(tableName)) {
+			return attribute.substring(pos + 1);
+		}
+
+		return attribute;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(DatabaseUtil.class);

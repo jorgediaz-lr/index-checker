@@ -105,6 +105,20 @@ public class Data implements Comparable<Data> {
 			return get(model.getPrimaryKeyAttribute());
 		}
 
+		if (!map.containsKey(attribute)) {
+			String newAttribute = model.getClassSimpleName() + "." + attribute;
+
+			if (!map.containsKey(newAttribute)) {
+				newAttribute = model.getClassName() + "." + attribute;
+			}
+
+			if (!map.containsKey(newAttribute)) {
+				return null;
+			}
+
+			attribute = newAttribute;
+		}
+
 		return map.get(attribute);
 	}
 
