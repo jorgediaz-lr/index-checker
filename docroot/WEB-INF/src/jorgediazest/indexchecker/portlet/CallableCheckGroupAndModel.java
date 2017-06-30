@@ -40,35 +40,37 @@ import jorgediazest.indexchecker.util.ConfigurationUtil;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
-import jorgediazest.util.modelquery.ModelQuery;
+import jorgediazest.util.modelquery.ModelQueryFactory;
 
 /**
  * @author Jorge Díaz
  */
 public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
-	public static Set<String> calculateAttributesToQuery(ModelQuery mq) {
-		Model model = mq.getModel();
+	public static Set<String> calculateAttributesToQuery(
+		Model model, DataComparator dataComparator) {
 
 		Set<String> attributesToCheck = new LinkedHashSet<String>(
 			ConfigurationUtil.getModelAttributesToQuery(model));
 
 		attributesToCheck.addAll(
-			Arrays.asList(mq.getDataComparator().getExactAttributes()));
+			Arrays.asList(dataComparator.getExactAttributes()));
 
 		return attributesToCheck;
 	}
 
 	public CallableCheckGroupAndModel(
-		long companyId, List<Long> groupIds, IndexCheckerModelQuery query,
-		Set<ExecutionMode> executionMode) {
+		long companyId, List<Long> groupIds, ModelQueryFactory mqFactory,
+		Model model, Set<ExecutionMode> executionMode) {
 
 		this.companyId = companyId;
 		this.groupIds = groupIds;
-		this.mq = query;
+		this.mqFactory = mqFactory;
+		this.model = model;
 		this.executionMode = executionMode;
 	}
 
@@ -118,8 +120,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	@Override
 	public Comparison call() throws Exception {
 
-		Model model = mq.getModel();
-
 		boolean oldIgnoreCase = DataUtil.getIgnoreCase();
 
 		try {
@@ -155,10 +155,13 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				return null;
 			}
 
+			IndexCheckerModelQuery mq =
+				(IndexCheckerModelQuery)mqFactory.getModelQueryObject(model);
+
 			Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
 
 			String[] attributesToQuery = calculateAttributesToQuery(
-				mq).toArray(new String[0]);
+				model, mq.getDataComparator()).toArray(new String[0]);
 
 			Map<Long, Data> liferayDataMap;
 
@@ -245,6 +248,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	private long companyId = -1;
 	private Set<ExecutionMode> executionMode = null;
 	private List<Long> groupIds = null;
-	private IndexCheckerModelQuery mq = null;
+	private Model model = null;
+	private ModelQueryFactory mqFactory = null;
 
 }

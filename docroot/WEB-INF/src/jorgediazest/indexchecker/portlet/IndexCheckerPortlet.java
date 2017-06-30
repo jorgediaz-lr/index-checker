@@ -82,7 +82,6 @@ import javax.portlet.ResourceURL;
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
-import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
 import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
@@ -94,7 +93,6 @@ import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.modelquery.ModelQuery;
 import jorgediazest.util.modelquery.ModelQueryFactory;
 import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 import jorgediazest.util.output.OutputUtils;
@@ -143,14 +141,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public static List<Future<Comparison>> executeCallableCheckGroupAndModel(
-		ExecutorService executor, List<ModelQuery> mqList, long companyId,
-		List<Long> groupIds, Set<ExecutionMode> executionMode) {
+		ModelQueryFactory mqFactory, ExecutorService executor,
+		List<Model> modelList, long companyId, List<Long> groupIds,
+		Set<ExecutionMode> executionMode) {
 
 		List<Future<Comparison>> futureResultList =
 			new ArrayList<Future<Comparison>>();
 
-		for (ModelQuery mq : mqList) {
-			String className = mq.getModel().getClassName();
+		for (Model model : modelList) {
+			String className = model.getClassName();
 
 			if (!hasIndexerEnabled(className)) {
 				continue;
@@ -162,8 +161,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			CallableCheckGroupAndModel c =
 				new CallableCheckGroupAndModel(
-					companyId, groupIds, (IndexCheckerModelQuery)mq,
-					executionMode);
+					companyId, groupIds, mqFactory, model, executionMode);
 
 			futureResultList.add(executor.submit(c));
 		}
@@ -177,19 +175,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		int threadsExecutor)
 	throws ExecutionException, InterruptedException, SystemException {
 
-		DataComparatorFactory dataComparatorFactory =
-			new DataComparatorFactory() {
-
-			@Override
-			public DataComparator getDataComparator(ModelQuery query) {
-				return ConfigurationUtil.getDataComparator(query.getModel());
-			}
-
-		};
-
-		mqFactory.setDataComparatorFactory(dataComparatorFactory);
-
-		List<ModelQuery> mqList = getModelQueryList(mqFactory, classNames);
+		List<Model> modelList = getModelList(
+			mqFactory.getModelFactory(), classNames);
 
 		long companyId = company.getCompanyId();
 
@@ -206,7 +193,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				List<Future<Comparison>> futureResultList =
 					executeCallableCheckGroupAndModel(
-						executor, mqList, companyId, groupIdsAux,
+						mqFactory, executor, modelList, companyId, groupIdsAux,
 						executionMode);
 
 				futureResultDataMap.put(groupId, futureResultList);
@@ -215,7 +202,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		else {
 			List<Future<Comparison>> futureResultList =
 				executeCallableCheckGroupAndModel(
-					executor, mqList, companyId, groupIds, executionMode);
+					mqFactory, executor, modelList, companyId, groupIds,
+					executionMode);
 
 			futureResultDataMap.put(0L, futureResultList);
 		}
@@ -286,20 +274,20 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return _log;
 	}
 
-	public static List<ModelQuery> getModelQueryList(
-		ModelQueryFactory mqFactory, List<String> classNames) {
+	public static List<Model> getModelList(
+		ModelFactory modelFactory, List<String> classNames) {
 
-		List<ModelQuery> mqList = new ArrayList<ModelQuery>();
+		List<Model> modelList = new ArrayList<Model>();
 
 		for (String className : classNames) {
-			ModelQuery mq = mqFactory.getModelQueryObject(className);
+			Model mq = modelFactory.getModelObject(className);
 
 			if (mq != null) {
-				mqList.add(mq);
+				modelList.add(mq);
 			}
 		}
 
-		return mqList;
+		return modelList;
 	}
 
 	public static boolean hasIndexerEnabled(String className) {
@@ -335,8 +323,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return false;
 	}
 
-	public static Map<Data, String> reindex(
-		ModelQueryFactory mqFactory, Comparison comparison) {
+	public static Map<Data, String> reindex(Comparison comparison) {
 
 		Set<Data> objectsToReindex = new HashSet<Data>();
 
@@ -350,15 +337,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
-		IndexCheckerModelQuery modelQuery =
-			(IndexCheckerModelQuery)mqFactory.getModelQueryObject(
-				comparison.getModel());
+		Model model = comparison.getModel();
 
-		if (modelQuery == null) {
+		if (model == null) {
 			return null;
 		}
-
-		Model model = modelQuery.getModel();
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
@@ -382,8 +365,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return IndexSearchUtil.reindex(dataCollection);
 	}
 
-	public static Map<Data, String> removeIndexOrphans(
-		ModelQueryFactory mqFactory, Comparison comparison) {
+	public static Map<Data, String> removeIndexOrphans(Comparison comparison) {
 
 		Set<Data> indexOnlyData = comparison.getData("only-right");
 
@@ -391,18 +373,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return null;
 		}
 
-		IndexCheckerModelQuery modelQuery =
-			(IndexCheckerModelQuery)mqFactory.getModelQueryObject(
-				comparison.getModel());
+		Model model = comparison.getModel();
 
-		if (modelQuery == null) {
+		if (model == null) {
 			return null;
 		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"Deleting " + indexOnlyData.size() + " objects of type " +
-					modelQuery.getModel().getClassName());
+					model.getClassName());
 		}
 
 		return IndexSearchUtil.deleteAndCheck(indexOnlyData);
@@ -410,7 +390,23 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	public ModelQueryFactory createModelQueryFactory() throws Exception {
 		ModelFactory modelFactory = new IndexCheckerModelFactory();
-		return new IndexCheckerModelQueryFactory(modelFactory);
+
+		ModelQueryFactory mqFactory = new IndexCheckerModelQueryFactory(
+			modelFactory);
+
+		DataComparatorFactory dataComparatorFactory =
+			new DataComparatorFactory() {
+
+			@Override
+			public DataComparator getDataComparator(Model model) {
+				return ConfigurationUtil.getDataComparator(model);
+			}
+
+		};
+
+		mqFactory.setDataComparatorFactory(dataComparatorFactory);
+
+		return mqFactory;
 	}
 
 	public void doView(
@@ -700,7 +696,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					List<Comparison> resultList = entry.getValue();
 
 					for (Comparison result : resultList) {
-						Map<Data, String> errors = reindex(mqf, result);
+						Map<Data, String> errors = reindex(result);
 /* TODO Mover todo esto al JSP */
 						if (((errors!= null) && (errors.size() > 0)) ||
 							(result.getError() != null)) {
@@ -815,8 +811,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					List<Comparison> resultList = entry.getValue();
 
 					for (Comparison result : resultList) {
-						Map<Data, String> errors = removeIndexOrphans(
-							mqf, result);
+						Map<Data, String> errors = removeIndexOrphans(result);
 						/* TODO Mover todo esto al JSP */
 						if (((errors != null) && (errors.size() > 0)) ||
 							(result.getError() != null)) {

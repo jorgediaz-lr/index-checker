@@ -84,12 +84,18 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			return;
 		}
 
-		long groupId = data.get("groupId", 0L);
+		long groupId = 0L;
 
-		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+		Object groupIdObj = data.get("groupId", 0L);
 
-		if ((group != null) && group.isLayout()) {
-			groupId = group.getParentGroupId();
+		if (groupIdObj instanceof Number) {
+			groupId = ((Number)groupIdObj).longValue();
+
+			Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+			if ((group != null) && group.isLayout()) {
+				groupId = group.getParentGroupId();
+			}
 		}
 
 		data.set("permissionsClassName", className);

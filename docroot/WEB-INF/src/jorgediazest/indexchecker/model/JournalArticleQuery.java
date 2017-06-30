@@ -33,9 +33,9 @@ import java.util.Map;
 import jorgediazest.indexchecker.index.IndexSearchUtil;
 
 import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 import jorgediazest.util.service.Service;
 
 /**
@@ -54,7 +54,7 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 		List<String> validAttributes = new ArrayList<String>();
 
 		ProjectionList projectionList = getModel().getPropertyProjection(
-			attributes, validAttributes);
+			attributes, validAttributes, null);
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
@@ -144,10 +144,10 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 	}
 
 	@Override
-	public void init(Model model, DataComparatorFactory dataComparatorFactory)
+	public void init(Model model, DataComparator dataComparator)
 		throws Exception {
 
-		super.init(model, dataComparatorFactory);
+		super.init(model, dataComparator);
 
 		try {
 			indexAllVersions =
