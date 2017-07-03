@@ -2,9 +2,11 @@ ignoreClassNames: [com.liferay.portal.repository.liferayrepository.model.Liferay
 modelNotIndexed: [com.liferay.portlet.asset.model.AssetEntry, com.liferay.portlet.trash.model.TrashEntry]
 modelInfo: [{
     model: default,
-    modelQueryClass: !!jorgediazest.indexchecker.model.IndexCheckerModelQuery {},
+    queryHelperClass: !!jorgediazest.indexchecker.model.IndexCheckerQueryHelper {},
+    permissionsHelperClass: !!jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper {},
+    indexSearchHelperClass: !!jorgediazest.indexchecker.index.IndexSearchHelper {},
     filter: "",
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version],
     exactAttributesToCheck: [createDate,modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedAttributesToCheck: [
         "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[roleId,actionIds,scope]: ",
@@ -27,11 +29,11 @@ modelInfo: [{
 },
 {
     model: workflowedModel,
-    filter: "status=0+status=8",
+    filter: "status=0 or status=8",
 },
 {
     model: resourcedModel,
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,resourcePrimKey],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,resourcePrimKey],
     relatedAttributesToCheck: [
         "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[roleId,actionIds,scope]: ",
         "com.liferay.portlet.asset.model.AssetEntry:resourcePrimKey=classPK:AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible",
@@ -50,20 +52,29 @@ modelInfo: [{
     }
 },
 {
+    model: com.liferay.portlet.asset.model.AssetCategory,
+    relatedAttributesToCheck: ["com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[roleId,actionIds,scope]: "]
+},
+{
+    model: com.liferay.portlet.asset.model.AssetTag,
+    relatedAttributesToCheck: ["com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[roleId,actionIds,scope]: "]
+},
+{
     model: com.liferay.portlet.calendar.model.CalendarBooking,
-    filter: "status=0+status=9",
+    filter: "status=0 or status=9",
 },
 {
     model: com.liferay.portal.model.Contact,
-    modelQueryClass: !!jorgediazest.indexchecker.model.ContactQuery {},
+    filter: "classPK in (select userId from User_ where defaultUser=[$FALSE$] and status=0)"
 },
 {
     model: com.liferay.portlet.documentlibrary.model.DLFileEntry,
-    modelQueryClass: !!jorgediazest.indexchecker.model.DLFileEntryQuery {},
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,repositoryId,version],
+    filter: "fileEntryId in (select fileEntryId from DLFileVersion)",
+    permissionsHelperClass: !!jorgediazest.indexchecker.model.DLFileEntryPermissionsHelper {},
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,repositoryId],
     exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedAttributesToCheck: [
-        "com.liferay.portlet.documentlibrary.model.DLFileVersion:fileEntryId,version-:status",
+        "com.liferay.portlet.documentlibrary.model.DLFileVersion:fileEntryId,version:status",
         "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[roleId,actionIds,scope]: ",
         "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible",
         "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=AssetCategory.categoryId:AssetCategory.title",
@@ -71,8 +82,9 @@ modelInfo: [{
 },
 {
     model: com.liferay.portlet.dynamicdatalists.model.DDLRecord,
+    filter: "recordId in (select recordId from DDLRecordVersion)",
     relatedAttributesToCheck: [
-        "com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion:recordId,version-:version,status",
+        "com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion:recordId,version:version,status",
         "com.liferay.portal.model.ResourcePermission:permissionsClassPK=primKey:[roleId,actionIds,scope]: ",
         "com.liferay.portlet.asset.model.AssetEntry:pk=classPK:AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible",
         "com.liferay.portlet.asset.model.AssetCategory:AssetEntries_AssetCategories.categoryId=AssetCategory.categoryId:AssetCategory.title",
@@ -80,19 +92,24 @@ modelInfo: [{
 },
 {
     model: com.liferay.portlet.journal.model.JournalArticle,
-    modelQueryClass: !!jorgediazest.indexchecker.model.JournalArticleQuery {},
+    queryHelperClass: !!jorgediazest.indexchecker.model.JournalArticleQueryHelper {},
+    indexSearchHelperClass: !!jorgediazest.indexchecker.index.JournalArticleIndexSearchHelper {},
     filter: "classNameId=0",
     indexPrimaryKeyAttribute: $$JOURNAL_ARTICLE_INDEX_PRIMARY_KEY_ATTRIBUTE$$,
 },
 {
     model: com.liferay.portlet.messageboards.model.MBMessage,
-    modelQueryClass: !!jorgediazest.indexchecker.model.MBMessageQuery {},
-    filter: "status=0+status=8,categoryId<>-1+parentMessageId<>0",
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,categoryId],
+    permissionsHelperClass: !!jorgediazest.indexchecker.model.MBMessagePermissionsHelper {},
+    filter: "(status=0 or status=8) and (categoryId<>-1 or parentMessageId<>0)",
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,categoryId],
+},
+{
+    model: com.liferay.portal.model.ResourcePermission,
+    filter: "name in (select value from ClassName_)"
 },
 {
     model: com.liferay.portal.model.User,
-    filter: "defaultUser=false",
+    filter: "defaultUser=[$FALSE$]",
     exactAttributesToCheck: [modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
 },
 {
@@ -101,6 +118,6 @@ modelInfo: [{
 },
 {
     model: com.liferay.portlet.wiki.model.WikiPage,
-    filter: "status=0+status=8,head=true,redirectTitle=",
+    filter: "(status=0 or status=8) and head=[$TRUE$] and redirectTitle=''",
     exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 }]

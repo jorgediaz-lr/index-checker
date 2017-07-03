@@ -20,6 +20,7 @@ import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
+import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.model.ModelWrapper;
 
 /**
@@ -35,9 +36,13 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			return null;
 		}
 
-		String stringFilter = ConfigurationUtil.getStringFilter(model);
+		if (model instanceof ModelWrapper) {
+			return model;
+		}
 
-		Criterion filter = model.generateCriterionFilter(stringFilter);
+		String sqlFilter = ConfigurationUtil.getStringFilter(model);
+
+		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
 
 		if (filter == null) {
 			return model;
@@ -46,6 +51,8 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		ModelWrapper modelWrapper = new ModelWrapper(model);
 
 		modelWrapper.setFilter(filter);
+
+		cacheModelObject.put(className, modelWrapper);
 
 		return modelWrapper;
 	}
