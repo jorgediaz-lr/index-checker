@@ -30,10 +30,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
+import jorgediazest.indexchecker.index.IndexSearchHelper;
+import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
+import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
 
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.modelquery.ModelQuery;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -45,9 +47,8 @@ public class ConfigurationUtil {
 	public static DataComparator getDataComparator(Model model) {
 		String primaryKeyAttribute = getIndexPrimaryKeyAttribute(model);
 
-		@SuppressWarnings("unchecked")
-		Collection<String> exactAttributesList =
-			(Collection<String>) getModelInfo(model, "exactAttributesToCheck");
+		Collection<String> exactAttributesList = getExactAttributesToCheck(
+			model);
 
 		String[] exactAttributes = exactAttributesList.toArray(
 			new String[exactAttributesList.size()]);
@@ -61,6 +62,12 @@ public class ConfigurationUtil {
 
 	public static int getDefaultNumberThreads() {
 		return PortletPropsValues.NUMBER_THREADS;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Collection<String> getExactAttributesToCheck(Model model) {
+		return (Collection<String>)getModelInfo(
+			model, "exactAttributesToCheck");
 	}
 
 	public static String getIndexAttributeName(Model model, String attribute) {
@@ -84,6 +91,11 @@ public class ConfigurationUtil {
 		}
 
 		return indexAttribute;
+	}
+
+	public static IndexSearchHelper getIndexSearchHelper(Model model) {
+
+		return (IndexSearchHelper)getModelInfo(model, "indexSearchHelperClass");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -157,28 +169,17 @@ public class ConfigurationUtil {
 		return getModelInfo().get("default").get(entry);
 	}
 
-	@SuppressWarnings("unchecked")
-	public static Class<? extends ModelQuery> getModelQueryClass(
-			String className) {
+	public static IndexCheckerPermissionsHelper getPermissionsHelper(
+			Model model) {
 
-		Object object = null;
-
-		Map<String, Object> modelMap = getModelInfo().get(className);
-
-		if (modelMap != null) {
-			object = modelMap.get("modelQueryClass");
-		}
-
-		if (object != null) {
-			return (Class<? extends ModelQuery>)object.getClass();
-		}
-
-		modelMap = getModelInfo().get("default");
-
-		object = modelMap.get("modelQueryClass");
-
-		return (Class<? extends ModelQuery>)object.getClass();
+		return (IndexCheckerPermissionsHelper)getModelInfo(
+			model, "permissionsHelperClass");
 	}
+
+	public static IndexCheckerQueryHelper getQueryHelper(Model model) {
+
+	return (IndexCheckerQueryHelper)getModelInfo(model, "queryHelperClass");
+}
 
 	public static Collection<String> getRelatedAttributesToCheck(Model model) {
 		@SuppressWarnings("unchecked")

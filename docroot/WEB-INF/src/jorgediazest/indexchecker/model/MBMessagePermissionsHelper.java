@@ -14,6 +14,7 @@
 
 package jorgediazest.indexchecker.model;
 
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.messageboards.model.MBCategoryConstants;
 
@@ -22,46 +23,27 @@ import jorgediazest.util.data.Data;
 /**
  * @author Jorge Díaz
  */
-public class MBMessageQuery extends IndexCheckerModelQuery {
+public class MBMessagePermissionsHelper extends IndexCheckerPermissionsHelper {
 
 	@Override
-	protected String getPermissionsClassName(Data data) {
+	protected boolean isRelatedEntry(Data data) {
 
 		long categoryId = data.get("categoryId", 0L);
 
 		if (categoryId != MBCategoryConstants.DISCUSSION_CATEGORY_ID) {
-			return super.getPermissionsClassName(data);
+			return false;
 		}
 
 		long classNameId = data.get("classNameId", 0L);
 
-		String permissionsClassName = null;
-
-		if (classNameId != 0) {
-			permissionsClassName = PortalUtil.getClassName(classNameId);
+		if (classNameId == 0) {
+			return false;
 		}
 
-		for (String validPermissionsClassName : validPermissionClassNames) {
-			if (validPermissionsClassName.equals(permissionsClassName)) {
-				return permissionsClassName;
-			}
-		}
+		String permissionsClassName = PortalUtil.getClassName(classNameId);
 
-		return super.getPermissionsClassName(data);
-	}
-
-	@Override
-	protected long getPermissionsClassPK(Data data) {
-
-		String permissionsClassName = this.getPermissionsClassName(data);
-
-		if ("com.liferay.portlet.messageboards.model.MBMessage".equals(
-				permissionsClassName)) {
-
-			return super.getPermissionsClassPK(data);
-		}
-
-		return data.get("classPK", -1L);
+		return ArrayUtil.contains(
+			validPermissionClassNames, permissionsClassName);
 	}
 
 	protected static String[] validPermissionClassNames = new String[] {

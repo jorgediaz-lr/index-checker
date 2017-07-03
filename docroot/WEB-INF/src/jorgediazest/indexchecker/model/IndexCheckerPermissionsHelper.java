@@ -16,24 +16,10 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.BooleanClauseOccur;
-import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
-import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.search.ParseException;
-import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.TermRangeQuery;
-import com.liferay.portal.kernel.search.TermRangeQueryFactoryUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Group;
@@ -48,23 +34,18 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
+import com.liferay.portal.util.PortalUtil;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import jorgediazest.indexchecker.index.IndexSearchUtil;
-import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
-import jorgediazest.util.modelquery.ModelQueryImpl;
-public class IndexCheckerModelQuery extends ModelQueryImpl {
+public class IndexCheckerPermissionsHelper {
 
 	public void addPermissionsClassNameGroupIdFields(Data data)
 		throws SystemException {
@@ -120,161 +101,6 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		addRolesFieldsToData(className, data, permissionsClassName);
 	}
 
-	public void fillDataObject(Data data, String[] attributes, Document doc) {
-		data.set(Field.UID, doc.getUID());
-
-		Locale[] locales = LanguageUtil.getAvailableLocales();
-		Locale siteLocale = LocaleUtil.getSiteDefault();
-
-		for (String attribute : attributes) {
-			String attrDoc = ConfigurationUtil.getIndexAttributeName(
-				data.getModel(), attribute);
-
-			List<Map<Locale, String>> listValueMap = null;
-
-			Class<?> typeClass = data.getAttributeTypeClass(attribute);
-
-			if (typeClass.equals(String.class) ||
-				typeClass.equals(Object.class)) {
-
-				listValueMap = IndexSearchUtil.getLocalizedMap(
-					locales, doc, attrDoc);
-			}
-
-			if ((listValueMap != null) && !listValueMap.isEmpty()) {
-				String[] xml = new String[listValueMap.size()];
-
-				int pos = 0;
-
-				for (Map<Locale, String> valueMap : listValueMap) {
-					xml[pos++] = LocalizationUtil.updateLocalization(
-						valueMap, "", "data",
-						LocaleUtil.toLanguageId(siteLocale));
-				}
-
-				data.set(attribute, xml);
-			}
-			else if (doc.hasField(attrDoc)) {
-				data.set(attribute, doc.getField(attrDoc).getValues());
-			}
-		}
-	}
-
-	public Set<Data> getIndexData(
-		Set<Model> relatedModels, String[] attributes,
-		SearchContext searchContext, BooleanQuery contextQuery)
-	throws ParseException, SearchException {
-
-		String[] sortAttributes = {"createDate", "modifiedDate"};
-
-		Sort[] sorts = getIndexSorting(sortAttributes);
-
-		return getIndexData(
-			relatedModels, attributes, sorts, searchContext, contextQuery);
-	}
-
-	public Set<Data> getIndexData(
-			Set<Model> relatedModels, String[] attributes, Sort[] sorts,
-			SearchContext searchContext, BooleanQuery contextQuery)
-		throws ParseException, SearchException {
-
-		int size = Math.min((int)getModel().count() * 2, 10000);
-
-		Set<Data> indexData = new HashSet<Data>();
-
-		TermRangeQuery termRangeQuery = null;
-
-		do {
-			Document[] docs = IndexSearchUtil.executeSearch(
-				searchContext, contextQuery, sorts, termRangeQuery, size);
-
-			if ((docs == null) || (docs.length == 0)) {
-				break;
-			}
-
-			for (Document doc : docs) {
-				String entryClassName = doc.get(Field.ENTRY_CLASS_NAME);
-
-				if ((entryClassName == null) ||
-					!entryClassName.equals(getModel().getClassName())) {
-
-					_log.error("Wrong entryClassName: " + entryClassName);
-
-					continue;
-				}
-
-				Data data = new Data(getModel(), this.dataComparator);
-
-				data.addModelTableInfo(relatedModels);
-
-				fillDataObject(data, attributes, doc);
-
-				indexData.add(data);
-			}
-
-			termRangeQuery = getTermRangeQuery(
-				docs[docs.length - 1], termRangeQuery, sorts, searchContext);
-		}
-		while (termRangeQuery != null);
-
-		return indexData;
-	}
-
-	public BooleanQuery getIndexQuery(
-			List<Long> groupIds, SearchContext searchContext)
-		throws ParseException {
-
-		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
-		query.addRequiredTerm(
-			Field.ENTRY_CLASS_NAME, getModel().getClassName());
-
-		if (getModel().hasAttribute("groupId") && (groupIds != null)) {
-			BooleanQuery groupQuery = BooleanQueryFactoryUtil.create(
-				searchContext);
-
-			for (Long groupId : groupIds) {
-				groupQuery.addTerm(Field.SCOPE_GROUP_ID, groupId);
-			}
-
-			query.add(groupQuery, BooleanClauseOccur.MUST);
-		}
-
-		return query;
-	}
-
-	public SearchContext getIndexSearchContext(long companyId) {
-		SearchContext searchContext = new SearchContext();
-		searchContext.setCompanyId(companyId);
-		searchContext.setEntryClassNames(
-			new String[] {getModel().getClassName()});
-
-		return searchContext;
-	}
-
-	public Sort[] getIndexSorting(String[] attributes) {
-		List<String> sortAttributesList = new ArrayList<String>();
-
-		Model model = getModel();
-
-		for (String attribute : attributes) {
-			if (model.hasAttribute(attribute)) {
-				String sortableFieldName =
-					ConfigurationUtil.getIndexAttributeName(model, attribute);
-
-				sortAttributesList.add(sortableFieldName);
-			}
-		}
-
-		Sort[] sorts = new Sort[sortAttributesList.size()];
-
-		for (int i = 0; i<sortAttributesList.size(); i++) {
-			sorts[i] = new Sort(
-				sortAttributesList.get(i), Sort.LONG_TYPE, false);
-		}
-
-		return sorts;
-	}
-
 	public boolean hasActionId(long actionIds, String name, String actionId)
 		throws PortalException {
 
@@ -290,40 +116,6 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		else {
 			return false;
 		}
-	}
-
-	protected static TermRangeQuery getTermRangeQuery(
-		Document lastDocument, TermRangeQuery previousTermRangeQuery,
-		Sort[] sorts, SearchContext searchContext) {
-
-		for (Sort sort : sorts) {
-			String fieldName = sort.getFieldName();
-			String lowerTerm = lastDocument.get(fieldName);
-
-			if (Validator.isNull(lowerTerm)) {
-				continue;
-			}
-
-			if (_log.isDebugEnabled()) {
-				_log.debug("fieldName=" + fieldName);
-				_log.debug("lowerTerm=" + lowerTerm);
-			}
-
-			boolean includesLower = true;
-
-			if ((previousTermRangeQuery != null) &&
-				fieldName.equals(previousTermRangeQuery.getField())) {
-
-				includesLower = !lowerTerm.equals(
-					previousTermRangeQuery.getLowerTerm());
-			}
-
-			return TermRangeQueryFactoryUtil.create(
-					searchContext, fieldName, lowerTerm, null, includesLower,
-					true);
-		}
-
-		return null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -386,15 +178,15 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 			}
 		}
 
-		data.set("roleId", roleIds);
-		data.set("groupRoleId", groupRoleIds);
-
-		ModelFactory modelFactory = model.getModelFactory();
+		ModelFactory modelFactory = data.getModel().getModelFactory();
 
 		Model permissionsModel = modelFactory.getModelObject(
 			permissionsClassName);
 
 		data.addModelTableInfo(permissionsModel);
+
+		data.set("roleId", roleIds);
+		data.set("groupRoleId", groupRoleIds);
 	}
 
 	protected long getActionIdBitwiseValue(String name, String actionId)
@@ -427,10 +219,22 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 	}
 
 	protected String getPermissionsClassName(Data data) {
+
+		if (isRelatedEntry(data)) {
+			long classNameId = data.get("classNameId", 0L);
+
+			return PortalUtil.getClassName(classNameId);
+		}
+
 		return data.getEntryClassName();
 	}
 
 	protected long getPermissionsClassPK(Data data) {
+
+		if (isRelatedEntry(data)) {
+			return data.get("classPK", -1L);
+		}
+
 		if (data.getModel().isResourcedModel()) {
 			return data.getResourcePrimKey();
 		}
@@ -438,10 +242,14 @@ public class IndexCheckerModelQuery extends ModelQueryImpl {
 		return data.getPrimaryKey();
 	}
 
+	protected boolean isRelatedEntry(Data data) {
+		return false;
+	}
+
 	protected Map<String, Long> cacheActionIdBitwiseValue =
 		new HashMap<String, Long>();
 
 	private static Log _log = LogFactoryUtil.getLog(
-		IndexCheckerModelQuery.class);
+		IndexCheckerPermissionsHelper.class);
 
 }
