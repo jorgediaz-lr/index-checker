@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.table.TableInfo;
 
 /**
@@ -285,6 +286,8 @@ public class Data implements Comparable<Data> {
 		}
 
 		if (transformObject != null) {
+			attribute = ModelUtil.getCachedAttributeName(attribute);
+
 			map.put(attribute, transformObject);
 		}
 	}
@@ -303,6 +306,8 @@ public class Data implements Comparable<Data> {
 		Object transformObject = DataUtil.transformArray(type, values);
 
 		if (transformObject != null) {
+			attribute = ModelUtil.getCachedAttributeName(attribute);
+
 			map.put(attribute, transformObject);
 		}
 	}
@@ -322,6 +327,8 @@ public class Data implements Comparable<Data> {
 			type, values.toArray());
 
 		if (transformObject != null) {
+			attribute = ModelUtil.getCachedAttributeName(attribute);
+
 			map.put(attribute, transformObject);
 		}
 	}
