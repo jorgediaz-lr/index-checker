@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.data.Data;
@@ -39,19 +38,30 @@ import jorgediazest.util.model.ModelUtil;
 public abstract class ModelQueryImpl implements ModelQuery {
 
 	public void addRelatedModelData(
-			Map<Long, Data> dataMap, ModelQuery relatedModelQuery,
-			String[] attributes, String[] mappingsSource, String[] mappingsDest,
-			boolean removeUnmatched, boolean rawData, Criterion filter)
+			Map<Long, Data> dataMap, Model relatedModel, String[] attributes,
+			String[] mappingsSource, String[] mappingsDest, boolean rawData,
+			Criterion filter)
 		throws Exception {
 
-		Model model = getModel();
-		Model relatedModel = relatedModelQuery.getModel();
+		ModelQuery relatedModelQuery = mqFactory.getModelQueryObject(
+			relatedModel);
 
-		String mappingAttr = mappingsDest[0];
+		if (relatedModelQuery == null) {
+			return;
+		}
 
 		if (model.getClassName().equals(relatedModel.getClassName())) {
 			return;
 		}
+
+		if ("classPK".equals(mappingsDest[0])) {
+			Criterion classNameIdFilter = relatedModel.getProperty(
+				"classNameId").eq(model.getClassNameId());
+			filter = ModelUtil.generateConjunctionQueryFilter(
+				classNameIdFilter, filter);
+		}
+
+		String mappingAttr = mappingsDest[0];
 
 		Map<Long, List<Data>> relatedMap;
 
@@ -75,46 +85,6 @@ public abstract class ModelQueryImpl implements ModelQuery {
 		else {
 			ModelQueryUtil.addRelatedModelData(dataMap, matchedMap, attributes);
 		}
-
-		if (removeUnmatched) {
-			for (Entry<Long, List<Data>> entry : matchedMap.entrySet()) {
-				if (entry.getValue().isEmpty()) {
-					dataMap.remove(entry.getKey());
-				}
-			}
-		}
-	}
-
-	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String relatedClassName,
-			String[] attrRelated, String[] mappings, boolean removeUnmatched,
-			boolean rawData, Criterion filter)
-		throws Exception {
-
-		ModelQuery relatedModelQuery = mqFactory.getModelQueryObject(
-			relatedClassName);
-
-		if (relatedModelQuery == null) {
-			return;
-		}
-
-		String[] mappingsSource = new String[mappings.length];
-		String[] mappingsDest = new String[mappings.length];
-
-		ModelQueryUtil.splitSourceDest(mappings, mappingsSource, mappingsDest);
-
-		Model relatedModel = relatedModelQuery.getModel();
-
-		if ("classPK".equals(mappingsDest[0])) {
-			Criterion classNameIdFilter = relatedModel.getProperty(
-				"classNameId").eq(model.getClassNameId());
-			filter = ModelUtil.generateConjunctionQueryFilter(
-				classNameIdFilter, filter);
-		}
-
-		addRelatedModelData(
-			dataMap, relatedModelQuery, attrRelated, mappingsSource,
-			mappingsDest, removeUnmatched, rawData, filter);
 	}
 
 	public void addRelatedModelData(
@@ -135,19 +105,14 @@ public abstract class ModelQueryImpl implements ModelQuery {
 				continue;
 			}
 
+			Criterion relatedFilter = filter;
+
 			if (relatedDataArr.length > 3) {
-				filter = relatedModel.generateCriterionFilter(
+				relatedFilter = ModelUtil.generateSQLCriterion(
 					relatedDataArr[3]);
 			}
 
-			boolean removeUnmatched = false;
-			String mappings = relatedDataArr[1];
-
-			if (mappings.endsWith("-")) {
-				removeUnmatched = true;
-
-				mappings = mappings.substring(0, mappings.length()-1);
-			}
+			String mappingsString = relatedDataArr[1];
 
 			boolean rawData = false;
 			String attrRelated = relatedDataArr[2];
@@ -158,9 +123,17 @@ public abstract class ModelQueryImpl implements ModelQuery {
 				attrRelated = attrRelated.substring(1, attrRelated.length()-1);
 			}
 
+			String[] mappings = mappingsString.split(",");
+
+			String[] mappingsSource = new String[mappings.length];
+			String[] mappingsDest = new String[mappings.length];
+
+			ModelQueryUtil.splitSourceDest(
+				mappings, mappingsSource, mappingsDest);
+
 			addRelatedModelData(
-				dataMap, className, attrRelated.split(","), mappings.split(","),
-				removeUnmatched, rawData, filter);
+				dataMap, relatedModel, attrRelated.split(","), mappingsSource,
+				mappingsDest, rawData, relatedFilter);
 		}
 	}
 
@@ -175,7 +148,7 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	}
 
 	public final Map<Long, Data> getData() throws Exception {
-		return getData(null, "pk", null);
+		return DataUtil.getData(model, dataComparator, null, null);
 	}
 
 	public final Map<Long, Data> getData(Criterion filter) throws Exception {
@@ -183,13 +156,13 @@ public abstract class ModelQueryImpl implements ModelQuery {
 	}
 
 	public final Map<Long, Data> getData(String[] attributes) throws Exception {
-		return getData(attributes, "pk", null);
+		return DataUtil.getData(model, dataComparator, attributes, null);
 	}
 
 	public final Map<Long, Data> getData(String[] attributes, Criterion filter)
 		throws Exception {
 
-		return getData(attributes, "pk", filter);
+		return DataUtil.getData(model, dataComparator, attributes, filter);
 	}
 
 	public final Map<Long, Data> getData(

@@ -29,21 +29,14 @@ import jorgediazest.util.model.Model;
 public interface ModelQuery extends Comparable<ModelQuery> {
 
 	public void addRelatedModelData(
-			Map<Long, Data> dataMap, ModelQuery relatedModelQuery,
-			String[] attributes, String[] mappingsSource, String[] mappingsDest,
-			boolean removeUnmatched, boolean rawData, Criterion filter)
-		throws Exception;
+		Map<Long, Data> dataMap, Model relatedModel, String[] attributes,
+		String[] mappingsSource, String[] mappingsDest, boolean rawData,
+		Criterion filter)
+	throws Exception;
 
 	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String relatedClassName,
-			String[] attrRelated, String[] mappings, boolean removeNotMatched,
-			boolean rawData, Criterion filter)
-		throws Exception;
-
-	public void addRelatedModelData(
-			Map<Long, Data> dataMap, String[] attributesRelated,
-			Criterion filter)
-		throws Exception;
+		Map<Long, Data> dataMap, String[] attributesRelated, Criterion filter)
+	throws Exception;
 
 	public Map<Long, Data> getData() throws Exception;
 

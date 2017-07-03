@@ -359,6 +359,15 @@ public class DataUtil {
 	}
 
 	public static Map<Long, Data> getData(
+		Model model, DataComparator dataComparator, String[] attributes,
+		Criterion filter)
+	throws Exception {
+		return getData(
+			model, dataComparator, attributes, model.getPrimaryKeyAttribute(),
+			filter);
+	}
+
+	public static Map<Long, Data> getData(
 			Model model, DataComparator dataComparator, String[] attributes,
 			String mapKeyAttribute, Criterion filter)
 		throws Exception {
