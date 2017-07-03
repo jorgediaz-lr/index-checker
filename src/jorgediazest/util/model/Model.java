@@ -51,12 +51,15 @@ public interface Model extends Comparable<Model> {
 		Criterion filter, Projection projection, List<Order> order)
 	throws Exception;
 
+	@Deprecated
 	public Criterion generateCriterionFilter(String stringFilter);
 
 	public Criterion generateInCriteria(String property, List<Long> list);
 
+	@Deprecated
 	public Criterion generateSingleCriterion(String filter);
 
+	@Deprecated
 	public Criterion generateSingleCriterion(
 		String attrName, String attrValue, String op);
 

@@ -114,6 +114,7 @@ public class ReflectionUtil {
 		return result;
 	}
 
+	@Deprecated
 	public static Criterion generateSingleCriterion(
 		Model model, String attrName, String attrValue, String op) {
 
@@ -348,8 +349,13 @@ public class ReflectionUtil {
 		return object.toString();
 	}
 
+	@Deprecated
 	private static Constructor<?> contructorCriterionImpl;
+
+	@Deprecated
 	private static Constructor<?> contructorPropertyExpression;
+
+	@Deprecated
 	private static Constructor<?> contructorSimpleExpression;
 	private static Map<Integer, String> jdbcTypeNames = null;
 

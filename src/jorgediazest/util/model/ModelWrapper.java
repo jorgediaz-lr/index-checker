@@ -128,21 +128,25 @@ public class ModelWrapper implements Model, Cloneable {
 			getService(), filter, projection, orders);
 	}
 
+	@Deprecated
 	@Override
 	public Criterion generateCriterionFilter(String stringFilter) {
 		return model.generateCriterionFilter(stringFilter);
 	}
 
+	@Deprecated
 	@Override
 	public Criterion generateInCriteria(String property, List<Long> list) {
 		return model.generateInCriteria(property, list);
 	}
 
+	@Deprecated
 	@Override
 	public Criterion generateSingleCriterion(String filter) {
 		return model.generateSingleCriterion(filter);
 	}
 
+	@Deprecated
 	@Override
 	public Criterion generateSingleCriterion(
 		String attrName, String attrValue, String op) {

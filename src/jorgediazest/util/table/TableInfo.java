@@ -203,6 +203,15 @@ public class TableInfo {
 		return getName().hashCode();
 	}
 
+	@Override
+	public String toString() {
+		if (toString == null) {
+			toString = name + ": " + sqlCreate;
+		}
+
+		return toString;
+	}
+
 	protected String getCreateTableAttributes() {
 		String aux = attributesStr;
 
@@ -245,5 +254,6 @@ public class TableInfo {
 
 	private String[] primaryKeyMultiAttribute = null;
 	private String sqlCreate = null;
+	private String toString = null;
 
 }

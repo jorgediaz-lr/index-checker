@@ -29,10 +29,13 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
+import com.liferay.portal.util.PortalUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
 
@@ -83,6 +86,7 @@ public class ModelUtil {
 		return conjuntion;
 	}
 
+	@Deprecated
 	public static Criterion generateSingleCriterion(
 		Model model, String filter) {
 
@@ -123,6 +127,25 @@ public class ModelUtil {
 		return criterion;
 	}
 
+	public static Criterion generateSQLCriterion(String sql) {
+		if (Validator.isNull(sql)) {
+			return null;
+		}
+
+		sql = PortalUtil.transformSQL(sql);
+
+		return RestrictionsFactoryUtil.sqlRestriction(sql);
+	}
+
+	public static String getCachedAttributeName(String attribute) {
+		if (!cachedAttributeNames.containsKey(attribute)) {
+			cachedAttributeNames.put(attribute, attribute);
+		}
+
+		return cachedAttributeNames.get(attribute);
+	}
+
+	@Deprecated
 	public static ClassLoader getClassLoaderAggregate() {
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
@@ -141,6 +164,7 @@ public class ModelUtil {
 		return aggregateClassLoader;
 	}
 
+	@Deprecated
 	public static List<ClassLoader> getClassLoaders() {
 		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
 
@@ -191,6 +215,9 @@ public class ModelUtil {
 
 		return classNameStr;
 	}
+
+	protected static Map<String, String> cachedAttributeNames =
+		new ConcurrentHashMap<String, String>();
 
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
 

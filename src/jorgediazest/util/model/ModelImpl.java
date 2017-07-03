@@ -132,6 +132,7 @@ public class ModelImpl implements Model {
 			getService(), filter, projection, orders);
 	}
 
+	@Deprecated
 	public Criterion generateCriterionFilter(String stringFilter) {
 
 		if (Validator.isNull(stringFilter)) {
@@ -155,13 +156,20 @@ public class ModelImpl implements Model {
 			conjuntion.add(criterion);
 		}
 
-		if ((conjuntion == null) && _log.isWarnEnabled()) {
-			_log.warn("Invalid filter: " + stringFilter + " for " + this);
+		if (conjuntion != null) {
+			return conjuntion;
 		}
 
-		return conjuntion;
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				"Invalid filter: " + stringFilter + " for " + this +
+				", creating a sqlRestriction");
+		}
+
+		return ModelUtil.generateSQLCriterion(stringFilter);
 	}
 
+	@Deprecated
 	public Criterion generateDisjunctionCriterion(String[] filters) {
 
 		Criterion criterion = null;
@@ -188,8 +196,8 @@ public class ModelImpl implements Model {
 			criterion = disjunction;
 		}
 
-		if ((criterion == null) && _log.isWarnEnabled()) {
-			_log.warn(
+		if ((criterion == null) && _log.isInfoEnabled()) {
+			_log.info(
 				"Invalid filters: " + Arrays.toString(filters) + " for " +
 				this);
 		}
@@ -216,11 +224,13 @@ public class ModelImpl implements Model {
 		return disjunction;
 	}
 
+	@Deprecated
 	public Criterion generateSingleCriterion(String filter) {
 
 		return ModelUtil.generateSingleCriterion(this, filter);
 	}
 
+	@Deprecated
 	public Criterion generateSingleCriterion(
 		String attrName, String attrValue, String op) {
 
@@ -644,10 +654,10 @@ public class ModelImpl implements Model {
 		if (prefix.equals(this.getClassName()) ||
 			prefix.equals(this.getClassSimpleName())) {
 
-			return attribute.substring(pos + 1); /* TODO Cachear en un Map para evitar consumo de memoria */
+			attribute = attribute.substring(pos + 1);
 		}
 
-		return attribute;
+		return ModelUtil.getCachedAttributeName(attribute);
 	}
 
 	protected Projection getPropertyProjection(String attribute, String op) {
