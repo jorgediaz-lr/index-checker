@@ -79,7 +79,15 @@ public class ModelQueryFactory {
 			return modelQuery;
 		}
 
-		modelQuery = getModelQueryObjectNoCached(model);
+		synchronized(model) {
+			modelQuery = cacheModelObject.get(model);
+
+			if (modelQuery != null) {
+				return modelQuery;
+			}
+
+			modelQuery = getModelQueryObjectNoCached(model);
+		}
 
 		if (modelQuery == null) {
 			cacheNullModelObject.add(model.getClassName());
@@ -87,7 +95,8 @@ public class ModelQueryFactory {
 		}
 
 		cacheModelObject.put(model, modelQuery);
-		return modelQuery;
+
+		return cacheModelObject.get(model);
 	}
 
 	public ModelQuery getModelQueryObject(String className) {
