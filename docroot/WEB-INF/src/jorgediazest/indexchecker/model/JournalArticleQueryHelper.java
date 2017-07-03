@@ -19,41 +19,45 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jorgediazest.indexchecker.index.IndexSearchUtil;
+import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
+import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.service.Service;
 
 /**
  * @author Jorge Díaz
  */
-public class JournalArticleQuery extends IndexCheckerModelQuery {
+public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
+
+	public JournalArticleQueryHelper() throws Exception {
+		indexAllVersions = PrefsPropsUtil.getBoolean(
+			"journal.articles.index.all.versions");
+	}
 
 	public void addMissingJournalArticles(
-			String[] attributes, Criterion filter, Criterion filterStatus,
-			Map<Long, Data> dataMap)
+			Model model, String[] attributes, Criterion filter,
+			Criterion filterStatus, Map<Long, Data> dataMap)
 		throws Exception {
 
-		Service service = getModel().getService();
+		Service service = model.getService();
 		DynamicQuery query = service.newDynamicQuery();
 
 		List<String> validAttributes = new ArrayList<String>();
 
-		ProjectionList projectionList = getModel().getPropertyProjection(
+		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes, null);
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
@@ -77,8 +81,7 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 
 		articleVersionDynamicQuery.add(filterStatus);
 
-		query.add(
-			getModel().getProperty("version").eq(articleVersionDynamicQuery));
+		query.add(model.getProperty("version").eq(articleVersionDynamicQuery));
 
 		query.add(filterStatus);
 
@@ -88,6 +91,9 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 
 		String[] validAttributesArr = validAttributes.toArray(
 			new String[validAttributes.size()]);
+
+		DataComparator dataComparator = ConfigurationUtil.getDataComparator(
+			model);
 
 		for (Object[] result : results) {
 			Data data = DataUtil.createDataObject(
@@ -100,63 +106,40 @@ public class JournalArticleQuery extends IndexCheckerModelQuery {
 	}
 
 	@Override
-	public void fillDataObject(Data data, String[] attributes, Document doc) {
-		super.fillDataObject(data, attributes, doc);
-
-		if (indexAllVersions) {
-			long id = IndexSearchUtil.getIdFromUID(doc.get(Field.UID));
-			data.setPrimaryKey(id);
-		}
-	}
-
-	@Override
-	public Map<Long, Data> getData(
-			String[] attributes, String mapKeyAttribute, Criterion filter)
+	public Map<Long, Data> getLiferayData(
+			Model model, long companyId, List<Long> groupIds)
 		throws Exception {
 
 		if (indexAllVersions) {
-			return super.getData(attributes, mapKeyAttribute, filter);
+			return super.getLiferayData(model, companyId, groupIds);
 		}
+
+		Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
+
+		Collection<String> attributesToQuery =
+			ConfigurationUtil.getModelAttributesToQuery(model);
+
+		String[] attributesToQueryArr = attributesToQuery.toArray(
+			new String[0]);
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
-		Criterion filterStatusApproved = getModel().generateCriterionFilter(
-			"status=" + WorkflowConstants.STATUS_APPROVED + "+status=" +
+		Criterion filterStatusApproved = ModelUtil.generateSQLCriterion(
+			"status=" + WorkflowConstants.STATUS_APPROVED + " or status=" +
 				WorkflowConstants.STATUS_IN_TRASH);
 
 		addMissingJournalArticles(
-			attributes, filter, filterStatusApproved, dataMap);
+			model, attributesToQueryArr, filter, filterStatusApproved, dataMap);
 
-		Criterion filterStatusNotApproved = getModel().generateCriterionFilter(
-			"status<>" + WorkflowConstants.STATUS_APPROVED + ",status<>" +
+		Criterion filterStatusNotApproved = ModelUtil.generateSQLCriterion(
+			"status<>" + WorkflowConstants.STATUS_APPROVED + " or status<>" +
 				WorkflowConstants.STATUS_IN_TRASH);
 
 		addMissingJournalArticles(
-			attributes, filter, filterStatusNotApproved, dataMap);
+			model, attributesToQueryArr, filter, filterStatusNotApproved,
+			dataMap);
 
-		Map<Long, Data> dataMap2 = new HashMap<Long, Data>();
-
-		for (Data data : dataMap.values()) {
-			dataMap2.put((Long)data.get(mapKeyAttribute), data);
-		}
-
-		return dataMap2;
-	}
-
-	@Override
-	public void init(Model model, DataComparator dataComparator)
-		throws Exception {
-
-		super.init(model, dataComparator);
-
-		try {
-			indexAllVersions =
-				PrefsPropsUtil.getBoolean(
-					"journal.articles.index.all.versions");
-		}
-		catch (SystemException e) {
-			throw new RuntimeException(e);
-		}
+		return dataMap;
 	}
 
 	protected boolean indexAllVersions;

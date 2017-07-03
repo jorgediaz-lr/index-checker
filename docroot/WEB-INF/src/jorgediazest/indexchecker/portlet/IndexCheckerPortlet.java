@@ -80,9 +80,8 @@ import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.index.IndexSearchUtil;
+import jorgediazest.indexchecker.index.IndexSearchHelper;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
-import jorgediazest.indexchecker.model.IndexCheckerModelQueryFactory;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
@@ -343,16 +342,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return null;
 		}
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+		IndexSearchHelper indexSearchHelper =
+			ConfigurationUtil.getIndexSearchHelper(model);
 
-		for (Data data : objectsToReindex) {
-			if (model.isResourcedModel()) {
-				dataMap.put(data.getResourcePrimKey(), data);
-			}
-			else {
-				dataMap.put(data.getPrimaryKey(), data);
-			}
-		}
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
 		Collection<Data> dataCollection = dataMap.values();
 
@@ -362,7 +355,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					model.getClassName());
 		}
 
-		return IndexSearchUtil.reindex(dataCollection);
+		return indexSearchHelper.reindex(objectsToReindex);
 	}
 
 	public static Map<Data, String> removeIndexOrphans(Comparison comparison) {
@@ -379,20 +372,22 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return null;
 		}
 
+		IndexSearchHelper indexSearchHelper =
+			ConfigurationUtil.getIndexSearchHelper(model);
+
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"Deleting " + indexOnlyData.size() + " objects of type " +
 					model.getClassName());
 		}
 
-		return IndexSearchUtil.deleteAndCheck(indexOnlyData);
+		return indexSearchHelper.deleteAndCheck(indexOnlyData);
 	}
 
 	public ModelQueryFactory createModelQueryFactory() throws Exception {
 		ModelFactory modelFactory = new IndexCheckerModelFactory();
 
-		ModelQueryFactory mqFactory = new IndexCheckerModelQueryFactory(
-			modelFactory);
+		ModelQueryFactory mqFactory = new ModelQueryFactory(modelFactory);
 
 		DataComparatorFactory dataComparatorFactory =
 			new DataComparatorFactory() {

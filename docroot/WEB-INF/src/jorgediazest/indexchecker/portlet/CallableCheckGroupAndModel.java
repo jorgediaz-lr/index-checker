@@ -14,27 +14,22 @@
 
 package jorgediazest.indexchecker.portlet;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
-import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
-import com.liferay.portlet.asset.model.AssetRendererFactory;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import jorgediazest.indexchecker.ExecutionMode;
-import jorgediazest.indexchecker.model.IndexCheckerModelQuery;
+import jorgediazest.indexchecker.index.IndexSearchHelper;
+import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
+import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Comparison;
@@ -43,25 +38,12 @@ import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.modelquery.ModelQueryFactory;
 
 /**
  * @author Jorge Díaz
  */
 public class CallableCheckGroupAndModel implements Callable<Comparison> {
-
-	public static Set<String> calculateAttributesToQuery(
-		Model model, DataComparator dataComparator) {
-
-		Set<String> attributesToCheck = new LinkedHashSet<String>(
-			ConfigurationUtil.getModelAttributesToQuery(model));
-
-		attributesToCheck.addAll(
-			Arrays.asList(dataComparator.getExactAttributes()));
-
-		return attributesToCheck;
-	}
 
 	public CallableCheckGroupAndModel(
 		long companyId, List<Long> groupIds, ModelQueryFactory mqFactory,
@@ -74,51 +56,17 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		this.executionMode = executionMode;
 	}
 
-	public Collection<String> calculateRelatedAttributesToCheck(Model model) {
-
-		Collection<String> relatedAttributesToCheck =
-			ConfigurationUtil.getRelatedAttributesToCheck(model);
-
-		if (checkAssetEntryRelations(model)) {
-			return relatedAttributesToCheck;
-		}
-
-		Collection<String> relatedAttributesToCheckFiltered =
-			new LinkedHashSet<String>();
-
-		for (String relatedAttributeToCheck : relatedAttributesToCheck) {
-			if (!relatedAttributeToCheck.startsWith(
-					"com.liferay.portlet.asset.model.Asset")) {
-
-				relatedAttributesToCheckFiltered.add(relatedAttributeToCheck);
-			}
-		}
-
-		return relatedAttributesToCheckFiltered;
-	}
-
-	public Set<Model> calculateRelatedModels(
-		ModelFactory modelFactory, String[] relatedAttributesToCheck) {
-
-		Set<String> relatedClassNames = new LinkedHashSet<String>();
-
-		for (String relatedAttributeToCheck : relatedAttributesToCheck) {
-			relatedClassNames.add(relatedAttributeToCheck.split(":")[0]);
-		}
-
-		Set<Model> relatedModels = new LinkedHashSet<Model>();
-
-		for (String relatedClassName : relatedClassNames) {
-			Model relatedModel = modelFactory.getModelObject(relatedClassName);
-
-			relatedModels.add(relatedModel);
-		}
-
-		return relatedModels;
-	}
-
 	@Override
 	public Comparison call() throws Exception {
+
+		boolean showBothExact = executionMode.contains(
+			ExecutionMode.SHOW_BOTH_EXACT);
+		boolean showBothNotExact = executionMode.contains(
+			ExecutionMode.SHOW_BOTH_NOTEXACT);
+		boolean showOnlyLiferay = executionMode.contains(
+			ExecutionMode.SHOW_LIFERAY);
+		boolean showOnlyIndex = executionMode.contains(
+			ExecutionMode.SHOW_INDEX);
 
 		boolean oldIgnoreCase = DataUtil.getIgnoreCase();
 
@@ -155,62 +103,55 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				return null;
 			}
 
-			IndexCheckerModelQuery mq =
-				(IndexCheckerModelQuery)mqFactory.getModelQueryObject(model);
+			IndexCheckerQueryHelper queryHelper =
+				ConfigurationUtil.getQueryHelper(model);
 
-			Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
+			Map<Long, Data> liferayDataMap = queryHelper.getLiferayData(
+				model, companyId, groupIds);
 
-			String[] attributesToQuery = calculateAttributesToQuery(
-				model, mq.getDataComparator()).toArray(new String[0]);
-
-			Map<Long, Data> liferayDataMap;
-
-			liferayDataMap = mq.getData(attributesToQuery, filter);
+			IndexCheckerPermissionsHelper permissionsHelper =
+				ConfigurationUtil.getPermissionsHelper(model);
 
 			for (Data data : liferayDataMap.values()) {
-				mq.addPermissionsClassNameGroupIdFields(data);
+				permissionsHelper.addPermissionsClassNameGroupIdFields(data);
 			}
 
-			String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
-				model).toArray(new String[0]);
-
-			mq.addRelatedModelData(liferayDataMap, relatedAttrToCheck, filter);
+			queryHelper.addRelatedModelData(
+				liferayDataMap, mqFactory, model, companyId, groupIds);
 
 			for (Data data : liferayDataMap.values()) {
-				mq.addRolesFields(data);
+				permissionsHelper.addRolesFields(data);
 			}
 
 			Set<Data> liferayData = new HashSet<Data>(liferayDataMap.values());
 
 			Set<Data> indexData;
 
-			if (executionMode.contains(ExecutionMode.SHOW_INDEX) ||
-				!liferayData.isEmpty()) {
+			IndexSearchHelper indexSearchHelper =
+				ConfigurationUtil.getIndexSearchHelper(model);
 
-				SearchContext searchContext = mq.getIndexSearchContext(
-					companyId);
-				BooleanQuery contextQuery = mq.getIndexQuery(
-					groupIds, searchContext);
+			if ((!showOnlyIndex && liferayData.isEmpty())||
+				(indexSearchHelper == null)) {
 
-				Set<Model> relatedModels = calculateRelatedModels(
-					model.getModelFactory(), relatedAttrToCheck);
-
-				indexData = mq.getIndexData(
-					relatedModels, attributesToQuery, searchContext,
-					contextQuery);
-			}
-			else {
 				indexData = new HashSet<Data>();
 			}
+			else {
+				Set<Model> relatedModels = queryHelper.calculateRelatedModels(
+					model);
 
-			boolean showBothExact = executionMode.contains(
-				ExecutionMode.SHOW_BOTH_EXACT);
-			boolean showBothNotExact = executionMode.contains(
-				ExecutionMode.SHOW_BOTH_NOTEXACT);
-			boolean showOnlyLiferay = executionMode.contains(
-				ExecutionMode.SHOW_LIFERAY);
-			boolean showOnlyIndex = executionMode.contains(
-				ExecutionMode.SHOW_INDEX);
+				DataComparator dataComparator =
+					ConfigurationUtil.getDataComparator(model);
+
+				Set<String> indexAttributesToQuery = new HashSet<String>(
+					ConfigurationUtil.getModelAttributesToQuery(model));
+
+				indexAttributesToQuery.addAll(
+					ConfigurationUtil.getExactAttributesToCheck(model));
+
+				indexData = indexSearchHelper.getIndexData(
+					model, relatedModels, indexAttributesToQuery,
+					dataComparator, companyId, groupIds);
+			}
 
 			return ComparisonUtil.getComparison(
 				model, liferayData, indexData, showBothExact, showBothNotExact,
@@ -224,22 +165,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 			ShardUtil.popCompanyService();
 		}
-	}
-
-	protected boolean checkAssetEntryRelations(Model model) {
-		boolean assetEntryRelations = true;
-
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				model.getClassName());
-
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSelectable()) {
-
-			assetEntryRelations = false;
-		}
-
-		return assetEntryRelations;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

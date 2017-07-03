@@ -46,7 +46,7 @@ import jorgediazest.util.data.DataUtil;
 /**
  * @author Jorge Díaz
  */
-public class IndexSearchUtil {
+public class IndexSearchHelper {
 
 	public static void delete(Data value) throws SearchException {
 		Object uid = value.get(Field.UID);
