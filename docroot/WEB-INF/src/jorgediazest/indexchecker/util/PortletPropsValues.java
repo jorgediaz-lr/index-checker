@@ -22,8 +22,12 @@ import com.liferay.util.portlet.PortletProps;
  */
 public class PortletPropsValues {
 
+	public static final int INDEX_SEARCH_LIMIT =
+		GetterUtil.getInteger(
+			PortletProps.get(PortletPropsKeys.INDEX_SEARCH_LIMIT), 10000);
+
 	public static final int NUMBER_THREADS =
 		GetterUtil.getInteger(
-				PortletProps.get(PortletPropsKeys.NUMBER_THREADS), 1);
+			PortletProps.get(PortletPropsKeys.NUMBER_THREADS), 1);
 
 }

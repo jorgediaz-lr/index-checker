@@ -19,6 +19,8 @@ package jorgediazest.indexchecker.util;
  */
 public interface PortletPropsKeys {
 
+	public static final String INDEX_SEARCH_LIMIT = "index.search.limit";
+
 	public static final String NUMBER_THREADS = "number.threads";
 
 }
