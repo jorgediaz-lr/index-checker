@@ -17,9 +17,11 @@ package jorgediazest.indexchecker.model;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
-import com.liferay.portlet.asset.model.AssetRendererFactory;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Validator;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,68 +31,127 @@ import java.util.Set;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
-import jorgediazest.util.modelquery.ModelQuery;
-import jorgediazest.util.modelquery.ModelQueryFactory;
+import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.modelquery.ModelQueryUtil;
 public class IndexCheckerQueryHelper {
 
+	@SuppressWarnings("unchecked")
 	public void addRelatedModelData(
-			Map<Long, Data> liferayDataMap, ModelQueryFactory mqFactory,
-			Model model, long companyId, List<Long> groupIds)
+			Map<String, Map<Long, List<Data>>> queryCache,
+			Map<Long, Data> liferayDataMap, Model model, List<Long> groupIds)
 		throws Exception {
 
-		Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
+		if (liferayDataMap.isEmpty()) {
+			return;
+		}
 
-		String[] relatedAttrToCheck = calculateRelatedAttributesToCheck(
-			model).toArray(new String[0]);
+		Criterion groupCriterion = model.getGroupCriterion(groupIds);
 
-		ModelQuery mq = mqFactory.getModelQueryObject(model);
+		ModelFactory modelFactory = model.getModelFactory();
 
-		mq.addRelatedModelData(liferayDataMap, relatedAttrToCheck, filter);
+		List<Map<String, Object>> relatedDataToQueryList =
+			ConfigurationUtil.getRelatedDataToQuery(model);
+
+		for (Map<String, Object> rdtq : relatedDataToQueryList) {
+			String relatedClassName = (String) rdtq.get("model");
+			List<String> mappingsSource = (List<String>)rdtq.get(
+				"mappingsSource");
+			List<String> mappingsRelated = (List<String>)rdtq.get(
+				"mappingsRelated");
+			List<String> attributesToQuery = (List<String>)rdtq.get(
+				"attributesToQuery");
+			boolean rawData = GetterUtil.getBoolean(
+				(Boolean)rdtq.get("raw"),false);
+			String relatedFilterString = (String)rdtq.get("filter");
+
+			Model relatedModel = modelFactory.getModelObject(relatedClassName);
+
+			if (relatedModel == null) {
+				continue;
+			}
+
+			addRelatedModelData(
+				queryCache, liferayDataMap, model, relatedModel, mappingsSource,
+				mappingsRelated, attributesToQuery, rawData, groupCriterion,
+				relatedFilterString);
+		}
 	}
 
-	public Collection<String> calculateRelatedAttributesToCheck(Model model) {
+	public void addRelatedModelData(
+			Map<String, Map<Long, List<Data>>> queryCache,
+			Map<Long, Data> liferayDataMap, Model model, Model relatedModel,
+			List<String> mappingsSource, List<String> mappingsRelated,
+			List<String> attributesToQuery, boolean rawData,
+			Criterion groupCriterion, String relatedFilterString)
+		throws Exception {
 
-		Collection<String> relatedAttributesToCheck =
-			ConfigurationUtil.getRelatedAttributesToCheck(model);
+		Criterion relatedFilter = null;
 
-		if (checkAssetEntryRelations(model)) {
-			return relatedAttributesToCheck;
+		if (Validator.isNotNull(relatedFilterString)) {
+			relatedFilter = ModelUtil.generateSQLCriterion(relatedFilterString);
+		}
+		else if (relatedModel.isGroupedModel()) {
+			relatedFilter = groupCriterion;
 		}
 
-		Collection<String> relatedAttributesToCheckFiltered =
-			new LinkedHashSet<String>();
+		if ("classPK".equals(mappingsRelated.get(0))) {
+			Criterion classNameIdCriterion = relatedModel.getProperty(
+				"classNameId").eq(model.getClassNameId());
 
-		for (String relatedAttributeToCheck : relatedAttributesToCheck) {
-			if (!relatedAttributeToCheck.startsWith(
-					"com.liferay.portlet.asset.model.Asset")) {
-
-				relatedAttributesToCheckFiltered.add(relatedAttributeToCheck);
-			}
+			relatedFilter = ModelUtil.generateConjunctionCriterion(
+				classNameIdCriterion, relatedFilter);
 		}
 
-		return relatedAttributesToCheckFiltered;
+		List<String> relatedAttributes = new ArrayList<String>();
+		relatedAttributes.addAll(attributesToQuery);
+		relatedAttributes.addAll(mappingsRelated);
+
+		Map<Long, List<Data>> relatedMap;
+
+		if (relatedFilter == null) {
+			relatedMap = getDataWithDuplicatesWithCache(
+				queryCache, relatedModel, relatedAttributes, mappingsRelated,
+				relatedFilter);
+		}
+		else {
+			relatedMap = DataUtil.getDataWithDuplicates(
+				relatedModel, relatedAttributes.toArray(new String[0]),
+				mappingsRelated.get(0), relatedFilter);
+		}
+
+		Map<Long, List<Data>> matchedMap =
+			ModelQueryUtil.getMatchingEntriesMap(
+				liferayDataMap, relatedMap,
+				mappingsSource.toArray(new String[0]),
+				mappingsRelated.toArray(new String[0]));
+
+		if (rawData) {
+			ModelQueryUtil.addRelatedModelDataRaw(
+				liferayDataMap, matchedMap,
+				attributesToQuery.toArray(new String[0]));
+		}
+		else {
+			ModelQueryUtil.addRelatedModelData(
+				liferayDataMap, matchedMap,
+				attributesToQuery.toArray(new String[0]));
+		}
 	}
 
 	public Set<Model> calculateRelatedModels(Model model) {
 
-		Collection<String> relatedAttributesToCheck =
-			calculateRelatedAttributesToCheck(model);
-
-		Set<String> relatedClassNames = new LinkedHashSet<String>();
-
-		for (String relatedAttributeToCheck : relatedAttributesToCheck) {
-			relatedClassNames.add(relatedAttributeToCheck.split(":")[0]);
-		}
+		List<Map<String, Object>> relatedDataToQueryList =
+			ConfigurationUtil.getRelatedDataToQuery(model);
 
 		ModelFactory modelFactory = model.getModelFactory();
 
 		Set<Model> relatedModels = new LinkedHashSet<Model>();
 
-		for (String relatedClassName : relatedClassNames) {
+		for (Map<String, Object> relatedDataToQuery : relatedDataToQueryList) {
+			String relatedClassName = (String) relatedDataToQuery.get("model");
+
 			Model relatedModel = modelFactory.getModelObject(relatedClassName);
 
 			relatedModels.add(relatedModel);
@@ -99,11 +160,43 @@ public class IndexCheckerQueryHelper {
 		return relatedModels;
 	}
 
-	public Map<Long, Data> getLiferayData(
-			Model model, long companyId, List<Long> groupIds)
+	public Map<Long, List<Data>> getDataWithDuplicatesWithCache(
+			Map<String, Map<Long, List<Data>>> queryCache, Model relatedModel,
+			List<String> relatedAttributes, List<String> mappingsRelated,
+			Criterion relatedFilter)
 		throws Exception {
 
-		Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
+		Map<Long, List<Data>> relatedMap;
+
+		String attributes = Arrays.toString(relatedAttributes.toArray());
+
+		String cacheKey =
+			relatedModel.getName() + "_" + attributes + "_key_" +
+				mappingsRelated.get(0);
+
+		relatedMap = queryCache.get(cacheKey);
+
+		if (relatedMap == null) {
+			synchronized(relatedModel) {
+				relatedMap = queryCache.get(cacheKey);
+
+				if (relatedMap == null) {
+					relatedMap = DataUtil.getDataWithDuplicates(
+						relatedModel, relatedAttributes.toArray(new String[0]),
+						mappingsRelated.get(0), relatedFilter);
+
+					queryCache.put(cacheKey, relatedMap);
+				}
+			}
+		}
+
+		return relatedMap;
+	}
+
+	public Map<Long, Data> getLiferayData(Model model, List<Long> groupIds)
+		throws Exception {
+
+		Criterion filter = model.getGroupCriterion(groupIds);
 
 		Collection<String> attributesToQuery =
 			ConfigurationUtil.getModelAttributesToQuery(model);
@@ -111,27 +204,7 @@ public class IndexCheckerQueryHelper {
 		String[] attributesToQueryArr = attributesToQuery.toArray(
 			new String[0]);
 
-		DataComparator dataComparator = ConfigurationUtil.getDataComparator(
-			model);
-
-		return DataUtil.getData(
-			model, dataComparator, attributesToQueryArr, filter);
-	}
-
-	protected boolean checkAssetEntryRelations(Model model) {
-		boolean assetEntryRelations = true;
-
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				model.getClassName());
-
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSelectable()) {
-
-			assetEntryRelations = false;
-		}
-
-		return assetEntryRelations;
+		return DataUtil.getData(model, attributesToQueryArr, filter);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

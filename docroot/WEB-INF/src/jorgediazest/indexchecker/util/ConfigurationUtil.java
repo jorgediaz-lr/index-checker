@@ -20,21 +20,23 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
+import com.liferay.portlet.asset.model.AssetRendererFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
 import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
 import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
 
-import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
 
 import org.yaml.snakeyaml.Yaml;
@@ -43,22 +45,6 @@ import org.yaml.snakeyaml.Yaml;
  * @author Jorge Díaz
  */
 public class ConfigurationUtil {
-
-	public static DataComparator getDataComparator(Model model) {
-		String primaryKeyAttribute = getIndexPrimaryKeyAttribute(model);
-
-		Collection<String> exactAttributesList = getExactAttributesToCheck(
-			model);
-
-		String[] exactAttributes = exactAttributesList.toArray(
-			new String[exactAttributesList.size()]);
-
-		DataIndexCheckerModelComparator comparator =
-			new DataIndexCheckerModelComparator(
-				primaryKeyAttribute, exactAttributes);
-
-		return comparator;
-	}
 
 	public static int getDefaultNumberThreads() {
 		return PortletPropsValues.NUMBER_THREADS;
@@ -91,6 +77,11 @@ public class ConfigurationUtil {
 		}
 
 		return indexAttribute;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<String> getIndexKeyAttributes(Model model) {
+		return (List<String>)getModelInfo(model, "keyAttributes");
 	}
 
 	public static IndexSearchHelper getIndexSearchHelper(Model model) {
@@ -178,19 +169,41 @@ public class ConfigurationUtil {
 
 	public static IndexCheckerQueryHelper getQueryHelper(Model model) {
 
-	return (IndexCheckerQueryHelper)getModelInfo(model, "queryHelperClass");
-}
+		return (IndexCheckerQueryHelper)getModelInfo(model, "queryHelperClass");
+	}
 
-	public static Collection<String> getRelatedAttributesToCheck(Model model) {
+	public static List<Map<String, Object>> getRelatedDataToQuery(Model model) {
+		boolean checkAssetEntryRelations =
+			ConfigurationUtil.checkAssetEntryRelations(model);
+
 		@SuppressWarnings("unchecked")
-		Collection<String> relatedAttributesToCheck =
-			(Collection<String>)getModelInfo(model, "relatedAttributesToCheck");
+		List<Map<String, Object>> relatedDataToQueryList =
+			(List<Map<String,Object>>)getModelInfo(model, "relatedDataToQuery");
 
-		if (relatedAttributesToCheck == null) {
-			return Collections.emptySet();
+		if (relatedDataToQueryList == null) {
+			relatedDataToQueryList = Collections.emptyList();
 		}
 
-		return relatedAttributesToCheck;
+		List<Map<String, Object>> relatedDataToQueryListFiltered =
+			new ArrayList<Map<String, Object>>();
+
+		for (Map<String, Object> relatedDataToQuery : relatedDataToQueryList) {
+			String relatedModel = (String)relatedDataToQuery.get("model");
+
+			if (Validator.isNull(relatedModel)) {
+				continue;
+			}
+
+			if ("com.liferay.portlet.asset.model.Asset".equals(relatedModel) &&
+				checkAssetEntryRelations) {
+
+				continue;
+			}
+
+			relatedDataToQueryListFiltered.add(relatedDataToQuery);
+		}
+
+		return relatedDataToQueryList;
 	}
 
 	public static String getStringFilter(Model model) {
@@ -210,6 +223,22 @@ public class ConfigurationUtil {
 	public static boolean modelNotIndexed(String className) {
 		return configurationListEntryContainsValue(
 			"modelNotIndexed", className);
+	}
+
+	protected static boolean checkAssetEntryRelations(Model model) {
+		boolean assetEntryRelations = true;
+
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				model.getClassName());
+
+		if ((assetRendererFactory == null) ||
+			!assetRendererFactory.isSelectable()) {
+
+			assetEntryRelations = false;
+		}
+
+		return assetEntryRelations;
 	}
 
 	protected static boolean configurationListEntryContainsValue(
@@ -246,21 +275,6 @@ public class ConfigurationUtil {
 
 			return configuration;
 		}
-	}
-
-	/**
-	 * @param model
-	 * @return
-	 */
-	protected static String getIndexPrimaryKeyAttribute(Model model) {
-		String primaryKeyAttribute = (String)getModelInfo(
-			model, "indexPrimaryKeyAttribute");
-
-		if (Validator.isNotNull(primaryKeyAttribute)) {
-			return primaryKeyAttribute;
-		}
-
-		return model.getPrimaryKeyAttribute();
 	}
 
 	@SuppressWarnings("unchecked")

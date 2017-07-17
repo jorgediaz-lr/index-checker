@@ -31,7 +31,6 @@ import java.util.Map;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
@@ -92,12 +91,9 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 		String[] validAttributesArr = validAttributes.toArray(
 			new String[validAttributes.size()]);
 
-		DataComparator dataComparator = ConfigurationUtil.getDataComparator(
-			model);
-
 		for (Object[] result : results) {
 			Data data = DataUtil.createDataObject(
-				model, dataComparator, validAttributesArr, result);
+				model, validAttributesArr, result);
 
 			if (!dataMap.containsKey(data.getResourcePrimKey())) {
 				dataMap.put(data.getResourcePrimKey(), data);
@@ -106,15 +102,14 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 	}
 
 	@Override
-	public Map<Long, Data> getLiferayData(
-			Model model, long companyId, List<Long> groupIds)
+	public Map<Long, Data> getLiferayData(Model model, List<Long> groupIds)
 		throws Exception {
 
 		if (indexAllVersions) {
-			return super.getLiferayData(model, companyId, groupIds);
+			return super.getLiferayData(model, groupIds);
 		}
 
-		Criterion filter = model.getCompanyGroupFilter(companyId, groupIds);
+		Criterion filter = model.getGroupCriterion(groupIds);
 
 		Collection<String> attributesToQuery =
 			ConfigurationUtil.getModelAttributesToQuery(model);

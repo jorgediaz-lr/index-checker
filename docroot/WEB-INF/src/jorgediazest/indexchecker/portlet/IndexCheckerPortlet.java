@@ -64,6 +64,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -88,12 +89,9 @@ import jorgediazest.indexchecker.util.ConfigurationUtil;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.modelquery.ModelQueryFactory;
-import jorgediazest.util.modelquery.ModelQueryFactory.DataComparatorFactory;
 import jorgediazest.util.output.OutputUtils;
 
 /**
@@ -140,7 +138,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public static List<Future<Comparison>> executeCallableCheckGroupAndModel(
-		ModelQueryFactory mqFactory, ExecutorService executor,
+		Map<String, Map<Long, List<Data>>> queryCache, ExecutorService executor,
 		List<Model> modelList, long companyId, List<Long> groupIds,
 		Set<ExecutionMode> executionMode) {
 
@@ -160,7 +158,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			CallableCheckGroupAndModel c =
 				new CallableCheckGroupAndModel(
-					companyId, groupIds, mqFactory, model, executionMode);
+					queryCache, companyId, groupIds, model, executionMode);
 
 			futureResultList.add(executor.submit(c));
 		}
@@ -169,15 +167,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public static Map<Long, List<Comparison>> executeCheck(
-		ModelQueryFactory mqFactory, Company company, List<Long> groupIds,
-		List<String> classNames, Set<ExecutionMode> executionMode,
-		int threadsExecutor)
-	throws ExecutionException, InterruptedException, SystemException {
-
-		List<Model> modelList = getModelList(
-			mqFactory.getModelFactory(), classNames);
+			Company company, List<Long> groupIds, List<String> classNames,
+			Set<ExecutionMode> executionMode, int threadsExecutor)
+		throws ExecutionException, InterruptedException, SystemException {
 
 		long companyId = company.getCompanyId();
+
+		Map<String, Map<Long, List<Data>>> queryCache =
+			new ConcurrentHashMap<String, Map<Long, List<Data>>>();
+
+		ModelFactory modelFactory = new IndexCheckerModelFactory(companyId);
+
+		List<Model> modelList = getModelList(modelFactory, classNames);
 
 		ExecutorService executor = Executors.newFixedThreadPool(
 			threadsExecutor);
@@ -192,7 +193,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				List<Future<Comparison>> futureResultList =
 					executeCallableCheckGroupAndModel(
-						mqFactory, executor, modelList, companyId, groupIdsAux,
+						queryCache, executor, modelList, companyId, groupIdsAux,
 						executionMode);
 
 				futureResultDataMap.put(groupId, futureResultList);
@@ -201,7 +202,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		else {
 			List<Future<Comparison>> futureResultList =
 				executeCallableCheckGroupAndModel(
-					mqFactory, executor, modelList, companyId, groupIds,
+					queryCache, executor, modelList, companyId, groupIds,
 					executionMode);
 
 			futureResultDataMap.put(0L, futureResultList);
@@ -384,26 +385,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return indexSearchHelper.deleteAndCheck(indexOnlyData);
 	}
 
-	public ModelQueryFactory createModelQueryFactory() throws Exception {
-		ModelFactory modelFactory = new IndexCheckerModelFactory();
-
-		ModelQueryFactory mqFactory = new ModelQueryFactory(modelFactory);
-
-		DataComparatorFactory dataComparatorFactory =
-			new DataComparatorFactory() {
-
-			@Override
-			public DataComparator getDataComparator(Model model) {
-				return ConfigurationUtil.getDataComparator(model);
-			}
-
-		};
-
-		mqFactory.setDataComparatorFactory(dataComparatorFactory);
-
-		return mqFactory;
-	}
-
 	public void doView(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
@@ -537,11 +518,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				ModelQueryFactory mqf = createModelQueryFactory();
-
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						mqf, company, groupIds, classNames, executionMode,
+						company, groupIds, classNames, executionMode,
 						getNumberOfThreads(request));
 
 				boolean groupBySite = executionMode.contains(
@@ -677,11 +656,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				ModelQueryFactory mqf = createModelQueryFactory();
-
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						mqf, company, groupIds, classNames, executionMode,
+						company, groupIds, classNames, executionMode,
 						getNumberOfThreads(request));
 
 				for (
@@ -792,11 +769,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				ModelQueryFactory mqf = createModelQueryFactory();
-
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						mqf, company, groupIds, classNames, executionMode,
+						company, groupIds, classNames, executionMode,
 						getNumberOfThreads(request));
 
 				for (
@@ -1084,7 +1059,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		disjunctionGlobal.add(
 			groupModel.getProperty("classNameId").eq(companyClassNameId));
 		disjunctionGlobal.add(
-			groupModel.generateInCriteria("liveGroupId", liveGlobalGroupIds));
+			groupModel.generateInCriterion("liveGroupId", liveGlobalGroupIds));
 
 		List<Order> orders = new ArrayList<Order>();
 		orders.add(OrderFactoryUtil.asc("companyId"));
@@ -1100,7 +1075,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		stagingSites.add(groupModel.getProperty("liveGroupId").ne(0L));
 		stagingSites.add(
 			RestrictionsFactoryUtil.not(
-				groupModel.generateInCriteria(
+				groupModel.generateInCriterion(
 					"liveGroupId", liveGlobalGroupIds)));
 
 		Conjunction normalSites = RestrictionsFactoryUtil.conjunction();

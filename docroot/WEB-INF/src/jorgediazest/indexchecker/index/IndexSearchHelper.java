@@ -51,7 +51,6 @@ import jorgediazest.indexchecker.util.ConfigurationUtil;
 import jorgediazest.indexchecker.util.PortletPropsValues;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 
@@ -148,8 +147,8 @@ public class IndexSearchHelper {
 
 	public Set<Data> getIndexData(
 			Model model, Set<Model> relatedModels,
-			Set<String> indexAttributesToQuery, DataComparator dataComparator,
-			long companyId, List<Long> groupIds)
+			Set<String> indexAttributesToQuery, long companyId,
+			List<Long> groupIds)
 		throws ParseException, SearchException {
 
 		SearchContext searchContext = getIndexSearchContext(model, companyId);
@@ -163,13 +162,13 @@ public class IndexSearchHelper {
 
 		return getIndexData(
 			model, relatedModels, indexAttributesToQuery.toArray(new String[0]),
-			dataComparator, sorts, searchContext, contextQuery);
+			sorts, searchContext, contextQuery);
 	}
 
 	public Set<Data> getIndexData(
 			Model model, Set<Model> relatedModels, String[] attributes,
-			DataComparator dataComparator, Sort[] sorts,
-			SearchContext searchContext, BooleanQuery contextQuery)
+			Sort[] sorts, SearchContext searchContext,
+			BooleanQuery contextQuery)
 		throws ParseException, SearchException {
 
 		int indexSearchLimit = PortletPropsValues.INDEX_SEARCH_LIMIT;
@@ -199,7 +198,7 @@ public class IndexSearchHelper {
 					continue;
 				}
 
-				Data data = new Data(model, dataComparator);
+				Data data = new Data(model);
 
 				data.addModelTableInfo(relatedModels);
 

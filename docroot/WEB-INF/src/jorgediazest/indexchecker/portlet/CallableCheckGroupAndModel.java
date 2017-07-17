@@ -19,7 +19,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.security.auth.CompanyThreadLocal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import jorgediazest.indexchecker.ExecutionMode;
+import jorgediazest.indexchecker.data.DataIndexCheckerModelComparator;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
 import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
 import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
@@ -38,7 +41,6 @@ import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.modelquery.ModelQueryFactory;
 
 /**
  * @author Jorge Díaz
@@ -46,12 +48,12 @@ import jorgediazest.util.modelquery.ModelQueryFactory;
 public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 	public CallableCheckGroupAndModel(
-		long companyId, List<Long> groupIds, ModelQueryFactory mqFactory,
-		Model model, Set<ExecutionMode> executionMode) {
+		Map<String, Map<Long, List<Data>>> queryCache, long companyId,
+		List<Long> groupIds, Model model, Set<ExecutionMode> executionMode) {
 
 		this.companyId = companyId;
 		this.groupIds = groupIds;
-		this.mqFactory = mqFactory;
+		this.queryCache = queryCache;
 		this.model = model;
 		this.executionMode = executionMode;
 	}
@@ -93,21 +95,21 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 						companyId + " - GroupId: " + strGroupIds);
 			}
 
-			if ((groupIds != null) && (groupIds.size() == 0)) {
-				return null;
-			}
+			if (groupIds != null) {
+				if (groupIds.isEmpty()) {
+					return null;
+				}
 
-			if ((groupIds != null) && (!groupIds.contains(0L) &&
-				 !model.hasAttribute("groupId"))) {
-
-				return null;
+				if (!model.hasAttribute("groupId") && !groupIds.contains(0L)) {
+					return null;
+				}
 			}
 
 			IndexCheckerQueryHelper queryHelper =
 				ConfigurationUtil.getQueryHelper(model);
 
 			Map<Long, Data> liferayDataMap = queryHelper.getLiferayData(
-				model, companyId, groupIds);
+				model, groupIds);
 
 			IndexCheckerPermissionsHelper permissionsHelper =
 				ConfigurationUtil.getPermissionsHelper(model);
@@ -117,11 +119,14 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			}
 
 			queryHelper.addRelatedModelData(
-				liferayDataMap, mqFactory, model, companyId, groupIds);
+				queryCache, liferayDataMap, model, groupIds);
 
 			for (Data data : liferayDataMap.values()) {
 				permissionsHelper.addRolesFields(data);
 			}
+
+			Collection<String> exactAttributes =
+				ConfigurationUtil.getExactAttributesToCheck(model);
 
 			Set<Data> liferayData = new HashSet<Data>(liferayDataMap.values());
 
@@ -139,23 +144,28 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				Set<Model> relatedModels = queryHelper.calculateRelatedModels(
 					model);
 
-				DataComparator dataComparator =
-					ConfigurationUtil.getDataComparator(model);
-
 				Set<String> indexAttributesToQuery = new HashSet<String>(
 					ConfigurationUtil.getModelAttributesToQuery(model));
 
-				indexAttributesToQuery.addAll(
-					ConfigurationUtil.getExactAttributesToCheck(model));
+				indexAttributesToQuery.addAll(exactAttributes);
 
 				indexData = indexSearchHelper.getIndexData(
-					model, relatedModels, indexAttributesToQuery,
-					dataComparator, companyId, groupIds);
+					model, relatedModels, indexAttributesToQuery, companyId,
+					groupIds);
 			}
 
+			List<String> exactAttributesList = new ArrayList<String>(
+				model.getKeyAttributes());
+
+			exactAttributesList.addAll(exactAttributes);
+
+			DataComparator exactDataComparator =
+				new DataIndexCheckerModelComparator(exactAttributesList);
+
 			return ComparisonUtil.getComparison(
-				model, liferayData, indexData, showBothExact, showBothNotExact,
-				showOnlyLiferay, showOnlyIndex);
+				model, exactDataComparator, liferayData, indexData,
+				showBothExact, showBothNotExact, showOnlyLiferay,
+				showOnlyIndex);
 		}
 		catch (Throwable t) {
 			return ComparisonUtil.getError(model, t);
@@ -174,6 +184,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	private Set<ExecutionMode> executionMode = null;
 	private List<Long> groupIds = null;
 	private Model model = null;
-	private ModelQueryFactory mqFactory = null;
+	private Map<String, Map<Long, List<Data>>> queryCache = null;
 
 }

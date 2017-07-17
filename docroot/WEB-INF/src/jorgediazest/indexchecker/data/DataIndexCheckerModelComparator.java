@@ -18,49 +18,33 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataModelComparator;
-import jorgediazest.util.data.DataUtil;
 
 /**
  * @author Jorge Díaz
  */
 public class DataIndexCheckerModelComparator extends DataModelComparator {
 
-	public DataIndexCheckerModelComparator(
-		String primaryKeyAttribute, String[] exactAttributes) {
+	public DataIndexCheckerModelComparator(List<String> attributes) {
 
-		super(exactAttributes);
-
-		this.primaryKeyAttribute = primaryKeyAttribute;
-	}
-
-	@Override
-	public int compare(Data data1, Data data2) {
-		return DataUtil.compareLongs(
-				data1.get(primaryKeyAttribute, -1L),
-				data2.get(primaryKeyAttribute, -1L));
-	}
-
-	@Override
-	public boolean equals(Data data1, Data data2) {
-		long primaryKey1 = data1.get(primaryKeyAttribute, -1L);
-		long primaryKey2 = data2.get(primaryKeyAttribute, -1L);
-
-		return (primaryKey1 == primaryKey2);
+		super(attributes);
 	}
 
 	public boolean equalsAttributes(
-		Data data1, Data data2, String attr1, String attr2, Object o1,
-		Object o2) {
+		Data data1, Data data2, String attr1, String attr2) {
 
-		if (super.equalsAttributes(data1, data2, attr1, attr2, o1, o2)) {
+		if (super.equalsAttributes(data1, data2, attr1, attr2)) {
 			return true;
 		}
+
+		Object o1 = data1.get(attr1);
+		Object o2 = data2.get(attr2);
 
 		if (o1 instanceof Set && o2 instanceof Set) {
 			for (Locale key : LanguageUtil.getAvailableLocales()) {
@@ -112,19 +96,5 @@ public class DataIndexCheckerModelComparator extends DataModelComparator {
 
 		return true;
 	}
-
-	@Override
-	public Integer hashCode(Data data) {
-		long primaryKey = data.get(primaryKeyAttribute, -1L);
-
-		if (primaryKey == -1L) {
-			return null;
-		}
-
-		return -1 * data.getEntryClassName().hashCode() *
-			Long.valueOf(primaryKey).hashCode();
-	}
-
-	protected String primaryKeyAttribute = null;
 
 }

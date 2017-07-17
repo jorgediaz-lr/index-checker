@@ -16,6 +16,8 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
 
+import java.util.List;
+
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.model.Model;
@@ -27,6 +29,16 @@ import jorgediazest.util.model.ModelWrapper;
  * @author Jorge Díaz
  */
 public class IndexCheckerModelFactory extends ModelFactory {
+
+	long companyId;
+
+	public IndexCheckerModelFactory() {
+		this.companyId = 0L;
+	}
+
+	public IndexCheckerModelFactory(long companyId) {
+		this.companyId = companyId;
+	}
 
 	@Override
 	public Model getModelObject(String className) {
@@ -40,17 +52,33 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			return model;
 		}
 
+		List<String> keyAttributes = ConfigurationUtil.getIndexKeyAttributes(
+			model);
+
 		String sqlFilter = ConfigurationUtil.getStringFilter(model);
 
 		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
 
-		if (filter == null) {
+		if (companyId > 0) {
+			filter = ModelUtil.generateConjunctionCriterion(
+				model.getCompanyCriterion(companyId), filter);
+		}
+
+		if ((filter == null)&& ((keyAttributes == null) ||
+			 keyAttributes.isEmpty())) {
+
 			return model;
 		}
 
 		ModelWrapper modelWrapper = new ModelWrapper(model);
 
-		modelWrapper.setFilter(filter);
+		if (filter != null) {
+			modelWrapper.setFilter(filter);
+		}
+
+		if ((keyAttributes != null) && !keyAttributes.isEmpty()) {
+			modelWrapper.setKeyAttributes(keyAttributes);
+		}
 
 		cacheModelObject.put(className, modelWrapper);
 
