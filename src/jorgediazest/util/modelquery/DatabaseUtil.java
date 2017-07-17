@@ -21,22 +21,15 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PortalUtil;
 
-import java.lang.reflect.Field;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
-import jorgediazest.util.data.DataComparatorMap;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.table.TableInfo;
@@ -46,102 +39,11 @@ import jorgediazest.util.table.TableInfo;
  */
 public class DatabaseUtil {
 
-	public static Object castObjectToJdbcTypeObject(int type, Object value) {
-		Object result = null;
-
-		switch (type) {
-			case Types.NULL:
-				result = value;
-				break;
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.CLOB:
-				result = DataUtil.castString(value);
-				break;
-
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				result = DataUtil.castBigDecimal(value);
-				break;
-
-			case Types.BIT:
-			case Types.BOOLEAN:
-				result = DataUtil.castBoolean(value);
-				break;
-
-			case Types.TINYINT:
-				result = DataUtil.castByte(value);
-				break;
-
-			case Types.SMALLINT:
-				result = DataUtil.castShort(value);
-				break;
-
-			case Types.INTEGER:
-				result = DataUtil.castInt(value);
-				break;
-
-			case Types.BIGINT:
-				result = DataUtil.castLong(value);
-				break;
-
-			case Types.REAL:
-			case Types.FLOAT:
-				result = DataUtil.castFloat(value);
-				break;
-
-			case Types.DOUBLE:
-				result = DataUtil.castDouble(value);
-				break;
-
-			case Types.BINARY:
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				result = DataUtil.castBytes(value);
-				break;
-
-			case Types.DATE:
-			case Types.TIME:
-			case Types.TIMESTAMP:
-				result = DataUtil.castDateToEpoch(value);
-				break;
-
-			default:
-				throw new RuntimeException(
-					"Unsupported conversion for " +
-						getJdbcTypeNames().get(type));
-		}
-
-		return result;
-	}
-
-	public static Map<Integer, String> getJdbcTypeNames() {
-
-		if (jdbcTypeNames == null) {
-			Map<Integer, String> aux = new HashMap<Integer, String>();
-
-			for (Field field : Types.class.getFields()) {
-				try {
-					aux.put((Integer)field.get(null), field.getName());
-				}
-				catch (IllegalArgumentException e) {
-				}
-				catch (IllegalAccessException e) {
-				}
-			}
-
-			jdbcTypeNames = aux;
-		}
-
-		return jdbcTypeNames;
-	}
-
 	public static Set<Data> queryTable(Model model, TableInfo tableInfo)
 		throws Exception {
 
 		if (Validator.isNull(tableInfo)) {
-			return new HashSet<Data>();
+			return Collections.emptySet();
 		}
 
 		return queryTable(model, tableInfo, tableInfo.getAttributesName());
@@ -191,8 +93,8 @@ public class DatabaseUtil {
 				}
 
 				Data data = DataUtil.createDataObject(
-					model, tableInfo, dataComparatorMap, attributesName,
-					result);
+					tableInfo, attributesName, result);
+
 				dataSet.add(data);
 			}
 		}
@@ -226,8 +128,5 @@ public class DatabaseUtil {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(DatabaseUtil.class);
-
-	private static DataComparator dataComparatorMap = new DataComparatorMap();
-	private static Map<Integer, String> jdbcTypeNames = null;
 
 }

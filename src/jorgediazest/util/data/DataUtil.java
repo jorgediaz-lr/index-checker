@@ -23,15 +23,16 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
-
 import java.sql.Time;
 import java.sql.Timestamp;
-
+import java.sql.Types;
 import java.text.DateFormat;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 
 import jorgediazest.util.model.Model;
 import jorgediazest.util.modelquery.DatabaseUtil;
@@ -306,50 +308,24 @@ public class DataUtil {
 		return aux;
 	}
 
-	/* Long.compare()is not available at java 1.6 */
-
-	public static int compareLongs(long x, long y) {
-		return (x < y) ? -1 : ((x == y) ? 0 : 1);
-	}
-
 	public static Data createDataObject(
-		Model model, Collection<TableInfo> tableInfoCol,
-		DataComparator dataComparator, String[] attributes, Object[] result) {
+		Model model, String[] attributes, Object[] array) {
 
-		Data data = new Data(model, dataComparator);
+		Data data = new Data(model);
 
-		if (tableInfoCol != null) {
-			data.addTableInfo(tableInfoCol);
-		}
-
-		int i = 0;
-
-		for (String attrib : attributes) {
-			data.set(attrib, result[i++]);
-		}
+		data.setArray(attributes, array);
 
 		return data;
 	}
 
 	public static Data createDataObject(
-		Model model, DataComparator dataComparator, String[] attributes,
-		Object[] result) {
+		TableInfo tableInfo, String[] attributes, Object[] array) {
 
-		return createDataObject(
-			model, (Collection<TableInfo>)null, dataComparator, attributes,
-			result);
-	}
+		Data data = new Data(tableInfo);
 
-	public static Data createDataObject(
-		Model model, TableInfo tableInfo, DataComparator dataComparator,
-		String[] attributes, Object[] result) {
+		data.setArray(attributes, array);
 
-		List<TableInfo> tableInfoList = new ArrayList<TableInfo>();
-
-		tableInfoList.add(tableInfo);
-
-		return createDataObject(
-			model, tableInfoList, dataComparator, attributes, result);
+		return data;
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
@@ -359,17 +335,15 @@ public class DataUtil {
 	}
 
 	public static Map<Long, Data> getData(
-		Model model, DataComparator dataComparator, String[] attributes,
-		Criterion filter)
+		Model model, String[] attributes, Criterion filter)
 	throws Exception {
 		return getData(
-			model, dataComparator, attributes, model.getPrimaryKeyAttribute(),
-			filter);
+			model, attributes, model.getPrimaryKeyAttribute(), filter);
 	}
 
 	public static Map<Long, Data> getData(
-			Model model, DataComparator dataComparator, String[] attributes,
-			String mapKeyAttribute, Criterion filter)
+			Model model, String[] attributes, String mapKeyAttribute,
+			Criterion filter)
 		throws Exception {
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -399,7 +373,7 @@ public class DataUtil {
 
 		for (Object[] result : results) {
 			Data data = DataUtil.createDataObject(
-				model, dataComparator, validAttributesArr, result);
+				model, validAttributesArr, result);
 
 			addDataToMap(dataMap, mapKeyAttribute, data, i--);
 
@@ -409,6 +383,10 @@ public class DataUtil {
 
 		if (dataMapByPK == null) {
 			dataMapByPK = dataMap;
+		}
+
+		if (dataMap.isEmpty()) {
+			return Collections.emptyMap();
 		}
 
 		for (String notValidAttribute : notValidAttributes) {
@@ -426,9 +404,40 @@ public class DataUtil {
 		return dataMap;
 	}
 
+	public static DataComparator getDataComparator(Model model) {
+		if (model == null) {
+			return dataComparatorMap;
+		}
+
+		DataComparator dataComparator = null;
+
+		WeakReference<DataComparator> weakReference =
+			modelDataComparatorCache.get(model);
+
+		if (weakReference != null) {
+			dataComparator = weakReference.get();
+		}
+
+		if (dataComparator == null) {
+			List<String> keyAttributes = model.getKeyAttributes();
+
+			if ((keyAttributes == null) || keyAttributes.isEmpty()) {
+				dataComparator = dataComparatorMap;
+			}
+			else {
+				dataComparator = new DataModelComparator(keyAttributes);
+			}
+
+			modelDataComparatorCache.put(
+				model, new WeakReference<DataComparator>(dataComparator));
+		}
+
+		return dataComparator;
+	}
+
 	public static Map<Long, List<Data>> getDataWithDuplicates(
-			Model model, DataComparator dataComparator, String[] attributes,
-			String mapKeyAttribute, Criterion filter)
+			Model model, String[] attributes, String mapKeyAttribute,
+			Criterion filter)
 		throws Exception {
 
 		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
@@ -457,8 +466,7 @@ public class DataUtil {
 		long i = -1;
 
 		for (Object[] result : results) {
-			Data data = createDataObject(
-				model, dataComparator, validAttributesArr, result);
+			Data data = createDataObject(model, validAttributesArr, result);
 
 			addDataToMapValueList(dataMap, mapKeyAttribute, data, i--);
 
@@ -641,7 +649,7 @@ public class DataUtil {
 			return o;
 		}
 
-		Object transformObject = DatabaseUtil.castObjectToJdbcTypeObject(
+		Object transformObject = DataUtil.castObjectToJdbcTypeObject(
 			type, o);
 
 		if (transformObject instanceof String) {
@@ -921,6 +929,8 @@ public class DataUtil {
 		}
 	};
 
+	private static DataComparator dataComparatorMap = new DataComparatorMap();
+
 	private static ThreadLocal<Boolean> ignoreCase =
 		new ThreadLocal<Boolean>() {
 
@@ -930,5 +940,102 @@ public class DataUtil {
 			return false;
 		}
 	};
+
+	private static Map<Model, WeakReference<DataComparator>>
+		modelDataComparatorCache = Collections.synchronizedMap(
+			new WeakHashMap<Model, WeakReference<DataComparator>>());
+
+	public static Object castObjectToJdbcTypeObject(int type, Object value) {
+		Object result = null;
+	
+		switch (type) {
+			case Types.NULL:
+				result = value;
+				break;
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.CLOB:
+				result = castString(value);
+				break;
+	
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				result = castBigDecimal(value);
+				break;
+	
+			case Types.BIT:
+			case Types.BOOLEAN:
+				result = castBoolean(value);
+				break;
+	
+			case Types.TINYINT:
+				result = castByte(value);
+				break;
+	
+			case Types.SMALLINT:
+				result = castShort(value);
+				break;
+	
+			case Types.INTEGER:
+				result = castInt(value);
+				break;
+	
+			case Types.BIGINT:
+				result = castLong(value);
+				break;
+	
+			case Types.REAL:
+			case Types.FLOAT:
+				result = castFloat(value);
+				break;
+	
+			case Types.DOUBLE:
+				result = castDouble(value);
+				break;
+	
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				result = castBytes(value);
+				break;
+	
+			case Types.DATE:
+			case Types.TIME:
+			case Types.TIMESTAMP:
+				result = castDateToEpoch(value);
+				break;
+	
+			default:
+				throw new RuntimeException(
+					"Unsupported conversion for " +
+						DataUtil.getJdbcTypeNames().get(type));
+		}
+	
+		return result;
+	}
+
+	public static Map<Integer, String> getJdbcTypeNames() {
+	
+		if (jdbcTypeNames == null) {
+			Map<Integer, String> aux = new HashMap<Integer, String>();
+	
+			for (Field field : Types.class.getFields()) {
+				try {
+					aux.put((Integer)field.get(null), field.getName());
+				}
+				catch (IllegalArgumentException e) {
+				}
+				catch (IllegalAccessException e) {
+				}
+			}
+	
+			jdbcTypeNames = aux;
+		}
+	
+		return jdbcTypeNames;
+	}
+
+	private static Map<Integer, String> jdbcTypeNames = null;
 
 }

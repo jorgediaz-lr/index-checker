@@ -20,53 +20,59 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 /**
  * @author Jorge Díaz
  */
-public class DataBaseComparator implements DataComparator {
+public abstract class DataBaseComparator implements DataComparator {
 
-	public int compare(Data data1, Data data2) {
+	public int compareAttributes(
+		Data data1, Data data2, String attr1, String attr2) {
 
-		if (data1.equals(data2)) {
+		int type1 = data1.getAttributeType(attr1);
+		int type2 = data2.getAttributeType(attr2);
+
+		Object o1 = data1.get(attr1);
+		Object o2 = data2.get(attr2);
+
+		return compareAttributes(type1, type2, o1, o2);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public int compareAttributes(int type1, int type2, Object o1, Object o2) {
+		if (o1 == o2) {
 			return 0;
 		}
 
-		return DataUtil.compareLongs(data1.hashCode(), data2.hashCode());
-	}
-
-	public boolean equals(Data data1, Data data2) {
-
-		if (data1.hashCode() != data2.hashCode()) {
-			return false;
+		if ((o1 == null) && (o2 != null)) {
+			return -1;
 		}
 
-		return data1.getMap().equals(data2.getMap());
+		if (o2 == null) {
+			return 1;
+		}
+
+		if ((o1 instanceof Comparable) && (o2 instanceof Comparable) &&
+			(type1 == type2) && (type1 != 0) && (type2 != 0)) {
+
+			Comparable c1 = (Comparable)o1;
+			Comparable c2 = (Comparable)o2;
+
+			return c1.compareTo(c2);
+		}
+
+		String s1 = DataUtil.castString(o1);
+		String s2 = DataUtil.castString(o2);
+
+		return s1.compareTo(s2);
 	}
 
 	public boolean equalsAttributes(
-		Data data1, Data data2, String attr1, String attr2, Object o1,
-		Object o2) {
+		Data data1, Data data2, String attr1, String attr2) {
 
-		boolean equalsAttribute = false;
+		int type1 = data1.getAttributeType(attr1);
+		int type2 = data2.getAttributeType(attr2);
 
-		boolean isNull1 = DataUtil.isNull(o1);
-		boolean isNull2 = DataUtil.isNull(o2);
+		Object o1 = data1.get(attr1);
+		Object o2 = data2.get(attr2);
 
-		if (isNull1 || isNull2) {
-			equalsAttribute = (isNull1 && isNull2);
-		}
-		else {
-			equalsAttribute = o1.equals(o2);
-
-			if (!equalsAttribute) {
-				int type1 = data1.getAttributeType(attr1);
-				int type2 = data2.getAttributeType(attr2);
-
-				if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
-					o1 = DataUtil.castString(o1);
-					o2 = DataUtil.castString(o2);
-
-					equalsAttribute = o1.equals(o2);
-				}
-			}
-		}
+		boolean equalsAttribute = equalsAttributes(type1, type2, o1, o2);
 
 		if (_log.isDebugEnabled() && !(equalsAttribute)) {
 			_log.debug(
@@ -78,13 +84,30 @@ public class DataBaseComparator implements DataComparator {
 		return equalsAttribute;
 	}
 
-	public boolean exact(Data data1, Data data2) {
-		return equals(data1, data2);
-	}
+	public boolean equalsAttributes(
+			int type1, int type2, Object o1, Object o2) {
 
-	@Override
-	public String[] getExactAttributes() {
-		return new String[0];
+		boolean isNull1 = DataUtil.isNull(o1);
+		boolean isNull2 = DataUtil.isNull(o2);
+
+		if (isNull1 || isNull2) {
+			return (isNull1 && isNull2);
+		}
+
+		boolean equalsAttribute = o1.equals(o2);
+
+		if (equalsAttribute) {
+			return true;
+		}
+
+		if ((type1 != type2) || (type1 == 0) || (type2 == 0)) {
+			String str1 = DataUtil.castString(o1);
+			String str2 = DataUtil.castString(o2);
+
+			return str1.equals(str2);
+		}
+
+		return false;
 	}
 
 	public Integer hashCode(Data data) {

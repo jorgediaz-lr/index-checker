@@ -14,48 +14,46 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.util.Validator;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Jorge Díaz
  */
 public class DataModelComparator extends DataBaseComparator {
 
-	public DataModelComparator(String[] exactAttributes) {
-		this.exactAttributes = exactAttributes;
+	public DataModelComparator(List<String> attributes) {
+		this.attributes = attributes;
 	}
 
+	@Override
 	public int compare(Data data1, Data data2) {
 
-		return DataUtil.compareLongs(
-			data1.getPrimaryKey(), data2.getPrimaryKey());
+		if ((attributes == null)|| attributes.isEmpty()) {
+			throw new IllegalArgumentException();
+		}
+
+		int compare = 0;
+
+		for (String attribute : attributes) {
+			compare = compareAttributes(data1, data2, attribute, attribute);
+
+			if (compare != 0) {
+				break;
+			}
+		}
+
+		return compare;
 	}
 
+	@Override
 	public boolean equals(Data data1, Data data2) {
 		if (data1.model != data2.model) {
 			return false;
 		}
 
-		return (data1.getPrimaryKey() == data2.getPrimaryKey());
-	}
-
-	public boolean exact(Data data1, Data data2) {
-		if (!data1.equals(data2)) {
-			return false;
-		}
-
-		if (!Validator.equals(data1.getCompanyId(), data2.getCompanyId())) {
-			return false;
-		}
-
-		if (data1.getModel().hasAttribute("groupId") &&
-			!Validator.equals(data1.getGroupId(), data2.getGroupId())) {
-
-			return false;
-		}
-
-		for (String attr : exactAttributes) {
-			if (!data1.equalsAttributes(data2, attr)) {
+		for (String attribute : attributes) {
+			if (!equalsAttributes(data1, data2, attribute, attribute)) {
 				return false;
 			}
 		}
@@ -63,19 +61,27 @@ public class DataModelComparator extends DataBaseComparator {
 		return true;
 	}
 
-	public String[] getExactAttributes() {
-		return exactAttributes;
+	public List<String> getAttributes() {
+		return Collections.unmodifiableList(attributes);
 	}
 
+	@Override
 	public Integer hashCode(Data data) {
-		if (data.getPrimaryKey() == -1) {
-			return null;
+		int hashCode = 1;
+
+		for (String attribute : attributes) {
+			Object o = data.get(attribute);
+
+			if (o == null) {
+				return null;
+			}
+
+			hashCode *= o.hashCode();
 		}
 
-		return data.getEntryClassName().hashCode() *
-			Long.valueOf(data.getPrimaryKey()).hashCode();
+		return data.getEntryClassName().hashCode() * hashCode;
 	}
 
-	protected String[] exactAttributes = null;
+	protected List<String> attributes;
 
 }

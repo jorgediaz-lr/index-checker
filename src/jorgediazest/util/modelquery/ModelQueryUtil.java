@@ -68,10 +68,14 @@ public class ModelQueryUtil {
 		Map<Long, ?> dataMap, Map<Long, List<Data>> matchedMap,
 		String[] attributes) {
 
+		if (matchedMap.isEmpty()) {
+			return;
+		}
+
 		for (Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
-			if (matched.isEmpty()) {
+			if ((matched == null) || matched.isEmpty()) {
 				continue;
 			}
 
@@ -88,8 +92,36 @@ public class ModelQueryUtil {
 		}
 	}
 
+	public static Map<Long, List<Data>> getMatchingEntriesMap(
+		Map<Long, Data> dataMap, Map<Long, List<Data>> relatedMap,
+		String[] mappingsSource, String[] mappingsDest) {
+
+		if (dataMap.isEmpty() || relatedMap.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Long, List<Data>> matchedMap = new HashMap<Long, List<Data>>();
+
+		for (Entry<Long, Data> entry : dataMap.entrySet()) {
+			Data data = entry.getValue();
+
+			List<Data> matched = data.getMatchingEntries(
+					relatedMap, mappingsSource, mappingsDest);
+
+			if (!matched.isEmpty()) {
+				matchedMap.put(entry.getKey(), matched);
+			}
+		}
+
+		return matchedMap;
+	}
+
 	protected static void addMatchedData(
 		Data data, List<Data> matched, String[] attributes) {
+
+		if (matched.isEmpty()) {
+			return;
+		}
 
 		for (int k = 0; k<attributes.length; k++) {
 			String attribute = attributes[k];
@@ -111,72 +143,6 @@ public class ModelQueryUtil {
 				data.set(attribute, values);
 			}
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	protected static List<Data> getMatchingEntries(
-		Data data, Map<Long, List<Data>> relatedMap, String[] mappingsSource,
-		String[] mappingsDest) {
-
-		List<Data> relatedList = new ArrayList<Data>();
-
-		Object key = data.get(mappingsSource[0]);
-
-		if (key instanceof Set) {
-			for (Object k : (Set<Object>)key) {
-				List<Data> list = relatedMap.get(k);
-
-				if (list != null) {
-					relatedList.addAll(list);
-				}
-			}
-		}
-		else {
-			List<Data> list = relatedMap.get(key);
-
-			if (list != null) {
-				relatedList.addAll(list);
-			}
-		}
-
-		List<Data> matched = new ArrayList<Data>();
-
-		for (Data related : relatedList) {
-			boolean equalsAttributes = true;
-
-			for (int j = 1; j<mappingsSource.length; j++) {
-				equalsAttributes = data.includesValueOfAttribute(
-						related, mappingsSource[j], mappingsDest[j]);
-
-				if (!equalsAttributes) {
-					break;
-				}
-			}
-
-			if (equalsAttributes) {
-				matched.add(related);
-			}
-		}
-
-		return matched;
-	}
-
-	protected static Map<Long, List<Data>> getMatchingEntriesMap(
-		Map<Long, Data> dataMap, Map<Long, List<Data>> relatedMap,
-		String[] mappingsSource, String[] mappingsDest) {
-
-		Map<Long, List<Data>> matchedMap = new HashMap<Long, List<Data>>();
-
-		for (Entry<Long, Data> entry : dataMap.entrySet()) {
-			Data data = entry.getValue();
-
-			List<Data> matched = getMatchingEntries(
-					data, relatedMap, mappingsSource, mappingsDest);
-
-			matchedMap.put(entry.getKey(), matched);
-		}
-
-		return matchedMap;
 	}
 
 	protected static Object getRawRelatedData(
@@ -203,25 +169,6 @@ public class ModelQueryUtil {
 		}
 
 		return values;
-	}
-
-	protected static void splitSourceDest(
-		String[] dataArray, String[] dataArrayOrigin, String[] dataArrayDest) {
-
-		int i = 0;
-
-		for (String data : dataArray) {
-			String[] aux = data.split("=");
-			dataArrayOrigin[i] = aux[0];
-			int posDest = 0;
-
-			if (aux.length > 1) {
-				posDest = 1;
-			}
-
-			dataArrayDest[i] = aux[posDest];
-			i++;
-		}
 	}
 
 	@SuppressWarnings("unchecked")

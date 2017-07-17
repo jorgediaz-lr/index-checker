@@ -39,9 +39,9 @@ public class ComparisonUtil {
 	}
 
 	public static Comparison getComparison(
-		Model model, Set<Data> leftData, Set<Data> rightData,
-		boolean showBothExact, boolean showBothNotExact, boolean showOnlyLeft,
-		boolean showOnlyRight) {
+		Model model, DataComparator exactDataComparator, Set<Data> leftData,
+		Set<Data> rightData, boolean showBothExact, boolean showBothNotExact,
+		boolean showOnlyLeft, boolean showOnlyRight) {
 
 		Map<String, Set<Data>> data = new TreeMap<String, Set<Data>>();
 
@@ -65,16 +65,18 @@ public class ComparisonUtil {
 				Data dataLeft = bothArrSetLeft[i];
 				Data dataRight = bothArrSetRight[i];
 
-				if (!dataRight.equals(dataLeft)) {
+				if (!dataLeft.equals(dataRight)) {
 					throw new RuntimeException("Inconsistent data");
 				}
-				else if (dataRight.exact(dataLeft)) {
-					if (showBothExact) {
-						data.get("both-exact-left").add(dataLeft);
-						data.get("both-exact-right").add(dataRight);
-					}
+
+				boolean exact = exactDataComparator.equals(dataLeft, dataRight);
+
+				if (exact && showBothExact) {
+					data.get("both-exact-left").add(dataLeft);
+					data.get("both-exact-right").add(dataRight);
 				}
-				else if (showBothNotExact) {
+
+				if (!exact && showBothNotExact) {
 					data.get("both-notexact-left").add(dataLeft);
 					data.get("both-notexact-right").add(dataRight);
 				}

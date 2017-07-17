@@ -23,6 +23,40 @@ import java.util.Set;
 public class DataComparatorMap extends DataBaseComparator {
 
 	@Override
+	public int compare(Data data1, Data data2) {
+		Set<String> k1 = data1.getMap().keySet();
+		Set<String> k2 = data2.getMap().keySet();
+
+		if (k1.size() != k2.size()) {
+			return k1.size() - k2.size();
+		}
+
+		int compare = 0;
+
+		Iterator<String> it1 = k1.iterator();
+		Iterator<String> it2 = k2.iterator();
+
+		while (it1.hasNext() && it2.hasNext()) {
+			String s1 = it1.next();
+			String s2 = it2.next();
+
+			compare = s1.compareTo(s2);
+
+			if (compare != 0) {
+				break;
+			}
+
+			compare = compareAttributes(data1, data2, s1, s2);
+
+			if (compare != 0) {
+				break;
+			}
+		}
+
+		return compare;
+	}
+
+	@Override
 	public boolean equals(Data data1, Data data2) {
 		Set<String> k1 = data1.getMap().keySet();
 		Set<String> k2 = data2.getMap().keySet();
@@ -39,17 +73,12 @@ public class DataComparatorMap extends DataBaseComparator {
 		Iterator<String> it2 = k2.iterator();
 
 		while (it1.hasNext() && it2.hasNext()) {
-			if (!data1.equalsAttributes(data2, it1.next(), it2.next())) {
+			if (!equalsAttributes(data1, data2, it1.next(), it2.next())) {
 				return false;
 			}
 		}
 
 		return true;
-	}
-
-	@Override
-	public boolean exact(Data data1, Data data2) {
-		return equals(data1, data2);
 	}
 
 	@Override
