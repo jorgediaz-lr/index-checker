@@ -14,14 +14,11 @@
 
 package jorgediazest.util.reflection;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -31,13 +28,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import jorgediazest.util.model.Model;
+import java.util.UUID;
 
 /**
  * @author Jorge Díaz
  */
 public class ReflectionUtil {
+
+	public static final int CUSTOM_UUID = 10000;
 
 	public static Object castStringToJdbcTypeObject(int type, String value) {
 		value = StringUtil.unquote(value);
@@ -105,6 +103,10 @@ public class ReflectionUtil {
 				result = java.sql.Timestamp.valueOf(value);
 				break;
 
+			case CUSTOM_UUID:
+				result = UUID.fromString(value);
+				break;
+
 			default:
 				throw new RuntimeException(
 					"Unsupported conversion for " +
@@ -112,41 +114,6 @@ public class ReflectionUtil {
 		}
 
 		return result;
-	}
-
-	@Deprecated
-	public static Criterion generateSingleCriterion(
-		Model model, String attrName, String attrValue, String op) {
-
-		Criterion criterion = null;
-
-		if (model.isPartOfPrimaryKeyMultiAttribute(attrName)) {
-			attrName = "primaryKey." + attrName;
-		}
-
-		try {
-			if (model.hasAttribute(attrValue)) {
-				criterion =
-					(Criterion)contructorCriterionImpl.newInstance(
-						contructorPropertyExpression.newInstance(
-					new Object[] { attrName, attrValue, op}));
-			}
-			else {
-				Object value =
-					ReflectionUtil.castStringToJdbcTypeObject(
-						model.getAttributeType(attrName), attrValue);
-
-				criterion =
-					(Criterion)contructorCriterionImpl.newInstance(
-						contructorSimpleExpression.newInstance(
-					new Object[] { attrName, value, op}));
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-
-		return criterion;
 	}
 
 	public static Class<?> getJdbcTypeClass(int type) {
@@ -212,6 +179,10 @@ public class ReflectionUtil {
 			case Types.TIMESTAMP:
 				result = java.sql.Timestamp.class;
 				break;
+
+			case CUSTOM_UUID:
+				result = UUID.class;
+				break;
 		}
 
 		return result;
@@ -231,6 +202,8 @@ public class ReflectionUtil {
 				catch (IllegalAccessException e) {
 				}
 			}
+
+			aux.put(CUSTOM_UUID, "UUID");
 
 			jdbcTypeNames = aux;
 		}
@@ -349,47 +322,6 @@ public class ReflectionUtil {
 		return object.toString();
 	}
 
-	@Deprecated
-	private static Constructor<?> contructorCriterionImpl;
-
-	@Deprecated
-	private static Constructor<?> contructorPropertyExpression;
-
-	@Deprecated
-	private static Constructor<?> contructorSimpleExpression;
 	private static Map<Integer, String> jdbcTypeNames = null;
-
-	static {
-		try {
-			Class<?> criterion =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-				"org.hibernate.criterion.Criterion");
-
-			Class<?> simpleExpression =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-				"org.hibernate.criterion.SimpleExpression");
-			contructorSimpleExpression =
-				simpleExpression.getDeclaredConstructor(
-					String.class, Object.class, String.class);
-			contructorSimpleExpression.setAccessible(true);
-
-			Class<?> propertyExpression =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-				"org.hibernate.criterion.PropertyExpression");
-			contructorPropertyExpression =
-				propertyExpression.getDeclaredConstructor(
-					String.class, String.class, String.class);
-			contructorPropertyExpression.setAccessible(true);
-
-			Class<?> criterionImpl =
-				PortalClassLoaderUtil.getClassLoader().loadClass(
-				"com.liferay.portal.dao.orm.hibernate.CriterionImpl");
-			contructorCriterionImpl = criterionImpl.getDeclaredConstructor(
-				criterion);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
-		}
-	}
 
 }

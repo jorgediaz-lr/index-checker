@@ -128,30 +128,9 @@ public class ModelWrapper implements Model, Cloneable {
 			getService(), filter, projection, orders);
 	}
 
-	@Deprecated
 	@Override
-	public Criterion generateCriterionFilter(String stringFilter) {
-		return model.generateCriterionFilter(stringFilter);
-	}
-
-	@Deprecated
-	@Override
-	public Criterion generateInCriteria(String property, List<Long> list) {
-		return model.generateInCriteria(property, list);
-	}
-
-	@Deprecated
-	@Override
-	public Criterion generateSingleCriterion(String filter) {
-		return model.generateSingleCriterion(filter);
-	}
-
-	@Deprecated
-	@Override
-	public Criterion generateSingleCriterion(
-		String attrName, String attrValue, String op) {
-
-		return model.generateSingleCriterion(attrName, attrValue, op);
+	public Criterion generateInCriterion(String property, List<Long> list) {
+		return model.generateInCriterion(property, list);
 	}
 
 	@Override
@@ -200,20 +179,8 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public Criterion getCompanyFilter(long companyId) {
-		return model.getCompanyFilter(companyId);
-	}
-
-	@Override
-	public Criterion getCompanyGroupFilter(
-		long companyId, List<Long> groupIds) {
-
-		return model.getCompanyGroupFilter(companyId, groupIds);
-	}
-
-	@Override
-	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
-		return model.getCompanyGroupFilter(companyId, groupId);
+	public Criterion getCompanyCriterion(long companyId) {
+		return model.getCompanyCriterion(companyId);
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -234,28 +201,46 @@ public class ModelWrapper implements Model, Cloneable {
 	@Override
 	public Model getFilteredModel(Criterion filters, String nameSufix) {
 		if (serviceWrapper != null) {
-			filters = ModelUtil.generateConjunctionQueryFilter(
+			filters = ModelUtil.generateConjunctionCriterion(
 				filters, serviceWrapper.getFilter());
 		}
 
 		return model.getFilteredModel(filters, nameSufix);
 	}
 
-	@Override
-	public Model getFilteredModel(String filters) {
-		return getFilteredModel(filters, filters);
+	public Model getFilteredModel(String sqlFilter) {
+		return getFilteredModel(sqlFilter, sqlFilter);
 	}
 
-	@Override
-	public Model getFilteredModel(String filters, String nameSufix) {
+	public Model getFilteredModel(String sqlFilter, String nameSufix) {
 
-		Criterion filter = this.generateCriterionFilter(filters);
+		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
 
 		if (filter == null) {
 			return null;
 		}
 
 		return getFilteredModel(filter, nameSufix);
+	}
+
+	@Override
+	public Criterion getGroupCriterion(List<Long> groupIds) {
+
+		return model.getGroupCriterion(groupIds);
+	}
+
+	@Override
+	public Criterion getGroupCriterion(long groupId) {
+		return model.getGroupCriterion(groupId);
+	}
+
+	@Override
+	public List<String> getKeyAttributes() {
+		if (keyAttributes != null) {
+			return keyAttributes;
+		}
+
+		return model.getKeyAttributes();
 	}
 
 	@Override
@@ -383,6 +368,10 @@ public class ModelWrapper implements Model, Cloneable {
 		serviceWrapper.setFilter(filter);
 	}
 
+	public void setKeyAttributes(List<String> keyAttributes) {
+		this.keyAttributes = keyAttributes;
+	}
+
 	public void setNameSuffix(String suffix) {
 		if (Validator.isNull(suffix)) {
 			return;
@@ -400,6 +389,7 @@ public class ModelWrapper implements Model, Cloneable {
 
 	protected static Log _log = LogFactoryUtil.getLog(ModelWrapper.class);
 
+	protected List<String> keyAttributes = null;
 	protected Model model;
 	protected String name = null;
 	protected ServiceWrapper serviceWrapper = null;

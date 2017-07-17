@@ -29,14 +29,14 @@ import jorgediazest.util.table.TableInfo;
 /**
  * @author Jorge Díaz
  */
-public class ServiceWrapper implements Service {
+public class ServiceWrapper implements Service, Cloneable {
 
 	public ServiceWrapper(Service service) {
 		this.service = service;
 	}
 
 	public void addFilter(Criterion filter) {
-		this.filter = ModelUtil.generateConjunctionQueryFilter(
+		this.filter = ModelUtil.generateConjunctionCriterion(
 			this.filter, filter);
 	}
 

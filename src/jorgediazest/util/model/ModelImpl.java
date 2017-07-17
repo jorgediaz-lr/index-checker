@@ -14,7 +14,6 @@
 
 package jorgediazest.util.model;
 
-import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.Order;
@@ -39,7 +38,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jorgediazest.util.reflection.ReflectionUtil;
 import jorgediazest.util.service.Service;
 import jorgediazest.util.table.TableInfo;
 
@@ -132,80 +130,7 @@ public class ModelImpl implements Model {
 			getService(), filter, projection, orders);
 	}
 
-	@Deprecated
-	public Criterion generateCriterionFilter(String stringFilter) {
-
-		if (Validator.isNull(stringFilter)) {
-			return null;
-		}
-
-		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
-
-		String[] allFiltersArr = stringFilter.split(",");
-
-		for (String filters : allFiltersArr) {
-			Criterion criterion = this.generateDisjunctionCriterion(
-				filters.split("\\+"));
-
-			if (criterion == null) {
-				conjuntion = null;
-
-				break;
-			}
-
-			conjuntion.add(criterion);
-		}
-
-		if (conjuntion != null) {
-			return conjuntion;
-		}
-
-		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Invalid filter: " + stringFilter + " for " + this +
-				", creating a sqlRestriction");
-		}
-
-		return ModelUtil.generateSQLCriterion(stringFilter);
-	}
-
-	@Deprecated
-	public Criterion generateDisjunctionCriterion(String[] filters) {
-
-		Criterion criterion = null;
-
-		if (filters.length == 1) {
-			criterion = this.generateSingleCriterion(filters[0]);
-		}
-		else {
-			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
-
-			for (String singleFilter : filters) {
-				Criterion singleCriterion = this.generateSingleCriterion(
-					singleFilter);
-
-				if (singleCriterion == null) {
-					disjunction = null;
-
-					break;
-				}
-
-				disjunction.add(singleCriterion);
-			}
-
-			criterion = disjunction;
-		}
-
-		if ((criterion == null) && _log.isInfoEnabled()) {
-			_log.info(
-				"Invalid filters: " + Arrays.toString(filters) + " for " +
-				this);
-		}
-
-		return criterion;
-	}
-
-	public Criterion generateInCriteria(String property, List<Long> list) {
+	public Criterion generateInCriterion(String property, List<Long> list) {
 		int size = MAX_NUMBER_OF_CLAUSES;
 
 		if (list.size() <= size) {
@@ -222,22 +147,6 @@ public class ModelImpl implements Model {
 		}
 
 		return disjunction;
-	}
-
-	@Deprecated
-	public Criterion generateSingleCriterion(String filter) {
-
-		return ModelUtil.generateSingleCriterion(this, filter);
-	}
-
-	@Deprecated
-	public Criterion generateSingleCriterion(
-		String attrName, String attrValue, String op) {
-
-		attrName = cleanAttributeName(attrName);
-
-		return ReflectionUtil.generateSingleCriterion(
-			this, attrName, attrValue, op);
 	}
 
 	public int getAttributePos(String name) {
@@ -276,43 +185,12 @@ public class ModelImpl implements Model {
 		return classSimpleName;
 	}
 
-	public Criterion getCompanyFilter(long companyId) {
-		return getCompanyGroupFilter(companyId, null);
-	}
-
-	public Criterion getCompanyGroupFilter(
-			long companyId, List<Long> groupIds) {
-
-		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
-
-		if (this.hasAttribute("companyId")) {
-			conjunction.add(getProperty("companyId").eq(companyId));
+	public Criterion getCompanyCriterion(long companyId) {
+		if (!this.hasAttribute("companyId")) {
+			return null;
 		}
 
-		if (this.hasAttribute("groupId") && Validator.isNotNull(groupIds)) {
-			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
-
-			for (Long groupId : groupIds) {
-				disjunction.add(getProperty("groupId").eq(groupId));
-			}
-
-			conjunction.add(disjunction);
-		}
-
-		return conjunction;
-	}
-
-	public Criterion getCompanyGroupFilter(long companyId, long groupId) {
-
-		List<Long> groupIds = null;
-
-		if (groupId != 0) {
-			groupIds = new ArrayList<Long>();
-
-			groupIds.add(groupId);
-		}
-
-		return getCompanyGroupFilter(companyId, groupIds);
+		return getProperty("companyId").eq(companyId);
 	}
 
 	public String getDisplayName(Locale locale) {
@@ -347,19 +225,62 @@ public class ModelImpl implements Model {
 		return modelWrapper;
 	}
 
-	public Model getFilteredModel(String filters) {
-		return getFilteredModel(filters, filters);
+	public Model getFilteredModel(String sqlFilter) {
+		return getFilteredModel(sqlFilter, sqlFilter);
 	}
 
-	public Model getFilteredModel(String filters, String nameSufix) {
+	public Model getFilteredModel(String sqlFilter, String nameSufix) {
 
-		Criterion filter = this.generateCriterionFilter(filters);
+		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
 
 		if (filter == null) {
 			return null;
 		}
 
 		return getFilteredModel(filter, nameSufix);
+	}
+
+	public Criterion getGroupCriterion(List<Long> groupIds) {
+
+		if (!this.hasAttribute("groupId") || Validator.isNull(groupIds)) {
+			return null;
+		}
+
+		Property groupIdProperty = getProperty("groupId");
+
+		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+		for (Long groupId : groupIds) {
+			disjunction.add(groupIdProperty.eq(groupId));
+		}
+
+		return disjunction;
+	}
+
+	public Criterion getGroupCriterion(long groupId) {
+		return getGroupCriterion(Collections.singletonList(groupId));
+	}
+
+	@Override
+	public List<String> getKeyAttributes() {
+		String primaryKeyAttribute = getPrimaryKeyAttribute();
+		String[] primaryKeyMultiAttribute = getPrimaryKeyMultiAttribute();
+
+		if (Validator.isNull(primaryKeyAttribute)) {
+			return Arrays.asList(primaryKeyMultiAttribute);
+		}
+
+		if (primaryKeyMultiAttribute.length == 0) {
+			return Collections.singletonList(primaryKeyAttribute);
+		}
+
+		List<String> primaryKeyAttributes = new ArrayList<String>();
+
+		primaryKeyAttributes.add(primaryKeyAttribute);
+
+		primaryKeyAttributes.addAll(Arrays.asList(primaryKeyMultiAttribute));
+
+		return primaryKeyAttributes;
 	}
 
 	public ModelFactory getModelFactory() {

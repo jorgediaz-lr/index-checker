@@ -22,11 +22,6 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.PluginContextListener;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
-import com.liferay.portal.kernel.util.AggregateClassLoader;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.util.PortalUtil;
@@ -36,8 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.ServletContext;
 
 import jorgediazest.util.service.Service;
 
@@ -70,7 +63,7 @@ public class ModelUtil {
 		return service.executeDynamicQuery(query);
 	}
 
-	public static Criterion generateConjunctionQueryFilter(
+	public static Criterion generateConjunctionCriterion(
 		Criterion criterion1, Criterion criterion2) {
 
 		if (criterion1 == null) {
@@ -84,47 +77,6 @@ public class ModelUtil {
 		conjuntion.add(criterion1);
 		conjuntion.add(criterion2);
 		return conjuntion;
-	}
-
-	@Deprecated
-	public static Criterion generateSingleCriterion(
-		Model model, String filter) {
-
-		String[] ops = {"=", "<>", " like ", ">", "<" ,"<=", ">="};
-
-		Criterion criterion = null;
-
-		for (String op : ops) {
-			boolean dummyValue = false;
-
-			String filterAux = filter;
-
-			if (filterAux.endsWith(op)) {
-				filterAux = filterAux + "DUMMY_TEXT";
-				dummyValue = true;
-			}
-
-			String[] filterArr = filterAux.split(op);
-
-			if ((filterArr != null) && (filterArr.length == 2)) {
-				String attrName = filterArr[0];
-				String attrValue = filterArr[1];
-
-				if (dummyValue) {
-					attrValue = attrValue.replaceAll(
-						"DUMMY_TEXT", StringPool.BLANK);
-				}
-
-				if (model.hasAttribute(attrName)) {
-					criterion = model.generateSingleCriterion(
-						attrName, attrValue, op);
-				}
-
-				break;
-			}
-		}
-
-		return criterion;
 	}
 
 	public static Criterion generateSQLCriterion(String sql) {
@@ -143,61 +95,6 @@ public class ModelUtil {
 		}
 
 		return cachedAttributeNames.get(attribute);
-	}
-
-	@Deprecated
-	public static ClassLoader getClassLoaderAggregate() {
-
-		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
-
-		AggregateClassLoader aggregateClassLoader = new AggregateClassLoader(
-			portalClassLoader);
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Adding " + portalClassLoader);
-		}
-
-		aggregateClassLoader.addClassLoader(portalClassLoader);
-
-		aggregateClassLoader.addClassLoader(getClassLoaders());
-
-		return aggregateClassLoader;
-	}
-
-	@Deprecated
-	public static List<ClassLoader> getClassLoaders() {
-		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
-
-		for (String servletContextName : ServletContextPool.keySet()) {
-			try {
-				ServletContext servletContext = ServletContextPool.get(
-					servletContextName);
-
-				ClassLoader classLoader =
-					(ClassLoader)servletContext.getAttribute(
-						PluginContextListener.PLUGIN_CLASS_LOADER);
-
-				if (classLoader == null) {
-					continue;
-				}
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Adding " + classLoader + " for " + servletContextName);
-				}
-
-				classLoaders.add(classLoader);
-			}
-			catch (Exception e) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Error adding classLoader for " + servletContextName +
-						": " + e.getMessage(), e);
-				}
-			}
-		}
-
-		return classLoaders;
 	}
 
 	public static List<String> getClassNameValues(

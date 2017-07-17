@@ -90,6 +90,10 @@ public class TableInfo {
 			return mapAttributePosition.get(name);
 		}
 
+		if ("pk".equals(name)) {
+			name = this.getPrimaryKeyAttribute();
+		}
+
 		Object[][] values = this.getAttributes();
 
 		if (name.endsWith(StringPool.UNDERLINE)) {
@@ -138,7 +142,7 @@ public class TableInfo {
 		int[] types = new int[values.length];
 
 		for (int i = 0; i < values.length; i++) {
-			types[i] = (Integer)values[i][1];
+			types[i] = getAttributeType((String)values[i][0]);
 		}
 
 		return types;
@@ -149,6 +153,12 @@ public class TableInfo {
 
 		if (pos == -1) {
 			return Types.NULL;
+		}
+
+		if ("uuid".equals(name) || "uuid_".equals(name) ||
+			name.endsWith("Uuid")) {
+
+			return ReflectionUtil.CUSTOM_UUID;
 		}
 
 		return (Integer)this.getAttributes()[pos][1];

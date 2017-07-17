@@ -51,17 +51,7 @@ public interface Model extends Comparable<Model> {
 		Criterion filter, Projection projection, List<Order> order)
 	throws Exception;
 
-	@Deprecated
-	public Criterion generateCriterionFilter(String stringFilter);
-
-	public Criterion generateInCriteria(String property, List<Long> list);
-
-	@Deprecated
-	public Criterion generateSingleCriterion(String filter);
-
-	@Deprecated
-	public Criterion generateSingleCriterion(
-		String attrName, String attrValue, String op);
+	public Criterion generateInCriterion(String property, List<Long> list);
 
 	public int getAttributePos(String name);
 
@@ -81,11 +71,7 @@ public interface Model extends Comparable<Model> {
 
 	public String getClassSimpleName();
 
-	public Criterion getCompanyFilter(long companyId);
-
-	public Criterion getCompanyGroupFilter(long companyId, List<Long> groupIds);
-
-	public Criterion getCompanyGroupFilter(long companyId, long groupId);
+	public Criterion getCompanyCriterion(long companyId);
 
 	public String getDisplayName(Locale locale);
 
@@ -96,6 +82,12 @@ public interface Model extends Comparable<Model> {
 	public Model getFilteredModel(String filters);
 
 	public Model getFilteredModel(String filters, String nameSufix);
+
+	public Criterion getGroupCriterion(List<Long> groupIds);
+
+	public Criterion getGroupCriterion(long groupId);
+
+	public List<String> getKeyAttributes();
 
 	public ModelFactory getModelFactory();
 
