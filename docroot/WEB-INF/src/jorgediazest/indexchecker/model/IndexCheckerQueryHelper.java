@@ -31,11 +31,11 @@ import java.util.Set;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
-import jorgediazest.util.modelquery.ModelQueryUtil;
+import jorgediazest.util.query.Query;
+import jorgediazest.util.query.QueryUtil;
 public class IndexCheckerQueryHelper {
 
 	@SuppressWarnings("unchecked")
@@ -117,24 +117,24 @@ public class IndexCheckerQueryHelper {
 				relatedFilter);
 		}
 		else {
-			relatedMap = DataUtil.getDataWithDuplicates(
+			relatedMap = Query.getDataWithDuplicates(
 				relatedModel, relatedAttributes.toArray(new String[0]),
 				mappingsRelated.get(0), relatedFilter);
 		}
 
 		Map<Long, List<Data>> matchedMap =
-			ModelQueryUtil.getMatchingEntriesMap(
+			QueryUtil.getMatchingEntriesMap(
 				liferayDataMap, relatedMap,
 				mappingsSource.toArray(new String[0]),
 				mappingsRelated.toArray(new String[0]));
 
 		if (rawData) {
-			ModelQueryUtil.addRelatedModelDataRaw(
+			QueryUtil.addRelatedModelDataRaw(
 				liferayDataMap, matchedMap,
 				attributesToQuery.toArray(new String[0]));
 		}
 		else {
-			ModelQueryUtil.addRelatedModelData(
+			QueryUtil.addRelatedModelData(
 				liferayDataMap, matchedMap,
 				attributesToQuery.toArray(new String[0]));
 		}
@@ -181,7 +181,7 @@ public class IndexCheckerQueryHelper {
 				relatedMap = queryCache.get(cacheKey);
 
 				if (relatedMap == null) {
-					relatedMap = DataUtil.getDataWithDuplicates(
+					relatedMap = Query.getDataWithDuplicates(
 						relatedModel, relatedAttributes.toArray(new String[0]),
 						mappingsRelated.get(0), relatedFilter);
 
@@ -204,7 +204,7 @@ public class IndexCheckerQueryHelper {
 		String[] attributesToQueryArr = attributesToQuery.toArray(
 			new String[0]);
 
-		return DataUtil.getData(model, attributesToQueryArr, filter);
+		return Query.getData(model, attributesToQueryArr, filter);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

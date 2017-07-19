@@ -35,10 +35,10 @@ import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
 import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 
+import jorgediazest.util.comparator.DataComparator;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataComparator;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 

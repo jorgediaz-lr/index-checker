@@ -23,8 +23,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jorgediazest.util.comparator.DataModelComparator;
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataModelComparator;
 
 /**
  * @author Jorge Díaz
