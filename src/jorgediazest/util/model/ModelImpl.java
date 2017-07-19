@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.util.PortalUtil;
 
 import java.util.ArrayList;
@@ -194,16 +193,7 @@ public class ModelImpl implements Model {
 	}
 
 	public String getDisplayName(Locale locale) {
-		String displayName = ResourceActionsUtil.getModelResource(
-			locale, getClassName());
-
-		if (displayName.startsWith(
-				ResourceActionsUtil.getModelResourceNamePrefix())) {
-
-			return StringPool.BLANK;
-		}
-
-		return displayName;
+		return ModelUtil.getDisplayName(this.getClassName(), locale);
 	}
 
 	public Model getFilteredModel(Criterion filters) {

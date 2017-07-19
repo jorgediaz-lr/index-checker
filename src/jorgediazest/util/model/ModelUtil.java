@@ -22,13 +22,16 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.ClassName;
+import com.liferay.portal.security.permission.ResourceActionsUtil;
 import com.liferay.portal.util.PortalUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,6 +114,19 @@ public class ModelUtil {
 		}
 
 		return classNameStr;
+	}
+
+	public static String getDisplayName(String className, Locale locale) {
+		String displayName = ResourceActionsUtil.getModelResource(
+			locale, className);
+
+		if (displayName.startsWith(
+				ResourceActionsUtil.getModelResourceNamePrefix())) {
+
+			return StringPool.BLANK;
+		}
+
+		return displayName;
 	}
 
 	protected static Map<String, String> cachedAttributeNames =
