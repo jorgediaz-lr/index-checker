@@ -125,11 +125,11 @@ public abstract class ServiceImpl implements Service {
 		}
 
 		Object[][] attributesArr =
-			(Object[][])ReflectionUtil.getLiferayModelImplField(
+			(Object[][])ReflectionUtil.getStaticFieldValue(
 				classLiferayModelImpl, fieldPrefix + "_COLUMNS");
-		String name = (String)ReflectionUtil.getLiferayModelImplField(
+		String name = (String)ReflectionUtil.getStaticFieldValue(
 			classLiferayModelImpl, fieldPrefix + "_NAME");
-		String sqlCreate = (String)ReflectionUtil.getLiferayModelImplField(
+		String sqlCreate = (String)ReflectionUtil.getStaticFieldValue(
 			classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
 
 		return new TableInfo(name, attributesArr, sqlCreate);

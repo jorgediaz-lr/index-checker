@@ -17,7 +17,6 @@ package jorgediazest.util.reflection;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -25,9 +24,7 @@ import java.lang.reflect.Method;
 import java.sql.Types;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -36,85 +33,6 @@ import java.util.UUID;
 public class ReflectionUtil {
 
 	public static final int CUSTOM_UUID = 10000;
-
-	public static Object castStringToJdbcTypeObject(int type, String value) {
-		value = StringUtil.unquote(value);
-
-		Object result = null;
-
-		switch (type) {
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.CLOB:
-				result = value;
-				break;
-
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				result = new java.math.BigDecimal(value);
-				break;
-
-			case Types.BIT:
-			case Types.BOOLEAN:
-				result = Boolean.parseBoolean(value);
-				break;
-
-			case Types.TINYINT:
-				result = Byte.parseByte(value);
-				break;
-
-			case Types.SMALLINT:
-				result = Short.parseShort(value);
-				break;
-
-			case Types.INTEGER:
-				result = Integer.parseInt(value);
-				break;
-
-			case Types.BIGINT:
-				result = Long.parseLong(value);
-				break;
-
-			case Types.REAL:
-			case Types.FLOAT:
-				result = Float.parseFloat(value);
-				break;
-
-			case Types.DOUBLE:
-				result = Double.parseDouble(value);
-				break;
-
-			case Types.BINARY:
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				result = value.getBytes();
-				break;
-
-			case Types.DATE:
-				result = java.sql.Date.valueOf(value);
-				break;
-
-			case Types.TIME:
-				result = java.sql.Time.valueOf(value);
-				break;
-
-			case Types.TIMESTAMP:
-				result = java.sql.Timestamp.valueOf(value);
-				break;
-
-			case CUSTOM_UUID:
-				result = UUID.fromString(value);
-				break;
-
-			default:
-				throw new RuntimeException(
-					"Unsupported conversion for " +
-						ReflectionUtil.getJdbcTypeNames().get(type));
-		}
-
-		return result;
-	}
 
 	public static Class<?> getJdbcTypeClass(int type) {
 		Class<?> result = Object.class;
@@ -188,48 +106,6 @@ public class ReflectionUtil {
 		return result;
 	}
 
-	public static Map<Integer, String> getJdbcTypeNames() {
-
-		if (jdbcTypeNames == null) {
-			Map<Integer, String> aux = new HashMap<Integer, String>();
-
-			for (Field field : Types.class.getFields()) {
-				try {
-					aux.put((Integer)field.get(null), field.getName());
-				}
-				catch (IllegalArgumentException e) {
-				}
-				catch (IllegalAccessException e) {
-				}
-			}
-
-			aux.put(CUSTOM_UUID, "UUID");
-
-			jdbcTypeNames = aux;
-		}
-
-		return jdbcTypeNames;
-	}
-
-	public static Object getLiferayModelImplField(
-		Class<?> classLiferayModelImpl, String liferayModelImplField) {
-
-		Object data = null;
-		try {
-			Field field = classLiferayModelImpl.getDeclaredField(
-				liferayModelImplField);
-			data = field.get(null);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(
-				"Error accessing to " +
-				classLiferayModelImpl.getName() + "#" +
-				liferayModelImplField, e);
-		}
-
-		return data;
-	}
-
 	public static List<String> getLiferayModelImplMappingTablesFields(
 		Class<?> classLiferayModelImpl) {
 
@@ -267,6 +143,21 @@ public class ReflectionUtil {
 				clazz, fieldName);
 
 		return field.get(object);
+	}
+
+	public static Object getStaticFieldValue(Class<?> clazz, String fieldName) {
+
+		try {
+			Field field =
+				com.liferay.portal.kernel.util.ReflectionUtil.getDeclaredField(
+					clazz, fieldName);
+
+			return field.get(null);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(
+				"Error accessing to " + clazz.getName() + "#" + fieldName, e);
+		}
 	}
 
 	public static String getWrappedModelImpl(DynamicQuery dynamicQuery) {
@@ -321,7 +212,5 @@ public class ReflectionUtil {
 
 		return object.toString();
 	}
-
-	private static Map<Integer, String> jdbcTypeNames = null;
 
 }
