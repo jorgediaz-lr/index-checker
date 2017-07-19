@@ -12,10 +12,12 @@
  * details.
  */
 
-package jorgediazest.util.data;
+package jorgediazest.util.comparator;
 
 import java.util.Collections;
 import java.util.List;
+
+import jorgediazest.util.data.Data;
 
 /**
  * @author Jorge Díaz
@@ -48,7 +50,7 @@ public class DataModelComparator extends DataBaseComparator {
 
 	@Override
 	public boolean equals(Data data1, Data data2) {
-		if (data1.model != data2.model) {
+		if (data1.getModel() != data2.getModel()) {
 			return false;
 		}
 

@@ -14,8 +14,6 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
@@ -25,11 +23,15 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+
 import java.math.BigDecimal;
+
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+
 import java.text.DateFormat;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,9 +45,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
 
+import jorgediazest.util.comparator.DataComparator;
+import jorgediazest.util.comparator.DataComparatorMap;
+import jorgediazest.util.comparator.DataModelComparator;
 import jorgediazest.util.model.Model;
-import jorgediazest.util.modelquery.DatabaseUtil;
-import jorgediazest.util.modelquery.ModelQueryUtil;
 import jorgediazest.util.table.TableInfo;
 
 /**
@@ -266,6 +269,76 @@ public class DataUtil {
 		return null;
 	}
 
+	public static Object castObjectToJdbcTypeObject(int type, Object value) {
+		Object result = null;
+
+		switch (type) {
+			case Types.NULL:
+				result = value;
+				break;
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.CLOB:
+				result = castString(value);
+				break;
+
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				result = castBigDecimal(value);
+				break;
+
+			case Types.BIT:
+			case Types.BOOLEAN:
+				result = castBoolean(value);
+				break;
+
+			case Types.TINYINT:
+				result = castByte(value);
+				break;
+
+			case Types.SMALLINT:
+				result = castShort(value);
+				break;
+
+			case Types.INTEGER:
+				result = castInt(value);
+				break;
+
+			case Types.BIGINT:
+				result = castLong(value);
+				break;
+
+			case Types.REAL:
+			case Types.FLOAT:
+				result = castFloat(value);
+				break;
+
+			case Types.DOUBLE:
+				result = castDouble(value);
+				break;
+
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				result = castBytes(value);
+				break;
+
+			case Types.DATE:
+			case Types.TIME:
+			case Types.TIMESTAMP:
+				result = castDateToEpoch(value);
+				break;
+
+			default:
+				throw new RuntimeException(
+					"Unsupported conversion for " +
+						DataUtil.getJdbcTypeNames().get(type));
+		}
+
+		return result;
+	}
+
 	public static Short castShort(Object value) {
 		if (value == null) {
 			return null;
@@ -334,76 +407,6 @@ public class DataUtil {
 		return both.toArray(new Data[0]);
 	}
 
-	public static Map<Long, Data> getData(
-		Model model, String[] attributes, Criterion filter)
-	throws Exception {
-		return getData(
-			model, attributes, model.getPrimaryKeyAttribute(), filter);
-	}
-
-	public static Map<Long, Data> getData(
-			Model model, String[] attributes, String mapKeyAttribute,
-			Criterion filter)
-		throws Exception {
-
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
-		Map<Long, Data> dataMapByPK = new HashMap<Long, Data>();
-
-		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
-			dataMapByPK = null;
-		}
-
-		if (attributes == null) {
-			attributes = model.getAttributesName();
-		}
-
-		List<String> validAttributes = new ArrayList<String>();
-		List<String> notValidAttributes = new ArrayList<String>();
-		ProjectionList projectionList = model.getPropertyProjection(
-			attributes, validAttributes, notValidAttributes);
-
-		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
-			filter, projectionList);
-
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
-
-		long i = -1;
-
-		for (Object[] result : results) {
-			Data data = DataUtil.createDataObject(
-				model, validAttributesArr, result);
-
-			addDataToMap(dataMap, mapKeyAttribute, data, i--);
-
-			addDataToMap(
-				dataMapByPK, model.getPrimaryKeyAttribute(), data, null);
-		}
-
-		if (dataMapByPK == null) {
-			dataMapByPK = dataMap;
-		}
-
-		if (dataMap.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		for (String notValidAttribute : notValidAttributes) {
-			Map<Long, List<Data>> relatedDataMap =
-				getRelatedDataFromMappingTable(model, notValidAttribute);
-
-			if (relatedDataMap == null) {
-				continue;
-			}
-
-			ModelQueryUtil.addRelatedModelData(
-				dataMapByPK, relatedDataMap, new String[]{notValidAttribute});
-		}
-
-		return dataMap;
-	}
-
 	public static DataComparator getDataComparator(Model model) {
 		if (model == null) {
 			return dataComparatorMap;
@@ -435,70 +438,33 @@ public class DataUtil {
 		return dataComparator;
 	}
 
-	public static Map<Long, List<Data>> getDataWithDuplicates(
-			Model model, String[] attributes, String mapKeyAttribute,
-			Criterion filter)
-		throws Exception {
-
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
-		Map<Long, List<Data>> dataMapByPK = new HashMap<Long, List<Data>>();
-
-		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
-			dataMapByPK = null;
-		}
-
-		if (attributes == null) {
-			attributes = model.getAttributesName();
-		}
-
-		List<String> validAttributes = new ArrayList<String>();
-		List<String> notValidAttributes = new ArrayList<String>();
-		ProjectionList projectionList = model.getPropertyProjection(
-			attributes, validAttributes, notValidAttributes);
-
-		@SuppressWarnings("unchecked")
-		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
-			filter, projectionList);
-
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
-
-		long i = -1;
-
-		for (Object[] result : results) {
-			Data data = createDataObject(model, validAttributesArr, result);
-
-			addDataToMapValueList(dataMap, mapKeyAttribute, data, i--);
-
-			addDataToMapValueList(
-				dataMapByPK, model.getPrimaryKeyAttribute(), data, null);
-		}
-
-		if (dataMapByPK == null) {
-			dataMapByPK = dataMap;
-		}
-
-		for (String notValidAttribute : notValidAttributes) {
-			Map<Long, List<Data>> relatedDataMap =
-				getRelatedDataFromMappingTable(model, notValidAttribute);
-
-			if (relatedDataMap == null) {
-				continue;
-			}
-
-			ModelQueryUtil.addRelatedModelData(
-				dataMapByPK, relatedDataMap, new String[]{notValidAttribute});
-		}
-
-		return dataMap;
-	}
-
 	public static ThreadLocal<Boolean> getIgnorecase() {
 		return DataUtil.ignoreCase;
 	}
 
 	public static boolean getIgnoreCase() {
 		return DataUtil.ignoreCase.get();
+	}
+
+	public static Map<Integer, String> getJdbcTypeNames() {
+
+		if (jdbcTypeNames == null) {
+			Map<Integer, String> aux = new HashMap<Integer, String>();
+
+			for (Field field : Types.class.getFields()) {
+				try {
+					aux.put((Integer)field.get(null), field.getName());
+				}
+				catch (IllegalArgumentException e) {
+				}
+				catch (IllegalAccessException e) {
+				}
+			}
+
+			jdbcTypeNames = aux;
+		}
+
+		return jdbcTypeNames;
 	}
 
 	public static String[] getListAttr(Collection<Data> data, String attr) {
@@ -649,8 +615,7 @@ public class DataUtil {
 			return o;
 		}
 
-		Object transformObject = DataUtil.castObjectToJdbcTypeObject(
-			type, o);
+		Object transformObject = DataUtil.castObjectToJdbcTypeObject(type, o);
 
 		if (transformObject instanceof String) {
 			String str = (String)transformObject.toString();
@@ -661,75 +626,6 @@ public class DataUtil {
 		}
 
 		return transformObject;
-	}
-
-	protected static void addDataToMap(
-		Map<Long, Data> dataMap, String mapKeyAttribute, Data data,
-		Long defaultValue) {
-
-		if ((dataMap == null) || (data == null)) {
-			return;
-		}
-
-		Long mappingAttributeValue = castLong(data.get(mapKeyAttribute));
-
-		if (Validator.isNull(mappingAttributeValue)) {
-			if (defaultValue == null) {
-				return;
-			}
-
-			mappingAttributeValue = defaultValue;
-		}
-
-		if (!dataMap.containsKey(mappingAttributeValue)) {
-			dataMap.put(mappingAttributeValue, data);
-		}
-	}
-
-	protected static void addDataToMapValueList(
-			Map<Long, List<Data>> dataMap, String mapKeyAttribute, Data data,
-			Long defaultValue) {
-
-		if ((dataMap == null) || (data == null)) {
-			return;
-		}
-
-		Long mappingAttributeValue = castLong(data.get(mapKeyAttribute));
-
-		if (Validator.isNull(mappingAttributeValue)) {
-			if (defaultValue == null) {
-				return;
-			}
-
-			mappingAttributeValue = defaultValue;
-		}
-
-		if (!dataMap.containsKey(mappingAttributeValue)) {
-			List<Data> list = new ArrayList<Data>();
-			list.add(data);
-			dataMap.put(mappingAttributeValue, list);
-		}
-		else {
-			dataMap.get(mappingAttributeValue).add(data);
-		}
-	}
-
-	protected static Map<Long, List<Data>> getRelatedDataFromMappingTable(
-			Model model, String attribute)
-		throws Exception {
-
-		TableInfo tableInfo = model.getTableInfo(attribute);
-
-		if (tableInfo == null) {
-			return null;
-		}
-
-		Set<Data> relateDataSet = DatabaseUtil.queryTable(
-			model, tableInfo,
-			new String[] {model.getPrimaryKeyAttribute(), attribute});
-
-		return DataUtil.getMapFromSetData(
-			relateDataSet, model.getPrimaryKeyAttribute());
 	}
 
 	protected static Set<Object> transformArrayToSet(
@@ -941,101 +837,9 @@ public class DataUtil {
 		}
 	};
 
+	private static Map<Integer, String> jdbcTypeNames = null;
 	private static Map<Model, WeakReference<DataComparator>>
 		modelDataComparatorCache = Collections.synchronizedMap(
 			new WeakHashMap<Model, WeakReference<DataComparator>>());
-
-	public static Object castObjectToJdbcTypeObject(int type, Object value) {
-		Object result = null;
-	
-		switch (type) {
-			case Types.NULL:
-				result = value;
-				break;
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.CLOB:
-				result = castString(value);
-				break;
-	
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				result = castBigDecimal(value);
-				break;
-	
-			case Types.BIT:
-			case Types.BOOLEAN:
-				result = castBoolean(value);
-				break;
-	
-			case Types.TINYINT:
-				result = castByte(value);
-				break;
-	
-			case Types.SMALLINT:
-				result = castShort(value);
-				break;
-	
-			case Types.INTEGER:
-				result = castInt(value);
-				break;
-	
-			case Types.BIGINT:
-				result = castLong(value);
-				break;
-	
-			case Types.REAL:
-			case Types.FLOAT:
-				result = castFloat(value);
-				break;
-	
-			case Types.DOUBLE:
-				result = castDouble(value);
-				break;
-	
-			case Types.BINARY:
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				result = castBytes(value);
-				break;
-	
-			case Types.DATE:
-			case Types.TIME:
-			case Types.TIMESTAMP:
-				result = castDateToEpoch(value);
-				break;
-	
-			default:
-				throw new RuntimeException(
-					"Unsupported conversion for " +
-						DataUtil.getJdbcTypeNames().get(type));
-		}
-	
-		return result;
-	}
-
-	public static Map<Integer, String> getJdbcTypeNames() {
-	
-		if (jdbcTypeNames == null) {
-			Map<Integer, String> aux = new HashMap<Integer, String>();
-	
-			for (Field field : Types.class.getFields()) {
-				try {
-					aux.put((Integer)field.get(null), field.getName());
-				}
-				catch (IllegalArgumentException e) {
-				}
-				catch (IllegalAccessException e) {
-				}
-			}
-	
-			jdbcTypeNames = aux;
-		}
-	
-		return jdbcTypeNames;
-	}
-
-	private static Map<Integer, String> jdbcTypeNames = null;
 
 }

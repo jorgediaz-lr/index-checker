@@ -12,10 +12,13 @@
  * details.
  */
 
-package jorgediazest.util.data;
+package jorgediazest.util.comparator;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+
+import jorgediazest.util.data.Data;
+import jorgediazest.util.data.DataUtil;
 
 /**
  * @author Jorge Díaz

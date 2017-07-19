@@ -12,7 +12,7 @@
  * details.
  */
 
-package jorgediazest.util.modelquery;
+package jorgediazest.util.query;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -34,7 +34,7 @@ import jorgediazest.util.model.Model;
 /**
  * @author Jorge Díaz
  */
-public class ModelQueryUtil {
+public class QueryUtil {
 
 	public static void addRelatedModelData(
 		Map<Long, ?> dataMap, Map<Long, List<Data>> matchedMap,
@@ -188,6 +188,6 @@ public class ModelQueryUtil {
 		return Collections.emptyList();
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ModelQueryUtil.class);
+	private static Log _log = LogFactoryUtil.getLog(QueryUtil.class);
 
 }

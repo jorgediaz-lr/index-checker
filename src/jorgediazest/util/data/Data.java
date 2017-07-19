@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import jorgediazest.util.comparator.DataComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.table.TableInfo;
@@ -341,23 +342,23 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
-		Object transformObject;
+		Object transformedObject;
 
 		if (value instanceof Set) {
-			transformObject = DataUtil.transformArray(
+			transformedObject = DataUtil.transformArray(
 				type, ((Set)value).toArray());
 		}
 		else if (value instanceof Object[] || value.getClass().isArray()) {
-			transformObject = DataUtil.transformArray(type, (Object[])value);
+			transformedObject = DataUtil.transformArray(type, (Object[])value);
 		}
 		else {
-			transformObject = DataUtil.transformObject(type, value);
+			transformedObject = DataUtil.transformObject(type, value);
 		}
 
-		if (transformObject != null) {
+		if (transformedObject != null) {
 			attribute = ModelUtil.getCachedAttributeName(attribute);
 
-			map.put(attribute, transformObject);
+			map.put(attribute, transformedObject);
 		}
 	}
 
@@ -372,12 +373,12 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
-		Object transformObject = DataUtil.transformArray(type, values);
+		Object transformedObject = DataUtil.transformArray(type, values);
 
-		if (transformObject != null) {
+		if (transformedObject != null) {
 			attribute = ModelUtil.getCachedAttributeName(attribute);
 
-			map.put(attribute, transformObject);
+			map.put(attribute, transformedObject);
 		}
 	}
 
@@ -392,13 +393,13 @@ public class Data implements Comparable<Data> {
 			return;
 		}
 
-		Object transformObject = DataUtil.transformArray(
+		Object transformedObject = DataUtil.transformArray(
 			type, values.toArray());
 
-		if (transformObject != null) {
+		if (transformedObject != null) {
 			attribute = ModelUtil.getCachedAttributeName(attribute);
 
-			map.put(attribute, transformObject);
+			map.put(attribute, transformedObject);
 		}
 	}
 

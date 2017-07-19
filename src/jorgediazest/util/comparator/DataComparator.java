@@ -12,9 +12,11 @@
  * details.
  */
 
-package jorgediazest.util.data;
+package jorgediazest.util.comparator;
 
 import java.util.Comparator;
+
+import jorgediazest.util.data.Data;
 
 /**
  * @author Jorge Díaz
