@@ -25,14 +25,11 @@ import java.sql.Types;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Jorge Díaz
  */
 public class ReflectionUtil {
-
-	public static final int CUSTOM_UUID = 10000;
 
 	public static Class<?> getJdbcTypeClass(int type) {
 		Class<?> result = Object.class;
@@ -96,10 +93,6 @@ public class ReflectionUtil {
 
 			case Types.TIMESTAMP:
 				result = java.sql.Timestamp.class;
-				break;
-
-			case CUSTOM_UUID:
-				result = UUID.class;
 				break;
 		}
 
@@ -197,8 +190,6 @@ public class ReflectionUtil {
 		return null;
 	}
 
-	static Log _log = LogFactoryUtil.getLog(ReflectionUtil.class);
-
 	public static String getWrappedString(Object object, String methodName) {
 		if (object == null) {
 			return null;
@@ -212,5 +203,7 @@ public class ReflectionUtil {
 
 		return object.toString();
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(ReflectionUtil.class);
 
 }

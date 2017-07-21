@@ -43,7 +43,7 @@ import jorgediazest.util.service.Service;
 public class ModelUtil {
 
 	public static List<?> executeDynamicQuery(
-			Service service, Criterion filter, Projection projection,
+			Service service, Criterion criterion, Projection projection,
 			List<Order> orders)
 		throws Exception {
 
@@ -59,8 +59,8 @@ public class ModelUtil {
 			}
 		}
 
-		if (filter != null) {
-			query.add(filter);
+		if (criterion != null) {
+			query.add(criterion);
 		}
 
 		return service.executeDynamicQuery(query);

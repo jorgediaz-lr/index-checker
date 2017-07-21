@@ -85,6 +85,16 @@ public class TableInfo {
 		return getName().equals(tableInfo.getName());
 	}
 
+	public Class<?> getAttributeClass(String name) {
+		int type = this.getAttributeTypeId(name);
+
+		if (type == Types.NULL) {
+			return Object.class;
+		}
+
+		return ReflectionUtil.getJdbcTypeClass(type);
+	}
+
 	public int getAttributePos(String name) {
 		if (mapAttributePosition.containsKey(name)) {
 			return mapAttributePosition.get(name);
@@ -94,8 +104,6 @@ public class TableInfo {
 			name = this.getPrimaryKeyAttribute();
 		}
 
-		Object[][] values = this.getAttributes();
-
 		if (name.endsWith(StringPool.UNDERLINE)) {
 			name = name.substring(0, name.length() - 1);
 		}
@@ -104,13 +112,13 @@ public class TableInfo {
 
 		int pos = -1;
 
-		for (int i = 0; i < values.length; i++) {
-			if (((String)values[i][0]).endsWith(StringPool.UNDERLINE) &&
-				((String)values[i][0]).equals(nameWithUnderline)) {
+		for (int i = 0; i < attributesArr.length; i++) {
+			if (((String)attributesArr[i][0]).endsWith(StringPool.UNDERLINE) &&
+				((String)attributesArr[i][0]).equals(nameWithUnderline)) {
 
 				pos = i;
 			}
-			else if (((String)values[i][0]).equals(name)) {
+			else if (((String)attributesArr[i][0]).equals(name)) {
 				pos = i;
 			}
 		}
@@ -120,58 +128,24 @@ public class TableInfo {
 		return pos;
 	}
 
-	public Object[][] getAttributes() {
-		return attributesArr;
-	}
-
 	public String[] getAttributesName() {
-		Object[][] values = this.getAttributes();
+		String[] names = new String[attributesArr.length];
 
-		String[] names = new String[values.length];
-
-		for (int i = 0; i < values.length; i++) {
-			names[i] = (String)values[i][0];
+		for (int i = 0; i < attributesArr.length; i++) {
+			names[i] = (String)attributesArr[i][0];
 		}
 
 		return names;
 	}
 
-	public int[] getAttributesType() {
-		Object[][] values = this.getAttributes();
-
-		int[] types = new int[values.length];
-
-		for (int i = 0; i < values.length; i++) {
-			types[i] = getAttributeType((String)values[i][0]);
-		}
-
-		return types;
-	}
-
-	public int getAttributeType(String name) {
+	public int getAttributeTypeId(String name) {
 		int pos = this.getAttributePos(name);
 
 		if (pos == -1) {
 			return Types.NULL;
 		}
 
-		if ("uuid".equals(name) || "uuid_".equals(name) ||
-			name.endsWith("Uuid")) {
-
-			return ReflectionUtil.CUSTOM_UUID;
-		}
-
-		return (Integer)this.getAttributes()[pos][1];
-	}
-
-	public Class<?> getAttributeTypeClass(String name) {
-		int type = this.getAttributeType(name);
-
-		if (type == Types.NULL) {
-			return Object.class;
-		}
-
-		return ReflectionUtil.getJdbcTypeClass(type);
+		return (Integer)this.attributesArr[pos][1];
 	}
 
 	public String getDestinationAttr(String primaryKey) {

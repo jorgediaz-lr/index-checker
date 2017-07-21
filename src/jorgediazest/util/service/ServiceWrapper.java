@@ -35,9 +35,9 @@ public class ServiceWrapper implements Service, Cloneable {
 		this.service = service;
 	}
 
-	public void addFilter(Criterion filter) {
-		this.filter = ModelUtil.generateConjunctionCriterion(
-			this.filter, filter);
+	public void addCriterion(Criterion criterion) {
+		this.criterion = ModelUtil.generateConjunctionCriterion(
+			this.criterion, criterion);
 	}
 
 	@Override
@@ -49,7 +49,7 @@ public class ServiceWrapper implements Service, Cloneable {
 	public ServiceWrapper clone() {
 		ServiceWrapper serviceWrapper = new ServiceWrapper(service);
 
-		serviceWrapper.setFilter(filter);
+		serviceWrapper.setCriterion(criterion);
 
 		return serviceWrapper;
 	}
@@ -98,8 +98,8 @@ public class ServiceWrapper implements Service, Cloneable {
 		return service.getClassSimpleName();
 	}
 
-	public Criterion getFilter() {
-		return filter;
+	public Criterion getCriterion() {
+		return criterion;
 	}
 
 	@Override
@@ -129,14 +129,14 @@ public class ServiceWrapper implements Service, Cloneable {
 
 	public void prepareDynamicQuery(DynamicQuery dynamicQuery) {
 
-		if (filter != null) {
-			dynamicQuery.add(filter);
+		if (criterion != null) {
+			dynamicQuery.add(criterion);
 		}
 
 		if (_log.isDebugEnabled()) {
-			if (filter != null) {
+			if (criterion != null) {
 				String filterString = ReflectionUtil.getWrappedString(
-					filter, "getWrappedCriterion");
+					criterion, "getWrappedCriterion");
 				_log.debug("added filter: " + filterString);
 			}
 
@@ -148,8 +148,8 @@ public class ServiceWrapper implements Service, Cloneable {
 		}
 	}
 
-	public final void setFilter(Criterion filter) {
-		this.filter = filter;
+	public final void setCriterion(Criterion criterion) {
+		this.criterion = criterion;
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class ServiceWrapper implements Service, Cloneable {
 		return service.updateObject(object);
 	}
 
-	protected Criterion filter = null;
+	protected Criterion criterion = null;
 	protected Service service;
 
 	private static Log _log = LogFactoryUtil.getLog(ServiceWrapper.class);

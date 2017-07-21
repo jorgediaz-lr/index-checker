@@ -67,14 +67,17 @@ public class ModelImpl implements Model {
 		}
 	}
 
+	@Override
 	public int compareTo(Model o) {
 		return this.getClassName().compareTo(o.getClassName());
 	}
 
+	@Override
 	public long count() {
 		return count(null);
 	}
 
+	@Override
 	public long count(Criterion condition) {
 		try {
 			List<?> list = executeDynamicQuery(
@@ -92,163 +95,141 @@ public class ModelImpl implements Model {
 		return -1;
 	}
 
-	public List<?> executeDynamicQuery(Criterion filter) throws Exception {
+	@Override
+	public List<?> executeDynamicQuery(Criterion criterion) throws Exception {
 
-		return executeDynamicQuery(filter, null, null);
+		return executeDynamicQuery(criterion, null, null);
 	}
 
 	@Override
-	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
+	public List<?> executeDynamicQuery(Criterion criterion, List<Order> orders)
 		throws Exception {
 
-		return executeDynamicQuery(filter, null, orders);
+		return executeDynamicQuery(criterion, null, orders);
 	}
 
 	@Override
-	public List<?> executeDynamicQuery(Criterion filter, Order order)
+	public List<?> executeDynamicQuery(Criterion criterion, Order order)
 		throws Exception {
 
 		List<Order> orders = Collections.singletonList(order);
 
-		return executeDynamicQuery(filter, null, orders);
-	}
-
-	@Override
-	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
-		throws Exception {
-
-		return executeDynamicQuery(filter, projection, null);
+		return executeDynamicQuery(criterion, null, orders);
 	}
 
 	@Override
 	public List<?> executeDynamicQuery(
-			Criterion filter, Projection projection, List<Order> orders)
+			Criterion criterion, Projection projection)
+		throws Exception {
+
+		return executeDynamicQuery(criterion, projection, null);
+	}
+
+	@Override
+	public List<?> executeDynamicQuery(
+			Criterion criterion, Projection projection, List<Order> orders)
 		throws Exception {
 
 		return ModelUtil.executeDynamicQuery(
-			getService(), filter, projection, orders);
+			getService(), criterion, projection, orders);
 	}
 
-	public Criterion generateInCriterion(String property, List<Long> list) {
-		int size = MAX_NUMBER_OF_CLAUSES;
+	@Override
+	public Class<?> getAttributeClass(String name) {
+		return getTableInfo().getAttributeClass(name);
+	}
 
-		if (list.size() <= size) {
-			return getProperty(property).in(list);
+	@Override
+	public <T> Criterion getAttributeCriterion(String attribute, List<T> list) {
+
+		if (!this.hasAttribute(attribute) || Validator.isNull(list)) {
+			return null;
+		}
+
+		Property property = getProperty(attribute);
+
+		if (list.size() == 1) {
+			return property.eq(list.get(0));
+		}
+
+		int maxNumClauses = MAX_NUMBER_OF_CLAUSES;
+
+		if (list.size() <= maxNumClauses) {
+			return property.in(list);
 		}
 
 		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 
-		for (int i = 0; i<((list.size() + size - 1) / size); i++) {
-			int start = i * size;
-			int end = Math.min(start + size, list.size());
-			List<Long> listAux = list.subList(start, end);
-			disjunction.add(this.getProperty(property).in(listAux));
+		int numberOfDisjuntions =
+			((list.size() + maxNumClauses - 1) / maxNumClauses);
+
+		for (int i = 0; i<numberOfDisjuntions; i++) {
+			int start = i * maxNumClauses;
+			int end = Math.min(start + maxNumClauses, list.size());
+
+			List<T> subList = list.subList(start, end);
+			disjunction.add(property.in(subList));
 		}
 
 		return disjunction;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> Criterion getAttributeCriterion(String attribute, T value) {
+		return getAttributeCriterion(
+			attribute, (List<T>)Collections.singleton(value));
+	}
+
+	@Override
 	public int getAttributePos(String name) {
 		return this.getTableInfo().getAttributePos(name);
 	}
 
-	public Object[][] getAttributes() {
-		return getTableInfo().getAttributes();
-	}
-
+	@Override
 	public String[] getAttributesName() {
 		return getTableInfo().getAttributesName();
 	}
 
-	public int[] getAttributesType() {
-		return getTableInfo().getAttributesType();
-	}
-
-	public int getAttributeType(String name) {
-		return getTableInfo().getAttributeType(name);
-	}
-
-	public Class<?> getAttributeTypeClass(String name) {
-		return getTableInfo().getAttributeTypeClass(name);
-	}
-
+	@Override
 	public String getClassName() {
 		return className;
 	}
 
+	@Override
 	public long getClassNameId() {
 		return PortalUtil.getClassNameId(getClassName());
 	}
 
+	@Override
 	public String getClassSimpleName() {
 		return classSimpleName;
 	}
 
-	public Criterion getCompanyCriterion(long companyId) {
-		if (!this.hasAttribute("companyId")) {
-			return null;
-		}
-
-		return getProperty("companyId").eq(companyId);
-	}
-
+	@Override
 	public String getDisplayName(Locale locale) {
 		return ModelUtil.getDisplayName(this.getClassName(), locale);
 	}
 
-	public Model getFilteredModel(Criterion filters) {
-		return getFilteredModel(filters, null);
+	@Override
+	public Model getFilteredModel(Criterion criterion) {
+		return getFilteredModel(criterion, null);
 	}
 
-	public Model getFilteredModel(Criterion filters, String nameSufix) {
-		if (filters == null) {
+	@Override
+	public Model getFilteredModel(Criterion criterion, String nameSuffix) {
+		if (criterion == null) {
 			return this;
 		}
 
 		ModelWrapper modelWrapper = new ModelWrapper(this);
-		modelWrapper.setFilter(filters);
+		modelWrapper.setCriterion(criterion);
 
-		if (Validator.isNotNull(nameSufix)) {
-			modelWrapper.setNameSuffix(nameSufix);
+		if (Validator.isNotNull(nameSuffix)) {
+			modelWrapper.setNameSuffix(nameSuffix);
 		}
 
 		return modelWrapper;
-	}
-
-	public Model getFilteredModel(String sqlFilter) {
-		return getFilteredModel(sqlFilter, sqlFilter);
-	}
-
-	public Model getFilteredModel(String sqlFilter, String nameSufix) {
-
-		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
-
-		if (filter == null) {
-			return null;
-		}
-
-		return getFilteredModel(filter, nameSufix);
-	}
-
-	public Criterion getGroupCriterion(List<Long> groupIds) {
-
-		if (!this.hasAttribute("groupId") || Validator.isNull(groupIds)) {
-			return null;
-		}
-
-		Property groupIdProperty = getProperty("groupId");
-
-		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
-
-		for (Long groupId : groupIds) {
-			disjunction.add(groupIdProperty.eq(groupId));
-		}
-
-		return disjunction;
-	}
-
-	public Criterion getGroupCriterion(long groupId) {
-		return getGroupCriterion(Collections.singletonList(groupId));
 	}
 
 	@Override
@@ -273,22 +254,27 @@ public class ModelImpl implements Model {
 		return primaryKeyAttributes;
 	}
 
+	@Override
 	public ModelFactory getModelFactory() {
 		return modelFactory;
 	}
 
+	@Override
 	public String getName() {
 		return getClassName();
 	}
 
+	@Override
 	public String getPrimaryKeyAttribute() {
 		return getTableInfo().getPrimaryKeyAttribute();
 	}
 
+	@Override
 	public String[] getPrimaryKeyMultiAttribute() {
 		return getTableInfo().getPrimaryKeyMultiAttribute();
 	}
 
+	@Override
 	public Property getProperty(String attribute) {
 		attribute = cleanAttributeName(attribute);
 
@@ -299,6 +285,7 @@ public class ModelImpl implements Model {
 		return PropertyFactoryUtil.forName(attribute);
 	}
 
+	@Override
 	public Projection getPropertyProjection(String attribute) {
 
 		String op = null;
@@ -312,6 +299,7 @@ public class ModelImpl implements Model {
 		return getPropertyProjection(attribute, op);
 	}
 
+	@Override
 	public ProjectionList getPropertyProjection(String[] attributes) {
 
 		List<String> validAttributes = new ArrayList<String>();
@@ -325,6 +313,7 @@ public class ModelImpl implements Model {
 		return projectionList;
 	}
 
+	@Override
 	public ProjectionList getPropertyProjection(
 		String[] attributes, List<String> validAttributes,
 		List<String> notValidAttributes) {
@@ -400,10 +389,12 @@ public class ModelImpl implements Model {
 		return projectionList;
 	}
 
+	@Override
 	public Service getService() {
 		return service;
 	}
 
+	@Override
 	public TableInfo getTableInfo() {
 		if (tableInfo == null) {
 			tableInfo = service.getTableInfo();
@@ -412,6 +403,7 @@ public class ModelImpl implements Model {
 		return tableInfo;
 	}
 
+	@Override
 	public TableInfo getTableInfo(String attribute) {
 		if (hasAttribute(attribute)) {
 			return getTableInfo();
@@ -440,9 +432,11 @@ public class ModelImpl implements Model {
 		return tableInfo;
 	}
 
+	@Override
 	public Map<String, TableInfo> getTableInfoMappings() {
 		if (tableInfoMappings == null) {
-			tableInfoMappings = new ConcurrentHashMap<String, TableInfo>();
+			Map<String, TableInfo> mappings =
+				new ConcurrentHashMap<String, TableInfo>();
 
 			List<String> mappingTables = service.getMappingTables();
 
@@ -451,13 +445,16 @@ public class ModelImpl implements Model {
 
 				String destinationAttr = tableInfo.getDestinationAttr(
 					getPrimaryKeyAttribute());
-				tableInfoMappings.put(destinationAttr, tableInfo);
+				mappings.put(destinationAttr, tableInfo);
 			}
+
+			this.tableInfoMappings = Collections.unmodifiableMap(mappings);
 		}
 
 		return tableInfoMappings;
 	}
 
+	@Override
 	public boolean hasAttribute(String attribute) {
 
 		attribute = cleanAttributeName(attribute);
@@ -465,6 +462,7 @@ public class ModelImpl implements Model {
 		return (getAttributePos(attribute) != -1);
 	}
 
+	@Override
 	public boolean hasAttributes(String[] attributes) {
 		for (String attribute : attributes) {
 			if (!hasAttribute(attribute)) {
@@ -475,6 +473,7 @@ public class ModelImpl implements Model {
 		return true;
 	}
 
+	@Override
 	public boolean isAuditedModel() {
 		if (hasAttribute("companyId") && hasAttribute("createDate") &&
 			hasAttribute("modifiedDate") && hasAttribute("userId") &&
@@ -486,6 +485,7 @@ public class ModelImpl implements Model {
 		return false;
 	}
 
+	@Override
 	public boolean isGroupedModel() {
 		if (isAuditedModel() && hasAttribute("groupId") &&
 			!getPrimaryKeyAttribute().equals("groupId")) {
@@ -497,6 +497,7 @@ public class ModelImpl implements Model {
 		}
 	}
 
+	@Override
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
 
 		for (String primaryKeyAttribute : this.getPrimaryKeyMultiAttribute()) {
@@ -508,6 +509,7 @@ public class ModelImpl implements Model {
 		return false;
 	}
 
+	@Override
 	public boolean isResourcedModel() {
 		if (hasAttribute("resourcePrimKey") &&
 			!getPrimaryKeyAttribute().equals("resourcePrimKey") &&
@@ -519,6 +521,7 @@ public class ModelImpl implements Model {
 		return false;
 	}
 
+	@Override
 	public boolean isStagedModel() {
 		if (hasAttribute("uuid") && hasAttribute("companyId") &&
 			hasAttribute("createDate") &&
@@ -530,6 +533,7 @@ public class ModelImpl implements Model {
 		return false;
 	}
 
+	@Override
 	public boolean isWorkflowEnabled() {
 		if (hasAttribute("status") && hasAttribute("statusByUserId") &&
 			hasAttribute("statusByUserName") && hasAttribute("statusDate")) {
@@ -540,6 +544,7 @@ public class ModelImpl implements Model {
 		return false;
 	}
 
+	@Override
 	public boolean modelEqualsClass(Class<?> clazz) {
 		return this.getClassName().equals(clazz.getName());
 	}

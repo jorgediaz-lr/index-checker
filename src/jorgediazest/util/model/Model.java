@@ -36,34 +36,31 @@ public interface Model extends Comparable<Model> {
 
 	public long count(Criterion condition);
 
-	public List<?> executeDynamicQuery(Criterion filter) throws Exception;
+	public List<?> executeDynamicQuery(Criterion criterion) throws Exception;
 
-	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
+	public List<?> executeDynamicQuery(Criterion criterion, List<Order> orders)
 		throws Exception;
 
-	public List<?> executeDynamicQuery(Criterion filter, Order order)
-		throws Exception;
-
-	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
+	public List<?> executeDynamicQuery(Criterion criterion, Order order)
 		throws Exception;
 
 	public List<?> executeDynamicQuery(
-		Criterion filter, Projection projection, List<Order> order)
-	throws Exception;
+			Criterion criterion, Projection projection)
+		throws Exception;
 
-	public Criterion generateInCriterion(String property, List<Long> list);
+	public List<?> executeDynamicQuery(
+			Criterion criterion, Projection projection, List<Order> order)
+		throws Exception;
+
+	public Class<?> getAttributeClass(String name);
+
+	public <T> Criterion getAttributeCriterion(String attribute, List<T> list);
+
+	public <T> Criterion getAttributeCriterion(String attribute, T value);
 
 	public int getAttributePos(String name);
 
-	public Object[][] getAttributes();
-
 	public String[] getAttributesName();
-
-	public int[] getAttributesType();
-
-	public int getAttributeType(String name);
-
-	public Class<?> getAttributeTypeClass(String name);
 
 	public String getClassName();
 
@@ -71,21 +68,11 @@ public interface Model extends Comparable<Model> {
 
 	public String getClassSimpleName();
 
-	public Criterion getCompanyCriterion(long companyId);
-
 	public String getDisplayName(Locale locale);
 
-	public Model getFilteredModel(Criterion filters);
+	public Model getFilteredModel(Criterion criterion);
 
-	public Model getFilteredModel(Criterion filters, String nameSufix);
-
-	public Model getFilteredModel(String filters);
-
-	public Model getFilteredModel(String filters, String nameSufix);
-
-	public Criterion getGroupCriterion(List<Long> groupIds);
-
-	public Criterion getGroupCriterion(long groupId);
+	public Model getFilteredModel(Criterion criterion, String nameSuffix);
 
 	public List<String> getKeyAttributes();
 

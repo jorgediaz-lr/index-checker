@@ -42,12 +42,12 @@ public class ModelWrapper implements Model, Cloneable {
 		this.model = model;
 	}
 
-	public void addFilter(Criterion filter) {
+	public void addCriterion(Criterion criterion) {
 		if (serviceWrapper == null) {
 			serviceWrapper = new ServiceWrapper(model.getService());
 		}
 
-		serviceWrapper.addFilter(filter);
+		serviceWrapper.addCriterion(criterion);
 	}
 
 	@Override
@@ -91,46 +91,58 @@ public class ModelWrapper implements Model, Cloneable {
 		return -1;
 	}
 
-	public List<?> executeDynamicQuery(Criterion filter) throws Exception {
+	@Override
+	public List<?> executeDynamicQuery(Criterion criterion) throws Exception {
 
-		return executeDynamicQuery(filter, null, null);
+		return executeDynamicQuery(criterion, null, null);
 	}
 
 	@Override
-	public List<?> executeDynamicQuery(Criterion filter, List<Order> orders)
+	public List<?> executeDynamicQuery(Criterion criterion, List<Order> orders)
 		throws Exception {
 
-		return executeDynamicQuery(filter, null, orders);
+		return executeDynamicQuery(criterion, null, orders);
 	}
 
 	@Override
-	public List<?> executeDynamicQuery(Criterion filter, Order order)
+	public List<?> executeDynamicQuery(Criterion criterion, Order order)
 		throws Exception {
 
 		List<Order> orders = Collections.singletonList(order);
 
-		return executeDynamicQuery(filter, null, orders);
-	}
-
-	@Override
-	public List<?> executeDynamicQuery(Criterion filter, Projection projection)
-		throws Exception {
-
-		return executeDynamicQuery(filter, projection, null);
+		return executeDynamicQuery(criterion, null, orders);
 	}
 
 	@Override
 	public List<?> executeDynamicQuery(
-			Criterion filter, Projection projection, List<Order> orders)
+			Criterion criterion, Projection projection)
 		throws Exception {
 
-		return ModelUtil.executeDynamicQuery(
-			getService(), filter, projection, orders);
+		return executeDynamicQuery(criterion, projection, null);
 	}
 
 	@Override
-	public Criterion generateInCriterion(String property, List<Long> list) {
-		return model.generateInCriterion(property, list);
+	public List<?> executeDynamicQuery(
+			Criterion criterion, Projection projection, List<Order> orders)
+		throws Exception {
+
+		return ModelUtil.executeDynamicQuery(
+			getService(), criterion, projection, orders);
+	}
+
+	@Override
+	public Class<?> getAttributeClass(String name) {
+		return model.getAttributeClass(name);
+	}
+
+	@Override
+	public <T> Criterion getAttributeCriterion(String attribute, List<T> list) {
+		return model.getAttributeCriterion(attribute, list);
+	}
+
+	@Override
+	public <T> Criterion getAttributeCriterion(String attribute, T value) {
+		return model.getAttributeCriterion(attribute, value);
 	}
 
 	@Override
@@ -139,28 +151,8 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public Object[][] getAttributes() {
-		return model.getAttributes();
-	}
-
-	@Override
 	public String[] getAttributesName() {
 		return model.getAttributesName();
-	}
-
-	@Override
-	public int[] getAttributesType() {
-		return model.getAttributesType();
-	}
-
-	@Override
-	public int getAttributeType(String name) {
-		return model.getAttributeType(name);
-	}
-
-	@Override
-	public Class<?> getAttributeTypeClass(String name) {
-		return model.getAttributeTypeClass(name);
 	}
 
 	@Override
@@ -178,11 +170,6 @@ public class ModelWrapper implements Model, Cloneable {
 		return model.getClassSimpleName();
 	}
 
-	@Override
-	public Criterion getCompanyCriterion(long companyId) {
-		return model.getCompanyCriterion(companyId);
-	}
-
 	public String getDisplayName(Locale locale) {
 		String displayName = model.getDisplayName(locale);
 
@@ -194,44 +181,18 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public Model getFilteredModel(Criterion filters) {
-		return getFilteredModel(filters, null);
+	public Model getFilteredModel(Criterion criterion) {
+		return getFilteredModel(criterion, null);
 	}
 
 	@Override
-	public Model getFilteredModel(Criterion filters, String nameSufix) {
+	public Model getFilteredModel(Criterion criterion, String nameSuffix) {
 		if (serviceWrapper != null) {
-			filters = ModelUtil.generateConjunctionCriterion(
-				filters, serviceWrapper.getFilter());
+			criterion = ModelUtil.generateConjunctionCriterion(
+				criterion, serviceWrapper.getCriterion());
 		}
 
-		return model.getFilteredModel(filters, nameSufix);
-	}
-
-	public Model getFilteredModel(String sqlFilter) {
-		return getFilteredModel(sqlFilter, sqlFilter);
-	}
-
-	public Model getFilteredModel(String sqlFilter, String nameSufix) {
-
-		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
-
-		if (filter == null) {
-			return null;
-		}
-
-		return getFilteredModel(filter, nameSufix);
-	}
-
-	@Override
-	public Criterion getGroupCriterion(List<Long> groupIds) {
-
-		return model.getGroupCriterion(groupIds);
-	}
-
-	@Override
-	public Criterion getGroupCriterion(long groupId) {
-		return model.getGroupCriterion(groupId);
+		return model.getFilteredModel(criterion, nameSuffix);
 	}
 
 	@Override
@@ -360,12 +321,12 @@ public class ModelWrapper implements Model, Cloneable {
 		return model.modelEqualsClass(clazz);
 	}
 
-	public void setFilter(Criterion filter) {
+	public void setCriterion(Criterion criterion) {
 		if (serviceWrapper == null) {
 			serviceWrapper = new ServiceWrapper(model.getService());
 		}
 
-		serviceWrapper.setFilter(filter);
+		serviceWrapper.setCriterion(criterion);
 	}
 
 	public void setKeyAttributes(List<String> keyAttributes) {
