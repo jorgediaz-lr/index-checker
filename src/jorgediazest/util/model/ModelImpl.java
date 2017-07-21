@@ -175,10 +175,9 @@ public class ModelImpl implements Model {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> Criterion getAttributeCriterion(String attribute, T value) {
 		return getAttributeCriterion(
-			attribute, (List<T>)Collections.singleton(value));
+			attribute, Collections.singletonList(value));
 	}
 
 	@Override
