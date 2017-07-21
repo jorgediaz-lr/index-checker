@@ -28,9 +28,10 @@ public interface DataComparator extends Comparator<Data> {
 	public boolean equals(Data data1, Data data2);
 
 	public boolean equalsAttributes(
-		Data data1, Data data2, String attr1, String attr2);
+		Class<?> type1, Class<?> type2, Object o1, Object o2);
 
-	public boolean equalsAttributes(int type1, int type2, Object o1, Object o2);
+	public boolean equalsAttributes(
+		Data data1, Data data2, String attr1, String attr2);
 
 	public Integer hashCode(Data data);
 

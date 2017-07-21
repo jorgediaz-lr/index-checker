@@ -138,56 +138,45 @@ public class Data implements Comparable<Data> {
 		return defaultValue;
 	}
 
+	public Class<?> getAttributeClass(String attribute) {
+		String prefix = null;
+		int pos = attribute.indexOf(".");
+
+		if (pos != -1) {
+			prefix = attribute.substring(0, pos);
+			attribute = attribute.substring(pos+1);
+		}
+
+		Class<?> attributeClass = Object.class;
+
+		for (TableInfo tableInfo : tableInfoSet) {
+			if ((prefix != null) && !tableInfo.getName().equals(prefix)) {
+				continue;
+			}
+
+			attributeClass = tableInfo.getAttributeClass(attribute);
+
+			if (!Object.class.equals(attributeClass)) {
+				break;
+			}
+		}
+
+		if (String.class.equals(attributeClass) &&
+			("uuid".equals(attribute) || "uuid_".equals(attribute) ||
+			 attribute.endsWith("Uuid"))) {
+
+			attributeClass = UUID.class;
+		}
+
+		return attributeClass;
+	}
+
 	public Set<String> getAttributes() {
 		return map.keySet();
 	}
 
 	public String[] getAttributesArray() {
 		return map.keySet().toArray(new String[map.keySet().size()]);
-	}
-
-	public int getAttributeType(String attribute) {
-		String prefix = null;
-		int pos = attribute.indexOf(".");
-
-		if (pos != -1) {
-			prefix = attribute.substring(0, pos);
-			attribute = attribute.substring(pos+1);
-		}
-
-		for (TableInfo tableInfo : tableInfoSet) {
-			if ((prefix != null) && !tableInfo.getName().equals(prefix)) {
-				continue;
-			}
-
-			int type = tableInfo.getAttributeType(attribute);
-
-			if (type != 0) {
-				return type;
-			}
-		}
-
-		return 0;
-	}
-
-	public Class<?> getAttributeTypeClass(String attribute) {
-		String prefix = null;
-		int pos = attribute.indexOf(".");
-
-		if (pos != -1) {
-			prefix = attribute.substring(0, pos);
-			attribute = attribute.substring(pos+1);
-		}
-
-		for (TableInfo tableInfo : tableInfoSet) {
-			if ((prefix != null) && !tableInfo.getName().equals(prefix)) {
-				continue;
-			}
-
-			return tableInfo.getAttributeTypeClass(attribute);
-		}
-
-		return Object.class;
 	}
 
 	public Long getCompanyId() {
@@ -258,8 +247,8 @@ public class Data implements Comparable<Data> {
 				if (value instanceof Set) {
 					Set<Object> valueSet = (Set<Object>)value;
 
-					int type1 = this.getAttributeType(attr1);
-					int type2 = data.getAttributeType(attr2);
+					Class<?> type1 = this.getAttributeClass(attr1);
+					Class<?> type2 = data.getAttributeClass(attr2);
 
 					for (Object setElement : valueSet) {
 						equalsAttributes = dataComparator.equalsAttributes(
@@ -336,7 +325,7 @@ public class Data implements Comparable<Data> {
 			attribute = getPrimaryKeyAttribute();
 		}
 
-		int type = getAttributeType(attribute);
+		Class<?> type = getAttributeClass(attribute);
 
 		if (!isValid(attribute, type, value)) {
 			return;
@@ -367,7 +356,7 @@ public class Data implements Comparable<Data> {
 			attribute = getPrimaryKeyAttribute();
 		}
 
-		int type = getAttributeType(attribute);
+		Class<?> type = getAttributeClass(attribute);
 
 		if (!isValid(attribute, type, values)) {
 			return;
@@ -387,7 +376,7 @@ public class Data implements Comparable<Data> {
 			attribute = getPrimaryKeyAttribute();
 		}
 
-		int type = getAttributeType(attribute);
+		Class<?> type = getAttributeClass(attribute);
 
 		if (!isValid(attribute, type, values)) {
 			return;
@@ -453,12 +442,12 @@ public class Data implements Comparable<Data> {
 		return pkAttribute;
 	}
 
-	protected boolean isValid(String attribute, int type, Object value) {
-		if (value == null) {
+	protected boolean isValid(String attribute, Class<?> type, Object value) {
+		if ((type == null) || (value == null)) {
 			return false;
 		}
 
-		if (type != 0) {
+		if (!Object.class.equals(type)) {
 			return true;
 		}
 

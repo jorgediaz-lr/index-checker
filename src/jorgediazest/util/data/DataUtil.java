@@ -22,13 +22,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 
 import java.math.BigDecimal;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 
 import java.text.DateFormat;
 
@@ -43,6 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 import jorgediazest.util.comparator.DataComparator;
@@ -269,74 +268,64 @@ public class DataUtil {
 		return null;
 	}
 
-	public static Object castObjectToJdbcTypeObject(int type, Object value) {
-		Object result = null;
-
-		switch (type) {
-			case Types.NULL:
-				result = value;
-				break;
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.CLOB:
-				result = castString(value);
-				break;
-
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				result = castBigDecimal(value);
-				break;
-
-			case Types.BIT:
-			case Types.BOOLEAN:
-				result = castBoolean(value);
-				break;
-
-			case Types.TINYINT:
-				result = castByte(value);
-				break;
-
-			case Types.SMALLINT:
-				result = castShort(value);
-				break;
-
-			case Types.INTEGER:
-				result = castInt(value);
-				break;
-
-			case Types.BIGINT:
-				result = castLong(value);
-				break;
-
-			case Types.REAL:
-			case Types.FLOAT:
-				result = castFloat(value);
-				break;
-
-			case Types.DOUBLE:
-				result = castDouble(value);
-				break;
-
-			case Types.BINARY:
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				result = castBytes(value);
-				break;
-
-			case Types.DATE:
-			case Types.TIME:
-			case Types.TIMESTAMP:
-				result = castDateToEpoch(value);
-				break;
-
-			default:
-				throw new RuntimeException(
-					"Unsupported conversion for " +
-						DataUtil.getJdbcTypeNames().get(type));
+	public static Object castObject(Class<?> type, Object value) {
+		if (Object.class.equals(type)) {
+			return value;
 		}
 
-		return result;
+		if (String.class.equals(type)) {
+			return castString(value);
+		}
+
+		if (java.math.BigDecimal.class.equals(type)) {
+			return castBigDecimal(value);
+		}
+
+		if (Boolean.class.equals(type)) {
+			return castBoolean(value);
+		}
+
+		if (Byte.class.equals(type)) {
+			return castByte(value);
+		}
+
+		if (Short.class.equals(type)) {
+			return castShort(value);
+		}
+
+		if (Integer.class.equals(type)) {
+			return castInt(value);
+		}
+
+		if (Long.class.equals(type)) {
+			return castLong(value);
+		}
+
+		if (Float.class.equals(type)) {
+			return castFloat(value);
+		}
+
+		if (Double.class.equals(type)) {
+			return castDouble(value);
+		}
+
+		if (Byte[].class.equals(type)) {
+			return castBytes(value);
+		}
+
+		if (java.sql.Date.class.equals(type) ||
+			java.sql.Time.class.equals(type) ||
+			java.sql.Timestamp.class.equals(type)) {
+
+			return castDateToEpoch(value);
+		}
+
+		if (UUID.class.equals(type)) {
+			return castUUID(value);
+		}
+
+		throw new RuntimeException(
+			"Unsupported conversion for " + type.getCanonicalName());
 	}
 
 	public static Short castShort(Object value) {
@@ -379,6 +368,22 @@ public class DataUtil {
 		}
 
 		return aux;
+	}
+
+	public static UUID castUUID(Object value) {
+		if (value == null) {
+			return null;
+		}
+
+		if (value instanceof UUID) {
+			return (UUID)value;
+		}
+
+		if (value instanceof String) {
+			return UUID.fromString((String)value);
+		}
+
+		return null;
 	}
 
 	public static Data createDataObject(
@@ -444,27 +449,6 @@ public class DataUtil {
 
 	public static boolean getIgnoreCase() {
 		return DataUtil.ignoreCase.get();
-	}
-
-	public static Map<Integer, String> getJdbcTypeNames() {
-
-		if (jdbcTypeNames == null) {
-			Map<Integer, String> aux = new HashMap<Integer, String>();
-
-			for (Field field : Types.class.getFields()) {
-				try {
-					aux.put((Integer)field.get(null), field.getName());
-				}
-				catch (IllegalArgumentException e) {
-				}
-				catch (IllegalAccessException e) {
-				}
-			}
-
-			jdbcTypeNames = aux;
-		}
-
-		return jdbcTypeNames;
 	}
 
 	public static String[] getListAttr(Collection<Data> data, String attr) {
@@ -596,7 +580,7 @@ public class DataUtil {
 		return date;
 	}
 
-	public static Object transformArray(int type, Object[] values) {
+	public static Object transformArray(Class<?> type, Object[] values) {
 		Set<Object> transformObjects = transformArrayToSet(type, values);
 
 		if (transformObjects.isEmpty()) {
@@ -610,12 +594,12 @@ public class DataUtil {
 		return transformObjects;
 	}
 
-	public static Object transformObject(int type, Object o) {
+	public static Object transformObject(Class<?> type, Object o) {
 		if (o instanceof Map) {
 			return o;
 		}
 
-		Object transformObject = DataUtil.castObjectToJdbcTypeObject(type, o);
+		Object transformObject = DataUtil.castObject(type, o);
 
 		if (transformObject instanceof String) {
 			String str = (String)transformObject.toString();
@@ -629,7 +613,7 @@ public class DataUtil {
 	}
 
 	protected static Set<Object> transformArrayToSet(
-		int type, Object[] values) {
+		Class<?> type, Object[] values) {
 
 		Set<Object> transformObjects = new HashSet<Object>(values.length);
 
@@ -837,7 +821,6 @@ public class DataUtil {
 		}
 	};
 
-	private static Map<Integer, String> jdbcTypeNames = null;
 	private static Map<Model, WeakReference<DataComparator>>
 		modelDataComparatorCache = Collections.synchronizedMap(
 			new WeakHashMap<Model, WeakReference<DataComparator>>());
