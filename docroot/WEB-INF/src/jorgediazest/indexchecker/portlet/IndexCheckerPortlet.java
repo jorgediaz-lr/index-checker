@@ -1059,7 +1059,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		disjunctionGlobal.add(
 			groupModel.getProperty("classNameId").eq(companyClassNameId));
 		disjunctionGlobal.add(
-			groupModel.generateInCriterion("liveGroupId", liveGlobalGroupIds));
+			groupModel.getAttributeCriterion(
+				"liveGroupId", liveGlobalGroupIds));
 
 		List<Order> orders = new ArrayList<Order>();
 		orders.add(OrderFactoryUtil.asc("companyId"));
@@ -1075,7 +1076,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		stagingSites.add(groupModel.getProperty("liveGroupId").ne(0L));
 		stagingSites.add(
 			RestrictionsFactoryUtil.not(
-				groupModel.generateInCriterion(
+				groupModel.getAttributeCriterion(
 					"liveGroupId", liveGlobalGroupIds)));
 
 		Conjunction normalSites = RestrictionsFactoryUtil.conjunction();

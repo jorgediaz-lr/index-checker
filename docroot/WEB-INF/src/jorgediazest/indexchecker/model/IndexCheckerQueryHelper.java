@@ -48,7 +48,8 @@ public class IndexCheckerQueryHelper {
 			return;
 		}
 
-		Criterion groupCriterion = model.getGroupCriterion(groupIds);
+		Criterion groupCriterion = model.getAttributeCriterion(
+			"groupId", groupIds);
 
 		ModelFactory modelFactory = model.getModelFactory();
 
@@ -88,21 +89,22 @@ public class IndexCheckerQueryHelper {
 			Criterion groupCriterion, String relatedFilterString)
 		throws Exception {
 
-		Criterion relatedFilter = null;
+		Criterion relatedCriterion = null;
 
 		if (Validator.isNotNull(relatedFilterString)) {
-			relatedFilter = ModelUtil.generateSQLCriterion(relatedFilterString);
+			relatedCriterion = ModelUtil.generateSQLCriterion(
+				relatedFilterString);
 		}
 		else if (relatedModel.isGroupedModel()) {
-			relatedFilter = groupCriterion;
+			relatedCriterion = groupCriterion;
 		}
 
 		if ("classPK".equals(mappingsRelated.get(0))) {
 			Criterion classNameIdCriterion = relatedModel.getProperty(
 				"classNameId").eq(model.getClassNameId());
 
-			relatedFilter = ModelUtil.generateConjunctionCriterion(
-				classNameIdCriterion, relatedFilter);
+			relatedCriterion = ModelUtil.generateConjunctionCriterion(
+				classNameIdCriterion, relatedCriterion);
 		}
 
 		List<String> relatedAttributes = new ArrayList<String>();
@@ -111,15 +113,15 @@ public class IndexCheckerQueryHelper {
 
 		Map<Long, List<Data>> relatedMap;
 
-		if (relatedFilter == null) {
+		if (relatedCriterion == null) {
 			relatedMap = getDataWithDuplicatesWithCache(
 				queryCache, relatedModel, relatedAttributes, mappingsRelated,
-				relatedFilter);
+				relatedCriterion);
 		}
 		else {
 			relatedMap = Query.getDataWithDuplicates(
 				relatedModel, relatedAttributes.toArray(new String[0]),
-				mappingsRelated.get(0), relatedFilter);
+				mappingsRelated.get(0), relatedCriterion);
 		}
 
 		Map<Long, List<Data>> matchedMap =
@@ -163,7 +165,7 @@ public class IndexCheckerQueryHelper {
 	public Map<Long, List<Data>> getDataWithDuplicatesWithCache(
 			Map<String, Map<Long, List<Data>>> queryCache, Model relatedModel,
 			List<String> relatedAttributes, List<String> mappingsRelated,
-			Criterion relatedFilter)
+			Criterion relatedCriterion)
 		throws Exception {
 
 		Map<Long, List<Data>> relatedMap;
@@ -183,7 +185,7 @@ public class IndexCheckerQueryHelper {
 				if (relatedMap == null) {
 					relatedMap = Query.getDataWithDuplicates(
 						relatedModel, relatedAttributes.toArray(new String[0]),
-						mappingsRelated.get(0), relatedFilter);
+						mappingsRelated.get(0), relatedCriterion);
 
 					queryCache.put(cacheKey, relatedMap);
 				}
@@ -196,7 +198,7 @@ public class IndexCheckerQueryHelper {
 	public Map<Long, Data> getLiferayData(Model model, List<Long> groupIds)
 		throws Exception {
 
-		Criterion filter = model.getGroupCriterion(groupIds);
+		Criterion criterion = model.getAttributeCriterion("groupId", groupIds);
 
 		Collection<String> attributesToQuery =
 			ConfigurationUtil.getModelAttributesToQuery(model);
@@ -204,7 +206,7 @@ public class IndexCheckerQueryHelper {
 		String[] attributesToQueryArr = attributesToQuery.toArray(
 			new String[0]);
 
-		return Query.getData(model, attributesToQueryArr, filter);
+		return Query.getData(model, attributesToQueryArr, criterion);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

@@ -109,7 +109,7 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 			return super.getLiferayData(model, groupIds);
 		}
 
-		Criterion filter = model.getGroupCriterion(groupIds);
+		Criterion criterion = model.getAttributeCriterion("groupId", groupIds);
 
 		Collection<String> attributesToQuery =
 			ConfigurationUtil.getModelAttributesToQuery(model);
@@ -119,19 +119,20 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
-		Criterion filterStatusApproved = ModelUtil.generateSQLCriterion(
+		Criterion criterionStatusApproved = ModelUtil.generateSQLCriterion(
 			"status=" + WorkflowConstants.STATUS_APPROVED + " or status=" +
 				WorkflowConstants.STATUS_IN_TRASH);
 
 		addMissingJournalArticles(
-			model, attributesToQueryArr, filter, filterStatusApproved, dataMap);
+			model, attributesToQueryArr, criterion, criterionStatusApproved,
+			dataMap);
 
-		Criterion filterStatusNotApproved = ModelUtil.generateSQLCriterion(
+		Criterion criterionStatusNotApproved = ModelUtil.generateSQLCriterion(
 			"status<>" + WorkflowConstants.STATUS_APPROVED + " or status<>" +
 				WorkflowConstants.STATUS_IN_TRASH);
 
 		addMissingJournalArticles(
-			model, attributesToQueryArr, filter, filterStatusNotApproved,
+			model, attributesToQueryArr, criterion, criterionStatusNotApproved,
 			dataMap);
 
 		return dataMap;

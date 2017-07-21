@@ -118,7 +118,7 @@ public class IndexSearchHelper {
 
 			List<Map<Locale, String>> listValueMap = null;
 
-			Class<?> typeClass = data.getAttributeTypeClass(attribute);
+			Class<?> typeClass = data.getAttributeClass(attribute);
 
 			if (typeClass.equals(String.class) ||
 				typeClass.equals(Object.class)) {

@@ -57,14 +57,14 @@ public class IndexCheckerModelFactory extends ModelFactory {
 
 		String sqlFilter = ConfigurationUtil.getStringFilter(model);
 
-		Criterion filter = ModelUtil.generateSQLCriterion(sqlFilter);
+		Criterion criterion = ModelUtil.generateSQLCriterion(sqlFilter);
 
 		if (companyId > 0) {
-			filter = ModelUtil.generateConjunctionCriterion(
-				model.getCompanyCriterion(companyId), filter);
+			criterion = ModelUtil.generateConjunctionCriterion(
+				model.getAttributeCriterion("companyId", companyId), criterion);
 		}
 
-		if ((filter == null)&& ((keyAttributes == null) ||
+		if ((criterion == null)&& ((keyAttributes == null) ||
 			 keyAttributes.isEmpty())) {
 
 			return model;
@@ -72,8 +72,8 @@ public class IndexCheckerModelFactory extends ModelFactory {
 
 		ModelWrapper modelWrapper = new ModelWrapper(model);
 
-		if (filter != null) {
-			modelWrapper.setFilter(filter);
+		if (criterion != null) {
+			modelWrapper.setCriterion(criterion);
 		}
 
 		if ((keyAttributes != null) && !keyAttributes.isEmpty()) {
