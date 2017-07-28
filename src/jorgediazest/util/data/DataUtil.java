@@ -31,7 +31,6 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -449,32 +448,6 @@ public class DataUtil {
 
 	public static boolean getIgnoreCase() {
 		return DataUtil.ignoreCase.get();
-	}
-
-	public static String[] getListAttr(Collection<Data> data, String attr) {
-		return getListAttr(data, attr, data.size());
-	}
-
-	public static String[] getListAttr(
-		Collection<Data> data, String attr, int size) {
-
-		if ((size > data.size()) || (size <= 0)) {
-			size = data.size();
-		}
-
-		String[] values = new String[size];
-
-		int i = 0;
-
-		for (Data value : data) {
-			values[i++] = value.get(attr).toString();
-
-			if (i >= size) {
-				break;
-			}
-		}
-
-		return values;
 	}
 
 	public static Map<Long, List<Data>> getMapFromSetData(
