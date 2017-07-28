@@ -44,6 +44,7 @@ import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -55,7 +56,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.Data;
-import jorgediazest.util.data.DataUtil;
 public class OutputUtils {
 
 	public static FileEntry addPortletFileEntry(
@@ -99,6 +99,26 @@ public class OutputUtils {
 	public static String generateCSVRow(
 		PortletConfig portletConfig, Comparison comp, String companyOutput,
 		String groupIdOutput, String groupNameOutput, String type,
+		List<String> attributeList, Locale locale) {
+
+		Set<Data> data = comp.getData(type);
+
+		if ((data == null) || data.isEmpty()) {
+			return null;
+		}
+
+		String[] output = DataUtil.getListAttr(data, attributeList);
+
+		String outputString = OutputUtils.stringArrayToString(output);
+
+		return OutputUtils.generateCSVRow(
+			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
+			type, locale, outputString, data.size());
+	}
+
+	public static String generateCSVRow(
+		PortletConfig portletConfig, Comparison comp, String companyOutput,
+		String groupIdOutput, String groupNameOutput, String type,
 		Locale locale, String output, int outputSize) {
 
 		if (Validator.isNull(output)) {
@@ -133,19 +153,59 @@ public class OutputUtils {
 		String groupIdOutput, String groupNameOutput, String type,
 		String attribute, Locale locale) {
 
+		return generateCSVRow(
+			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
+			type, Collections.singletonList(attribute), locale);
+	}
+
+	public static ResultRow generateSearchContainerRow(
+		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		String groupNameOutput, String type, List<String> attributeList,
+		Locale locale, int numberOfRows, int maxSize) {
+
 		Set<Data> data = comp.getData(type);
 
 		if ((data == null) || data.isEmpty()) {
 			return null;
 		}
 
-		String[] output = DataUtil.getListAttr(data, attribute);
+		String[] output = DataUtil.getListAttr(data, attributeList);
 
 		String outputString = OutputUtils.stringArrayToString(output);
 
-		return OutputUtils.generateCSVRow(
-			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
-			type, locale, outputString, data.size());
+		outputString = HtmlUtil.escape(outputString);
+
+		String outputStringTrimmed = null;
+
+		int overflow = data.size() - maxSize;
+
+		if (overflow > 0) {
+			String[] outputTrimmed = DataUtil.getListAttr(
+				data, attributeList, maxSize);
+
+			outputStringTrimmed = OutputUtils.stringArrayToString(
+				outputTrimmed);
+
+			outputStringTrimmed = HtmlUtil.escape(outputStringTrimmed);
+
+			String tagId = StringUtil.randomString() + "_" + numberOfRows;
+			String onClick =
+				"onclick=\"showHide('" + tagId + "');return false;\"";
+			String linkMore =
+				"<a href=\"#\"" + onClick + " >(" + overflow + " more)</a>";
+			String linkCollapse =
+				"<a href=\"#\"" + onClick + " >(collapse)</a>";
+
+			outputString =
+				"<span id=\"" + tagId + "-show\" >" + outputStringTrimmed +
+				"... " + linkMore + "</span><span id=\"" + tagId +
+				"\" style=\"display: none;\" >" + outputString + " " +
+				linkCollapse + "</span>";
+		}
+
+		return OutputUtils.generateSearchContainerRow(
+			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
+			numberOfRows, outputString, data.size());
 	}
 
 	public static ResultRow generateSearchContainerRow(
@@ -198,49 +258,10 @@ public class OutputUtils {
 		String groupNameOutput, String type, String attribute, Locale locale,
 		int numberOfRows, int maxSize) {
 
-		Set<Data> data = comp.getData(type);
-
-		if ((data == null) || data.isEmpty()) {
-			return null;
-		}
-
-		String[] output = DataUtil.getListAttr(data, attribute);
-
-		String outputString = OutputUtils.stringArrayToString(output);
-
-		outputString = HtmlUtil.escape(outputString);
-
-		String outputStringTrimmed = null;
-
-		int overflow = data.size() - maxSize;
-
-		if (overflow > 0) {
-			String[] outputTrimmed = DataUtil.getListAttr(
-				data, attribute, maxSize);
-
-			outputStringTrimmed = OutputUtils.stringArrayToString(
-				outputTrimmed);
-
-			outputStringTrimmed = HtmlUtil.escape(outputStringTrimmed);
-
-			String tagId = StringUtil.randomString() + "_" + numberOfRows;
-			String onClick =
-				"onclick=\"showHide('" + tagId + "');return false;\"";
-			String linkMore =
-				"<a href=\"#\"" + onClick + " >(" + overflow + " more)</a>";
-			String linkCollapse =
-				"<a href=\"#\"" + onClick + " >(collapse)</a>";
-
-			outputString =
-				"<span id=\"" + tagId + "-show\" >" + outputStringTrimmed +
-				"... " + linkMore + "</span><span id=\"" + tagId +
-				"\" style=\"display: none;\" >" + outputString + " " +
-				linkCollapse + "</span>";
-		}
-
-		return OutputUtils.generateSearchContainerRow(
-			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
-			numberOfRows, outputString, data.size());
+		return generateSearchContainerRow(
+			portletConfig, comp, groupIdOutput, groupNameOutput, type,
+			Collections.singletonList(attribute), locale, numberOfRows,
+			maxSize);
 	}
 
 	public static String getCSVRow(List<String> rowData) {
