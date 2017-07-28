@@ -16,6 +16,7 @@ package jorgediazest.util.model;
 
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
@@ -67,19 +68,59 @@ public class ModelUtil {
 	}
 
 	public static Criterion generateConjunctionCriterion(
-		Criterion criterion1, Criterion criterion2) {
+		Criterion... criterion) {
 
-		if (criterion1 == null) {
-			return criterion2;
+		List<Criterion> criterionList = new ArrayList<Criterion>();
+
+		for (Criterion criterionAux : criterion) {
+			if (criterionAux != null) {
+				criterionList.add(criterionAux);
+			}
 		}
-		else if (criterion2 == null) {
-			return criterion1;
+
+		if (criterionList.size() == 0) {
+			return null;
+		}
+
+		if (criterionList.size() == 1) {
+			return criterionList.get(0);
 		}
 
 		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
-		conjuntion.add(criterion1);
-		conjuntion.add(criterion2);
+
+		for (Criterion criterionAux : criterionList) {
+			conjuntion.add(criterionAux);
+		}
+
 		return conjuntion;
+	}
+
+	public static Criterion generateDisjunctionCriterion(
+		Criterion... criterion) {
+
+		List<Criterion> criterionList = new ArrayList<Criterion>();
+
+		for (Criterion criterionAux : criterion) {
+			if (criterionAux != null) {
+				criterionList.add(criterionAux);
+			}
+		}
+
+		if (criterionList.size() == 0) {
+			return null;
+		}
+
+		if (criterionList.size() == 1) {
+			return criterionList.get(0);
+		}
+
+		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+		for (Criterion criterionAux : criterionList) {
+			disjunction.add(criterionAux);
+		}
+
+		return disjunction;
 	}
 
 	public static Criterion generateSQLCriterion(String sql) {
