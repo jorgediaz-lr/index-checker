@@ -52,8 +52,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			return model;
 		}
 
-		List<String> keyAttributes = ConfigurationUtil.getIndexKeyAttributes(
-			model);
+		List<String> keyAttributes = ConfigurationUtil.getKeyAttributes(model);
 
 		String sqlFilter = ConfigurationUtil.getStringFilter(model);
 

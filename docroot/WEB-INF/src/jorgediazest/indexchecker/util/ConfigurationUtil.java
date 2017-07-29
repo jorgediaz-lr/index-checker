@@ -79,14 +79,14 @@ public class ConfigurationUtil {
 		return indexAttribute;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static List<String> getIndexKeyAttributes(Model model) {
-		return (List<String>)getModelInfo(model, "keyAttributes");
-	}
-
 	public static IndexSearchHelper getIndexSearchHelper(Model model) {
 
 		return (IndexSearchHelper)getModelInfo(model, "indexSearchHelperClass");
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<String> getKeyAttributes(Model model) {
+		return (List<String>)getModelInfo(model, "keyAttributes");
 	}
 
 	@SuppressWarnings("unchecked")
