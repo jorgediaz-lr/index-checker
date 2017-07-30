@@ -345,7 +345,7 @@ public class ModelWrapper implements Model, Cloneable {
 
 	@Override
 	public String toString() {
-		return model.toString();
+		return getName();
 	}
 
 	protected static Log _log = LogFactoryUtil.getLog(ModelWrapper.class);
