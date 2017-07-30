@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import jorgediazest.util.comparator.DataComparator;
 import jorgediazest.util.model.Model;
@@ -293,16 +292,6 @@ public class Data implements Comparable<Data> {
 		return Collections.unmodifiableSet(tableInfoSet);
 	}
 
-	public UUID getUuid() {
-		Object uuid = get("uuid");
-
-		if (uuid instanceof UUID) {
-			return (UUID)uuid;
-		}
-
-		return UUID.fromString(uuid.toString());
-	}
-
 	public int hashCode() {
 		if (hashCode != null) {
 			return hashCode;
@@ -421,7 +410,7 @@ public class Data implements Comparable<Data> {
 			return name + " " + map.toString();
 		}
 
-		return name + " " + pk + " " + rpk + " " + this.getUuid();
+		return name + " " + pk + " " + rpk + " " + get("uuid");
 	}
 
 	protected DataComparator getComparator() {
