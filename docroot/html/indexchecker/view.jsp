@@ -206,7 +206,7 @@ if (filterGroupIdSelected.contains("-2")) {
 		exportCsvResourceURL = "window.open('" + exportCsvResourceURL + "');";
 %>
 
-		<aui:button onClick="<%= exportCsvResourceURL %>" type="button" value="export-to-csv" />
+		<aui:button onClick="<%= exportCsvResourceURL %>" value="export-to-csv" />
 
 <%
 	}
@@ -220,7 +220,7 @@ if (filterGroupIdSelected.contains("-2")) {
 %>
 
 			<span id="reindexButtonSpan">
-			<aui:button onClick='<%= renderResponse.getNamespace() + "reindex();" %>' type="button" value="reindex" />
+			<aui:button onClick='<%= renderResponse.getNamespace() + "reindex();" %>' value="reindex" />
 			</span>
 <% }
 
@@ -228,7 +228,7 @@ if (filterGroupIdSelected.contains("-2")) {
 %>
 
 			<span id="removeOrphansSpan">
-			<aui:button onClick='<%= renderResponse.getNamespace() + "removeOrphans();" %>' type="button" value="remove-orphan-data" />
+			<aui:button onClick='<%= renderResponse.getNamespace() + "removeOrphans();" %>' value="remove-orphan-data" />
 			</span>
 
 <%
@@ -236,7 +236,7 @@ if (filterGroupIdSelected.contains("-2")) {
 	}
 %>
 
-		<aui:button onClick="<%= viewURL %>" type="button" value="clean" />
+		<aui:button onClick="<%= viewURL %>" value="clean" />
 
 	</aui:button-row>
 </aui:form>
