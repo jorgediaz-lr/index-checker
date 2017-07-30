@@ -70,12 +70,12 @@ modelInfo: [{
 },
 {
     model: com.liferay.portlet.documentlibrary.model.DLFileEntry,
-    filter: "fileEntryId in (select fileEntryId from DLFileVersion)",
+    filter: "fileEntryId in (select fileEntryId from DLFileVersion where status=0 or status=8)",
     permissionsHelperClass: !!jorgediazest.indexchecker.model.DLFileEntryPermissionsHelper {},
     attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,repositoryId],
     exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
-        {model: com.liferay.portlet.documentlibrary.model.DLFileVersion, mappingsSource: [fileEntryId,version], mappingsRelated: [fileEntryId,version], attributesToQuery: [status]},
+        {model: com.liferay.portlet.documentlibrary.model.DLFileVersion, mappingsSource: [fileEntryId,version], mappingsRelated: [fileEntryId,version], attributesToQuery: [status], filter: "status=0 or status=8"},
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
         {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title]},
@@ -84,9 +84,9 @@ modelInfo: [{
 },
 {
     model: com.liferay.portlet.dynamicdatalists.model.DDLRecord,
-    filter: "recordId in (select recordId from DDLRecordVersion)",
+    filter: "recordId in (select recordId from DDLRecordVersion where status=0)",
     relatedDataToQuery: [
-        {model: com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion, mappingsSource: [recordId,version], mappingsRelated: [recordId,version], attributesToQuery: [status]},
+        {model: com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion, mappingsSource: [recordId,version], mappingsRelated: [recordId,version], attributesToQuery: [status], filter: "status=0"},
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
         {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title]},
