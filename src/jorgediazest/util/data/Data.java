@@ -14,8 +14,13 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.model.BaseModel;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,12 +30,14 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
 import jorgediazest.util.comparator.DataComparator;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelUtil;
+import jorgediazest.util.service.Service;
 import jorgediazest.util.table.TableInfo;
 
 /**
@@ -277,6 +284,54 @@ public class Data implements Comparable<Data> {
 		return model;
 	}
 
+	public BaseModel<?> getObject() {
+		if (object != null) {
+			return object;
+		}
+
+		long primaryKey = getPrimaryKey();
+
+		try {
+			Service service = model.getService();
+
+			return (BaseModel<?>)service.fetchObject(primaryKey);
+		}
+		catch (UnsupportedOperationException uoe) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("error calling fetchObject: " + uoe.getMessage());
+			}
+		}
+
+		String primaryKeyAttribute = getPrimaryKeyAttribute();
+
+		if (Validator.isNull(primaryKeyAttribute) ||
+			"pk".equals(primaryKeyAttribute)) {
+
+			return null;
+		}
+
+		Criterion criterion = RestrictionsFactoryUtil.eq(
+			primaryKeyAttribute, primaryKey);
+
+		List<?> list = null;
+
+		try {
+			list = model.executeDynamicQuery(criterion);
+		}
+		catch (Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"error calling executeDynamicQuery: " + e.getMessage());
+			}
+		}
+
+		if ((list != null) && (list.size()== 1)) {
+			return (BaseModel<?>)list.get(0);
+		}
+
+		return null;
+	}
+
 	public long getPrimaryKey() {
 		return get("pk", -1L);
 	}
@@ -385,8 +440,26 @@ public class Data implements Comparable<Data> {
 	public <T> void setArray(String[] attributes, T[] data) {
 		int i = 0;
 
+		if ((attributes == null) || (attributes.length == 0)) {
+			if ((data.length == 1) && (data[0] instanceof BaseModel<?>)) {
+				this.setObject((BaseModel<?>)data[0]);
+			}
+
+			return;
+		}
+
 		for (String attrib : attributes) {
 			this.set(attrib, data[i++]);
+		}
+	}
+
+	public void setObject(BaseModel<?> object) {
+		this.object = object;
+
+		Map<String, Object> map = object.getModelAttributes();
+
+		for (Entry<String, Object> entry : map.entrySet()) {
+			set(entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -449,7 +522,10 @@ public class Data implements Comparable<Data> {
 	protected Integer hashCode = null;
 	protected Map<String, Object> map = new LinkedHashMap<String, Object>();
 	protected Model model = null;
+	protected BaseModel<?> object = null;
 	protected Set<Model> relatedModelsSet = new LinkedHashSet<Model>();
 	protected Set<TableInfo> tableInfoSet = new LinkedHashSet<TableInfo>();
+
+	private static Log _log = LogFactoryUtil.getLog(Data.class);
 
 }
