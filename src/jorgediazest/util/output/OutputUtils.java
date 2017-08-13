@@ -127,7 +127,7 @@ public class OutputUtils {
 	}
 
 	public static String generateCSVRow(
-		PortletConfig portletConfig, Comparison comp, String companyOutput,
+		ResourceBundle resourceBundle, Comparison comp, String companyOutput,
 		String groupIdOutput, String groupNameOutput, String type,
 		List<String> attributeList, Locale locale) {
 
@@ -142,12 +142,12 @@ public class OutputUtils {
 		String outputString = OutputUtils.stringArrayToString(output);
 
 		return OutputUtils.generateCSVRow(
-			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
+			resourceBundle, comp, companyOutput, groupIdOutput, groupNameOutput,
 			type, locale, outputString, data.size());
 	}
 
 	public static String generateCSVRow(
-		PortletConfig portletConfig, Comparison comp, String companyOutput,
+		ResourceBundle resourceBundle, Comparison comp, String companyOutput,
 		String groupIdOutput, String groupNameOutput, String type,
 		Locale locale, String output, int outputSize) {
 
@@ -165,7 +165,7 @@ public class OutputUtils {
 
 		line.add(comp.getModelName());
 		line.add(comp.getModelDisplayName(locale));
-		line.add(LanguageUtil.get(portletConfig, locale, "output." + type));
+		line.add(LanguageUtil.get(resourceBundle, "output." + type));
 
 		if (outputSize < 0) {
 			line.add(StringPool.BLANK);
@@ -179,17 +179,17 @@ public class OutputUtils {
 	}
 
 	public static String generateCSVRow(
-		PortletConfig portletConfig, Comparison comp, String companyOutput,
+		ResourceBundle resourceBundle, Comparison comp, String companyOutput,
 		String groupIdOutput, String groupNameOutput, String type,
 		String attribute, Locale locale) {
 
 		return generateCSVRow(
-			portletConfig, comp, companyOutput, groupIdOutput, groupNameOutput,
+			resourceBundle, comp, companyOutput, groupIdOutput, groupNameOutput,
 			type, Collections.singletonList(attribute), locale);
 	}
 
 	public static ResultRow generateSearchContainerRow(
-		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		ResourceBundle resourceBundle, Comparison comp, String groupIdOutput,
 		String groupNameOutput, String type, List<String> attributeList,
 		Locale locale, int numberOfRows, int maxSize) {
 
@@ -234,22 +234,22 @@ public class OutputUtils {
 		}
 
 		return OutputUtils.generateSearchContainerRow(
-			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
+			resourceBundle, comp, groupIdOutput, groupNameOutput, type, locale,
 			numberOfRows, outputString, data.size());
 	}
 
 	public static ResultRow generateSearchContainerRow(
-		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		ResourceBundle resourceBundle, Comparison comp, String groupIdOutput,
 		String groupNameOutput, String type, Locale locale, int numberOfRows,
 		String errorOutput) {
 
 		return generateSearchContainerRow(
-			portletConfig, comp, groupIdOutput, groupNameOutput, type, locale,
+			resourceBundle, comp, groupIdOutput, groupNameOutput, type, locale,
 			numberOfRows, HtmlUtil.escape(errorOutput), -1);
 	}
 
 	public static ResultRow generateSearchContainerRow(
-		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		ResourceBundle resourceBundle, Comparison comp, String groupIdOutput,
 		String groupNameOutput, String type, Locale locale, int numberOfRows,
 		String htmlOutput, int outputSize) {
 
@@ -257,7 +257,8 @@ public class OutputUtils {
 			return null;
 		}
 
-		ResultRow row = new ResultRow(comp, type, numberOfRows);
+		ResultRow row = new com.liferay.taglib.search.ResultRow(
+				comp, type, numberOfRows);
 
 		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
 			row.addText(groupIdOutput);
@@ -269,7 +270,7 @@ public class OutputUtils {
 		row.addText(
 			HtmlUtil.escape(
 				LanguageUtil.get(
-					portletConfig, locale, "output." + type)).replace(
+					resourceBundle, "output." + type)).replace(
 						" ", "&nbsp;"));
 
 		if (outputSize < 0) {
@@ -284,12 +285,12 @@ public class OutputUtils {
 	}
 
 	public static ResultRow generateSearchContainerRow(
-		PortletConfig portletConfig, Comparison comp, String groupIdOutput,
+		ResourceBundle resourceBundle, Comparison comp, String groupIdOutput,
 		String groupNameOutput, String type, String attribute, Locale locale,
 		int numberOfRows, int maxSize) {
 
 		return generateSearchContainerRow(
-			portletConfig, comp, groupIdOutput, groupNameOutput, type,
+			resourceBundle, comp, groupIdOutput, groupNameOutput, type,
 			Collections.singletonList(attribute), locale, numberOfRows,
 			maxSize);
 	}
