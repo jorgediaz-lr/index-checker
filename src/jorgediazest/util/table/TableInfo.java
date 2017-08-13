@@ -154,7 +154,7 @@ public class TableInfo {
 
 		for (int i = 0; i<attrNames.length; i++) {
 			if ((primaryKey != null) && !primaryKey.equals(attrNames[i]) &&
-					!"companyId".equals(attrNames[i])) {
+				!"companyId".equals(attrNames[i])) {
 
 				destinationAttr = attrNames[i];
 				break;
