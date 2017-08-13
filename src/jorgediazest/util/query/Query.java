@@ -65,14 +65,16 @@ public class Query {
 			dataMapByPK = null;
 		}
 
-		if (attributes == null) {
-			attributes = model.getAttributesName();
-		}
-
 		List<String> validAttributes = new ArrayList<String>();
 		List<String> notValidAttributes = new ArrayList<String>();
+
 		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes, notValidAttributes);
+
+		if ((projectionList == null) && (notValidAttributes.size() > 0)) {
+			return getDataFromMappingTables(
+				model, notValidAttributes, mapKeyAttribute);
+		}
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
@@ -314,6 +316,33 @@ public class Query {
 		}
 
 		return attribute;
+	}
+
+	protected static Map<Long, Data> getDataFromMappingTables(
+			Model model, List<String> notValidAttributes,
+			String mapKeyAttribute)
+		throws Exception {
+
+		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+
+		long i = -1;
+
+		for (String notValidAttribute : notValidAttributes) {
+			TableInfo tableInfo = model.getTableInfo(notValidAttribute);
+
+			if (tableInfo == null) {
+				continue;
+			}
+
+			Set<Data> dataSet = Query.queryTable(
+				model, tableInfo, new String[] {notValidAttribute});
+
+			for (Data data : dataSet) {
+				addDataToMap(dataMap, mapKeyAttribute, data, i--);
+			}
+		}
+
+		return dataMap;
 	}
 
 	protected static Map<Long, List<Data>> getRelatedDataFromMappingTable(
