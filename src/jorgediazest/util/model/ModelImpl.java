@@ -78,18 +78,17 @@ public class ModelImpl implements Model {
 	}
 
 	@Override
-	public long count(Criterion condition) {
+	public long count(Criterion criterion) {
 		try {
 			List<?> list = executeDynamicQuery(
-				condition, ProjectionFactoryUtil.rowCount());
+				criterion, ProjectionFactoryUtil.rowCount());
 
 			if (list != null) {
 				return (Long)list.get(0);
 			}
 		}
 		catch (Exception e) {
-			_log.error("Error executing count");
-			throw new RuntimeException(e);
+			_log.error("Error executing count: " + e.getMessage());
 		}
 
 		return -1;
@@ -221,6 +220,10 @@ public class ModelImpl implements Model {
 			return this;
 		}
 
+		if (count(criterion)==-1) {
+			return null;
+		}
+
 		ModelWrapper modelWrapper = new ModelWrapper(this);
 		modelWrapper.setCriterion(criterion);
 
@@ -317,6 +320,10 @@ public class ModelImpl implements Model {
 		String[] attributes, List<String> validAttributes,
 		List<String> notValidAttributes) {
 
+		if ((attributes == null)||(attributes.length == 0)) {
+			return null;
+		}
+
 		String[] op = new String[attributes.length];
 		String[] attributesAux = new String[attributes.length];
 
@@ -379,6 +386,10 @@ public class ModelImpl implements Model {
 			if (validAttributes != null) {
 				validAttributes.add(attributes[i]);
 			}
+		}
+
+		if (numProjections == 0) {
+			return null;
 		}
 
 		if (numProjections == 1) {

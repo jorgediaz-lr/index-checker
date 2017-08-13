@@ -74,18 +74,17 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	@Override
-	public long count(Criterion condition) {
+	public long count(Criterion criterion) {
 		try {
 			List<?> list = executeDynamicQuery(
-				condition, ProjectionFactoryUtil.rowCount());
+				criterion, ProjectionFactoryUtil.rowCount());
 
 			if (list != null) {
 				return (Long)list.get(0);
 			}
 		}
 		catch (Exception e) {
-			_log.error("Error executing count");
-			throw new RuntimeException(e);
+			_log.error("Error executing count: " + e.getMessage());
 		}
 
 		return -1;
@@ -322,6 +321,10 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	public void setCriterion(Criterion criterion) {
+		if (count(criterion)==-1) {
+			throw new IllegalArgumentException();
+		}
+
 		if (serviceWrapper == null) {
 			serviceWrapper = new ServiceWrapper(model.getService());
 		}

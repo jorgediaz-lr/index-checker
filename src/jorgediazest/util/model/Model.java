@@ -34,7 +34,7 @@ public interface Model extends Comparable<Model> {
 
 	public long count();
 
-	public long count(Criterion condition);
+	public long count(Criterion criterion);
 
 	public List<?> executeDynamicQuery(Criterion criterion) throws Exception;
 
