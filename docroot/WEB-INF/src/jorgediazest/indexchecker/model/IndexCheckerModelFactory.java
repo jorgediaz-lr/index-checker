@@ -69,6 +69,12 @@ public class IndexCheckerModelFactory extends ModelFactory {
 			return model;
 		}
 
+		if ((criterion != null) && (model.count(criterion) == -1)) {
+			cacheNullModelObject.add(className);
+
+			return null;
+		}
+
 		ModelWrapper modelWrapper = new ModelWrapper(model);
 
 		if (criterion != null) {
