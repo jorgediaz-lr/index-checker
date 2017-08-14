@@ -137,14 +137,14 @@ public class ConfigurationUtil {
 			value = modelMap.get(entry);
 		}
 
-		if (Validator.isNotNull(value)) {
+		if (value != null) {
 			return value;
 		}
 
 		if (model.isWorkflowEnabled()) {
 			value = getModelInfo().get("workflowedModel").get(entry);
 
-			if (Validator.isNotNull(value)) {
+			if (value != null) {
 				return value;
 			}
 		}
@@ -152,7 +152,7 @@ public class ConfigurationUtil {
 		if (model.isResourcedModel()) {
 			value = getModelInfo().get("resourcedModel").get(entry);
 
-			if (Validator.isNotNull(value)) {
+			if (value != null) {
 				return value;
 			}
 		}

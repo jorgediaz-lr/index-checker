@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,7 +90,7 @@ public class IndexCheckerQueryHelper {
 
 		Criterion relatedCriterion = null;
 
-		if (Validator.isNotNull(relatedFilterString)) {
+		if (relatedFilterString != null) {
 			relatedCriterion = ModelUtil.generateSQLCriterion(
 				relatedFilterString);
 		}
