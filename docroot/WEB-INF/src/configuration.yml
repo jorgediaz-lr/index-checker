@@ -117,7 +117,7 @@ modelInfo: [{
 },
 {
     model: com.liferay.portlet.wiki.model.WikiNode,
-    filter: "status=8",
+    filter: "status=8"
 },
 {
     model: com.liferay.portlet.wiki.model.WikiPage,

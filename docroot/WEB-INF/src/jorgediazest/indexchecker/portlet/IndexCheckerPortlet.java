@@ -280,10 +280,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		List<Model> modelList = new ArrayList<Model>();
 
 		for (String className : classNames) {
-			Model mq = modelFactory.getModelObject(className);
+			Model model = modelFactory.getModelObject(className);
 
-			if (mq != null) {
-				modelList.add(mq);
+			if (model != null) {
+				modelList.add(model);
 			}
 		}
 
