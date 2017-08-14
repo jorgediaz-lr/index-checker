@@ -88,7 +88,9 @@ public class ModelImpl implements Model {
 			}
 		}
 		catch (Exception e) {
-			_log.error("Error executing count: " + e.getMessage());
+			_log.error(
+				"Error executing count for " + getName() + ": " +
+					e.getMessage());
 		}
 
 		return -1;

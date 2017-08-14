@@ -78,6 +78,10 @@ public class ModelFactory {
 				throw new Exception(
 					model.getName() + " error retrieving attributes");
 			}
+
+			if (model.count()==-1) {
+				model = null;
+			}
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
