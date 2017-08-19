@@ -96,6 +96,17 @@
 		filterGroupIdSelected = new HashSet<String>();
 	}
 	Locale locale = renderRequest.getLocale();
+	String updateMessage = (String) request.getAttribute("updateMessage");
+%>
+
+<%
+	if (Validator.isNotNull(updateMessage)) {
+%>
+
+<div class="alert"><%= updateMessage %></div>
+
+<%
+	}
 %>
 
 <aui:form action="<%= executeCheckURL %>" method="POST" name="fm">

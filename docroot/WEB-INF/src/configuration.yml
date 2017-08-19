@@ -124,3 +124,12 @@ modelInfo: [{
     filter: "(status=0 or status=8) and head=[$TRUE$] and redirectTitle=''",
     exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 }]
+
+#Configuration to retrieve remote configuration
+remoteConfigurationBackup: {62: {}, 70: {}}
+remoteConfigurationUrl: "https://gist.githubusercontent.com/jorgediaz-lr/205dc3f71bdcdc92b4f0558f583bf2cc/raw/index-checker_configuration.yml"
+remoteConfigurationTimeoutMilis: 86400000
+
+#Configuration to show offline update message
+offlineUpdateMessage: 'Your Index Checker version is more than six month old!! Download a new version: <a href="https://web.liferay.com/es/marketplace/-/mp/application/70121999">https://web.liferay.com/es/marketplace/-/mp/application/70121999</a>'
+offlineUpdateTimeoutMilis: 15552000000
