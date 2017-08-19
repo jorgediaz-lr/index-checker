@@ -46,6 +46,16 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class ConfigurationUtil {
 
+	public static Object getConfigurationEntry(String configurationEntry) {
+		Map<String, Object> configuration = getConfiguration();
+
+		if (configuration == null) {
+			return null;
+		}
+
+		return configuration.get(configurationEntry);
+	}
+
 	public static int getDefaultNumberThreads() {
 		return PortletPropsValues.NUMBER_THREADS;
 	}
@@ -113,7 +123,7 @@ public class ConfigurationUtil {
 
 				@SuppressWarnings("unchecked")
 				Collection<Map<String, Object>> modelInfoList =
-					(Collection<Map<String, Object>>)getConfiguration().get(
+					(Collection<Map<String, Object>>)getConfigurationEntry(
 						"modelInfo");
 
 				for (Map<String, Object> modelMap : modelInfoList) {
@@ -245,8 +255,8 @@ public class ConfigurationUtil {
 		String configurationEntry, String value) {
 
 		@SuppressWarnings("unchecked")
-		Collection<String> list =
-			(Collection<String>)getConfiguration().get(configurationEntry);
+		Collection<String> list = (Collection<String>)getConfigurationEntry(
+			configurationEntry);
 
 		return (list.contains(value));
 	}
