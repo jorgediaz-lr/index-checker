@@ -38,6 +38,7 @@ import com.liferay.portal.service.GroupServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -71,6 +72,35 @@ public class OutputUtils {
 			repository.getGroupId(), userId, StringPool.BLANK, 0,
 			repository.getPortletId(), repository.getDlFolderId(), inputStream,
 			title, mimeType, true);
+	}
+
+	public static FileEntry addPortletOutputFileEntry(
+		String portletId, long userId, String outputContent) {
+
+		if (Validator.isNull(outputContent)) {
+			return null;
+		}
+
+		try {
+			InputStream inputStream = new ByteArrayInputStream(
+				outputContent.getBytes(StringPool.UTF8));
+
+			Repository repository = OutputUtils.getPortletRepository(portletId);
+
+			OutputUtils.cleanupPortletFileEntries(repository, 8 * 60);
+
+			String fileName =
+				portletId + "_output_" + userId + "_" +
+				System.currentTimeMillis() + ".csv";
+
+			return OutputUtils.addPortletFileEntry(
+				repository, inputStream, userId, fileName, "text/plain");
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			return null;
+		}
 	}
 
 	public static void cleanupPortletFileEntries(
