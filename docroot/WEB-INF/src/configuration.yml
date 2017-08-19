@@ -13,8 +13,8 @@ modelInfo: [{
         {model: com.liferay.portal.model.ResourceBlock, mappingsSource: [permissionsGroupId,permissionsClassName], mappingsRelated: [groupId,name], attributesToQuery: [ResourceBlock.resourceBlockId]},
         {model: com.liferay.portal.model.ResourceBlockPermission, mappingsSource: [ResourceBlock.resourceBlockId], mappingsRelated: [resourceBlockId], attributesToQuery: [roleId,actionIds], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
-        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title]},
-        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name]}
+        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
+        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
     ],
     indexAttributeNameMapping: {
         pk: entryClassPK,
@@ -37,8 +37,8 @@ modelInfo: [{
     relatedDataToQuery: [
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [resourcePrimKey], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
-        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title]},
-        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name]}
+        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
+        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
     ],
     keyAttributes: [resourcePrimKey],
     indexAttributeNameMapping: {
@@ -78,8 +78,8 @@ modelInfo: [{
         {model: com.liferay.portlet.documentlibrary.model.DLFileVersion, mappingsSource: [fileEntryId,version], mappingsRelated: [fileEntryId,version], attributesToQuery: [status], filter: "status=0 or status=8"},
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
-        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title]},
-        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name]}
+        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
+        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
     ]
 },
 {
@@ -89,8 +89,8 @@ modelInfo: [{
         {model: com.liferay.portlet.dynamicdatalists.model.DDLRecordVersion, mappingsSource: [recordId,version], mappingsRelated: [recordId,version], attributesToQuery: [status], filter: "status=0"},
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
-        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title]},
-        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name]}
+        {model: com.liferay.portlet.asset.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
+        {model: com.liferay.portlet.asset.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
     ]
 },
 {
