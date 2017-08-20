@@ -16,7 +16,6 @@ package jorgediazest.indexchecker.index;
 
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 
 import java.util.Collection;
 import java.util.HashMap;

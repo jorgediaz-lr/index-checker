@@ -14,8 +14,6 @@
 
 package jorgediazest.indexchecker.model;
 
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-
 import jorgediazest.util.data.Data;
 
 /**
