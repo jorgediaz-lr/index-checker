@@ -6,12 +6,11 @@ modelInfo: [{
     permissionsHelperClass: !!jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper {},
     indexSearchHelperClass: !!jorgediazest.indexchecker.index.IndexSearchHelper {},
     filter: "",
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,folderId,parentFolderId,treePath],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,resourceBlockId,version,folderId,parentFolderId,treePath],
     exactAttributesToCheck: [createDate,modifiedDate,status,version,folderId,parentFolderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
         {model: com.liferay.portal.kernel.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKeyId], attributesToQuery: [roleId,actionIds,scope], raw: true},
-        {model: com.liferay.portal.kernel.model.ResourceBlock, mappingsSource: [permissionsGroupId,permissionsClassName], mappingsRelated: [groupId,name], attributesToQuery: [ResourceBlock.resourceBlockId]},
-        {model: com.liferay.portal.kernel.model.ResourceBlockPermission, mappingsSource: [ResourceBlock.resourceBlockId], mappingsRelated: [resourceBlockId], attributesToQuery: [roleId,actionIds], raw: true},
+        {model: com.liferay.portal.kernel.model.ResourceBlockPermission, mappingsSource: [resourceBlockId], mappingsRelated: [resourceBlockId], attributesToQuery: [roleId,actionIds], raw: true},
         {model: com.liferay.asset.kernel.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
         {model: com.liferay.asset.kernel.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
         {model: com.liferay.asset.kernel.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
@@ -39,7 +38,7 @@ modelInfo: [{
 },
 {
     model: resourcedModel,
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,folderId,parentFolderId,treePath,resourcePrimKey],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,resourceBlockId,version,folderId,parentFolderId,treePath,resourcePrimKey],
     relatedDataToQuery: [
         {model: com.liferay.portal.kernel.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKeyId], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.asset.kernel.model.AssetEntry,  mappingsSource: [resourcePrimKey], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
@@ -75,7 +74,7 @@ modelInfo: [{
 {
     model: com.liferay.calendar.model.CalendarBooking,
     filter: "status=0 or status=9",
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,calendarId],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,resourceBlockId,version,calendarId],
     permissionsHelperClass: !!jorgediazest.indexchecker.model.CalendarBookingPermissionsHelper {},
 },
 {
