@@ -103,7 +103,7 @@
 	if (Validator.isNotNull(updateMessage)) {
 %>
 
-<div class="alert"><%= updateMessage %></div>
+<div class="alert alert-warning"><%= updateMessage %></div>
 
 <%
 	}
