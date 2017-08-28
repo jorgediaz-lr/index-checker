@@ -141,7 +141,7 @@ public class IndexCheckerPermissionsHelper {
 			return;
 		}
 
-		Set<Long> roleIds = new HashSet<Long>();
+		Set<String> roleIds = new HashSet<String>();
 		Set<String> groupRoleIds = new HashSet<String>();
 
 		for (List<Object> resourcePermission : resourcePermissions) {
@@ -173,7 +173,7 @@ public class IndexCheckerPermissionsHelper {
 					groupRoleIds.add(groupId + StringPool.DASH + roleId);
 				}
 				else {
-					roleIds.add(roleId);
+					roleIds.add(String.valueOf(roleId));
 				}
 			}
 		}
@@ -185,8 +185,8 @@ public class IndexCheckerPermissionsHelper {
 
 		data.addModelTableInfo(permissionsModel);
 
-		data.set("roleId", roleIds);
-		data.set("groupRoleId", groupRoleIds);
+		data.set("permissionsRoleId", roleIds);
+		data.set("permissionsGroupRoleId", groupRoleIds);
 	}
 
 	protected long getActionIdBitwiseValue(String name, String actionId)

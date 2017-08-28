@@ -7,7 +7,7 @@ modelInfo: [{
     indexSearchHelperClass: !!jorgediazest.indexchecker.index.IndexSearchHelper {},
     filter: "",
     attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version],
-    exactAttributesToCheck: [createDate,modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    exactAttributesToCheck: [createDate,modifiedDate,status,version,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portal.model.ResourceBlock, mappingsSource: [permissionsGroupId,permissionsClassName], mappingsRelated: [groupId,name], attributesToQuery: [ResourceBlock.resourceBlockId]},
@@ -24,7 +24,13 @@ modelInfo: [{
         AssetCategory.title: assetCategoryTitles,
         AssetEntries_AssetTags.tagId: assetTagIds,
         AssetTag.name: assetTagNames,
-        RatingsStats.averageScore: ratings
+        RatingsStats.averageScore: ratings,
+        organizationId: organizationIds,
+        permissionsRoleId: roleId,
+        permissionsGroupRoleId: groupRoleId,
+        roleId: roleIds,
+        teamId: teamIds,
+        userGroupId: userGroupIds
     }
 },
 {
@@ -49,7 +55,13 @@ modelInfo: [{
         AssetCategory.title: assetCategoryTitles,
         AssetEntries_AssetTags.tagId: assetTagIds,
         AssetTag.name: assetTagNames,
-        RatingsStats.averageScore: ratings
+        RatingsStats.averageScore: ratings,
+        organizationId: organizationIds,
+        permissionsRoleId: roleId,
+        permissionsGroupRoleId: groupRoleId,
+        roleId: roleIds,
+        teamId: teamIds,
+        userGroupId: userGroupIds
     }
 },
 {
@@ -73,7 +85,7 @@ modelInfo: [{
     filter: "fileEntryId in (select fileEntryId from DLFileVersion where status=0 or status=8)",
     permissionsHelperClass: !!jorgediazest.indexchecker.model.DLFileEntryPermissionsHelper {},
     attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,repositoryId],
-    exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    exactAttributesToCheck: [createDate,modifiedDate,status,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
         {model: com.liferay.portlet.documentlibrary.model.DLFileVersion, mappingsSource: [fileEntryId,version], mappingsRelated: [fileEntryId,version], attributesToQuery: [status], filter: "status=0 or status=8"},
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
@@ -113,7 +125,8 @@ modelInfo: [{
 {
     model: com.liferay.portal.model.User,
     filter: "defaultUser=[$FALSE$]",
-    exactAttributesToCheck: [modifiedDate,status,version,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    attributesToQuery: [pk,companyId,groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId],
+    exactAttributesToCheck: [groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 },
 {
     model: com.liferay.portlet.wiki.model.WikiNode,
@@ -122,7 +135,7 @@ modelInfo: [{
 {
     model: com.liferay.portlet.wiki.model.WikiPage,
     filter: "(status=0 or status=8) and head=[$TRUE$] and redirectTitle=''",
-    exactAttributesToCheck: [createDate,modifiedDate,status,roleId,groupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+    exactAttributesToCheck: [createDate,modifiedDate,status,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 }]
 
 #Configuration to retrieve remote configuration
