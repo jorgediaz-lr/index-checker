@@ -142,7 +142,14 @@ modelInfo: [{
     model: com.liferay.portal.kernel.model.User,
     filter: "defaultUser=[$FALSE$]",
     attributesToQuery: [pk,companyId,groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId],
-    exactAttributesToCheck: [groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+    exactAttributesToCheck: [groupId,"<=modifiedDate",status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    relatedDataToQuery: [
+        {model: com.liferay.portal.kernel.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKeyId], attributesToQuery: [roleId,actionIds,scope], raw: true},
+        {model: com.liferay.asset.kernel.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
+        {model: com.liferay.asset.kernel.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
+        {model: com.liferay.asset.kernel.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""},
+        {model: com.liferay.portal.kernel.model.Contact, mappingsSource: [userId], mappingsRelated: [userId], attributesToQuery: [contactId,modifiedDate]}
+    ]
 },
 {
     model: com.liferay.wiki.model.WikiNode,
