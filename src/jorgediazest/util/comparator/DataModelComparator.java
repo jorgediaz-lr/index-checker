@@ -14,6 +14,7 @@
 
 package jorgediazest.util.comparator;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,13 +26,28 @@ import jorgediazest.util.data.Data;
 public class DataModelComparator extends DataBaseComparator {
 
 	public DataModelComparator(List<String> attributes) {
-		this.attributes = attributes;
+		this.attributes = new String[attributes.size()];
+		this.operations = new String[attributes.size()];
+
+		int i=0;
+		for (String attribute : attributes) {
+			String operation = attribute.substring(0,2);
+			if (">=".equals(operation)||"<=".equals(operation)) {
+				attribute=attribute.substring(2);
+			}
+			else {
+				operation=null;
+			}
+			this.attributes[i]=attribute;
+			this.operations[i]=operation;
+			i++;
+		}
 	}
 
 	@Override
 	public int compare(Data data1, Data data2) {
 
-		if ((attributes == null)|| attributes.isEmpty()) {
+		if ((attributes == null)|| (attributes.length==0)) {
 			throw new IllegalArgumentException();
 		}
 
@@ -54,8 +70,20 @@ public class DataModelComparator extends DataBaseComparator {
 			return false;
 		}
 
-		for (String attribute : attributes) {
-			if (!equalsAttributes(data1, data2, attribute, attribute)) {
+		for (int i=0;i<attributes.length;i++) {
+			String attribute=attributes[i];
+			String operation=operations[i];
+			if (operation == null) {
+				if (!equalsAttributes(data1, data2, attribute, attribute)) {
+					return false;
+				}
+
+				continue;
+			}
+
+			int compare = compareAttributes(data1, data2, attribute, attribute);
+
+			if(!equalAttributeWithOperation(compare, operation)) {
 				return false;
 			}
 		}
@@ -63,8 +91,25 @@ public class DataModelComparator extends DataBaseComparator {
 		return true;
 	}
 
+	private boolean equalAttributeWithOperation(int compare, String operation) {
+		if (">=".equals(operation)) {
+			if (compare < 0) {
+				return false;
+			}
+		}
+		else if ("<=".equals(operation)) {
+			if (compare > 0) {
+				return false;
+			}
+		}
+		else {
+			throw new IllegalArgumentException();
+		}
+		return true;
+	}
+
 	public List<String> getAttributes() {
-		return Collections.unmodifiableList(attributes);
+		return Collections.unmodifiableList(Arrays.asList(attributes));
 	}
 
 	@Override
@@ -84,6 +129,7 @@ public class DataModelComparator extends DataBaseComparator {
 		return data.getEntryClassName().hashCode() * hashCode;
 	}
 
-	protected List<String> attributes;
+	protected String[] attributes;
+	protected String[] operations;
 
 }
