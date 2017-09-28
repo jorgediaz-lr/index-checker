@@ -73,7 +73,7 @@ modelInfo: [{
     relatedDataToQuery: [{model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true}]
 },
 {
-    model: com.liferay.portlet.calendar.model.CalendarBooking,
+    model: com.liferay.calendar.model.CalendarBooking,
     filter: "status=0 or status=9",
 },
 {
