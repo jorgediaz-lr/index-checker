@@ -6,8 +6,8 @@ modelInfo: [{
     permissionsHelperClass: !!jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper {},
     indexSearchHelperClass: !!jorgediazest.indexchecker.index.IndexSearchHelper {},
     filter: "",
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version],
-    exactAttributesToCheck: [createDate,modifiedDate,status,version,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,folderId,parentFolderId,treePath],
+    exactAttributesToCheck: [createDate,modifiedDate,status,version,folderId,parentFolderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portal.model.ResourceBlock, mappingsSource: [permissionsGroupId,permissionsClassName], mappingsRelated: [groupId,name], attributesToQuery: [ResourceBlock.resourceBlockId]},
@@ -39,7 +39,7 @@ modelInfo: [{
 },
 {
     model: resourcedModel,
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,resourcePrimKey],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,folderId,parentFolderId,treePath,resourcePrimKey],
     relatedDataToQuery: [
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},
         {model: com.liferay.portlet.asset.model.AssetEntry,  mappingsSource: [resourcePrimKey], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
@@ -84,8 +84,8 @@ modelInfo: [{
     model: com.liferay.portlet.documentlibrary.model.DLFileEntry,
     filter: "fileEntryId in (select fileEntryId from DLFileVersion where status=0 or status=8)",
     permissionsHelperClass: !!jorgediazest.indexchecker.model.DLFileEntryPermissionsHelper {},
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,repositoryId],
-    exactAttributesToCheck: [createDate,modifiedDate,status,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,folderId,parentFolderId,treePath,repositoryId],
+    exactAttributesToCheck: [createDate,modifiedDate,status,folderId,parentFolderId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
         {model: com.liferay.portlet.documentlibrary.model.DLFileVersion, mappingsSource: [fileEntryId,version], mappingsRelated: [fileEntryId,version], attributesToQuery: [status], filter: "status=0 or status=8"},
         {model: com.liferay.portal.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKey], attributesToQuery: [roleId,actionIds,scope], raw: true},

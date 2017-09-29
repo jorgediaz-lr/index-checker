@@ -47,6 +47,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 import jorgediazest.indexchecker.util.PortletPropsValues;
 
@@ -213,6 +214,14 @@ public class IndexSearchHelper {
 		while (termRangeQuery != null);
 
 		return indexData;
+	}
+
+	public void postProcessData(Data data) {
+		Object treePath = data.get("treePath");
+
+		treePath = IndexCheckerQueryHelper.processTreePath(treePath);
+
+		data.set("treePath", treePath);
 	}
 
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {

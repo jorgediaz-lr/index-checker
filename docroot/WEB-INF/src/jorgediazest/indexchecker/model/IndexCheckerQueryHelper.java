@@ -17,7 +17,10 @@ package jorgediazest.indexchecker.model;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +39,24 @@ import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.query.Query;
 import jorgediazest.util.query.QueryUtil;
 public class IndexCheckerQueryHelper {
+
+	public static Object processTreePath(Object treePath) {
+		if (Validator.isNull(treePath)) {
+			return null;
+		}
+
+		if (!(treePath instanceof String)) {
+			return treePath;
+		}
+
+		String treePathStr = (String)treePath;
+
+		if (treePathStr.charAt(0) == CharPool.SLASH) {
+			treePathStr = treePathStr.substring(1);
+		}
+
+		return StringUtil.split(treePathStr, CharPool.SLASH);
+	}
 
 	@SuppressWarnings("unchecked")
 	public void addRelatedModelData(
@@ -206,6 +227,14 @@ public class IndexCheckerQueryHelper {
 			new String[0]);
 
 		return Query.getData(model, attributesToQueryArr, criterion);
+	}
+
+	public void postProcessData(Data data) {
+		Object treePath = data.get("treePath");
+
+		treePath = IndexCheckerQueryHelper.processTreePath(treePath);
+
+		data.set("treePath", treePath);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

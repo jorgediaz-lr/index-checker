@@ -108,13 +108,15 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			IndexCheckerQueryHelper queryHelper =
 				ConfigurationUtil.getQueryHelper(model);
 
-			Map<Long, Data> liferayDataMap = queryHelper.getLiferayData(
-				model, groupIds);
-
 			IndexCheckerPermissionsHelper permissionsHelper =
 				ConfigurationUtil.getPermissionsHelper(model);
 
+			Map<Long, Data> liferayDataMap = queryHelper.getLiferayData(
+				model, groupIds);
+
 			for (Data data : liferayDataMap.values()) {
+				queryHelper.postProcessData(data);
+
 				permissionsHelper.addPermissionsClassNameGroupIdFields(data);
 			}
 
@@ -152,6 +154,10 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				indexData = indexSearchHelper.getIndexData(
 					model, relatedModels, indexAttributesToQuery, companyId,
 					groupIds);
+
+				for (Data data : indexData) {
+					indexSearchHelper.postProcessData(data);
+				}
 			}
 
 			List<String> exactAttributesList = new ArrayList<String>(
