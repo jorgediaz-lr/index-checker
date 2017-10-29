@@ -95,6 +95,10 @@ modelInfo: [{
     ]
 },
 {
+    model: com.liferay.portlet.documentlibrary.model.DLFolder,
+    exactAttributesToCheck: [createDate,modifiedDate,status,version,folderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+},
+{
     model: com.liferay.portlet.dynamicdatalists.model.DDLRecord,
     filter: "recordId in (select recordId from DDLRecordVersion where status=0)",
     relatedDataToQuery: [
@@ -111,6 +115,10 @@ modelInfo: [{
     indexSearchHelperClass: !!jorgediazest.indexchecker.index.JournalArticleIndexSearchHelper {},
     filter: "classNameId=0",
     keyAttributes: [$$JOURNAL_ARTICLE_INDEX_PRIMARY_KEY_ATTRIBUTE$$],
+},
+{
+    model: com.liferay.portlet.journal.model.JournalFolder,
+    exactAttributesToCheck: [createDate,modifiedDate,status,version,folderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 },
 {
     model: com.liferay.portlet.messageboards.model.MBMessage,
