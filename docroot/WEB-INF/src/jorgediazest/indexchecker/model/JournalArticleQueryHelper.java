@@ -61,7 +61,9 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 
 		query.setProjection(ProjectionFactoryUtil.distinct(projectionList));
 
-		query.add(filter);
+		if (filter != null) {
+			query.add(filter);
+		}
 
 		DynamicQuery articleVersionDynamicQuery = service.newDynamicQuery(
 			"articleVersion");
