@@ -135,7 +135,8 @@ modelInfo: [{
 {
     model: com.liferay.portlet.wiki.model.WikiPage,
     filter: "(status=0 or status=8) and head=[$TRUE$] and redirectTitle=''",
-    exactAttributesToCheck: [createDate,modifiedDate,status,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,title,resourcePrimKey],
+    exactAttributesToCheck: [createDate,modifiedDate,status,title,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 }]
 
 #Configuration to retrieve remote configuration
