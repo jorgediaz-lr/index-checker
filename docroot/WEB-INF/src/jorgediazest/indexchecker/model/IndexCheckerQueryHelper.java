@@ -19,12 +19,14 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +43,22 @@ import jorgediazest.util.query.QueryUtil;
 public class IndexCheckerQueryHelper {
 
 	public static Object processTreePath(Object treePath) {
-		if (Validator.isNull(treePath)) {
+		if (treePath == null) {
 			return null;
+		}
+
+		if (treePath instanceof Set) {
+			Set<?> treePathSet = (Set<?>)treePath;
+
+			Set<Object> treePathFiltered = new HashSet<Object>();
+
+			for (Object obj : treePathSet) {
+				if (Validator.isNotNull(obj)) {
+					treePathFiltered.add(obj);
+				}
+			}
+
+			return treePathFiltered;
 		}
 
 		if (!(treePath instanceof String)) {
@@ -51,8 +67,14 @@ public class IndexCheckerQueryHelper {
 
 		String treePathStr = (String)treePath;
 
-		if (treePathStr.charAt(0) == CharPool.SLASH) {
+		if ((treePathStr.length() > 0) &&
+			(treePathStr.charAt(0) == CharPool.SLASH)) {
+
 			treePathStr = treePathStr.substring(1);
+		}
+
+		if (Validator.isNull(treePathStr)) {
+			return StringPool.BLANK;
 		}
 
 		return StringUtil.split(treePathStr, CharPool.SLASH);
