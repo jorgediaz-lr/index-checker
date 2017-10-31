@@ -55,7 +55,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -359,13 +358,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		IndexSearchHelper indexSearchHelper =
 			ConfigurationUtil.getIndexSearchHelper(model);
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
-
-		Collection<Data> dataCollection = dataMap.values();
-
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"Reindexing " + dataCollection.size() + " objects of type " +
+				"Reindexing " + objectsToReindex.size() + " objects of type " +
 					model.getClassName());
 		}
 
