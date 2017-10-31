@@ -337,6 +337,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	public static Map<Data, String> reindex(Comparison comparison) {
 
+		Model model = comparison.getModel();
+
+		if (model == null) {
+			return null;
+		}
+
 		Set<Data> objectsToReindex = new HashSet<Data>();
 
 		for (String type : comparison.getOutputTypes()) {
@@ -347,12 +353,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					objectsToReindex.addAll(aux);
 				}
 			}
-		}
-
-		Model model = comparison.getModel();
-
-		if (model == null) {
-			return null;
 		}
 
 		IndexSearchHelper indexSearchHelper =
