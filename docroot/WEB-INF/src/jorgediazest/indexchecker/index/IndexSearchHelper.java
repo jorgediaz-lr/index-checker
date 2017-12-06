@@ -154,7 +154,7 @@ public class IndexSearchHelper {
 
 		SearchContext searchContext = getIndexSearchContext(model, companyId);
 
-		BooleanQuery contextQuery = getIndexQuery(
+		BooleanQuery query = getIndexQuery(
 			model, groupIds, searchContext);
 
 		String[] sortAttributes = {"createDate", "modifiedDate"};
@@ -163,13 +163,12 @@ public class IndexSearchHelper {
 
 		return getIndexData(
 			model, relatedModels, indexAttributesToQuery.toArray(new String[0]),
-			sorts, searchContext, contextQuery);
+			sorts, searchContext, query);
 	}
 
 	public Set<Data> getIndexData(
 			Model model, Set<Model> relatedModels, String[] attributes,
-			Sort[] sorts, SearchContext searchContext,
-			BooleanQuery contextQuery)
+			Sort[] sorts, SearchContext searchContext, BooleanQuery query)
 		throws ParseException, SearchException {
 
 		int indexSearchLimit = PortletPropsValues.INDEX_SEARCH_LIMIT;
@@ -182,7 +181,7 @@ public class IndexSearchHelper {
 
 		do {
 			Document[] docs = executeSearch(
-				searchContext, contextQuery, sorts, termRangeQuery, size);
+				searchContext, query, sorts, termRangeQuery, size);
 
 			if ((docs == null) || (docs.length == 0)) {
 				break;
@@ -263,13 +262,12 @@ public class IndexSearchHelper {
 			TermRangeQuery termRangeQuery, int size)
 		throws ParseException, SearchException {
 
-		BooleanQuery contextQuery = BooleanQueryFactoryUtil.create(
-			searchContext);
+		BooleanQuery mainQuery = BooleanQueryFactoryUtil.create(searchContext);
 
-		contextQuery.add(query, BooleanClauseOccur.MUST);
+		mainQuery.add(query, BooleanClauseOccur.MUST);
 
 		if (termRangeQuery != null) {
-			contextQuery.add(termRangeQuery, BooleanClauseOccur.MUST);
+			mainQuery.add(termRangeQuery, BooleanClauseOccur.MUST);
 		}
 
 		if (sorts.length > 0) {
@@ -278,7 +276,7 @@ public class IndexSearchHelper {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("size: " + size);
-			_log.debug("Executing search: " + contextQuery);
+			_log.debug("Executing search: " + mainQuery);
 		}
 
 		searchContext.setStart(0);
@@ -289,7 +287,7 @@ public class IndexSearchHelper {
 		queryConfig.setScoreEnabled(false);
 		searchContext.setQueryConfig(queryConfig);
 
-		Hits hits = SearchEngineUtil.search(searchContext, contextQuery);
+		Hits hits = SearchEngineUtil.search(searchContext, mainQuery);
 
 		Document[] docs = hits.getDocs();
 
