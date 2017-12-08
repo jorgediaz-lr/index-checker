@@ -15,7 +15,10 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 
+import java.util.Date;
 import java.util.List;
 
 import jorgediazest.indexchecker.util.ConfigurationUtil;
@@ -30,14 +33,16 @@ import jorgediazest.util.model.ModelWrapper;
  */
 public class IndexCheckerModelFactory extends ModelFactory {
 
-	long companyId;
-
 	public IndexCheckerModelFactory() {
 		this.companyId = 0L;
 	}
 
-	public IndexCheckerModelFactory(long companyId) {
+	public IndexCheckerModelFactory(
+		long companyId, Date startModifiedDate, Date endModifiedDate) {
+
 		this.companyId = companyId;
+		this.startModifiedDate = startModifiedDate;
+		this.endModifiedDate = endModifiedDate;
 	}
 
 	@Override
@@ -61,6 +66,22 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		if (companyId > 0) {
 			criterion = ModelUtil.generateConjunctionCriterion(
 				model.getAttributeCriterion("companyId", companyId), criterion);
+		}
+
+		if (startModifiedDate != null) {
+			Criterion startDateCriterion = getAttributeRangeCriterion(
+				model, "modifiedDate", startModifiedDate, true);
+
+			criterion = ModelUtil.generateConjunctionCriterion(
+				startDateCriterion, criterion);
+		}
+
+		if (endModifiedDate != null) {
+			Criterion endDateCriterion = getAttributeRangeCriterion(
+					model, "modifiedDate", endModifiedDate, false);
+
+			criterion = ModelUtil.generateConjunctionCriterion(
+				endDateCriterion, criterion);
 		}
 
 		if ((criterion == null)&& ((keyAttributes == null) ||
@@ -89,5 +110,25 @@ public class IndexCheckerModelFactory extends ModelFactory {
 
 		return modelWrapper;
 	}
+
+	protected Criterion getAttributeRangeCriterion(
+		Model model, String attribute, Object value, boolean isStartValue) {
+
+		if (!model.hasAttribute(attribute)) {
+			return RestrictionsFactoryUtil.disjunction();
+		}
+
+		Property property = model.getProperty(attribute);
+
+		if (isStartValue) {
+			return property.ge(value);
+		}
+
+		return property.lt(value);
+	}
+
+	private long companyId;
+	private Date endModifiedDate;
+	private Date startModifiedDate;
 
 }
