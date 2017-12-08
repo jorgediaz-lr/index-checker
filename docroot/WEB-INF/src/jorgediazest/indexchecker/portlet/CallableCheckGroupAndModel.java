@@ -22,6 +22,7 @@ import com.liferay.portal.security.auth.CompanyThreadLocal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,10 +50,13 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 	public CallableCheckGroupAndModel(
 		Map<String, Map<Long, List<Data>>> queryCache, long companyId,
-		List<Long> groupIds, Model model, Set<ExecutionMode> executionMode) {
+		List<Long> groupIds, Date startModifiedDate, Date endModifiedDate,
+		Model model, Set<ExecutionMode> executionMode) {
 
 		this.companyId = companyId;
 		this.groupIds = groupIds;
+		this.startModifiedDate = startModifiedDate;
+		this.endModifiedDate = endModifiedDate;
 		this.queryCache = queryCache;
 		this.model = model;
 		this.executionMode = executionMode;
@@ -153,7 +157,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 				indexData = indexSearchHelper.getIndexData(
 					model, relatedModels, indexAttributesToQuery, companyId,
-					groupIds);
+					groupIds, startModifiedDate, endModifiedDate);
 
 				for (Data data : indexData) {
 					indexSearchHelper.postProcessData(data);
@@ -187,9 +191,11 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		CallableCheckGroupAndModel.class);
 
 	private long companyId = -1;
+	private Date endModifiedDate = null;
 	private Set<ExecutionMode> executionMode = null;
 	private List<Long> groupIds = null;
 	private Model model = null;
 	private Map<String, Map<Long, List<Data>>> queryCache = null;
+	private Date startModifiedDate = null;
 
 }

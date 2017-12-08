@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,9 @@ import jorgediazest.indexchecker.util.PortletPropsValues;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
+
+import org.apache.lucene.document.DateTools;
+import org.apache.lucene.document.DateTools.Resolution;
 
 /**
  * @author Jorge Díaz
@@ -149,13 +153,13 @@ public class IndexSearchHelper {
 	public Set<Data> getIndexData(
 			Model model, Set<Model> relatedModels,
 			Set<String> indexAttributesToQuery, long companyId,
-			List<Long> groupIds)
+			List<Long> groupIds, Date startModifiedDate, Date endModifiedDate)
 		throws ParseException, SearchException {
 
 		SearchContext searchContext = getIndexSearchContext(model, companyId);
 
 		BooleanQuery query = getIndexQuery(
-			model, groupIds, searchContext);
+			model, groupIds, startModifiedDate, endModifiedDate, searchContext);
 
 		String[] sortAttributes = {"createDate", "modifiedDate"};
 
@@ -298,6 +302,27 @@ public class IndexSearchHelper {
 		return docs;
 	}
 
+	protected TermRangeQuery getDateTermRangeQuery(
+		SearchContext searchContext, Model model, String field, Date startDate,
+		Date endDate) {
+
+		String lowerTerm = null;
+		String upperTerm = null;
+
+		if (startDate != null) {
+			lowerTerm = DateTools.dateToString(startDate, Resolution.SECOND);
+		}
+
+		if (endDate != null) {
+			upperTerm = DateTools.dateToString(endDate, Resolution.SECOND);
+		}
+
+		field = ConfigurationUtil.getIndexAttributeName(model, field);
+
+		return TermRangeQueryFactoryUtil.create(
+			searchContext, field, lowerTerm, upperTerm, true, true);
+	}
+
 	protected long getIdFromUID(String strValue) {
 		long id = -1;
 		String[] uidArr = strValue.split("_");
@@ -317,7 +342,8 @@ public class IndexSearchHelper {
 	}
 
 	protected BooleanQuery getIndexQuery(
-			Model model, List<Long> groupIds, SearchContext searchContext)
+			Model model, List<Long> groupIds, Date startModifiedDate,
+			Date endModifiedDate, SearchContext searchContext)
 		throws ParseException {
 
 		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
@@ -332,6 +358,16 @@ public class IndexSearchHelper {
 			}
 
 			query.add(groupQuery, BooleanClauseOccur.MUST);
+		}
+
+		if (model.hasAttribute("modifiedDate") &&
+			((startModifiedDate != null) || (endModifiedDate != null))) {
+
+			TermRangeQuery termRangeQuery = getDateTermRangeQuery(
+					searchContext, model, "modifiedDate", startModifiedDate,
+					endModifiedDate);
+
+			query.add(termRangeQuery, BooleanClauseOccur.MUST);
 		}
 
 		return query;
