@@ -84,7 +84,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 				endDateCriterion, criterion);
 		}
 
-		if ((criterion == null)&& ((keyAttributes == null) ||
+		if ((criterion == null) && ((keyAttributes == null) ||
 			 keyAttributes.isEmpty())) {
 
 			return model;
