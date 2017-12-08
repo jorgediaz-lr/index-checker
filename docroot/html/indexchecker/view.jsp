@@ -33,6 +33,7 @@
 
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
+<%@ page import="com.liferay.portal.kernel.util.GetterUtil" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.kernel.model.Company" %>
 
@@ -95,6 +96,7 @@
 	if (filterGroupIdSelected == null) {
 		filterGroupIdSelected = new HashSet<String>();
 	}
+	Long filterModifiedDate = GetterUtil.getLong(request.getAttribute("filterModifiedDate"));
 	Locale locale = renderRequest.getLocale();
 	String updateMessage = (String) request.getAttribute("updateMessage");
 %>
@@ -115,7 +117,7 @@
 			<aui:input helpMessage="output-both-exact-help" name="outputBothExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
 			<aui:input helpMessage="output-both-not-exact-help" name="outputBothNotExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
 			<aui:input helpMessage="output-liferay-help" name="outputLiferay" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
-			<aui:input helpMessage="output-index-help" name="outputIndex" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
+			<aui:input disabled="<%= (filterModifiedDate > 0) %>" helpMessage="output-index-help" name="outputIndex" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
 		</aui:col>
 		<aui:col width="25">
 			<aui:select helpMessage="filter-class-name-help" multiple="true" name="filterClassName" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 180px;">
@@ -205,6 +207,25 @@ if (filterGroupIdSelected.contains("-2")) {
 			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
 			<aui:input name="dumpAllObjectsToLog" type="checkbox" value="false" />
 			<aui:input helpMessage="number-of-threads-help" name="numberOfThreads" type="text" value='<%= request.getAttribute("numberOfThreads") %>' />
+			<aui:fieldset>
+				<aui:select helpMessage="filter-modified-date-help"  inlineLabel="left" name="filterModifiedDate" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" + renderResponse.getNamespace() + "disableOutputOnlyInIndex(this);" %>' >
+					<aui:option selected="true" value="0"><liferay-ui:message key="filter-group-id-no-filter" /></aui:option>
+					<aui:option value="1"><liferay-ui:message key="1-hour" /></aui:option>
+					<aui:option value="3"><liferay-ui:message key="3-hours" /></aui:option>
+					<aui:option value="6"><liferay-ui:message key="6-hours" /></aui:option>
+					<aui:option value="12"><liferay-ui:message key="12-hours" /></aui:option>
+					<aui:option value="24"><liferay-ui:message key="1-day" /></aui:option>
+					<aui:option value="72"><liferay-ui:message key="3-days" /></aui:option>
+					<aui:option value="168"><liferay-ui:message key="1-week" /></aui:option>
+					<aui:option value="336"><liferay-ui:message key="2-weeks" /></aui:option>
+					<aui:option value="729"><liferay-ui:message key="1-month" /></aui:option>
+					<aui:option value="2190"><liferay-ui:message key="3-months" /></aui:option>
+					<aui:option value="4380"><liferay-ui:message key="6-months" /></aui:option>
+					<aui:option value="8760"><liferay-ui:message key="1-year" /></aui:option>
+					<aui:option value="26280"><liferay-ui:message key="3-years" /></aui:option>
+					<aui:option value="43800"><liferay-ui:message key="5-years" /></aui:option>
+				</aui:select>
+			</aui:fieldset>
 		</aui:col>
 	</aui:row>
 
@@ -309,6 +330,12 @@ if (filterGroupIdSelected.contains("-2")) {
 </div></div></div>
 
 <aui:script>
+	function <portlet:namespace />disableOutputOnlyInIndex(event) {
+		<portlet:namespace />outputIndex.value=false;
+		<portlet:namespace />outputIndex.disabled=true;
+		<portlet:namespace />outputIndexCheckbox.checked=false;
+		<portlet:namespace />outputIndexCheckbox.disabled=true;
+	}
 	function <portlet:namespace />disableReindexAndRemoveOrphansButtons(event) {
 		var reindexButton = document.getElementById("reindexButtonSpan");
 		var removeOrphansButton = document.getElementById("removeOrphansSpan");
