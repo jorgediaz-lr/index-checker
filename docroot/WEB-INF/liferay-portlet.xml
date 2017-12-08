@@ -5,6 +5,7 @@
 	<portlet>
 		<portlet-name>index_checker</portlet-name>
 		<icon>/icon.png</icon>
+		<configuration-action-class>com.liferay.portal.kernel.portlet.DefaultConfigurationAction</configuration-action-class>
 		<control-panel-entry-category>
 			apps
 		</control-panel-entry-category>
@@ -12,6 +13,8 @@
 		<control-panel-entry-class>
 			jorgediazest.indexchecker.portlet.IndexCheckerControlPanelEntry
 		</control-panel-entry-class>
+		<preferences-company-wide>true</preferences-company-wide>
+		<preferences-unique-per-layout>false</preferences-unique-per-layout>
 		<single-page-application>false</single-page-application>
 		<header-portlet-css>/css/main.css</header-portlet-css>
 		<footer-portlet-javascript>
