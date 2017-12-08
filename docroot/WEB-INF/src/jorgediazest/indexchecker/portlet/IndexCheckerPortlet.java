@@ -32,9 +32,13 @@ import com.liferay.portal.kernel.portlet.LiferayPortletContext;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.util.CalendarFactory;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
@@ -52,8 +56,10 @@ import java.io.StringWriter;
 import java.lang.reflect.Proxy;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -140,6 +146,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	public static List<Future<Comparison>> executeCallableCheckGroupAndModel(
 		Map<String, Map<Long, List<Data>>> queryCache, ExecutorService executor,
 		List<Model> modelList, long companyId, List<Long> groupIds,
+		Date startModifiedDate, Date endModifiedDate,
 		Set<ExecutionMode> executionMode) {
 
 		List<Future<Comparison>> futureResultList =
@@ -158,7 +165,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			CallableCheckGroupAndModel c =
 				new CallableCheckGroupAndModel(
-					queryCache, companyId, groupIds, model, executionMode);
+					queryCache, companyId, groupIds, startModifiedDate,
+					endModifiedDate, model, executionMode);
 
 			futureResultList.add(executor.submit(c));
 		}
@@ -168,6 +176,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	public static Map<Long, List<Comparison>> executeCheck(
 			Company company, List<Long> groupIds, List<String> classNames,
+			Date startModifiedDate, Date endModifiedDate,
 			Set<ExecutionMode> executionMode, int threadsExecutor)
 		throws ExecutionException, InterruptedException, SystemException {
 
@@ -176,7 +185,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Map<String, Map<Long, List<Data>>> queryCache =
 			new ConcurrentHashMap<String, Map<Long, List<Data>>>();
 
-		ModelFactory modelFactory = new IndexCheckerModelFactory(companyId);
+		ModelFactory modelFactory = new IndexCheckerModelFactory(
+			companyId, startModifiedDate, endModifiedDate);
 
 		List<Model> modelList = getModelList(modelFactory, classNames);
 
@@ -194,7 +204,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				List<Future<Comparison>> futureResultList =
 					executeCallableCheckGroupAndModel(
 						queryCache, executor, modelList, companyId, groupIdsAux,
-						executionMode);
+						startModifiedDate, endModifiedDate, executionMode);
 
 				futureResultDataMap.put(groupId, futureResultList);
 			}
@@ -203,7 +213,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			List<Future<Comparison>> futureResultList =
 				executeCallableCheckGroupAndModel(
 					queryCache, executor, modelList, companyId, groupIds,
-					executionMode);
+					startModifiedDate, endModifiedDate, executionMode);
 
 			futureResultDataMap.put(0L, futureResultList);
 		}
@@ -448,6 +458,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		int numberOfThreads = getNumberOfThreads(renderRequest);
 		renderRequest.setAttribute("numberOfThreads", numberOfThreads);
 
+		long filterModifiedDate = ParamUtil.getLong(
+			renderRequest, "filterModifiedDate", 0L);
+
+		renderRequest.setAttribute("filterModifiedDate", filterModifiedDate);
+
 		super.doView(renderRequest, renderResponse);
 	}
 
@@ -474,6 +489,21 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
+		List<String> classNames = getClassNames(filterClassNameArr);
+
+		Date startModifiedDate = null;
+		Date endModifiedDate = null;
+
+		long filterModifiedDate = ParamUtil.getLong(
+			request, "filterModifiedDate", 0L);
+
+		if (filterModifiedDate > 0) {
+			long now = System.currentTimeMillis();
+
+			startModifiedDate = getStartDate(now, filterModifiedDate);
+			endModifiedDate = getTomorrowDate(now);
+		}
+
 		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap =
 			new LinkedHashMap<Company, Map<Long, List<Comparison>>>();
 
@@ -488,8 +518,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				CompanyThreadLocal.setCompanyId(company.getCompanyId());
 
 				ShardUtil.pushCompanyService(company.getCompanyId());
-
-				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
 					company, executionMode, filterGroupIdArr);
@@ -508,7 +536,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, executionMode,
+						company, groupIds, classNames, startModifiedDate,
+						endModifiedDate, executionMode,
 						getNumberOfThreads(request));
 
 				boolean groupBySite = executionMode.contains(
@@ -613,6 +642,21 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
+		List<String> classNames = getClassNames(filterClassNameArr);
+
+		Date startModifiedDate = null;
+		Date endModifiedDate = null;
+
+		long filterModifiedDate = ParamUtil.getLong(
+			request, "filterModifiedDate", 0L);
+
+		if (filterModifiedDate > 0) {
+			long now = System.currentTimeMillis();
+
+			startModifiedDate = getStartDate(now, filterModifiedDate);
+			endModifiedDate = getTomorrowDate(now);
+		}
+
 		Map<Company, Long> companyProcessTime =
 			new LinkedHashMap<Company, Long>();
 
@@ -626,8 +670,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
-
-				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
 					company, executionMode, filterGroupIdArr);
@@ -646,7 +688,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, executionMode,
+						company, groupIds, classNames, startModifiedDate,
+						endModifiedDate, executionMode,
 						getNumberOfThreads(request));
 
 				for (
@@ -726,6 +769,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		request.setAttribute(
 			"filterGroupIdSelected", SetUtil.fromArray(filterGroupIdArr));
 
+		List<String> classNames = getClassNames(filterClassNameArr);
+
 		Map<Company, Long> companyProcessTime =
 			new LinkedHashMap<Company, Long>();
 
@@ -739,8 +784,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			try {
 				ShardUtil.pushCompanyService(company.getCompanyId());
-
-				List<String> classNames = getClassNames(filterClassNameArr);
 
 				List<Long> groupIds = getGroupIds(
 					company, executionMode, filterGroupIdArr);
@@ -759,8 +802,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				Map<Long, List<Comparison>> resultDataMap =
 					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, executionMode,
-						getNumberOfThreads(request));
+						company, groupIds, classNames, null, null,
+						executionMode, getNumberOfThreads(request));
 
 				for (
 					Entry<Long, List<Comparison>> entry :
@@ -1155,6 +1198,31 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		String portletId = portletConfig.getPortletName();
 
 		OutputUtils.servePortletFileEntry(portletId, resourceId, response);
+	}
+
+	protected Date getStartDate(long timeInMillis, long hoursToSubstract) {
+		CalendarFactory calendarFactory =
+			CalendarFactoryUtil.getCalendarFactory();
+
+		long start = timeInMillis - (hoursToSubstract * 60 * 60 * 1000);
+
+		Calendar startCalendar = calendarFactory.getCalendar(start);
+
+		return startCalendar.getTime();
+	}
+
+	protected Date getTomorrowDate(long timeInMillis) {
+
+		CalendarFactory calendarFactory =
+			CalendarFactoryUtil.getCalendarFactory();
+
+		Calendar tomorrowCalendar = calendarFactory.getCalendar(timeInMillis);
+		tomorrowCalendar.add(Calendar.DATE, 1);
+		tomorrowCalendar.set(Calendar.HOUR_OF_DAY, 0);
+		tomorrowCalendar.set(Calendar.MINUTE, 0);
+		tomorrowCalendar.set(Calendar.SECOND, 0);
+
+		return tomorrowCalendar.getTime();
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
