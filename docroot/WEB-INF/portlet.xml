@@ -6,6 +6,10 @@
 		<display-name>Index Checker</display-name>
 		<portlet-class>jorgediazest.indexchecker.portlet.IndexCheckerPortlet</portlet-class>
 		<init-param>
+			<name>config-template</name>
+			<value>/html/indexchecker/config.jsp</value>
+		</init-param>
+		<init-param>
 			<name>view-template</name>
 			<value>/html/indexchecker/view.jsp</value>
 		</init-param>

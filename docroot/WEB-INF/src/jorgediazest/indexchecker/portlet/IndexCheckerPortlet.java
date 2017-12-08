@@ -79,6 +79,7 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletContext;
 import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
@@ -246,6 +247,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	public static EnumSet<ExecutionMode>
 		getExecutionMode(ActionRequest request) {
 
+		PortletPreferences portletPreferences = request.getPreferences();
+
+		boolean queryBySite = GetterUtil.getBoolean(
+			portletPreferences.getValue("queryBySite", StringPool.FALSE));
+
+		boolean dumpAllObjectsToLog = GetterUtil.getBoolean(
+			portletPreferences.getValue(
+				"dumpAllObjectsToLog", StringPool.FALSE));
+
 		EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(
 			ExecutionMode.class);
 
@@ -253,7 +263,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			executionMode.add(ExecutionMode.GROUP_BY_SITE);
 		}
 
-		if (ParamUtil.getBoolean(request, "queryBySite")) {
+		if (queryBySite) {
 			executionMode.add(ExecutionMode.QUERY_BY_SITE);
 		}
 
@@ -273,7 +283,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			executionMode.add(ExecutionMode.SHOW_INDEX);
 		}
 
-		if (ParamUtil.getBoolean(request, "dumpAllObjectsToLog")) {
+		if (dumpAllObjectsToLog) {
 			executionMode.add(ExecutionMode.DUMP_ALL_OBJECTS_TO_LOG);
 		}
 
@@ -454,9 +464,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		catch (SystemException se) {
 			throw new PortletException(se);
 		}
-
-		int numberOfThreads = getNumberOfThreads(renderRequest);
-		renderRequest.setAttribute("numberOfThreads", numberOfThreads);
 
 		long filterModifiedDate = ParamUtil.getLong(
 			renderRequest, "filterModifiedDate", 0L);
@@ -1022,19 +1029,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public int getNumberOfThreads(ActionRequest actionRequest) {
-		int def = ConfigurationUtil.getDefaultNumberThreads();
+		PortletPreferences portletPreferences = actionRequest.getPreferences();
 
-		int num = ParamUtil.getInteger(actionRequest, "numberOfThreads", def);
+		int numberOfThreads = GetterUtil.getInteger(
+			portletPreferences.getValue("numberOfThreads", StringPool.BLANK));
 
-		return (num == 0) ? def : num;
-	}
+		if (numberOfThreads != 0) {
+			return numberOfThreads;
+		}
 
-	public int getNumberOfThreads(RenderRequest renderRequest) {
-		int def = ConfigurationUtil.getDefaultNumberThreads();
-
-		int num = ParamUtil.getInteger(renderRequest, "numberOfThreads", def);
-
-		return (num == 0) ? def : num;
+		return ConfigurationUtil.getDefaultNumberThreads();
 	}
 
 	public List<String> getSiteGroupDescriptions(List<Long> siteGroupIds)
