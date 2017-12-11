@@ -405,6 +405,14 @@ public class DataUtil {
 		return data;
 	}
 
+	public static String dateToString(Date date) {
+		return dateFormatyyyyMMddHHmmss.get().format(date);
+	}
+
+	public static String dateToStringWithMillis(Date date) {
+		return dateFormatyyyyMMddHHmmssSSS.get().format(date);
+	}
+
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
 		Set<Data> both = new TreeSet<Data>(set1);
 		both.retainAll(set2);
