@@ -47,15 +47,15 @@ import jorgediazest.util.table.TableInfo;
 public class Query {
 
 	public static Map<Long, Data> getData(
-		Model model, String[] attributes, Criterion filter)
+		Model model, String[] attributes, Criterion criterion)
 	throws Exception {
 		return getData(
-			model, attributes, model.getPrimaryKeyAttribute(), filter);
+			model, attributes, model.getPrimaryKeyAttribute(), criterion);
 	}
 
 	public static Map<Long, Data> getData(
 			Model model, String[] attributes, String mapKeyAttribute,
-			Criterion filter)
+			Criterion criterion)
 		throws Exception {
 
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -78,7 +78,7 @@ public class Query {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
-			filter, projectionList);
+			criterion, projectionList);
 
 		String[] validAttributesArr = validAttributes.toArray(
 			new String[validAttributes.size()]);
@@ -120,7 +120,7 @@ public class Query {
 
 	public static Map<Long, List<Data>> getDataWithDuplicates(
 		Model model, String[] attributes, String mapKeyAttribute,
-		Criterion filter)
+		Criterion criterion)
 	throws Exception {
 
 		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
@@ -141,7 +141,7 @@ public class Query {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
-			filter, projectionList);
+			criterion, projectionList);
 
 		String[] validAttributesArr = validAttributes.toArray(
 			new String[validAttributes.size()]);
