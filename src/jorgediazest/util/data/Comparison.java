@@ -16,6 +16,7 @@ package jorgediazest.util.data;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,9 +42,15 @@ public class Comparison {
 
 		Comparison merged = null;
 
+		Set<String> errors = new TreeSet<String>();
+
 		for (Comparison c : collection) {
 			if ((c.data != null) && (merged == null)) {
 				merged = c;
+
+				if (c.getError() != null) {
+					errors.add(c.getError());
+				}
 
 				continue;
 			}
@@ -52,6 +59,10 @@ public class Comparison {
 				result.add(c);
 
 				continue;
+			}
+
+			if (c.getError() != null) {
+				errors.add(c.getError());
 			}
 
 			for (Entry<String, Set<Data>> e : c.data.entrySet()) {
@@ -65,6 +76,10 @@ public class Comparison {
 
 				dataSet.addAll(e.getValue());
 			}
+		}
+
+		if (!errors.isEmpty()) {
+			merged.error = StringUtil.merge(errors, ", ");
 		}
 
 		result.add(merged);
