@@ -56,9 +56,6 @@ import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
 import jorgediazest.util.model.Model;
 
-import org.apache.lucene.document.DateTools;
-import org.apache.lucene.document.DateTools.Resolution;
-
 /**
  * @author Jorge Díaz
  */
@@ -310,11 +307,11 @@ public class IndexSearchHelper {
 		String upperTerm = null;
 
 		if (startDate != null) {
-			lowerTerm = DateTools.dateToString(startDate, Resolution.SECOND);
+			lowerTerm = DataUtil.dateToString(startDate);
 		}
 
 		if (endDate != null) {
-			upperTerm = DateTools.dateToString(endDate, Resolution.SECOND);
+			upperTerm = DataUtil.dateToString(endDate);
 		}
 
 		field = ConfigurationUtil.getIndexAttributeName(model, field);
