@@ -249,6 +249,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		PortletPreferences portletPreferences = request.getPreferences();
 
+		boolean outputGroupBySite = GetterUtil.getBoolean(
+			portletPreferences.getValue("outputGroupBySite", StringPool.FALSE));
+
 		boolean queryBySite = GetterUtil.getBoolean(
 			portletPreferences.getValue("queryBySite", StringPool.FALSE));
 
@@ -259,7 +262,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		EnumSet<ExecutionMode> executionMode = EnumSet.noneOf(
 			ExecutionMode.class);
 
-		if (ParamUtil.getBoolean(request, "outputGroupBySite")) {
+		if (outputGroupBySite) {
 			executionMode.add(ExecutionMode.GROUP_BY_SITE);
 		}
 
