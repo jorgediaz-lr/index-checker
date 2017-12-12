@@ -33,12 +33,12 @@
 
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
+<%@ page import="com.liferay.portal.kernel.model.Company" %>
+<%@ page import="com.liferay.portal.kernel.theme.PortletDisplay" %>
+<%@ page import="com.liferay.portal.kernel.theme.ThemeDisplay" %>
 <%@ page import="com.liferay.portal.kernel.util.GetterUtil" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.kernel.util.WebKeys" %>
-<%@ page import="com.liferay.portal.kernel.model.Company" %>
-<%@ page import="com.liferay.portal.theme.PortletDisplay" %>
-<%@ page import="com.liferay.portal.theme.ThemeDisplay" %>
 
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.util.HashSet" %>
