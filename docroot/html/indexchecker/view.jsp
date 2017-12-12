@@ -369,4 +369,11 @@ if (filterGroupIdSelected.contains("-2")) {
 
 		submitForm(document.<portlet:namespace />fm);
 	}
+
+	Liferay.provide(window,'closePopupWindow', function(dialogId) {
+			var dialog = Liferay.Util.Window.getById(dialogId);
+			dialog.destroy();
+		},
+		['liferay-util-window']
+	);
 </aui:script>

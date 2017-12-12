@@ -59,5 +59,12 @@ if (numberOfThreads_cfg == 0) {
 
 	<aui:button-row>
 		<aui:button type="submit" />
+		<aui:button onClick='<%= renderResponse.getNamespace() + "closeButton(this);" %>' value="close" />
 	</aui:button-row>
 </aui:form>
+
+<aui:script>
+	function <portlet:namespace />closeButton(event) {
+		Liferay.Util.getOpener().closePopupWindow(Liferay.Util.getWindowName());
+	}
+</aui:script>
