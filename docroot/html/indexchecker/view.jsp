@@ -35,7 +35,10 @@
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
 <%@ page import="com.liferay.portal.kernel.util.GetterUtil" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
+<%@ page import="com.liferay.portal.kernel.util.WebKeys" %>
 <%@ page import="com.liferay.portal.model.Company" %>
+<%@ page import="com.liferay.portal.theme.PortletDisplay" %>
+<%@ page import="com.liferay.portal.theme.ThemeDisplay" %>
 
 <%@ page import="java.util.EnumSet" %>
 <%@ page import="java.util.HashSet" %>
@@ -57,6 +60,14 @@
 <portlet:defineObjects />
 
 <portlet:renderURL var="viewURL" />
+
+<%
+	ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+
+	PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+	String configurationURL = portletDisplay.getURLConfigurationJS();
+%>
 
 <portlet:actionURL name="executeCheck" var="executeCheckURL" windowState="normal" />
 <portlet:actionURL name="executeReindex" var="executeReindexURL" windowState="normal" />
@@ -266,6 +277,7 @@ if (filterGroupIdSelected.contains("-2")) {
 %>
 
 		<aui:button onClick="<%= viewURL %>" value="clean" />
+		<aui:button onClick="<%= configurationURL %>" value="configuration" />
 
 	</aui:button-row>
 </aui:form>
