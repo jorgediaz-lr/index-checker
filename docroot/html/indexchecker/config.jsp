@@ -51,11 +51,16 @@ if (numberOfThreads_cfg == 0) {
 %>
 
 <aui:form action="<%= configurationURL %>" method="post" name="fm">
+
+	<div class="portlet-configuration-body-content"><div class="container-fluid-1280"><div class="card-horizontal main-content-card"><div class="panel-body">
+
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 
 	<aui:input name="preferences--queryBySite--" type="checkbox" value="<%= queryBySite_cfg %>" />
 	<aui:input name="preferences--dumpAllObjectsToLog--" type="checkbox" value="<%= dumpAllObjectsToLog_cfg %>" />
 	<aui:input helpMessage="number-of-threads-help" name="preferences--numberOfThreads--" type="text" value="<%= numberOfThreads_cfg %>" />
+
+	</div></div></div></div>
 
 	<aui:button-row>
 		<aui:button type="submit" />
