@@ -286,6 +286,8 @@ public class IndexSearchHelper {
 		QueryConfig queryConfig = new QueryConfig();
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
+
+		mainQuery.setQueryConfig(queryConfig);
 		searchContext.setQueryConfig(queryConfig);
 
 		Hits hits = SearchEngineUtil.search(searchContext, mainQuery);
