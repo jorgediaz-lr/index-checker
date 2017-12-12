@@ -124,14 +124,33 @@
 
 <aui:form action="<%= executeCheckURL %>" method="POST" name="fm">
 	<aui:row>
-		<aui:col width="25">
+		<aui:col width="33">
 			<aui:input helpMessage="output-both-exact-help" name="outputBothExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
 			<aui:input helpMessage="output-both-not-exact-help" name="outputBothNotExact" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
 			<aui:input helpMessage="output-liferay-help" name="outputLiferay" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="true" />
 			<aui:input disabled="<%= (filterModifiedDate > 0) %>" helpMessage="output-index-help" name="outputIndex" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' type="checkbox" value="false" />
+			<aui:fieldset>
+				<aui:select helpMessage="filter-modified-date-help"  inlineLabel="left" name="filterModifiedDate" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" + renderResponse.getNamespace() + "disableOutputOnlyInIndex(this);" %>' >
+					<aui:option selected="true" value="0"><liferay-ui:message key="filter-group-id-no-filter" /></aui:option>
+					<aui:option value="1"><liferay-ui:message key="1-hour" /></aui:option>
+					<aui:option value="3"><liferay-ui:message key="3-hours" /></aui:option>
+					<aui:option value="6"><liferay-ui:message key="6-hours" /></aui:option>
+					<aui:option value="12"><liferay-ui:message key="12-hours" /></aui:option>
+					<aui:option value="24"><liferay-ui:message key="1-day" /></aui:option>
+					<aui:option value="72"><liferay-ui:message key="3-days" /></aui:option>
+					<aui:option value="168"><liferay-ui:message key="1-week" /></aui:option>
+					<aui:option value="336"><liferay-ui:message key="2-weeks" /></aui:option>
+					<aui:option value="729"><liferay-ui:message key="1-month" /></aui:option>
+					<aui:option value="2190"><liferay-ui:message key="3-months" /></aui:option>
+					<aui:option value="4380"><liferay-ui:message key="6-months" /></aui:option>
+					<aui:option value="8760"><liferay-ui:message key="1-year" /></aui:option>
+					<aui:option value="26280"><liferay-ui:message key="3-years" /></aui:option>
+					<aui:option value="43800"><liferay-ui:message key="5-years" /></aui:option>
+				</aui:select>
+			</aui:fieldset>
 		</aui:col>
-		<aui:col width="25">
-			<aui:select helpMessage="filter-class-name-help" multiple="true" name="filterClassName" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 180px;">
+		<aui:col width="33">
+			<aui:select helpMessage="filter-class-name-help" multiple="true" name="filterClassName" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 240px; width: auto; min-width: 120px; max-width: 340px;">
 
 <%
 				String selectedAllModels = "";
@@ -165,8 +184,8 @@
 
 			</aui:select>
 		</aui:col>
-		<aui:col width="25">
-			<aui:select helpMessage="filter-group-id-help" multiple="true" name="filterGroupId" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 180px;">
+		<aui:col width="33">
+			<aui:select helpMessage="filter-group-id-help" multiple="true" name="filterGroupId" onChange='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" %>' style="height: 240px; width: auto; min-width: 120px; max-width: 340px;">
 
 <%
 String selectedNoFilter = "";
@@ -213,30 +232,9 @@ if (filterGroupIdSelected.contains("-2")) {
 				<option <%= selectedUserSites %> value="-2"><liferay-ui:message key="filter-group-id-user-sites" /></option>
 			</aui:select>
 		</aui:col>
-		<aui:col width="25">
-			<aui:fieldset>
-				<aui:select helpMessage="filter-modified-date-help"  inlineLabel="left" name="filterModifiedDate" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" + renderResponse.getNamespace() + "disableOutputOnlyInIndex(this);" %>' >
-					<aui:option selected="true" value="0"><liferay-ui:message key="filter-group-id-no-filter" /></aui:option>
-					<aui:option value="1"><liferay-ui:message key="1-hour" /></aui:option>
-					<aui:option value="3"><liferay-ui:message key="3-hours" /></aui:option>
-					<aui:option value="6"><liferay-ui:message key="6-hours" /></aui:option>
-					<aui:option value="12"><liferay-ui:message key="12-hours" /></aui:option>
-					<aui:option value="24"><liferay-ui:message key="1-day" /></aui:option>
-					<aui:option value="72"><liferay-ui:message key="3-days" /></aui:option>
-					<aui:option value="168"><liferay-ui:message key="1-week" /></aui:option>
-					<aui:option value="336"><liferay-ui:message key="2-weeks" /></aui:option>
-					<aui:option value="729"><liferay-ui:message key="1-month" /></aui:option>
-					<aui:option value="2190"><liferay-ui:message key="3-months" /></aui:option>
-					<aui:option value="4380"><liferay-ui:message key="6-months" /></aui:option>
-					<aui:option value="8760"><liferay-ui:message key="1-year" /></aui:option>
-					<aui:option value="26280"><liferay-ui:message key="3-years" /></aui:option>
-					<aui:option value="43800"><liferay-ui:message key="5-years" /></aui:option>
-				</aui:select>
-			</aui:fieldset>
-		</aui:col>
 	</aui:row>
 
-	<aui:button-row>
+	<aui:button-row style="margin-top: 0px;">
 		<aui:button type="submit" value="check-index" />
 
 <%
