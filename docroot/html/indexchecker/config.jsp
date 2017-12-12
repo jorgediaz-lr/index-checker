@@ -43,6 +43,7 @@
 
 <%
 boolean queryBySite_cfg = GetterUtil.getBoolean(portletPreferences.getValue("queryBySite", StringPool.FALSE));
+boolean outputGroupBySite_cfg = GetterUtil.getBoolean(portletPreferences.getValue("outputGroupBySite", StringPool.FALSE));
 boolean dumpAllObjectsToLog_cfg = GetterUtil.getBoolean(portletPreferences.getValue("dumpAllObjectsToLog", StringPool.FALSE));
 int numberOfThreads_cfg = GetterUtil.getInteger(portletPreferences.getValue("numberOfThreads", StringPool.BLANK));
 if (numberOfThreads_cfg == 0) {
@@ -57,6 +58,7 @@ if (numberOfThreads_cfg == 0) {
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 
 	<aui:input name="preferences--queryBySite--" type="checkbox" value="<%= queryBySite_cfg %>" />
+	<aui:input name="preferences--outputGroupBySite--" type="checkbox" value="<%= outputGroupBySite_cfg %>" />
 	<aui:input name="preferences--dumpAllObjectsToLog--" type="checkbox" value="<%= dumpAllObjectsToLog_cfg %>" />
 	<aui:input helpMessage="number-of-threads-help" name="preferences--numberOfThreads--" type="text" value="<%= numberOfThreads_cfg %>" />
 

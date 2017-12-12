@@ -214,7 +214,6 @@ if (filterGroupIdSelected.contains("-2")) {
 			</aui:select>
 		</aui:col>
 		<aui:col width="25">
-			<aui:input name="outputGroupBySite" type="checkbox" value="false" />
 			<aui:fieldset>
 				<aui:select helpMessage="filter-modified-date-help"  inlineLabel="left" name="filterModifiedDate" onClick='<%= renderResponse.getNamespace() + "disableReindexAndRemoveOrphansButtons(this);" + renderResponse.getNamespace() + "disableOutputOnlyInIndex(this);" %>' >
 					<aui:option selected="true" value="0"><liferay-ui:message key="filter-group-id-no-filter" /></aui:option>
