@@ -173,6 +173,17 @@ public class IndexSearchHelper {
 			Sort[] sorts, SearchContext searchContext, BooleanQuery query)
 		throws ParseException, SearchException {
 
+		String[] indexFields = new String[attributes.length+2];
+		indexFields[0]=Field.UID;
+		indexFields[1]=Field.ENTRY_CLASS_NAME;
+
+		for (int i=0;i<attributes.length;i++) {
+			String indexField = ConfigurationUtil.getIndexAttributeName(
+				model, attributes[i]);
+
+			indexFields[i+2]=indexField;
+		}
+
 		int indexSearchLimit = PortletPropsValues.INDEX_SEARCH_LIMIT;
 
 		int size = Math.min((int)model.count() * 2, indexSearchLimit);
@@ -183,7 +194,7 @@ public class IndexSearchHelper {
 
 		do {
 			Document[] docs = executeSearch(
-				searchContext, query, sorts, termRangeQuery, size);
+				searchContext, query, sorts, termRangeQuery, indexFields, size);
 
 			if ((docs == null) || (docs.length == 0)) {
 				break;
@@ -263,7 +274,7 @@ public class IndexSearchHelper {
 
 	protected Document[] executeSearch(
 			SearchContext searchContext, BooleanQuery query, Sort[] sorts,
-			TermRangeQuery termRangeQuery, int size)
+			TermRangeQuery termRangeQuery, String[] indexFields, int size)
 		throws ParseException, SearchException {
 
 		BooleanQuery mainQuery = BooleanQueryFactoryUtil.create(searchContext);
@@ -289,6 +300,10 @@ public class IndexSearchHelper {
 		QueryConfig queryConfig = new QueryConfig();
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
+
+		if (indexFields != null) {
+			queryConfig.setSelectedFieldNames(indexFields);
+		}
 
 		mainQuery.setQueryConfig(queryConfig);
 		searchContext.setQueryConfig(queryConfig);
