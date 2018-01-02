@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -40,7 +40,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +50,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import javax.portlet.PortletConfig;
+import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
 import javax.servlet.http.HttpServletResponse;
@@ -367,7 +367,8 @@ public class OutputUtils {
 	}
 
 	public static void servePortletFileEntry(
-			String portletId, String title, ResourceResponse response)
+			String portletId, String title, ResourceRequest request,
+			ResourceResponse response)
 		throws IOException {
 
 		try {
@@ -377,18 +378,12 @@ public class OutputUtils {
 				repository, title);
 
 			InputStream inputStream = fileEntry.getContentStream();
-			OutputStream outputStream = response.getPortletOutputStream();
 
-			byte[] buffer = new byte[10024];
-			int bytesRead = 0;
-			while ((bytesRead = inputStream.read(buffer)) != -1) {
-				outputStream.write(buffer, 0, bytesRead);
-			}
+			String mimeType = fileEntry.getMimeType();
 
-			response.setContentType(fileEntry.getMimeType());
-
-			response.addProperty(
-				HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+title);
+			PortletResponseUtil.sendFile(
+				request, response, title, inputStream, -1, mimeType,
+				"attachment");
 		}
 		catch (NoSuchFileEntryException nsfe) {
 			if (_log.isWarnEnabled()) {
