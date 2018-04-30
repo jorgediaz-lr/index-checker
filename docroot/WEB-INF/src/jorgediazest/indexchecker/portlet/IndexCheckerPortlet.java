@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletContext;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
@@ -44,6 +45,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -1125,7 +1127,49 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return result;
 	}
 
+	protected static boolean isLps74956Unsolved() {
+
+		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
+			if (installedPatch.startsWith("de-")) {
+				String[] fixpackNumber = installedPatch.split("\\-");
+				try {
+					long fixpackNum = Long.parseLong(fixpackNumber[1]);
+
+					if (fixpackNum>=33) {
+						return false;
+					}
+
+					return true;
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+
+		try {
+			String releaseVersion = ReleaseInfo.getVersion();
+	
+			long minorVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
+
+			if ((minorVersion>=5) && (minorVersion != 10)) {
+				return false;
+			}
+
+			return true;
+		}
+		catch (Exception e) {
+		}
+
+		return true;
+	}
+
 	public String getUpdateMessage(PortletConfig portletConfig) {
+
+		/* Due to LPS-74956, pluginPackage.getVersion() returns a wrong value */
+		if (isLps74956Unsolved()) {
+			return (String)ConfigurationUtil.getConfigurationEntry(
+					"oldLiferayUpdateMessage");
+		}
 
 		PluginPackage pluginPackage = getPluginPackage(portletConfig);
 

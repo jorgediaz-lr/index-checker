@@ -170,3 +170,6 @@ remoteConfigurationTimeoutMilis: 86400000
 #Configuration to show offline update message
 offlineUpdateMessage: 'Your Index Checker version is more than six month old!! Download a new version: <a href="https://web.liferay.com/es/marketplace/-/mp/application/70121999">https://web.liferay.com/es/marketplace/-/mp/application/70121999</a>'
 offlineUpdateTimeoutMilis: 15552000000
+
+#Configuration to show old Liferay version
+oldLiferayUpdateMessage: 'Your Liferay installation is outdated. Install a newer 7.0 enterprise fixpack or upgrade to last 7.0 community released GA.'
