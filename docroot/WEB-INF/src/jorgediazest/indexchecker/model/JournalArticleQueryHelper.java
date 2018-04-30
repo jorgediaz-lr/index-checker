@@ -121,16 +121,16 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 		Map<Long, Data> dataMap = new HashMap<Long, Data>();
 
 		Criterion criterionStatusApproved = ModelUtil.generateSQLCriterion(
-			"status=" + WorkflowConstants.STATUS_APPROVED + " or status=" +
-				WorkflowConstants.STATUS_IN_TRASH);
+			"(status=" + WorkflowConstants.STATUS_APPROVED + " or status=" +
+				WorkflowConstants.STATUS_IN_TRASH + ")");
 
 		addMissingJournalArticles(
 			model, attributesToQueryArr, criterion, criterionStatusApproved,
 			dataMap);
 
 		Criterion criterionStatusNotApproved = ModelUtil.generateSQLCriterion(
-			"status<>" + WorkflowConstants.STATUS_APPROVED + " or status<>" +
-				WorkflowConstants.STATUS_IN_TRASH);
+			"(status<>" + WorkflowConstants.STATUS_APPROVED + " or status<>" +
+				WorkflowConstants.STATUS_IN_TRASH + ")");
 
 		addMissingJournalArticles(
 			model, attributesToQueryArr, criterion, criterionStatusNotApproved,
