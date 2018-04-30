@@ -173,16 +173,20 @@ public class IndexSearchHelper {
 			Sort[] sorts, SearchContext searchContext, BooleanQuery query)
 		throws ParseException, SearchException {
 
-		String[] indexFields = new String[attributes.length+2];
-		indexFields[0]=Field.UID;
-		indexFields[1]=Field.ENTRY_CLASS_NAME;
+		List<String> indexFieldsList = new ArrayList<String>();
+		indexFieldsList.add(Field.UID);
+		indexFieldsList.add(Field.ENTRY_CLASS_NAME);
 
 		for (int i=0;i<attributes.length;i++) {
 			String indexField = ConfigurationUtil.getIndexAttributeName(
 				model, attributes[i]);
 
-			indexFields[i+2]=indexField;
+			indexFieldsList.add(indexField);
+			indexFieldsList.add(indexField.concat("*"));
 		}
+
+		String[] indexFields = indexFieldsList.toArray(
+			new String[indexFieldsList.size()]);
 
 		int indexSearchLimit = PortletPropsValues.INDEX_SEARCH_LIMIT;
 
