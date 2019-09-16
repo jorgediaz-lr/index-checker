@@ -1127,7 +1127,36 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return result;
 	}
 
-	protected static boolean isLps74956Unsolved() {
+	protected static boolean isLps74956Solved() {
+
+		long majorVersion=-1;
+		long minorVersion=-1;
+		long patchVersion=-1;
+
+		try {
+			String releaseVersion = ReleaseInfo.getVersion();
+
+			majorVersion = Long.parseLong(releaseVersion.split("\\.")[0]);
+			minorVersion = Long.parseLong(releaseVersion.split("\\.")[1]);
+			patchVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
+		}
+		catch (Exception e) {
+			_log.error(e,e);
+
+			return true;
+		}
+
+		if ((majorVersion < 7)||(majorVersion > 7)) {
+			return true;
+		}
+
+		if ((majorVersion == 7) && (minorVersion > 0)) {
+			return true;
+		}
+
+		if (patchVersion != 10) {
+			return (patchVersion>=5);
+		}
 
 		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
 			if (installedPatch.startsWith("de-")) {
@@ -1136,37 +1165,23 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					long fixpackNum = Long.parseLong(fixpackNumber[1]);
 
 					if (fixpackNum>=33) {
-						return false;
+						return true;
 					}
 
-					return true;
+					return false;
 				}
 				catch (Exception e) {
 				}
 			}
 		}
 
-		try {
-			String releaseVersion = ReleaseInfo.getVersion();
-	
-			long minorVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
-
-			if ((minorVersion>=5) && (minorVersion != 10)) {
-				return false;
-			}
-
-			return true;
-		}
-		catch (Exception e) {
-		}
-
-		return true;
+		return false;
 	}
 
 	public String getUpdateMessage(PortletConfig portletConfig) {
 
 		/* Due to LPS-74956, pluginPackage.getVersion() returns a wrong value */
-		if (isLps74956Unsolved()) {
+		if (!isLps74956Solved()) {
 			return (String)ConfigurationUtil.getConfigurationEntry(
 					"oldLiferayUpdateMessage");
 		}

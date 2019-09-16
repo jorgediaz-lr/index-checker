@@ -163,7 +163,7 @@ modelInfo: [{
 }]
 
 #Configuration to retrieve remote configuration
-remoteConfigurationBackup: {62: {}, 70: {}}
+remoteConfigurationBackup: {62: {}, 70: {}, 71: {}, 72: {}}
 remoteConfigurationUrl: "https://gist.githubusercontent.com/jorgediaz-lr/205dc3f71bdcdc92b4f0558f583bf2cc/raw/index-checker_configuration.yml"
 remoteConfigurationTimeoutMilis: 86400000
 
@@ -172,4 +172,4 @@ offlineUpdateMessage: 'Your Index Checker version is more than six month old!! D
 offlineUpdateTimeoutMilis: 15552000000
 
 #Configuration to show old Liferay version
-oldLiferayUpdateMessage: 'Your Liferay installation is outdated. Install a newer 7.0 enterprise fixpack or upgrade to last 7.0 community released GA.'
+oldLiferayUpdateMessage: 'Your Liferay installation is outdated. Install a newer enterprise fixpack or upgrade to last community released GA.'
