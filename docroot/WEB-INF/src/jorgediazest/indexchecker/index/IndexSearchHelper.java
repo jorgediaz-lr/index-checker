@@ -19,21 +19,21 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.IndexSearcherHelperUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.TermRangeQuery;
-import com.liferay.portal.kernel.search.TermRangeQueryFactoryUtil;
+import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
+import com.liferay.portal.kernel.search.generic.TermRangeQueryImpl;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -281,7 +281,7 @@ public class IndexSearchHelper {
 			TermRangeQuery termRangeQuery, String[] indexFields, int size)
 		throws ParseException, SearchException {
 
-		BooleanQuery mainQuery = BooleanQueryFactoryUtil.create(searchContext);
+		BooleanQuery mainQuery = new BooleanQueryImpl();
 
 		mainQuery.add(query, BooleanClauseOccur.MUST);
 
@@ -312,7 +312,7 @@ public class IndexSearchHelper {
 		mainQuery.setQueryConfig(queryConfig);
 		searchContext.setQueryConfig(queryConfig);
 
-		Hits hits = SearchEngineUtil.search(searchContext, mainQuery);
+		Hits hits = IndexSearcherHelperUtil.search(searchContext, mainQuery);
 
 		Document[] docs = hits.getDocs();
 
@@ -340,8 +340,8 @@ public class IndexSearchHelper {
 
 		field = ConfigurationUtil.getIndexAttributeName(model, field);
 
-		return TermRangeQueryFactoryUtil.create(
-			searchContext, field, lowerTerm, upperTerm, true, true);
+		return new TermRangeQueryImpl(
+			field, lowerTerm, upperTerm, true, true);
 	}
 
 	protected long getIdFromUID(String strValue) {
@@ -367,13 +367,12 @@ public class IndexSearchHelper {
 			Date endModifiedDate, SearchContext searchContext)
 		throws ParseException {
 
-		BooleanQuery query = BooleanQueryFactoryUtil.create(searchContext);
+		BooleanQuery query = new BooleanQueryImpl();
 		query.addRequiredTerm(
 			Field.ENTRY_CLASS_NAME, "\"" + model.getClassName() + "\"");
 
 		if (model.hasAttribute("groupId") && (groupIds != null)) {
-			BooleanQuery groupQuery = BooleanQueryFactoryUtil.create(
-				searchContext);
+			BooleanQuery groupQuery = new BooleanQueryImpl();
 
 			for (Long groupId : groupIds) {
 				groupQuery.addTerm(Field.SCOPE_GROUP_ID, groupId);
@@ -472,9 +471,8 @@ public class IndexSearchHelper {
 					previousTermRangeQuery.getLowerTerm());
 			}
 
-			return TermRangeQueryFactoryUtil.create(
-					searchContext, fieldName, lowerTerm, null, includesLower,
-					true);
+			return new TermRangeQueryImpl(
+				fieldName, lowerTerm, null, includesLower, true);
 		}
 
 		return null;
