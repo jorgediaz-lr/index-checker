@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.LiferayPortletContext;
+import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -37,6 +38,7 @@ import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -1139,7 +1141,64 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return result;
 	}
 
+	protected static boolean isLps74956Solved() {
+
+		long majorVersion=-1;
+		long minorVersion=-1;
+		long patchVersion=-1;
+
+		try {
+			String releaseVersion = ReleaseInfo.getVersion();
+
+			majorVersion = Long.parseLong(releaseVersion.split("\\.")[0]);
+			minorVersion = Long.parseLong(releaseVersion.split("\\.")[1]);
+			patchVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
+		}
+		catch (Exception e) {
+			_log.error(e,e);
+
+			return true;
+		}
+
+		if ((majorVersion < 7)||(majorVersion > 7)) {
+			return true;
+		}
+
+		if ((majorVersion == 7) && (minorVersion > 0)) {
+			return true;
+		}
+
+		if (patchVersion != 10) {
+			return (patchVersion>=5);
+		}
+
+		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
+			if (installedPatch.startsWith("de-")) {
+				String[] fixpackNumber = installedPatch.split("\\-");
+				try {
+					long fixpackNum = Long.parseLong(fixpackNumber[1]);
+
+					if (fixpackNum>=33) {
+						return true;
+					}
+
+					return false;
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+
+		return false;
+	}
+
 	public String getUpdateMessage(PortletConfig portletConfig) {
+
+		/* Due to LPS-74956, pluginPackage.getVersion() returns a wrong value */
+		if (!isLps74956Solved()) {
+			return (String)ConfigurationUtil.getConfigurationEntry(
+					"oldLiferayUpdateMessage");
+		}
 
 		PluginPackage pluginPackage = getPluginPackage(portletConfig);
 
