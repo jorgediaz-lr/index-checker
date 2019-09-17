@@ -34,7 +34,6 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
@@ -102,6 +101,7 @@ import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.output.OutputUtils;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 /**
  * Portlet implementation class IndexCheckerPortlet
@@ -352,9 +352,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			}
 		}
 
-		if (indexer instanceof BaseIndexer) {
-			BaseIndexer baseIndexer = (BaseIndexer)indexer;
-			return baseIndexer.isIndexerEnabled();
+		try {
+			return (Boolean)ReflectionUtil.getWrappedObject(
+				indexer, "isIndexerEnabled");
+		}
+		catch(Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(e, e);
+			}
 		}
 
 		return false;
