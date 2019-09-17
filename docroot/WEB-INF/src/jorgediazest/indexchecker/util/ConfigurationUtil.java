@@ -331,67 +331,17 @@ public class ConfigurationUtil {
 		return (Map<String, Object>)yaml.load(configuration);
 	}
 
-	protected static boolean isOldJournalArticleConfiguration() {
-
-		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
-			if (installedPatch.startsWith("de-")) {
-				String[] fixpackNumber = installedPatch.split("\\-");
-				try {
-					long fixpackNum = Long.parseLong(fixpackNumber[1]);
-
-					if (fixpackNum>=13) {
-						return false;
-					}
-
-					return true;
-				}
-				catch (Exception e) {
-				}
-			}
-		}
-
-		try {
-			String releaseVersion = ReleaseInfo.getVersion();
-	
-			long minorVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
-
-			if ((minorVersion>=3) && (minorVersion != 10)) {
-				return false;
-			}
-
-			return true;
-		}
-		catch (Exception e) {
-		}
-
-		return true;
-	}
-
 	public static boolean getJournalArticleIndexAllVersions()
 		throws Exception {
-
-		boolean indexAllVersions;
 
 		Service journalArticleService = ServiceUtil.getService(
 				"com.liferay.journal.model.JournalArticle");
 
-		if (isOldJournalArticleConfiguration()) {
-			String configurationValue =
-				IndexCheckerUtil.getPortletPropertiesKey(
-					journalArticleService.getClassLoader(),
-					"com.liferay.journal.configuration.JournalServiceConfigurationValues",
-					"JOURNAL_ARTICLE_INDEX_ALL_VERSIONS");
-			indexAllVersions = GetterUtil.getBoolean(configurationValue);
-		}
-		else {
-			indexAllVersions =
-				(boolean) IndexCheckerUtil.getCompanyConfigurationKey(
-					CompanyThreadLocal.getCompanyId(),
-					journalArticleService.getClassLoader(),
-					"com.liferay.journal.configuration.JournalServiceConfiguration",
-					"indexAllArticleVersionsEnabled");
-		}
-		return indexAllVersions;
+		return (boolean) IndexCheckerUtil.getCompanyConfigurationKey(
+				CompanyThreadLocal.getCompanyId(),
+				journalArticleService.getClassLoader(),
+				"com.liferay.journal.configuration.JournalServiceConfiguration",
+				"indexAllArticleVersionsEnabled");
 	}
 
 	private static final String CONFIGURATION_FILE = "configuration.yml";
