@@ -221,14 +221,26 @@ public class OutputUtils {
 			String tagId = StringUtil.randomString() + "_" + numberOfRows;
 			String onClick =
 				"onclick=\"showHide('" + tagId + "');return false;\"";
-			String linkMore =
-				"<a href=\"#\"" + onClick + " >(" + overflow + " more)</a>";
-			String linkCollapse =
-				"<a href=\"#\"" + onClick + " >(collapse)</a>";
+
+			String linkStartTag = "<a href=\"#\"" + onClick + " >";
+
+			String linkMoreEndTag;
+			if (maxSize == 0) {
+				linkMoreEndTag = "click to display</a>";
+			}
+			else {
+				outputStringTrimmed = outputStringTrimmed + "... ";
+
+				linkMoreEndTag = "(" + overflow + " more)</a>";
+			}
+
+			String linkMore = linkStartTag + linkMoreEndTag;
+
+			String linkCollapse = linkStartTag + "(collapse)</a>";
 
 			outputString =
 				"<span id=\"" + tagId + "-show\" >" + outputStringTrimmed +
-				"... " + linkMore + "</span><span id=\"" + tagId +
+				linkMore + "</span><span id=\"" + tagId +
 				"\" style=\"display: none;\" >" + outputString + " " +
 				linkCollapse + "</span>";
 		}

@@ -35,7 +35,11 @@ public class DataUtil {
 	public static String[] getListAttr(
 		Collection<Data> dataCollection, List<String> attrList, int size) {
 
-		if ((size > dataCollection.size()) || (size <= 0)) {
+		if (size <= 0) {
+			return new String[0];
+		}
+
+		if ((size > dataCollection.size())) {
 			size = dataCollection.size();
 		}
 
@@ -67,7 +71,9 @@ public class DataUtil {
 		}
 
 		return values;
-	} public static String[] getListAttr(
+	}
+
+	public static String[] getListAttr(
 		Collection<Data> dataCollection, String attr, int size) {
 
 		return getListAttr(
