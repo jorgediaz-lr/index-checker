@@ -135,7 +135,13 @@ modelInfo: [{
     model: com.liferay.portal.model.User,
     filter: "defaultUser=[$FALSE$]",
     attributesToQuery: [pk,companyId,groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId],
-    exactAttributesToCheck: [groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+    exactAttributesToCheck: [groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+    relatedDataToQuery: [
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"}
+    ]
 },
 {
     model: com.liferay.portlet.wiki.model.WikiNode,

@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -106,6 +107,8 @@ public class IndexCheckerQueryHelper {
 				"mappingsRelated");
 			List<String> attributesToQuery = (List<String>)rdtq.get(
 				"attributesToQuery");
+			List<String> attributesAlias = (List<String>)rdtq.get(
+				"attributesAlias");
 			boolean rawData = GetterUtil.getBoolean(
 				(Boolean)rdtq.get("raw"),false);
 			String relatedFilterString = (String)rdtq.get("filter");
@@ -118,8 +121,8 @@ public class IndexCheckerQueryHelper {
 
 			addRelatedModelData(
 				queryCache, liferayDataMap, model, relatedModel, mappingsSource,
-				mappingsRelated, attributesToQuery, rawData, groupCriterion,
-				relatedFilterString);
+				mappingsRelated, attributesToQuery, attributesAlias, rawData,
+				groupCriterion, relatedFilterString);
 		}
 	}
 
@@ -127,8 +130,9 @@ public class IndexCheckerQueryHelper {
 			Map<String, Map<Long, List<Data>>> queryCache,
 			Map<Long, Data> liferayDataMap, Model model, Model relatedModel,
 			List<String> mappingsSource, List<String> mappingsRelated,
-			List<String> attributesToQuery, boolean rawData,
-			Criterion groupCriterion, String relatedFilterString)
+			List<String> attributesToQuery, List<String> attributesAlias,
+			boolean rawData, Criterion groupCriterion,
+			String relatedFilterString)
 		throws Exception {
 
 		Criterion relatedCriterion = null;
@@ -172,15 +176,30 @@ public class IndexCheckerQueryHelper {
 				mappingsSource.toArray(new String[0]),
 				mappingsRelated.toArray(new String[0]));
 
+		if ((attributesAlias == null) || attributesAlias.isEmpty()) {
+			attributesAlias = attributesToQuery;
+		}
+		else {
+			Set<Data> matchedList = new HashSet<Data>();
+			for (List<Data> sublist : matchedMap.values()) {
+				matchedList.addAll(sublist);
+			}
+
+			for (Data data : matchedList) {
+				_copyAttributesToAlias(
+					data, attributesToQuery, attributesAlias);
+			}
+		}
+
 		if (rawData) {
 			QueryUtil.addRelatedModelDataRaw(
 				liferayDataMap, matchedMap,
-				attributesToQuery.toArray(new String[0]));
+				attributesAlias.toArray(new String[0]));
 		}
 		else {
 			QueryUtil.addRelatedModelData(
 				liferayDataMap, matchedMap,
-				attributesToQuery.toArray(new String[0]));
+				attributesAlias.toArray(new String[0]));
 		}
 	}
 
@@ -257,6 +276,37 @@ public class IndexCheckerQueryHelper {
 		treePath = IndexCheckerQueryHelper.processTreePath(treePath);
 
 		data.set("treePath", treePath);
+	}
+
+	private void _copyAttributesToAlias(
+		Data data, List<String> attributes, List<String> aliases) {
+
+		for (int i=0;i<attributes.size();i++) {
+			String attribute = attributes.get(i);
+			String alias = aliases.get(i);
+
+			Set<Object> existing = _castToSet(data.get(alias));
+			Set<Object> added = _castToSet(data.get(attribute));
+
+			Set<Object> newSet = new HashSet<Object>();
+
+			newSet.addAll(existing);
+			newSet.addAll(added);
+
+			data.set(alias,newSet);
+		}
+	}
+
+	private Set<Object> _castToSet(Object object) {
+		if (object == null) {
+			return Collections.emptySet();
+		}
+
+		if (object instanceof Set) {
+			return (Set)object;
+		}
+
+		return Collections.singleton(object);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(
