@@ -169,6 +169,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			DataComparator exactDataComparator =
 				new DataIndexCheckerModelComparator(exactAttributesList);
 
+			exactDataComparator.setIgnoreNulls(true);
+
 			return ComparisonUtil.getComparison(
 				model, exactDataComparator, liferayData, indexData,
 				showBothExact, showBothNotExact, showOnlyLiferay,
