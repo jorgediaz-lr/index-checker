@@ -304,7 +304,7 @@ public class IndexCheckerOutput {
 						attribute = Field.UID;
 					}
 
-					int maxSize = 50;
+					int maxSize = 0;
 
 					ResultRow row = OutputUtils.generateSearchContainerRow(
 						resourceBundle, comp, groupIdOutput, groupNameOutput,
