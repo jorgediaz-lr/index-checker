@@ -33,6 +33,10 @@ public interface DataComparator extends Comparator<Data> {
 	public boolean equalsAttributes(
 		Data data1, Data data2, String attr1, String attr2);
 
+	public boolean getIgnoreNulls();
+
 	public Integer hashCode(Data data);
+
+	public void setIgnoreNulls(boolean ignoreNulls);
 
 }

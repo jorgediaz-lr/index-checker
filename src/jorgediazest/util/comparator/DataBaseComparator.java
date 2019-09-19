@@ -77,7 +77,7 @@ public abstract class DataBaseComparator implements DataComparator {
 		boolean isNull2 = DataUtil.isNull(o2);
 
 		if (isNull1 || isNull2) {
-			return (isNull1 && isNull2);
+			return (_ignoreNulls || (isNull1 && isNull2));
 		}
 
 		boolean equalsAttribute = o1.equals(o2);
@@ -119,10 +119,20 @@ public abstract class DataBaseComparator implements DataComparator {
 		return equalsAttribute;
 	}
 
+	public boolean getIgnoreNulls() {
+		return _ignoreNulls;
+	}
+
 	public Integer hashCode(Data data) {
 
 		return data.getMap().hashCode();
 	}
+
+	public void setIgnoreNulls(boolean ignoreNulls) {
+		this._ignoreNulls = ignoreNulls;
+	}
+
+	private boolean _ignoreNulls = false;
 
 	private static Log _log = LogFactoryUtil.getLog(DataBaseComparator.class);
 
