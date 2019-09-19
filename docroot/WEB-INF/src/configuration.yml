@@ -148,7 +148,11 @@ modelInfo: [{
         {model: com.liferay.asset.kernel.model.AssetEntry,  mappingsSource: [pk], mappingsRelated: [classPK], attributesToQuery: [AssetEntry.entryId,AssetEntries_AssetCategories.categoryId,AssetEntries_AssetTags.tagId,AssetEntry.priority,AssetEntry.visible]},
         {model: com.liferay.asset.kernel.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
         {model: com.liferay.asset.kernel.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""},
-        {model: com.liferay.portal.kernel.model.Contact, mappingsSource: [userId], mappingsRelated: [userId], attributesToQuery: [contactId,modifiedDate]}
+        {model: com.liferay.portal.kernel.model.Contact, mappingsSource: [userId], mappingsRelated: [userId], attributesToQuery: [contactId,modifiedDate]},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"}
     ]
 },
 {
