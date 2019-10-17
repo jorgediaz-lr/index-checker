@@ -217,7 +217,9 @@ public class IndexCheckerQueryHelper {
 
 			Model relatedModel = modelFactory.getModelObject(relatedClassName);
 
-			relatedModels.add(relatedModel);
+			if (relatedModel != null) {
+				relatedModels.add(relatedModel);
+			}
 		}
 
 		return relatedModels;
