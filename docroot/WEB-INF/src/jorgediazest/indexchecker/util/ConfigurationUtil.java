@@ -188,34 +188,12 @@ public class ConfigurationUtil {
 	}
 
 	public static List<Map<String, Object>> getRelatedDataToQuery(Model model) {
-		boolean checkAssetEntryRelations =
-			ConfigurationUtil.checkAssetEntryRelations(model);
-
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> relatedDataToQueryList =
 			(List<Map<String,Object>>)getModelInfo(model, "relatedDataToQuery");
 
 		if (relatedDataToQueryList == null) {
-			relatedDataToQueryList = Collections.emptyList();
-		}
-
-		List<Map<String, Object>> relatedDataToQueryListFiltered =
-			new ArrayList<Map<String, Object>>();
-
-		for (Map<String, Object> relatedDataToQuery : relatedDataToQueryList) {
-			String relatedModel = (String)relatedDataToQuery.get("model");
-
-			if (Validator.isNull(relatedModel)) {
-				continue;
-			}
-
-			if ("com.liferay.portlet.asset.model.Asset".equals(relatedModel) &&
-				checkAssetEntryRelations) {
-
-				continue;
-			}
-
-			relatedDataToQueryListFiltered.add(relatedDataToQuery);
+			return Collections.emptyList();
 		}
 
 		return relatedDataToQueryList;
@@ -238,22 +216,6 @@ public class ConfigurationUtil {
 	public static boolean modelNotIndexed(String className) {
 		return configurationListEntryContainsValue(
 			"modelNotIndexed", className);
-	}
-
-	protected static boolean checkAssetEntryRelations(Model model) {
-		boolean assetEntryRelations = true;
-
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				model.getClassName());
-
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSelectable()) {
-
-			assetEntryRelations = false;
-		}
-
-		return assetEntryRelations;
 	}
 
 	protected static boolean configurationListEntryContainsValue(
