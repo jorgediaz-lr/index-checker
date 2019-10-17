@@ -42,6 +42,7 @@
 <liferay-portlet:actionURL portletConfiguration="true" var="configurationURL" />
 
 <%
+boolean checkRelatedData_cfg = GetterUtil.getBoolean(portletPreferences.getValue("checkRelatedData", StringPool.FALSE));
 boolean queryBySite_cfg = GetterUtil.getBoolean(portletPreferences.getValue("queryBySite", StringPool.FALSE));
 boolean outputGroupBySite_cfg = GetterUtil.getBoolean(portletPreferences.getValue("outputGroupBySite", StringPool.FALSE));
 boolean dumpAllObjectsToLog_cfg = GetterUtil.getBoolean(portletPreferences.getValue("dumpAllObjectsToLog", StringPool.FALSE));
@@ -57,6 +58,7 @@ if (numberOfThreads_cfg == 0) {
 
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 
+	<aui:input name="preferences--checkRelatedData--" type="checkbox" value="<%= checkRelatedData_cfg %>" />
 	<aui:input name="preferences--queryBySite--" type="checkbox" value="<%= queryBySite_cfg %>" />
 	<aui:input name="preferences--outputGroupBySite--" type="checkbox" value="<%= outputGroupBySite_cfg %>" />
 	<aui:input name="preferences--dumpAllObjectsToLog--" type="checkbox" value="<%= dumpAllObjectsToLog_cfg %>" />

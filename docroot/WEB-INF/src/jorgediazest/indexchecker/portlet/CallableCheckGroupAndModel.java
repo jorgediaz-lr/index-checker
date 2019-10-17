@@ -64,6 +64,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 	@Override
 	public Comparison call() throws Exception {
 
+		boolean checkRelatedData = executionMode.contains(
+			ExecutionMode.CHECK_RELATED_DATA);
 		boolean showBothExact = executionMode.contains(
 			ExecutionMode.SHOW_BOTH_EXACT);
 		boolean showBothNotExact = executionMode.contains(
@@ -121,11 +123,13 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				permissionsHelper.addPermissionsClassNameGroupIdFields(data);
 			}
 
-			queryHelper.addRelatedModelData(
-				queryCache, liferayDataMap, model, groupIds);
+			if (checkRelatedData) {
+				queryHelper.addRelatedModelData(
+					queryCache, liferayDataMap, model, groupIds);
 
-			for (Data data : liferayDataMap.values()) {
-				permissionsHelper.addRolesFields(data);
+				for (Data data : liferayDataMap.values()) {
+					permissionsHelper.addRolesFields(data);
+				}
 			}
 
 			Collection<String> exactAttributes =
