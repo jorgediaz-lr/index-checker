@@ -117,16 +117,18 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			Map<Long, Data> liferayDataMap = queryHelper.getLiferayData(
 				model, groupIds);
 
-			for (Data data : liferayDataMap.values()) {
-				queryHelper.postProcessData(data);
-
-				permissionsHelper.addPermissionsClassNameGroupIdFields(data);
+			if (checkRelatedData) {
+				for (Data data : liferayDataMap.values()) {
+					queryHelper.postProcessData(data);
+	
+					permissionsHelper.addPermissionsClassNameGroupIdFields(data);
+				}
 			}
 
-			if (checkRelatedData) {
-				queryHelper.addRelatedModelData(
-					queryCache, liferayDataMap, model, groupIds);
+			queryHelper.addRelatedModelData(
+				queryCache, liferayDataMap, model, groupIds, checkRelatedData);
 
+			if (checkRelatedData) {
 				for (Data data : liferayDataMap.values()) {
 					permissionsHelper.addRolesFields(data);
 				}
