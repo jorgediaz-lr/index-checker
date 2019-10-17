@@ -254,6 +254,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		boolean outputGroupBySite = GetterUtil.getBoolean(
 			portletPreferences.getValue("outputGroupBySite", StringPool.FALSE));
 
+		boolean checkRelatedData = GetterUtil.getBoolean(
+			portletPreferences.getValue("checkRelatedData", StringPool.FALSE));
+
 		boolean queryBySite = GetterUtil.getBoolean(
 			portletPreferences.getValue("queryBySite", StringPool.FALSE));
 
@@ -266,6 +269,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		if (outputGroupBySite) {
 			executionMode.add(ExecutionMode.GROUP_BY_SITE);
+		}
+
+		if (checkRelatedData) {
+			executionMode.add(ExecutionMode.CHECK_RELATED_DATA);
 		}
 
 		if (queryBySite) {
