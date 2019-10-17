@@ -84,7 +84,8 @@ public class IndexCheckerQueryHelper {
 	@SuppressWarnings("unchecked")
 	public void addRelatedModelData(
 			Map<String, Map<Long, List<Data>>> queryCache,
-			Map<Long, Data> liferayDataMap, Model model, List<Long> groupIds)
+			Map<Long, Data> liferayDataMap, Model model, List<Long> groupIds,
+			boolean addOptionalRelatedData)
 		throws Exception {
 
 		if (liferayDataMap.isEmpty()) {
@@ -100,6 +101,13 @@ public class IndexCheckerQueryHelper {
 			ConfigurationUtil.getRelatedDataToQuery(model);
 
 		for (Map<String, Object> rdtq : relatedDataToQueryList) {
+			boolean addRelatedData = GetterUtil.getBoolean(
+				(Boolean)rdtq.get("forceAdd"), addOptionalRelatedData);
+
+			if (!addRelatedData) {
+				continue;
+			}
+
 			String relatedClassName = (String) rdtq.get("model");
 			List<String> mappingsSource = (List<String>)rdtq.get(
 				"mappingsSource");
