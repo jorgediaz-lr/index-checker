@@ -211,7 +211,8 @@ public class IndexCheckerQueryHelper {
 		}
 	}
 
-	public Set<Model> calculateRelatedModels(Model model) {
+	public Set<Model> calculateRelatedModels(
+		Model model, boolean addOptionalRelatedData) {
 
 		List<Map<String, Object>> relatedDataToQueryList =
 			ConfigurationUtil.getRelatedDataToQuery(model);
@@ -221,6 +222,14 @@ public class IndexCheckerQueryHelper {
 		Set<Model> relatedModels = new LinkedHashSet<Model>();
 
 		for (Map<String, Object> relatedDataToQuery : relatedDataToQueryList) {
+			boolean addRelatedData = GetterUtil.getBoolean(
+				(Boolean)relatedDataToQuery.get("forceAdd"),
+				addOptionalRelatedData);
+
+			if (!addRelatedData) {
+				continue;
+			}
+
 			String relatedClassName = (String) relatedDataToQuery.get("model");
 
 			Model relatedModel = modelFactory.getModelObject(relatedClassName);

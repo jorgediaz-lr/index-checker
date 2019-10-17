@@ -120,11 +120,12 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			Map<Long, Data> liferayDataMap = queryHelper.getLiferayData(
 				model, groupIds);
 
-			if (checkRelatedData) {
-				for (Data data : liferayDataMap.values()) {
-					queryHelper.postProcessData(data);
-	
-					permissionsHelper.addPermissionsClassNameGroupIdFields(data);
+			for (Data data : liferayDataMap.values()) {
+				queryHelper.postProcessData(data);
+
+				if (checkRelatedData) {
+					permissionsHelper.addPermissionsClassNameGroupIdFields(
+						data);
 				}
 			}
 
@@ -154,7 +155,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			}
 			else {
 				Set<Model> relatedModels = queryHelper.calculateRelatedModels(
-					model);
+					model, checkRelatedData);
 
 				Set<String> indexAttributesToQuery = new HashSet<String>(
 					ConfigurationUtil.getModelAttributesToQuery(model));
