@@ -113,8 +113,10 @@ public class Data implements Comparable<Data> {
 			return null;
 		}
 
-		if ("pk".equals(attribute)) {
-			return get(getPrimaryKeyAttribute());
+		String primaryKeyAttribute = getPrimaryKeyAttribute();
+
+		if ("pk".equals(attribute) && !"pk".equals(primaryKeyAttribute)) {
+			return get(primaryKeyAttribute);
 		}
 
 		if ((model != null) && !map.containsKey(attribute)) {
