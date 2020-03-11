@@ -135,6 +135,13 @@ modelInfo: [{
     exactAttributesToCheck: [createDate,modifiedDate,status,version,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
 },
 {
+    model: com.liferay.message.boards.model.MBMessage,
+    permissionsHelperClass: !!jorgediazest.indexchecker.model.MBMessagePermissionsHelper {},
+    filter: "(status=0 or status=8) and (categoryId<>-1 or parentMessageId<>0)",
+    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,categoryId],
+    exactAttributesToCheck: [createDate,modifiedDate,status,version,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
+},
+{
     model: com.liferay.portal.kernel.model.ResourcePermission,
     filter: "viewActionId=[$TRUE$] and primKeyId<>0 and name in (select value from ClassName_)"
 },
