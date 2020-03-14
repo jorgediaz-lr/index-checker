@@ -31,6 +31,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -582,15 +583,29 @@ public class DataUtil {
 
 		Object transformObject = DataUtil.castObject(type, o);
 
-		if (transformObject instanceof String) {
-			String str = (String)transformObject.toString();
-
-			if (Validator.isXml(str)) {
-				transformObject = transformXmlToMap(str);
-			}
+		if (!(transformObject instanceof String)) {
+			return transformObject;
 		}
 
-		return transformObject;
+		String str = (String)transformObject.toString();
+
+		if (!Validator.isXml(str)) {
+			return transformObject;
+		}
+
+		Map<Locale, String> map = transformXmlToMap(str);
+
+		Set<String> valuesSet = new HashSet<String>(map.values());
+
+		if (valuesSet.size() == 0) {
+			return null;
+		}
+
+		if (valuesSet.size() == 1) {
+			return valuesSet.toArray()[0];
+		}
+
+		return map;
 	}
 
 	protected static Set<Object> transformArrayToSet(
