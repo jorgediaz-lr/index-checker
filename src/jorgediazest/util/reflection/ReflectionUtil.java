@@ -139,7 +139,6 @@ public class ReflectionUtil {
 	}
 
 	public static Object getStaticFieldValue(Class<?> clazz, String fieldName) {
-
 		try {
 			Field field =
 				com.liferay.portal.kernel.util.ReflectionUtil.getDeclaredField(

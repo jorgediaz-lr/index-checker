@@ -94,7 +94,6 @@ public class ModelWrapper implements Model, Cloneable {
 
 	@Override
 	public List<?> executeDynamicQuery(Criterion criterion) throws Exception {
-
 		return executeDynamicQuery(criterion, null, null);
 	}
 

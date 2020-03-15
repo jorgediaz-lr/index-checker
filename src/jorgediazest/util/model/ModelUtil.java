@@ -142,7 +142,7 @@ public class ModelUtil {
 	}
 
 	public static List<String> getClassNameValues(
-			Collection<ClassName> classNames) {
+		Collection<ClassName> classNames) {
 
 		List<String> classNameStr = new ArrayList<String>();
 

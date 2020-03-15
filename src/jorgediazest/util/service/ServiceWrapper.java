@@ -128,7 +128,6 @@ public class ServiceWrapper implements Service, Cloneable {
 	}
 
 	public void prepareDynamicQuery(DynamicQuery dynamicQuery) {
-
 		if (criterion != null) {
 			dynamicQuery.add(criterion);
 		}

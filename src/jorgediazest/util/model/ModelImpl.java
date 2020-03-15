@@ -98,7 +98,6 @@ public class ModelImpl implements Model {
 
 	@Override
 	public List<?> executeDynamicQuery(Criterion criterion) throws Exception {
-
 		return executeDynamicQuery(criterion, null, null);
 	}
 
@@ -142,7 +141,6 @@ public class ModelImpl implements Model {
 
 	@Override
 	public <T> Criterion getAttributeCriterion(String attribute, List<T> list) {
-
 		if (!this.hasAttribute(attribute) || Validator.isNull(list)) {
 			return null;
 		}
@@ -291,7 +289,6 @@ public class ModelImpl implements Model {
 
 	@Override
 	public Projection getPropertyProjection(String attribute) {
-
 		String op = null;
 
 		if (attribute.indexOf("(") > 0) {
@@ -305,7 +302,6 @@ public class ModelImpl implements Model {
 
 	@Override
 	public ProjectionList getPropertyProjection(String[] attributes) {
-
 		List<String> validAttributes = new ArrayList<String>();
 		ProjectionList projectionList = getPropertyProjection(
 			attributes, validAttributes, null);
@@ -468,7 +464,6 @@ public class ModelImpl implements Model {
 
 	@Override
 	public boolean hasAttribute(String attribute) {
-
 		attribute = cleanAttributeName(attribute);
 
 		return (getAttributePos(attribute) != -1);
@@ -511,7 +506,6 @@ public class ModelImpl implements Model {
 
 	@Override
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
-
 		for (String primaryKeyAttribute : this.getPrimaryKeyMultiAttribute()) {
 			if (primaryKeyAttribute.equals(attribute)) {
 				return true;
@@ -589,7 +583,6 @@ public class ModelImpl implements Model {
 	}
 
 	protected Projection getPropertyProjection(String attribute, String op) {
-
 		if ("rowCount".equals(op)) {
 			return ProjectionFactoryUtil.rowCount();
 		}

@@ -160,8 +160,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	protected Method getLocalServiceMethod(
-		String methodName, Class<?> parameterType)
-			throws ClassNotFoundException, NoSuchMethodException {
+			String methodName, Class<?> parameterType)
+		throws ClassNotFoundException, NoSuchMethodException {
 
 		String key = methodName;
 

@@ -96,7 +96,6 @@ public class ServiceUtil {
 	}
 
 	public static Service getService(String className) {
-
 		BaseLocalService modelService =
 			(BaseLocalService)PersistedModelLocalServiceRegistryUtil.
 				getPersistedModelLocalService(className);

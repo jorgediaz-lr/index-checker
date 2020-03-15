@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 public class TableUtil {
 
 	public static String getDatabaseAttributesStr(
-			String tableName, String tableSqlCreate) {
+		String tableName, String tableSqlCreate) {
 
 		int posTableName = tableSqlCreate.indexOf(tableName);
 
