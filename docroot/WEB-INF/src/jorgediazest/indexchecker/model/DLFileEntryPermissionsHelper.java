@@ -59,6 +59,7 @@ public class DLFileEntryPermissionsHelper
 		"com.liferay.blogs.model.BlogsEntry",
 		"com.liferay.document.library.kernel.model.DLFileEntry",
 		"com.liferay.message.boards.kernel.model.MBMessage",
+		"com.liferay.message.boards.model.MBMessage",
 		"com.liferay.wiki.model.WikiPage"};
 
 	private boolean isHiddenFolder(long groupId, long repositoryId) {
