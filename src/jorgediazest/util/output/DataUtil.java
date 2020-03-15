@@ -27,7 +27,7 @@ import jorgediazest.util.data.Data;
 public class DataUtil {
 
 	public static String[] getListAttr(
-			Collection<Data> dataCollection, List<String> attrList) {
+		Collection<Data> dataCollection, List<String> attrList) {
 
 		return getListAttr(dataCollection, attrList, dataCollection.size());
 	}
@@ -74,16 +74,16 @@ public class DataUtil {
 	}
 
 	public static String[] getListAttr(
+		Collection<Data> dataCollection, String attr) {
+
+		return getListAttr(dataCollection, attr, dataCollection.size());
+	}
+
+	public static String[] getListAttr(
 		Collection<Data> dataCollection, String attr, int size) {
 
 		return getListAttr(
 			dataCollection, Collections.singletonList(attr), size);
-	}
-
-	public static String[] getListAttr(
-		Collection<Data> dataCollection, String attr) {
-
-		return getListAttr(dataCollection, attr, dataCollection.size());
 	}
 
 }

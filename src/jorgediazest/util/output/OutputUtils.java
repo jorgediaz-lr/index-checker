@@ -225,6 +225,7 @@ public class OutputUtils {
 			String linkStartTag = "<a href=\"#\"" + onClick + " >";
 
 			String linkMoreEndTag;
+
 			if (maxSize == 0) {
 				linkMoreEndTag = "click to display</a>";
 			}
