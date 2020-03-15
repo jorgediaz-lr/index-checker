@@ -124,7 +124,6 @@ public abstract class DataBaseComparator implements DataComparator {
 	}
 
 	public Integer hashCode(Data data) {
-
 		return data.getMap().hashCode();
 	}
 
@@ -132,8 +131,8 @@ public abstract class DataBaseComparator implements DataComparator {
 		this._ignoreNulls = ignoreNulls;
 	}
 
-	private boolean _ignoreNulls = false;
-
 	private static Log _log = LogFactoryUtil.getLog(DataBaseComparator.class);
+
+	private boolean _ignoreNulls = false;
 
 }

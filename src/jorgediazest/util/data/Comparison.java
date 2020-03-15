@@ -88,7 +88,6 @@ public class Comparison {
 	}
 
 	public void dumpToLog() {
-
 		if (!_log.isInfoEnabled()) {
 			return;
 		}
