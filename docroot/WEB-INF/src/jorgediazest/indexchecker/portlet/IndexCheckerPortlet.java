@@ -26,12 +26,12 @@ import com.liferay.portal.kernel.deploy.DeployManagerUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.LiferayPortletContext;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -373,7 +373,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public static Map<Data, String> reindex(Comparison comparison) {
-
 		Model model = comparison.getModel();
 
 		if (model == null) {
@@ -405,7 +404,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public static Map<Data, String> removeIndexOrphans(Comparison comparison) {
-
 		Set<Data> indexOnlyData = comparison.getData("only-right");
 
 		if ((indexOnlyData == null) || indexOnlyData.isEmpty()) {
@@ -1073,7 +1071,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	@SuppressWarnings("unchecked")
 	public List<Long> getSiteGroupIds() throws Exception {
-
 		ModelFactory modelFactory = new ModelFactory();
 
 		Model groupModel = modelFactory.getModelObject(Group.class);
@@ -1139,60 +1136,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return result;
 	}
 
-	protected static boolean isLps74956Solved() {
-
-		long majorVersion=-1;
-		long minorVersion=-1;
-		long patchVersion=-1;
-
-		try {
-			String releaseVersion = ReleaseInfo.getVersion();
-
-			majorVersion = Long.parseLong(releaseVersion.split("\\.")[0]);
-			minorVersion = Long.parseLong(releaseVersion.split("\\.")[1]);
-			patchVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
-		}
-		catch (Exception e) {
-			_log.error(e,e);
-
-			return true;
-		}
-
-		if ((majorVersion < 7)||(majorVersion > 7)) {
-			return true;
-		}
-
-		if ((majorVersion == 7) && (minorVersion > 0)) {
-			return true;
-		}
-
-		if (patchVersion != 10) {
-			return (patchVersion>=5);
-		}
-
-		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
-			if (installedPatch.startsWith("de-")) {
-				String[] fixpackNumber = installedPatch.split("\\-");
-				try {
-					long fixpackNum = Long.parseLong(fixpackNumber[1]);
-
-					if (fixpackNum>=33) {
-						return true;
-					}
-
-					return false;
-				}
-				catch (Exception e) {
-				}
-			}
-		}
-
-		return false;
-	}
-
 	public String getUpdateMessage(PortletConfig portletConfig) {
 
-		/* Due to LPS-74956, pluginPackage.getVersion() returns a wrong value */
+		/* Due to LPS-74956, pluginPackage.getVersion()returns a wrong value */
 		if (!isLps74956Solved()) {
 			return (String)ConfigurationUtil.getConfigurationEntry(
 					"oldLiferayUpdateMessage");
@@ -1265,6 +1211,56 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			portletId, resourceId, request, response);
 	}
 
+	protected static boolean isLps74956Solved() {
+		long majorVersion =-1;
+		long minorVersion =-1;
+		long patchVersion =-1;
+
+		try {
+			String releaseVersion = ReleaseInfo.getVersion();
+
+			majorVersion = Long.parseLong(releaseVersion.split("\\.")[0]);
+			minorVersion = Long.parseLong(releaseVersion.split("\\.")[1]);
+			patchVersion = Long.parseLong(releaseVersion.split("\\.")[2]);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			return true;
+		}
+
+		if ((majorVersion < 7)||(majorVersion > 7)) {
+			return true;
+		}
+
+		if ((majorVersion == 7) && (minorVersion > 0)) {
+			return true;
+		}
+
+		if (patchVersion != 10) {
+			return (patchVersion>= 5);
+		}
+
+		for (String installedPatch : PatcherUtil.getInstalledPatches()) {
+			if (installedPatch.startsWith("de-")) {
+				String[] fixpackNumber = installedPatch.split("\\-");
+				try {
+					long fixpackNum = Long.parseLong(fixpackNumber[1]);
+
+					if (fixpackNum>= 33) {
+						return true;
+					}
+
+					return false;
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+
+		return false;
+	}
+
 	protected Date getStartDate(long timeInMillis, long hoursToSubstract) {
 		CalendarFactory calendarFactory =
 			CalendarFactoryUtil.getCalendarFactory();
@@ -1277,7 +1273,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	protected Date getTomorrowDate(long timeInMillis) {
-
 		CalendarFactory calendarFactory =
 			CalendarFactoryUtil.getCalendarFactory();
 

@@ -14,8 +14,6 @@
 
 package jorgediazest.indexchecker.util;
 
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -29,7 +27,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,7 +69,6 @@ public class ConfigurationUtil {
 	}
 
 	public static String getIndexAttributeName(Model model, String attribute) {
-
 		@SuppressWarnings("unchecked")
 		Map<String, Object> indexAttributeNameMapping =
 			(Map<String, Object>)getModelInfo(
@@ -95,7 +91,6 @@ public class ConfigurationUtil {
 	}
 
 	public static IndexSearchHelper getIndexSearchHelper(Model model) {
-
 		return (IndexSearchHelper)getModelInfo(model, "indexSearchHelperClass");
 	}
 
@@ -176,14 +171,13 @@ public class ConfigurationUtil {
 	}
 
 	public static IndexCheckerPermissionsHelper getPermissionsHelper(
-			Model model) {
+		Model model) {
 
 		return (IndexCheckerPermissionsHelper)getModelInfo(
 			model, "permissionsHelperClass");
 	}
 
 	public static IndexCheckerQueryHelper getQueryHelper(Model model) {
-
 		return (IndexCheckerQueryHelper)getModelInfo(model, "queryHelperClass");
 	}
 
@@ -200,7 +194,6 @@ public class ConfigurationUtil {
 	}
 
 	public static String getStringFilter(Model model) {
-
 		return (String) getModelInfo(model, "filter");
 	}
 

@@ -219,7 +219,6 @@ public class IndexCheckerPermissionsHelper {
 	}
 
 	protected String getPermissionsClassName(Data data) {
-
 		if (isRelatedEntry(data)) {
 			long classNameId = data.get("classNameId", 0L);
 
@@ -230,7 +229,6 @@ public class IndexCheckerPermissionsHelper {
 	}
 
 	protected long getPermissionsClassPK(Data data) {
-
 		if (isRelatedEntry(data)) {
 			return data.get("classPK", -1L);
 		}

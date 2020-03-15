@@ -64,7 +64,8 @@ public class RemoteConfigurationUtil {
 	private static boolean isOutdatedConfiguration() {
 		long dayTimeMillis = GetterUtil.getLong(
 			ConfigurationUtil.getConfigurationEntry(
-				"remoteConfigurationTimeoutMilis"), 0L);
+				"remoteConfigurationTimeoutMilis"),
+			0L);
 		long validCfgTimestamp = (configurationTimestamp + dayTimeMillis);
 
 		return (validCfgTimestamp < System.currentTimeMillis());
@@ -72,7 +73,7 @@ public class RemoteConfigurationUtil {
 
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> readConfiguration(
-			String configurationURL) {
+		String configurationURL) {
 
 		Map<String, Object> tempConfiguration;
 

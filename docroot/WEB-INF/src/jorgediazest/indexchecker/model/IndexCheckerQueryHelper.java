@@ -189,6 +189,7 @@ public class IndexCheckerQueryHelper {
 		}
 		else {
 			Set<Data> matchedList = new HashSet<Data>();
+
 			for (List<Data> sublist : matchedMap.values()) {
 				matchedList.addAll(sublist);
 			}
@@ -297,10 +298,22 @@ public class IndexCheckerQueryHelper {
 		data.set("treePath", treePath);
 	}
 
+	private Set<Object> _castToSet(Object object) {
+		if (object == null) {
+			return Collections.emptySet();
+		}
+
+		if (object instanceof Set) {
+			return (Set)object;
+		}
+
+		return Collections.singleton(object);
+	}
+
 	private void _copyAttributesToAlias(
 		Data data, List<String> attributes, List<String> aliases) {
 
-		for (int i=0;i<attributes.size();i++) {
+		for (int i = 0; i<attributes.size(); i++) {
 			String attribute = attributes.get(i);
 			String alias = aliases.get(i);
 
@@ -312,20 +325,8 @@ public class IndexCheckerQueryHelper {
 			newSet.addAll(existing);
 			newSet.addAll(added);
 
-			data.set(alias,newSet);
+			data.set(alias, newSet);
 		}
-	}
-
-	private Set<Object> _castToSet(Object object) {
-		if (object == null) {
-			return Collections.emptySet();
-		}
-
-		if (object instanceof Set) {
-			return (Set)object;
-		}
-
-		return Collections.singleton(object);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

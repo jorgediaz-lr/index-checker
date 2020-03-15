@@ -27,7 +27,6 @@ public class MBMessagePermissionsHelper extends IndexCheckerPermissionsHelper {
 
 	@Override
 	protected boolean isRelatedEntry(Data data) {
-
 		long categoryId = data.get("categoryId", 0L);
 
 		if (categoryId != MBCategoryConstants.DISCUSSION_CATEGORY_ID) {

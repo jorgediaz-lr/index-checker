@@ -63,7 +63,6 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 
 	@Override
 	public Comparison call() throws Exception {
-
 		boolean checkRelatedData = executionMode.contains(
 			ExecutionMode.CHECK_RELATED_DATA);
 		boolean showBothExact = executionMode.contains(

@@ -69,8 +69,8 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 
 		articleVersionDynamicQuery.setProjection(
 			ProjectionFactoryUtil.alias(
-				ProjectionFactoryUtil.max(
-					"articleVersion.version"), "articleVersion.version"));
+				ProjectionFactoryUtil.max("articleVersion.version"),
+				"articleVersion.version"));
 
 		// We need to use the "this" default alias to make sure the database
 		// engine handles this subquery as a correlated subquery

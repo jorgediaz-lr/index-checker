@@ -243,7 +243,6 @@ public class IndexSearchHelper {
 	}
 
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {
-
 		Map<Data, String> errors = new HashMap<Data, String>();
 
 		int i = 0;

@@ -34,7 +34,6 @@ public class DLFileEntryPermissionsHelper
 
 	@Override
 	protected boolean isRelatedEntry(Data data) {
-
 		long groupId = data.getGroupId();
 		long repositoryId = data.get("repositoryId", -1L);
 
@@ -63,7 +62,6 @@ public class DLFileEntryPermissionsHelper
 		"com.liferay.wiki.model.WikiPage"};
 
 	private boolean isHiddenFolder(long groupId, long repositoryId) {
-
 		try {
 			if (groupId == repositoryId) {
 				return false;
