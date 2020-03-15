@@ -83,7 +83,7 @@ public class ModelImpl implements Model {
 			List<?> list = executeDynamicQuery(
 				criterion, ProjectionFactoryUtil.rowCount());
 
-			if (list != null) {
+			if ((list != null) && !list.isEmpty()) {
 				return (Long)list.get(0);
 			}
 		}
