@@ -1,4 +1,4 @@
-ignoreClassNames: [com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry, com.liferay.portal.kernel.repository.model.FileEntry, com.liferay.portal.kernel.repository.model.Folder, com.liferay.portal.kernel.model.UserPersonalSite]
+ignoreClassNames: [com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry, com.liferay.portal.kernel.repository.model.FileEntry, com.liferay.portal.kernel.repository.model.Folder, com.liferay.portal.kernel.model.UserPersonalSite, com.liferay.expando.kernel.model.adapter.StagedExpandoColumn, com.liferay.expando.kernel.model.adapter.StagedExpandoTable]
 modelNotIndexed: [com.liferay.asset.kernel.model.AssetEntry, com.liferay.trash.kernel.model.TrashEntry, com.liferay.trash.model.TrashEntry, com.liferay.document.library.kernel.model.DLFileEntryMetadata]
 modelInfo: [{
     model: default,
