@@ -46,7 +46,6 @@ public class JournalArticleIndexSearchHelper extends IndexSearchHelper {
 
 	@Override
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {
-
 		Map<Long, Data> articles = new HashMap<Long, Data>();
 
 		for (Data data : dataCollection) {
