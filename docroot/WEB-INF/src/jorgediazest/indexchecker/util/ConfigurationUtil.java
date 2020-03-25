@@ -259,18 +259,9 @@ public class ConfigurationUtil {
 
 		String configuration = StringUtil.read(inputStream);
 
-		boolean indexAllVersions;
-
-		try {
-			indexAllVersions = getJournalArticleIndexAllVersions();
-		}
-		catch(Exception e) {
-			throw new SystemException(e);
-		}
-
 		String journalArticleIndexPrimaryKeyAttribute;
 
-		if (indexAllVersions) {
+		if (getJournalArticleIndexAllVersions()) {
 			journalArticleIndexPrimaryKeyAttribute = "pk";
 		}
 		else {
@@ -286,7 +277,27 @@ public class ConfigurationUtil {
 		return (Map<String, Object>)yaml.load(configuration);
 	}
 
-	public static boolean getJournalArticleIndexAllVersions()
+	public static boolean getJournalArticleIndexAllVersions() {
+		try {
+			return _getJournalArticleIndexAllVersions();
+		}
+		catch(Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.warn(
+					"Error getting JournalServiceConfiguration." +
+						"indexAllArticleVersionsEnabled: " + e.getMessage(), e);
+			}
+			else if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Error getting JournalServiceConfiguration." +
+						"indexAllArticleVersionsEnabled: " + e.getMessage());
+			}
+
+			return true;
+		}
+	}
+
+	private static boolean _getJournalArticleIndexAllVersions()
 		throws Exception {
 
 		Service journalArticleService = ServiceUtil.getService(

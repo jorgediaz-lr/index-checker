@@ -87,7 +87,12 @@ public class RemoteConfigurationUtil {
 				configurationContent);
 		}
 		catch (Exception e) {
-			_log.error(e, e);
+			if (_log.isDebugEnabled()) {
+				_log.warn("Cannot connect to github " + e.getMessage(), e);
+			}
+			else if (_log.isWarnEnabled()) {
+				_log.warn("Cannot connect to github " + e.getMessage());
+			}
 
 			tempConfiguration =
 				(Map<String, Object>)ConfigurationUtil.getConfigurationEntry(
