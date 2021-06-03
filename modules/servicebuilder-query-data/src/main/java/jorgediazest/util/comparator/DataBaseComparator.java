@@ -16,7 +16,8 @@ package jorgediazest.util.comparator;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.Validator;
+
+import java.util.Objects;
 
 import jorgediazest.util.data.Data;
 import jorgediazest.util.data.DataUtil;
@@ -43,7 +44,7 @@ public abstract class DataBaseComparator implements DataComparator {
 		}
 
 		if ((o1 instanceof Comparable) && (o2 instanceof Comparable) &&
-			Validator.equals(type1, type2) && (type1 != Object.class) &&
+			Objects.equals(type1, type2) && (type1 != Object.class) &&
 			(type2 != Object.class)) {
 
 			Comparable c1 = (Comparable)o1;
@@ -86,7 +87,7 @@ public abstract class DataBaseComparator implements DataComparator {
 			return true;
 		}
 
-		if (!Validator.equals(type1, type2) || (type1 == Object.class) ||
+		if (!Objects.equals(type1, type2) || (type1 == Object.class) ||
 			(type2 == Object.class)) {
 
 			String str1 = DataUtil.castString(o1);
