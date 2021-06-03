@@ -14,7 +14,7 @@
 
 package jorgediazest.util.table;
 
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.petra.string.StringPool;
 
 import java.sql.Types;
 
