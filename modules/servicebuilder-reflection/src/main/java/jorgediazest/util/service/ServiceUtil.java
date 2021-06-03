@@ -14,7 +14,6 @@
 
 package jorgediazest.util.service;
 
-import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -25,6 +24,7 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -213,7 +213,7 @@ public class ServiceUtil {
 	private static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
 
 	private static Set<String> cacheNullPortalServices =
-		new ConcurrentHashSet<String>();
+		Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private static Map<String, ServiceClassInterfaceImpl> cachePortalServices =
 		new ConcurrentHashMap<String, ServiceClassInterfaceImpl>();
 

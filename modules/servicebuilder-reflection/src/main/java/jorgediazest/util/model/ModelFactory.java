@@ -14,11 +14,11 @@
 
 package jorgediazest.util.model;
 
-import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +99,7 @@ public class ModelFactory {
 	protected Map<String, Model> cacheModelObject =
 		new ConcurrentHashMap<String, Model>();
 	protected Set<String> cacheNullModelObject =
-		new ConcurrentHashSet<String>();
+		Collections.newSetFromMap(new ConcurrentHashMap<>());
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 
