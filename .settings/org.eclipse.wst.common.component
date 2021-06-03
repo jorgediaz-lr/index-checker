@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="output-utils-shared">
+        <wb-resource deploy-path="/classes" source-path="/src"/>
+        <property name="context-root" value="index_checker-portlet"/>
+        <property name="java-output-path" value="/output-utils-shared/classes"/>
+    </wb-module>
+</project-modules>
