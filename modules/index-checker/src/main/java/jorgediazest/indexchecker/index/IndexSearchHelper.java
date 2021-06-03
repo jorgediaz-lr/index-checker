@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.IndexSearcherHelperUtil;
@@ -309,7 +308,7 @@ public class IndexSearchHelper {
 		}
 
 		mainQuery.setQueryConfig(queryConfig);
-		searchContext.setQueryConfig(queryConfig);
+		// TODO REVISAR: searchContext.setQueryConfig(queryConfig);
 
 		Hits hits = IndexSearcherHelperUtil.search(searchContext, mainQuery);
 
@@ -483,7 +482,7 @@ public class IndexSearchHelper {
 		Map<Locale, String> valueMap = new HashMap<Locale, String>();
 
 		for (int i = 0; i<locales.length; i++) {
-			String localizedFieldName = DocumentImpl.getLocalizedName(
+			String localizedFieldName = Field.getLocalizedName(
 				locales[i], attribute);
 
 			if (!doc.hasField(localizedFieldName)) {

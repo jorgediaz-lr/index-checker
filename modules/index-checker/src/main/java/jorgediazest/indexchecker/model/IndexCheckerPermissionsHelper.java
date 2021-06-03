@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceAction;
-import com.liferay.portal.kernel.model.ResourceBlockPermission;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
@@ -30,7 +29,6 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
-import com.liferay.portal.kernel.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.petra.string.StringPool;
@@ -89,16 +87,7 @@ public class IndexCheckerPermissionsHelper {
 
 		String className = data.get("permissionsClassName", StringPool.BLANK);
 
-		String permissionsClassName;
-
-		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
-			permissionsClassName = ResourceBlockPermission.class.getName();
-		}
-		else {
-			permissionsClassName = ResourcePermission.class.getName();
-		}
-
-		addRolesFieldsToData(className, data, permissionsClassName);
+		addRolesFieldsToData(className, data, ResourcePermission.class.getName());
 	}
 
 	public boolean hasActionId(long actionIds, String name, String actionId)

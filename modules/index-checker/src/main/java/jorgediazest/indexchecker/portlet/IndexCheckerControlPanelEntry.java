@@ -25,12 +25,12 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
  */
 public class IndexCheckerControlPanelEntry extends BaseControlPanelEntry {
 
-	@Override
+	/* TODO REVISAR @Override
 	public boolean isVisible(
 			PermissionChecker permissionChecker, Portlet portlet)
 		throws Exception {
 
 		return true;
-	}
+	}*/
 
 }
