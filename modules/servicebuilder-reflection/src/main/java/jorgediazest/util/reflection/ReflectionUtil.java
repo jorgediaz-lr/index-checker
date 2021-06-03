@@ -132,7 +132,7 @@ public class ReflectionUtil {
 		Class<?> clazz = object.getClass();
 
 		Field field =
-			com.liferay.portal.kernel.util.ReflectionUtil.getDeclaredField(
+			com.liferay.petra.reflect.ReflectionUtil.getDeclaredField(
 				clazz, fieldName);
 
 		return field.get(object);
@@ -141,7 +141,7 @@ public class ReflectionUtil {
 	public static Object getStaticFieldValue(Class<?> clazz, String fieldName) {
 		try {
 			Field field =
-				com.liferay.portal.kernel.util.ReflectionUtil.getDeclaredField(
+				com.liferay.petra.reflect.ReflectionUtil.getDeclaredField(
 					clazz, fieldName);
 
 			return field.get(null);
