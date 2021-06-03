@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE project>
-
-<project name="index_checker-portlet" basedir="." default="deploy">
-	<property name="import.shared" value="servicebuilder-reflection-shared,servicebuilder-query-data-shared,output-utils-shared" />
-	<import file="../build-common-portlet.xml" />
-</project>

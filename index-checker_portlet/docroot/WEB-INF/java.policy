@@ -1,4 +1,0 @@
-
-grant codeBase "file:${index_checker-portlet}${/}-" {
-    permission java.lang.RuntimePermission "getClassLoader";
-};
