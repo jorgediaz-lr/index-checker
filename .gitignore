@@ -1,0 +1,8 @@
+/.classpath
+/.project
+/.gradle
+/.settings
+/bin
+/build
+/test
+/bundles/osgi/modules/*.jar
