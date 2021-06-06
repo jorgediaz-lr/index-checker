@@ -1,3 +1,8 @@
 Bundle-Name: servicebuilder-reflection
 Bundle-SymbolicName: jorgediazest.servicebuilder.reflection
 Bundle-Version: 1.0.0
+Export-Package:\
+	jorgediazest.util.model,\
+	jorgediazest.util.reflection,\
+	jorgediazest.util.service,\
+	jorgediazest.util.table
