@@ -77,6 +77,7 @@ import java.util.concurrent.Future;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.Portlet;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletContext;
 import javax.portlet.PortletException;
@@ -87,10 +88,13 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 
+import org.osgi.service.component.annotations.Component;
+
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
+import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
 import jorgediazest.indexchecker.util.RemoteConfigurationUtil;
 
@@ -108,6 +112,33 @@ import jorgediazest.util.reflection.ReflectionUtil;
  *
  * @author Jorge Díaz
  */
+
+@Component(
+	immediate = true,
+	property = {
+		"com.liferay.portlet.control-panel-entry-category=apps",
+		"com.liferay.portlet.css-class-wrapper=index_checker-portlet",
+		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.preferences-company-wide=true",
+		"com.liferay.portlet.preferences-unique-per-layout=false",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
+		"com.liferay.portlet.icon=/icon.png",
+		"com.liferay.portlet.instanceable=false",
+		"com.liferay.portlet.single-page-application=false",
+		"javax.portlet.display-name=Index Checker",
+		"javax.portlet.info.keywords=search,index,check,checker,verify,reindex,lucene,solr,elasticsearch",
+		"javax.portlet.info.short-title=Index Checker",
+		"javax.portlet.info.title=Index Checker",
+		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.config-template=/html/indexchecker/config.jsp",
+		"javax.portlet.init-param.view-template=/html/indexchecker/view.jsp",
+		"javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
+		"javax.portlet.portlet-name=index_checker",
+		"javax.portlet.resource-bundle=content.Language",
+		"javax.portlet.security-role-ref=administrator,power-user,user"
+	},
+	service = Portlet.class
+)
 public class IndexCheckerPortlet extends MVCPortlet {
 
 	public static void dumpToLog(

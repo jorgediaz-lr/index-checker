@@ -14,20 +14,25 @@
 
 package jorgediazest.indexchecker.util;
 
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.util.portlet.PortletProps;
 
 /**
  * @author Jorge Díaz
  */
 public class PortletPropsValues {
 
+	private static final Configuration _configuration =
+		ConfigurationFactoryUtil.getConfiguration(
+				PortletPropsValues.class.getClassLoader(), "portlet");
+
 	public static final int INDEX_SEARCH_LIMIT =
 		GetterUtil.getInteger(
-			PortletProps.get(PortletPropsKeys.INDEX_SEARCH_LIMIT), 10000);
+			_configuration.get(PortletPropsKeys.INDEX_SEARCH_LIMIT), 10000);
 
 	public static final int NUMBER_THREADS =
 		GetterUtil.getInteger(
-			PortletProps.get(PortletPropsKeys.NUMBER_THREADS), 1);
+			_configuration.get(PortletPropsKeys.NUMBER_THREADS), 1);
 
 }
