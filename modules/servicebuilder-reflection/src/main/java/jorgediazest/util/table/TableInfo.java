@@ -18,7 +18,9 @@ import com.liferay.petra.string.StringPool;
 
 import java.sql.Types;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,21 +35,32 @@ public class TableInfo {
 
 		this.attributesArr = attributesArr;
 		this.name = name;
+		this.primaryKeyMultiAttribute = new String[0];
 		this.sqlCreate = sqlCreate;
 
 		attributesStr = TableUtil.getDatabaseAttributesStr(name, sqlCreate);
 
 		if ((attributesStr != null) && (attributesStr.indexOf('#') > 0)) {
 			String aux = attributesStr.split("#")[1];
-			primaryKeyMultiAttribute = aux.split(",");
 
-			for (int i = 0; i < primaryKeyMultiAttribute.length; i++) {
-				primaryKeyMultiAttribute[i] =
-					primaryKeyMultiAttribute[i].trim();
+			List<String> primaryKeyMultiAttributeList = new ArrayList<>();
+
+			for (String pkMultiElement : aux.split(",")) {
+				pkMultiElement = pkMultiElement.trim();
+
+				if (!pkMultiElement.equalsIgnoreCase("ctCollectionId")) {
+					primaryKeyMultiAttributeList.add(pkMultiElement);
+				}
 			}
-		}
-		else {
-			primaryKeyMultiAttribute = new String[0];
+
+			if (primaryKeyMultiAttributeList.size() == 1) {
+				primaryKeyAttribute = primaryKeyMultiAttributeList.get(0);
+			}
+			else if (primaryKeyMultiAttributeList.size() > 1) {
+				primaryKeyMultiAttribute =
+					primaryKeyMultiAttributeList.toArray(
+						new String[primaryKeyMultiAttributeList.size()]);
+			}
 		}
 
 		String[] arrDatabaseAttributes = getCreateTableAttributes().split(",");
@@ -218,11 +231,11 @@ public class TableInfo {
 	/**
 	 * primaries keys can be at following ways:
 	 *
-	 * - single => create table UserGroupGroupRole (userGroupId LONG not
+	 * - multi => create table UserGroupGroupRole (userGroupId LONG not
 	 * null,groupId LONG not null,roleId LONG not null,primary key (userGroupId,
 	 * groupId, roleId))";
 	 *
-	 * - multi => create table JournalArticle (uuid_ VARCHAR(75) null,id_ LONG
+	 * - single => create table JournalArticle (uuid_ VARCHAR(75) null,id_ LONG
 	 * not null primary key,resourcePrimKey LONG,groupId LONG,companyId
 	 * LONG,userId LONG,userName VARCHAR(75) null,createDate DATE
 	 * null,modifiedDate DATE null,folderId LONG,classNameId LONG,classPK
