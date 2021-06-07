@@ -40,6 +40,13 @@ public class QueryUtil {
 		Map<Long, ?> dataMap, Map<Long, List<Data>> matchedMap,
 		String[] attributes) {
 
+		addRelatedModelData(dataMap, matchedMap, attributes, false);
+	}
+
+	public static void addRelatedModelData(
+		Map<Long, ?> dataMap, Map<Long, List<Data>> matchedMap,
+		String[] attributes, boolean appendMode) {
+
 		if (dataMap == null) {
 			return;
 		}
@@ -59,7 +66,7 @@ public class QueryUtil {
 
 				data.addModelTableInfo(model);
 
-				addMatchedData(data, matched, attributes);
+				addMatchedData(data, matched, attributes, appendMode);
 			}
 		}
 	}
@@ -117,7 +124,8 @@ public class QueryUtil {
 	}
 
 	protected static void addMatchedData(
-		Data data, List<Data> matched, String[] attributes) {
+		Data data, List<Data> matched, String[] attributes, 
+		boolean appendMode) {
 
 		if (matched.isEmpty()) {
 			return;
@@ -130,7 +138,19 @@ public class QueryUtil {
 				continue;
 			}
 
-			Set<Object> values = new HashSet<Object>(matched.size());
+			Set<Object> values = new HashSet<Object>(
+				matched.size());
+
+			if (appendMode) {
+				Object existingValue = data.get(attribute);
+
+				if (existingValue instanceof Set) {
+					values.addAll((Set)existingValue);
+				}
+				else if (existingValue != null) {
+					values.add(existingValue);
+				}
+			}
 
 			for (Data m : matched) {
 				values.add(m.get(attribute));

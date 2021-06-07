@@ -119,6 +119,8 @@ public class IndexCheckerQueryHelper {
 				"attributesAlias");
 			boolean rawData = GetterUtil.getBoolean(
 				(Boolean)rdtq.get("raw"),false);
+			boolean appendMode = GetterUtil.getBoolean(
+					(Boolean)rdtq.get("appendMode"), false);
 			String relatedFilterString = (String)rdtq.get("filter");
 
 			Model relatedModel = modelFactory.getModelObject(relatedClassName);
@@ -130,7 +132,7 @@ public class IndexCheckerQueryHelper {
 			addRelatedModelData(
 				queryCache, liferayDataMap, model, relatedModel, mappingsSource,
 				mappingsRelated, attributesToQuery, attributesAlias, rawData,
-				groupCriterion, relatedFilterString);
+				appendMode, groupCriterion, relatedFilterString);
 		}
 	}
 
@@ -139,7 +141,7 @@ public class IndexCheckerQueryHelper {
 			Map<Long, Data> liferayDataMap, Model model, Model relatedModel,
 			List<String> mappingsSource, List<String> mappingsRelated,
 			List<String> attributesToQuery, List<String> attributesAlias,
-			boolean rawData, Criterion groupCriterion,
+			boolean rawData, boolean appendMode, Criterion groupCriterion,
 			String relatedFilterString)
 		throws Exception {
 
@@ -153,7 +155,10 @@ public class IndexCheckerQueryHelper {
 			relatedCriterion = groupCriterion;
 		}
 
-		if ("classPK".equals(mappingsRelated.get(0))) {
+		if ("classPK".equals(mappingsRelated.get(0)) && (
+			(relatedFilterString == null) || 
+			!relatedFilterString.startsWith("classNameId"))) {
+
 			Criterion classNameIdCriterion = relatedModel.getProperty(
 				"classNameId").eq(model.getClassNameId());
 
@@ -208,7 +213,7 @@ public class IndexCheckerQueryHelper {
 		else {
 			QueryUtil.addRelatedModelData(
 				liferayDataMap, matchedMap,
-				attributesAlias.toArray(new String[0]));
+				attributesAlias.toArray(new String[0]), appendMode);
 		}
 	}
 
