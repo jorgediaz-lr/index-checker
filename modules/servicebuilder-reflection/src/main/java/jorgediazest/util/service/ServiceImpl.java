@@ -19,7 +19,13 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.xml.Attribute;
+import com.liferay.portal.kernel.xml.Document;
+import com.liferay.portal.kernel.xml.DocumentException;
+import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,7 +138,49 @@ public abstract class ServiceImpl implements Service {
 		String sqlCreate = (String)ReflectionUtil.getStaticFieldValue(
 			classLiferayModelImpl, fieldPrefix + "_SQL_CREATE");
 
-		return new TableInfo(name, attributesArr, sqlCreate);
+		if (mappingTable == null) {
+			return new TableInfo(
+				name, attributesArr, sqlCreate, getTableInfoFromHbmXml(
+					classLiferayModelImpl));
+		}
+		else {
+			return new TableInfo(name, attributesArr, sqlCreate, null);
+		}
+	}
+
+	protected Element getTableInfoFromHbmXml(Class<?> classLiferayModelImpl) {
+		ClassLoader classLoader = classLiferayModelImpl.getClassLoader();
+		InputStream inputStream =
+			classLoader.getResourceAsStream("/META-INF/module-hbm.xml");
+
+		if (inputStream == null) {
+			inputStream = classLoader.getResourceAsStream(
+				"/META-INF/portal-hbm.xml");
+		}
+
+		Document document;
+		try {
+			document = SAXReaderUtil.read(inputStream);
+		} catch (DocumentException e) {
+			_log.error(e,e);
+
+			return null;
+		}
+
+		String hibernateClassImpl = classLiferayModelImpl.getName();
+
+		hibernateClassImpl = StringUtil.replaceLast(
+			hibernateClassImpl, "ModelImpl", "Impl");
+
+		Element rootElement = document.getRootElement();
+
+		for (Element element : rootElement.elements("class")) {
+			if (hibernateClassImpl.equals(element.attributeValue("name"))) {
+				return element;
+			};
+		}
+
+		return null;
 	}
 
 	public ClassedModel updateObject(ClassedModel object) {

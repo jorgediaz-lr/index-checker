@@ -15,11 +15,13 @@
 package jorgediazest.util.table;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.xml.Element;
 
 import java.sql.Types;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,14 +33,70 @@ import jorgediazest.util.reflection.ReflectionUtil;
  */
 public class TableInfo {
 
-	public TableInfo(String name, Object[][] attributesArr, String sqlCreate) {
+	public TableInfo(
+		String name, Object[][] attributesArr, String sqlCreate,
+		Element hbmXmlInfo) {
 
-		this.attributesArr = attributesArr;
+		this.attributeNamesArr = new String[attributesArr.length];
+		this.attributeTypeArr = new Integer[attributesArr.length];
+
+		for (int i=0; i < attributesArr.length; i++) {
+			attributeNamesArr[i] = (String)attributesArr[i][0];
+			attributeTypeArr[i] = (Integer)attributesArr[i][1];
+		}
 		this.name = name;
 		this.primaryKeyMultiAttribute = new String[0];
 		this.sqlCreate = sqlCreate;
 
-		attributesStr = TableUtil.getDatabaseAttributesStr(name, sqlCreate);
+		if (hbmXmlInfo != null) {
+			Map<String,String> databaseColumnToAttributeMap =
+				new HashMap<String, String>();
+
+			Element id = hbmXmlInfo.element("id");
+
+			if (id == null) {
+				primaryKeyAttribute = StringPool.BLANK;
+			}
+			else {
+				primaryKeyAttribute = id.attributeValue("name");
+				_addDatabaseColumnToAttributeMap(databaseColumnToAttributeMap, id);
+			}
+
+			Element compositeId = hbmXmlInfo.element("composite-id");
+
+			if (compositeId != null) {
+				List<String> primaryKeyMultiAttributeList = new ArrayList<>();
+
+				for (Element property : compositeId.elements("key-property")) {
+					primaryKeyMultiAttributeList.add(
+						property.attributeValue("name"));
+
+					_addDatabaseColumnToAttributeMap(databaseColumnToAttributeMap, property);
+				}
+
+				primaryKeyMultiAttribute =
+					primaryKeyMultiAttributeList.toArray(
+						new String[primaryKeyMultiAttributeList.size()]);
+			}
+
+			for (Element property : hbmXmlInfo.elements("property")) {
+				_addDatabaseColumnToAttributeMap(databaseColumnToAttributeMap, property);
+			}
+
+			for (int i = 0; i < attributeNamesArr.length; i++) {
+				if (!databaseColumnToAttributeMap.containsKey(attributeNamesArr[i])) {
+					continue;
+				}
+
+				attributeNamesArr[i] = databaseColumnToAttributeMap.get(
+					attributeNamesArr[i]);
+			}
+
+			return;
+		}
+
+		String attributesStr = TableUtil.getDatabaseAttributesStr(
+			name, sqlCreate);
 
 		if ((attributesStr != null) && (attributesStr.indexOf('#') > 0)) {
 			String aux = attributesStr.split("#")[1];
@@ -68,7 +126,8 @@ public class TableInfo {
 			}
 		}
 
-		String[] arrDatabaseAttributes = getCreateTableAttributes().split(",");
+		String[] arrDatabaseAttributes = _getCreateTableAttributes(
+			attributesStr).split(",");
 
 		for (String attr : arrDatabaseAttributes) {
 			String[] aux = attr.split(" ");
@@ -91,6 +150,18 @@ public class TableInfo {
 		if (primaryKeyAttribute == null) {
 			primaryKeyAttribute = StringPool.BLANK;
 		}
+	}
+
+	private static void _addDatabaseColumnToAttributeMap(
+		Map<String, String> databaseColumnToAttributeMap, Element property) {
+
+		if ((property == null) || (property.attributeValue("column") == null)) {
+			return;
+		}
+
+		databaseColumnToAttributeMap.put(
+			property.attributeValue("column"),
+			property.attributeValue("name"));
 	}
 
 	@Override
@@ -130,13 +201,13 @@ public class TableInfo {
 
 		int pos = -1;
 
-		for (int i = 0; i < attributesArr.length; i++) {
-			if (((String)attributesArr[i][0]).endsWith(StringPool.UNDERLINE) &&
-				((String)attributesArr[i][0]).equals(nameWithUnderline)) {
+		for (int i = 0; i < attributeNamesArr.length; i++) {
+			if ((attributeNamesArr[i]).endsWith(StringPool.UNDERLINE) &&
+				(attributeNamesArr[i]).equals(nameWithUnderline)) {
 
 				pos = i;
 			}
-			else if (((String)attributesArr[i][0]).equals(name)) {
+			else if ((attributeNamesArr[i]).equals(name)) {
 				pos = i;
 			}
 		}
@@ -147,10 +218,10 @@ public class TableInfo {
 	}
 
 	public String[] getAttributesName() {
-		String[] names = new String[attributesArr.length];
+		String[] names = new String[attributeNamesArr.length];
 
-		for (int i = 0; i < attributesArr.length; i++) {
-			names[i] = (String)attributesArr[i][0];
+		for (int i = 0; i < attributeNamesArr.length; i++) {
+			names[i] = (String)attributeNamesArr[i];
 		}
 
 		return names;
@@ -163,7 +234,7 @@ public class TableInfo {
 			return Types.NULL;
 		}
 
-		return (Integer)this.attributesArr[pos][1];
+		return attributeTypeArr[pos];
 	}
 
 	public String getDestinationAttr(String primaryKey) {
@@ -216,7 +287,7 @@ public class TableInfo {
 		return toString;
 	}
 
-	protected String getCreateTableAttributes() {
+	private static String _getCreateTableAttributes(String attributesStr) {
 		String aux = attributesStr;
 
 		if (aux.indexOf('#') > 0) {
@@ -229,8 +300,8 @@ public class TableInfo {
 	protected Map<String, Integer> mapAttributePosition =
 		new ConcurrentHashMap<String, Integer>();
 
-	private Object[][] attributesArr = null;
-	private String attributesStr = null;
+	private String[] attributeNamesArr = null;
+	private Integer[] attributeTypeArr = null;
 	private String name = null;
 
 	/**
