@@ -48,6 +48,11 @@ public class TableInfo {
 			for (String pkMultiElement : aux.split(",")) {
 				pkMultiElement = pkMultiElement.trim();
 
+				if (pkMultiElement.endsWith("_")) {
+					pkMultiElement = pkMultiElement.substring(
+						0, pkMultiElement.length() - 1);
+				}
+
 				if (!pkMultiElement.equalsIgnoreCase("ctCollectionId")) {
 					primaryKeyMultiAttributeList.add(pkMultiElement);
 				}
