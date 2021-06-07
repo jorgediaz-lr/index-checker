@@ -78,10 +78,6 @@ modelInfo: [{
     permissionsHelperClass: !!jorgediazest.indexchecker.model.CalendarBookingPermissionsHelper {},
 },
 {
-    model: com.liferay.portal.kernel.model.Contact,
-    filter: "classPK in (select userId from User_ where defaultUser=[$FALSE$] and status=0)"
-},
-{
     model: com.liferay.document.library.kernel.model.DLFileEntry,
     filter: "fileEntryId in (select fileEntryId from DLFileVersion where status=0 or status=8)",
     permissionsHelperClass: !!jorgediazest.indexchecker.model.DLFileEntryPermissionsHelper {},
@@ -156,10 +152,11 @@ modelInfo: [{
         {model: com.liferay.asset.kernel.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
         {model: com.liferay.asset.kernel.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""},
         {forceAdd: true, model: com.liferay.portal.kernel.model.Contact, mappingsSource: [userId], mappingsRelated: [userId], attributesToQuery: [contactId,modifiedDate]},
-        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
-        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
-        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"},
-        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], attributesAlias: [groupId], filter: "parentGroupId<>0"}
+        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [organizationId], mappingsRelated: [classPK], attributesToQuery: [groupId], appendMode: true, filter: "classNameId in (select classNameId from ClassName_ where value like '%Organization')"},
+        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], appendMode: true, attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], appendMode: true, attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], appendMode: true, attributesAlias: [groupId], filter: "parentGroupId<>0"},
+        {forceAdd: true, model: com.liferay.portal.kernel.model.Group, mappingsSource: [groupId], mappingsRelated: [groupId], attributesToQuery: [parentGroupId], appendMode: true, attributesAlias: [groupId], filter: "parentGroupId<>0"}
     ]
 },
 {
