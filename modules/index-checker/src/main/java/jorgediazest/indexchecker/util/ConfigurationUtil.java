@@ -14,6 +14,7 @@
 
 package jorgediazest.indexchecker.util;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -227,20 +228,14 @@ public class ConfigurationUtil {
 		}
 
 		synchronized(ConfigurationUtil.class) {
-			try {
+			if (configuration == null) {
+				configuration = readConfiguration(
+					CONFIGURATION_FILE_NAME, CONFIGURATION_FILE_EXT);
+
 				if (configuration == null) {
-					configuration = readConfiguration(CONFIGURATION_FILE);
+					throw new RuntimeException(
+						"Error reading configuration file");
 				}
-			}
-			catch (IOException ioe) {
-				_log.error(ioe);
-
-				throw new RuntimeException(ioe);
-			}
-			catch (SystemException se) {
-				_log.error(se);
-
-				throw new RuntimeException(se);
 			}
 
 			return configuration;
@@ -249,15 +244,28 @@ public class ConfigurationUtil {
 
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> readConfiguration(
-			String configurationFile)
-		throws IOException, SystemException {
+			String configurationFileName, String configurationFileExt) {
+
+		int liferayBuildNumber = ReleaseInfo.getBuildNumber();
 
 		ClassLoader classLoader = ConfigurationUtil.class.getClassLoader();
 
-		InputStream inputStream = classLoader.getResourceAsStream(
-			configurationFile);
+		String configuration = readConfiguration(
+			classLoader, configurationFileName + CharPool.UNDERLINE +
+			liferayBuildNumber + CharPool.PERIOD + configurationFileExt);
 
-		String configuration = StringUtil.read(inputStream);
+		if (configuration == null) {
+			configuration = readConfiguration(
+				classLoader, configurationFileName + CharPool.UNDERLINE +
+				((int)liferayBuildNumber/100) + CharPool.PERIOD +
+				configurationFileExt);
+		}
+
+		if (configuration == null) {
+			configuration = readConfiguration(
+				classLoader, configurationFileName + CharPool.PERIOD +
+				configurationFileExt);
+		}
 
 		String journalArticleIndexPrimaryKeyAttribute;
 
@@ -275,6 +283,28 @@ public class ConfigurationUtil {
 		Yaml yaml = new Yaml();
 
 		return (Map<String, Object>)yaml.load(configuration);
+	}
+
+	protected static String readConfiguration(
+			ClassLoader classLoader, String configurationFile) {
+	
+		try {
+			InputStream inputStream = classLoader.getResourceAsStream(
+				configurationFile);
+
+			if (inputStream == null) {
+				return null;
+			}
+	
+			return StringUtil.read(inputStream);
+		}
+		catch (IOException ioException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(ioException, ioException);
+			}
+		}
+
+		return null;
 	}
 
 	public static boolean getJournalArticleIndexAllVersions() {
@@ -310,7 +340,8 @@ public class ConfigurationUtil {
 				"indexAllArticleVersionsEnabled");
 	}
 
-	private static final String CONFIGURATION_FILE = "configuration.yml";
+	private static final String CONFIGURATION_FILE_NAME = "configuration";
+	private static final String CONFIGURATION_FILE_EXT = "yml";
 
 	private static Log _log = LogFactoryUtil.getLog(ConfigurationUtil.class);
 

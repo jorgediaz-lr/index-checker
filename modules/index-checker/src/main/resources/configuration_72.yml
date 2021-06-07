@@ -45,6 +45,7 @@ modelInfo: [{
         {model: com.liferay.asset.kernel.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
         {model: com.liferay.asset.kernel.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
     ],
+    keyAttributes: [resourcePrimKey],
     indexAttributeNameMapping: {
         resourcePrimKey: entryClassPK,
         groupId: scopeGroupId,
@@ -119,7 +120,8 @@ modelInfo: [{
     model: com.liferay.journal.model.JournalArticle,
     queryHelperClass: !!jorgediazest.indexchecker.model.JournalArticleQueryHelper {},
     indexSearchHelperClass: !!jorgediazest.indexchecker.index.JournalArticleIndexSearchHelper {},
-    filter: "classNameId=0"
+    filter: "classNameId=0",
+    keyAttributes: [$$JOURNAL_ARTICLE_INDEX_PRIMARY_KEY_ATTRIBUTE$$],
 },
 {
     model: com.liferay.journal.model.JournalFolder,
@@ -172,7 +174,7 @@ modelInfo: [{
 }]
 
 #Configuration to retrieve remote configuration
-remoteConfigurationBackup: {62: {}, 70: {}, 71: {}, 72: {}, 73: {}, 74: {}}
+remoteConfigurationBackup: {62: {}, 70: {}, 71: {}, 72: {}}
 remoteConfigurationUrl: "https://gist.githubusercontent.com/jorgediaz-lr/205dc3f71bdcdc92b4f0558f583bf2cc/raw/index-checker_configuration.yml"
 remoteConfigurationTimeoutMilis: 86400000
 
