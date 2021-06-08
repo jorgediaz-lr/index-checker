@@ -36,7 +36,7 @@ import jorgediazest.util.table.TableInfo;
 /**
  * @author Jorge Díaz
  */
-public class ModelWrapper implements Model, Cloneable {
+public class ModelWrapper implements Cloneable, Model {
 
 	public ModelWrapper(Model model) {
 		this.model = model;
@@ -322,7 +322,7 @@ public class ModelWrapper implements Model, Cloneable {
 	}
 
 	public void setCriterion(Criterion criterion) {
-		if (count(criterion)==-1) {
+		if (count(criterion) == -1) {
 			throw new IllegalArgumentException();
 		}
 

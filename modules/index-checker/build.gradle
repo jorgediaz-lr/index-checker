@@ -1,10 +1,9 @@
 dependencies {
-	compileOnly group: "com.liferay.portal", name: "release.portal.api"
+	compile project(":modules:output-utils")
+	compile project(":modules:servicebuilder-query-data")
 
+	compileOnly group: "com.liferay.portal", name: "release.portal.api"
 	compileOnly group: "org.yaml", name: "snakeyaml", version: "1.18"
 
 	cssBuilder group: "com.liferay", name: "com.liferay.css.builder", version: "3.0.2"
-
-	compile project(":modules:output-utils")
-	compile project(":modules:servicebuilder-query-data")
 }

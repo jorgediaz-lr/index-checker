@@ -14,8 +14,8 @@
 
 package jorgediazest.util.data;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -64,7 +64,7 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return new java.math.BigDecimal(((Number)value).toString());
+			return new BigDecimal(((Number)value).toString());
 		}
 
 		if (value instanceof String) {
@@ -73,7 +73,7 @@ public class DataUtil {
 			}
 
 			try {
-				return new java.math.BigDecimal((String)value);
+				return new BigDecimal((String)value);
 			}
 			catch (Exception e) {
 			}
@@ -276,7 +276,7 @@ public class DataUtil {
 			return castString(value);
 		}
 
-		if (java.math.BigDecimal.class.equals(type)) {
+		if (BigDecimal.class.equals(type)) {
 			return castBigDecimal(value);
 		}
 
@@ -312,9 +312,8 @@ public class DataUtil {
 			return castBytes(value);
 		}
 
-		if (java.sql.Date.class.equals(type) ||
-			java.sql.Time.class.equals(type) ||
-			java.sql.Timestamp.class.equals(type)) {
+		if (java.sql.Date.class.equals(type) || Time.class.equals(type) ||
+			Timestamp.class.equals(type)) {
 
 			return castDateToEpoch(value);
 		}
@@ -406,16 +405,24 @@ public class DataUtil {
 	}
 
 	public static String dateToString(Date date) {
-		return dateFormatyyyyMMddHHmmss.get().format(date);
+		return dateFormatyyyyMMddHHmmss.get(
+		).format(
+			date
+		);
 	}
 
 	public static String dateToStringWithMillis(Date date) {
-		return dateFormatyyyyMMddHHmmssSSS.get().format(date);
+		return dateFormatyyyyMMddHHmmssSSS.get(
+		).format(
+			date
+		);
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
-		Set<Data> both = new TreeSet<Data>(set1);
+		Set<Data> both = new TreeSet<>(set1);
+
 		both.retainAll(set2);
+
 		return both.toArray(new Data[0]);
 	}
 
@@ -461,7 +468,7 @@ public class DataUtil {
 	public static Map<Long, List<Data>> getMapFromSetData(
 		Set<Data> dataSet, String keyAttribute) {
 
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
+		Map<Long, List<Data>> dataMap = new HashMap<>();
 
 		for (Data data : dataSet) {
 			Long key = (Long)data.get(keyAttribute);
@@ -471,12 +478,17 @@ public class DataUtil {
 			}
 
 			if (!dataMap.containsKey(key)) {
-				List<Data> list = new ArrayList<Data>();
+				List<Data> list = new ArrayList<>();
+
 				list.add(data);
 				dataMap.put(key, list);
 			}
 			else {
-				dataMap.get(key).add(data);
+				dataMap.get(
+					key
+				).add(
+					data
+				);
 			}
 		}
 
@@ -493,25 +505,45 @@ public class DataUtil {
 		}
 
 		if (obj instanceof Double) {
-			return (((Double)obj).longValue() == 0);
+			if (((Double)obj).longValue() == 0) {
+				return true;
+			}
+
+			return false;
 		}
 		else if (obj instanceof Float) {
-			return (((Float)obj).longValue() == 0);
+			if (((Float)obj).longValue() == 0) {
+				return true;
+			}
+
+			return false;
 		}
 		else if (obj instanceof Integer) {
-			return (((Integer)obj).longValue() == 0);
+			if (((Integer)obj).longValue() == 0) {
+				return true;
+			}
+
+			return false;
 		}
 		else if (obj instanceof String) {
 			Double d = castDouble((String)obj);
 
 			if (d != null) {
-				return (d.longValue() == 0);
+				if (d.longValue() == 0) {
+					return true;
+				}
+
+				return false;
 			}
 
 			Long l = castLong((String)obj);
 
 			if (l != null) {
-				return (l.longValue() == 0);
+				if (l.longValue() == 0) {
+					return true;
+				}
+
+				return false;
 			}
 		}
 
@@ -526,18 +558,26 @@ public class DataUtil {
 		Date date = null;
 
 		try {
-			date = dateFormatyyyyMMddHHmmss.get().parse(dateString);
+			date = dateFormatyyyyMMddHHmmss.get(
+			).parse(
+				dateString
+			);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		if (date != null) {
 			return date;
 		}
 
 		try {
-			date = dateFormatyyyyMMddHHmmssSSS.get().parse(dateString);
+			date = dateFormatyyyyMMddHHmmssSSS.get(
+			).parse(
+				dateString
+			);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		if (date != null) {
 			return date;
@@ -546,7 +586,8 @@ public class DataUtil {
 		try {
 			date = Timestamp.valueOf(dateString);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		if (date != null) {
 			return date;
@@ -555,7 +596,8 @@ public class DataUtil {
 		try {
 			date = Time.valueOf(dateString);
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+		}
 
 		return date;
 	}
@@ -593,7 +635,7 @@ public class DataUtil {
 
 		Map<Locale, String> map = transformXmlToMap(str);
 
-		Set<String> valuesSet = new HashSet<String>(map.values());
+		Set<String> valuesSet = new HashSet<>(map.values());
 
 		if (valuesSet.size() == 0) {
 			return null;
@@ -609,7 +651,7 @@ public class DataUtil {
 	protected static Set<Object> transformArrayToSet(
 		Class<?> type, Object[] values) {
 
-		Set<Object> transformObjects = new HashSet<Object>(values.length);
+		Set<Object> transformObjects = new HashSet<>(values.length);
 
 		for (Object o : values) {
 			Object transformObject = transformObject(type, o);
@@ -625,7 +667,7 @@ public class DataUtil {
 	protected static Map<Locale, String> transformXmlToMap(String xml) {
 		Map<Locale, String> map = LocalizationUtil.getLocalizationMap(xml);
 
-		Map<Locale, String> cleanMap = new HashMap<Locale, String>();
+		Map<Locale, String> cleanMap = new HashMap<>();
 
 		for (Locale key : LanguageUtil.getAvailableLocales()) {
 			if (!map.containsKey(key)) {
@@ -704,9 +746,8 @@ public class DataUtil {
 		if (negative) {
 			return result;
 		}
-		else {
-			return -result;
-		}
+
+		return -result;
 	}
 
 	private static Long _parseLong(String value) {
@@ -767,9 +808,8 @@ public class DataUtil {
 		if (negative) {
 			return result;
 		}
-		else {
-			return -result;
-		}
+
+		return -result;
 	}
 
 	private static Short _parseShort(String value) {
@@ -782,38 +822,39 @@ public class DataUtil {
 		return (short)i.shortValue();
 	}
 
-	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
-			new ThreadLocal<DateFormat>() {
+	private static DataComparator dataComparatorMap = new DataComparatorMap();
 
-		@Override
-		protected DateFormat initialValue()
-		{
-			return DateFormatFactoryUtil.getSimpleDateFormat("yyyyMMddHHmmss");
-		}
-	};
+	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
+		new ThreadLocal<DateFormat>() {
+
+			@Override
+			protected DateFormat initialValue() {
+				return DateFormatFactoryUtil.getSimpleDateFormat(
+					"yyyyMMddHHmmss");
+			}
+
+		};
 
 	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmssSSS =
-			new ThreadLocal<DateFormat>() {
+		new ThreadLocal<DateFormat>() {
 
-		@Override
-		protected DateFormat initialValue()
-		{
-			return DateFormatFactoryUtil.getSimpleDateFormat(
-				"yyyyMMddHHmmssSSS");
-		}
-	};
+			@Override
+			protected DateFormat initialValue() {
+				return DateFormatFactoryUtil.getSimpleDateFormat(
+					"yyyyMMddHHmmssSSS");
+			}
 
-	private static DataComparator dataComparatorMap = new DataComparatorMap();
+		};
 
 	private static ThreadLocal<Boolean> ignoreCase =
 		new ThreadLocal<Boolean>() {
 
-		@Override
-		protected Boolean initialValue()
-		{
-			return false;
-		}
-	};
+			@Override
+			protected Boolean initialValue() {
+				return false;
+			}
+
+		};
 
 	private static Map<Model, WeakReference<DataComparator>>
 		modelDataComparatorCache = Collections.synchronizedMap(

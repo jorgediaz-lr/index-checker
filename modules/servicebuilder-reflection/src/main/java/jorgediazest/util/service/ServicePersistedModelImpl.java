@@ -14,6 +14,7 @@
 
 package jorgediazest.util.service;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -21,7 +22,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.petra.string.StringPool;
 
 import java.lang.reflect.Method;
 
@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServicePersistedModelImpl extends ServiceImpl {
 
 	public ServicePersistedModelImpl(
-			BaseLocalService modelService, String className) {
+		BaseLocalService modelService, String className) {
 
 		if (modelService == null) {
 			throw new NullPointerException("modelService cannot be null");
@@ -43,6 +43,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 		this.modelService = modelService;
 		this.className = className;
+
 		this.classSimpleName = className;
 
 		int pos = className.lastIndexOf(".");
@@ -53,7 +54,10 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassedModel addObject(ClassedModel object) {
-		String methodName = "add" + object.getModelClass().getSimpleName();
+		String methodName =
+			"add" +
+				object.getModelClass(
+				).getSimpleName();
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
@@ -67,7 +71,10 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassedModel deleteObject(ClassedModel object) {
-		String methodName = "delete" + object.getModelClass().getSimpleName();
+		String methodName =
+			"delete" +
+				object.getModelClass(
+				).getSimpleName();
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
@@ -104,7 +111,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 		catch (NoSuchMethodException e) {
 			throw new RuntimeException(
 				"executeMethod: " + methodName + " method not found for " +
-				modelService, e);
+					modelService,
+				e);
 		}
 		catch (Exception e) {
 			String cause = StringPool.BLANK;
@@ -115,8 +123,9 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 			}
 
 			throw new RuntimeException(
-				"executeMethod: " + methodName + " method for " +
-				modelService + ": " + cause, e);
+				"executeMethod: " + methodName + " method for " + modelService +
+					": " + cause,
+				e);
 		}
 	}
 
@@ -128,7 +137,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassLoader getClassLoader() {
-		return modelService.getClass().getClassLoader();
+		return modelService.getClass(
+		).getClassLoader();
 	}
 
 	public DynamicQuery newDynamicQuery() {
@@ -153,7 +163,10 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassedModel updateObject(ClassedModel object) {
-		String methodName = "update" + object.getModelClass().getSimpleName();
+		String methodName =
+			"update" +
+				object.getModelClass(
+				).getSimpleName();
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
@@ -173,7 +186,9 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 		if (localServiceMethods.containsKey(key)) {
 			try {
-				method = localServiceMethods.get(key).getMethod();
+				method = localServiceMethods.get(
+					key
+				).getMethod();
 			}
 			catch (NoSuchMethodException e) {
 			}
@@ -201,7 +216,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	protected Map<String, MethodKey> localServiceMethods =
-		new ConcurrentHashMap<String, MethodKey>();
+		new ConcurrentHashMap<>();
 	protected BaseLocalService modelService = null;
 
 	private static Log _log = LogFactoryUtil.getLog(

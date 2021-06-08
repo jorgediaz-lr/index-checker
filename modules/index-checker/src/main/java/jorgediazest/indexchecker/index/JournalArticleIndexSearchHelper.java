@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jorgediazest.indexchecker.util.ConfigurationUtil;
+
 import jorgediazest.util.data.Data;
 
 /**
@@ -46,7 +47,7 @@ public class JournalArticleIndexSearchHelper extends IndexSearchHelper {
 
 	@Override
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {
-		Map<Long, Data> articles = new HashMap<Long, Data>();
+		Map<Long, Data> articles = new HashMap<>();
 
 		for (Data data : dataCollection) {
 			articles.put(data.getResourcePrimKey(), data);

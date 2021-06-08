@@ -19,9 +19,9 @@ import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.service.RepositoryLocalServiceUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import jorgediazest.util.data.Data;
@@ -55,12 +55,13 @@ public class DLFileEntryPermissionsHelper
 			validPermissionClassNames, permissionsClassName);
 	}
 
-	protected static String[] validPermissionClassNames = new String[] {
+	protected static String[] validPermissionClassNames = {
 		"com.liferay.blogs.model.BlogsEntry",
 		"com.liferay.document.library.kernel.model.DLFileEntry",
 		"com.liferay.message.boards.kernel.model.MBMessage",
 		"com.liferay.message.boards.model.MBMessage",
-		"com.liferay.wiki.model.WikiPage"};
+		"com.liferay.wiki.model.WikiPage"
+	};
 
 	private boolean isHiddenFolder(long groupId, long repositoryId) {
 		try {

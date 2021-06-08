@@ -27,27 +27,30 @@ public class DataModelComparator extends DataBaseComparator {
 
 	public DataModelComparator(List<String> attributes) {
 		this.attributes = new String[attributes.size()];
+
 		this.operations = new String[attributes.size()];
 
-		int i=0;
+		int i = 0;
+
 		for (String attribute : attributes) {
-			String operation = attribute.substring(0,2);
-			if (">=".equals(operation)||"<=".equals(operation)) {
-				attribute=attribute.substring(2);
+			String operation = attribute.substring(0, 2);
+
+			if (">=".equals(operation) || "<=".equals(operation)) {
+				attribute = attribute.substring(2);
 			}
 			else {
-				operation=null;
+				operation = null;
 			}
-			this.attributes[i]=attribute;
-			this.operations[i]=operation;
+
+			this.attributes[i] = attribute;
+			this.operations[i] = operation;
 			i++;
 		}
 	}
 
 	@Override
 	public int compare(Data data1, Data data2) {
-
-		if ((attributes == null)|| (attributes.length==0)) {
+		if ((attributes == null) || (attributes.length == 0)) {
 			throw new IllegalArgumentException();
 		}
 
@@ -70,9 +73,10 @@ public class DataModelComparator extends DataBaseComparator {
 			return false;
 		}
 
-		for (int i=0;i<attributes.length;i++) {
-			String attribute=attributes[i];
-			String operation=operations[i];
+		for (int i = 0; i < attributes.length; i++) {
+			String attribute = attributes[i];
+			String operation = operations[i];
+
 			if (operation == null) {
 				if (!equalsAttributes(data1, data2, attribute, attribute)) {
 					return false;
@@ -83,28 +87,11 @@ public class DataModelComparator extends DataBaseComparator {
 
 			int compare = compareAttributes(data1, data2, attribute, attribute);
 
-			if(!equalAttributeWithOperation(compare, operation)) {
+			if (!equalAttributeWithOperation(compare, operation)) {
 				return false;
 			}
 		}
 
-		return true;
-	}
-
-	private boolean equalAttributeWithOperation(int compare, String operation) {
-		if (">=".equals(operation)) {
-			if (compare < 0) {
-				return false;
-			}
-		}
-		else if ("<=".equals(operation)) {
-			if (compare > 0) {
-				return false;
-			}
-		}
-		else {
-			throw new IllegalArgumentException();
-		}
 		return true;
 	}
 
@@ -126,10 +113,29 @@ public class DataModelComparator extends DataBaseComparator {
 			hashCode *= o.hashCode();
 		}
 
-		return data.getEntryClassName().hashCode() * hashCode;
+		return data.getEntryClassName(
+		).hashCode() * hashCode;
 	}
 
 	protected String[] attributes;
 	protected String[] operations;
+
+	private boolean equalAttributeWithOperation(int compare, String operation) {
+		if (">=".equals(operation)) {
+			if (compare < 0) {
+				return false;
+			}
+		}
+		else if ("<=".equals(operation)) {
+			if (compare > 0) {
+				return false;
+			}
+		}
+		else {
+			throw new IllegalArgumentException();
+		}
+
+		return true;
+	}
 
 }

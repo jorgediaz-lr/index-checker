@@ -60,10 +60,12 @@ public class ModelFactory {
 
 		if (model == null) {
 			cacheNullModelObject.add(key);
+
 			return null;
 		}
 
 		cacheModelObject.put(key, model);
+
 		return model;
 	}
 
@@ -71,6 +73,7 @@ public class ModelFactory {
 		String className = service.getClassName();
 
 		Model model = null;
+
 		try {
 			model = new ModelImpl(this, className, service);
 
@@ -79,7 +82,7 @@ public class ModelFactory {
 					model.getName() + " error retrieving attributes");
 			}
 
-			if (model.count()==-1) {
+			if (model.count() == -1) {
 				model = null;
 			}
 		}
@@ -87,7 +90,8 @@ public class ModelFactory {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"getModelObject(" + className + ") EXCEPTION " +
-					e.getClass().getName() + ": " + e.getMessage());
+						e.getClass(
+						).getName() + ": " + e.getMessage());
 			}
 
 			model = null;
@@ -96,10 +100,9 @@ public class ModelFactory {
 		return model;
 	}
 
-	protected Map<String, Model> cacheModelObject =
-		new ConcurrentHashMap<String, Model>();
-	protected Set<String> cacheNullModelObject =
-		Collections.newSetFromMap(new ConcurrentHashMap<>());
+	protected Map<String, Model> cacheModelObject = new ConcurrentHashMap<>();
+	protected Set<String> cacheNullModelObject = Collections.newSetFromMap(
+		new ConcurrentHashMap<>());
 
 	private static Log _log = LogFactoryUtil.getLog(ModelFactory.class);
 

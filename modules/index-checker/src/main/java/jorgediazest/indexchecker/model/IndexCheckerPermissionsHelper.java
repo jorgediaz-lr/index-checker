@@ -14,8 +14,8 @@
 
 package jorgediazest.indexchecker.model;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -31,7 +31,6 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.HashMap;
@@ -45,9 +44,7 @@ import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
 public class IndexCheckerPermissionsHelper {
 
-	public void addPermissionsClassNameGroupIdFields(Data data)
-		throws SystemException {
-
+	public void addPermissionsClassNameGroupIdFields(Data data) {
 		String className = getPermissionsClassName(data);
 		long classPK = getPermissionsClassPK(data);
 
@@ -82,12 +79,11 @@ public class IndexCheckerPermissionsHelper {
 		data.set("permissionsGroupId", groupId);
 	}
 
-	public void addRolesFields(Data data)
-		throws PortalException, SystemException {
-
+	public void addRolesFields(Data data) throws PortalException {
 		String className = data.get("permissionsClassName", StringPool.BLANK);
 
-		addRolesFieldsToData(className, data, ResourcePermission.class.getName());
+		addRolesFieldsToData(
+			className, data, ResourcePermission.class.getName());
 	}
 
 	public boolean hasActionId(long actionIds, String name, String actionId)
@@ -102,15 +98,14 @@ public class IndexCheckerPermissionsHelper {
 		if ((actionIds & bitwiseValue) == bitwiseValue) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
 	protected void addRolesFieldsToData(
 			String className, Data data, String permissionsClassName)
-		throws PortalException, SystemException {
+		throws PortalException {
 
 		String actionId = getPermissionsActionId(data);
 
@@ -119,7 +114,7 @@ public class IndexCheckerPermissionsHelper {
 		Set<List<Object>> resourcePermissions = null;
 
 		if (aux instanceof List) {
-			resourcePermissions = new HashSet<List<Object>>();
+			resourcePermissions = new HashSet<>();
 			resourcePermissions.add((List<Object>)aux);
 		}
 		else if (aux instanceof Set) {
@@ -130,8 +125,8 @@ public class IndexCheckerPermissionsHelper {
 			return;
 		}
 
-		Set<String> roleIds = new HashSet<String>();
-		Set<String> groupRoleIds = new HashSet<String>();
+		Set<String> roleIds = new HashSet<>();
+		Set<String> groupRoleIds = new HashSet<>();
 
 		for (List<Object> resourcePermission : resourcePermissions) {
 			long roleId = (Long)resourcePermission.get(0);
@@ -167,7 +162,8 @@ public class IndexCheckerPermissionsHelper {
 			}
 		}
 
-		ModelFactory modelFactory = data.getModel().getModelFactory();
+		ModelFactory modelFactory = data.getModel(
+		).getModelFactory();
 
 		Model permissionsModel = modelFactory.getModelObject(
 			permissionsClassName);
@@ -222,7 +218,9 @@ public class IndexCheckerPermissionsHelper {
 			return data.get("classPK", -1L);
 		}
 
-		if (data.getModel().isResourcedModel()) {
+		if (data.getModel(
+			).isResourcedModel()) {
+
 			return data.getResourcePrimKey();
 		}
 
@@ -233,8 +231,7 @@ public class IndexCheckerPermissionsHelper {
 		return false;
 	}
 
-	protected Map<String, Long> cacheActionIdBitwiseValue =
-		new HashMap<String, Long>();
+	protected Map<String, Long> cacheActionIdBitwiseValue = new HashMap<>();
 
 	private static Log _log = LogFactoryUtil.getLog(
 		IndexCheckerPermissionsHelper.class);

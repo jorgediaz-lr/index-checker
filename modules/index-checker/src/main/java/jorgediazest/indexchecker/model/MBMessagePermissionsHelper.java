@@ -14,9 +14,9 @@
 
 package jorgediazest.indexchecker.model;
 
+import com.liferay.message.boards.constants.MBCategoryConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.message.boards.constants.MBCategoryConstants;
 
 import jorgediazest.util.data.Data;
 
@@ -45,11 +45,12 @@ public class MBMessagePermissionsHelper extends IndexCheckerPermissionsHelper {
 			validPermissionClassNames, permissionsClassName);
 	}
 
-	protected static String[] validPermissionClassNames = new String[] {
+	protected static String[] validPermissionClassNames = {
 		"com.liferay.blogs.model.BlogsEntry",
 		"com.liferay.document.library.kernel.model.DLFileEntry",
 		"com.liferay.message.boards.kernel.model.MBMessage",
 		"com.liferay.message.boards.model.MBMessage",
-		"com.liferay.wiki.model.WikiPage"};
+		"com.liferay.wiki.model.WikiPage"
+	};
 
 }

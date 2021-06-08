@@ -19,7 +19,8 @@ import jorgediazest.util.data.Data;
 /**
  * @author Jorge Díaz
  */
-public class CalendarBookingPermissionsHelper extends IndexCheckerPermissionsHelper {
+public class CalendarBookingPermissionsHelper
+	extends IndexCheckerPermissionsHelper {
 
 	@Override
 	protected String getPermissionsActionId(Data data) {
@@ -35,4 +36,5 @@ public class CalendarBookingPermissionsHelper extends IndexCheckerPermissionsHel
 	protected long getPermissionsClassPK(Data data) {
 		return data.get("calendarId", -1L);
 	}
+
 }

@@ -14,18 +14,18 @@
 
 package jorgediazest.util.service;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
 import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,6 +78,7 @@ public abstract class ServiceImpl implements Service {
 
 			if (liferayModelImpl == null) {
 				liferayModelImplClassIsNull = true;
+
 				return null;
 			}
 
@@ -86,6 +87,7 @@ public abstract class ServiceImpl implements Service {
 
 			if (liferayModelImplClass == null) {
 				liferayModelImplClassIsNull = true;
+
 				return null;
 			}
 		}
@@ -98,7 +100,7 @@ public abstract class ServiceImpl implements Service {
 			ReflectionUtil.getLiferayModelImplMappingTablesFields(
 				getLiferayModelImplClass());
 
-		List<String> mappingTables = new ArrayList<String>(
+		List<String> mappingTables = new ArrayList<>(
 			mappingTablesFields.size());
 
 		for (String mappingTablesField : mappingTablesFields) {
@@ -140,18 +142,22 @@ public abstract class ServiceImpl implements Service {
 
 		if (mappingTable == null) {
 			return new TableInfo(
-				name, attributesArr, sqlCreate, getTableInfoFromHbmXml(
-					classLiferayModelImpl));
+				name, attributesArr, sqlCreate,
+				getTableInfoFromHbmXml(classLiferayModelImpl));
 		}
-		else {
-			return new TableInfo(name, attributesArr, sqlCreate, null);
-		}
+
+		return new TableInfo(name, attributesArr, sqlCreate, null);
+	}
+
+	public ClassedModel updateObject(ClassedModel object) {
+		throw new UnsupportedOperationException();
 	}
 
 	protected Element getTableInfoFromHbmXml(Class<?> classLiferayModelImpl) {
 		ClassLoader classLoader = classLiferayModelImpl.getClassLoader();
-		InputStream inputStream =
-			classLoader.getResourceAsStream("/META-INF/module-hbm.xml");
+
+		InputStream inputStream = classLoader.getResourceAsStream(
+			"/META-INF/module-hbm.xml");
 
 		if (inputStream == null) {
 			inputStream = classLoader.getResourceAsStream(
@@ -159,10 +165,12 @@ public abstract class ServiceImpl implements Service {
 		}
 
 		Document document;
+
 		try {
 			document = SAXReaderUtil.read(inputStream);
-		} catch (DocumentException e) {
-			_log.error(e,e);
+		}
+		catch (DocumentException e) {
+			_log.error(e, e);
 
 			return null;
 		}
@@ -181,10 +189,6 @@ public abstract class ServiceImpl implements Service {
 		}
 
 		return null;
-	}
-
-	public ClassedModel updateObject(ClassedModel object) {
-		throw new UnsupportedOperationException();
 	}
 
 	protected String className = null;

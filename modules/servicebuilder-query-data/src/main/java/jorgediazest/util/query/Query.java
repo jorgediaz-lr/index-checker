@@ -14,13 +14,13 @@
 
 package jorgediazest.util.query;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.Connection;
@@ -47,8 +47,9 @@ import jorgediazest.util.table.TableInfo;
 public class Query {
 
 	public static Map<Long, Data> getData(
-		Model model, String[] attributes, Criterion criterion)
-	throws Exception {
+			Model model, String[] attributes, Criterion criterion)
+		throws Exception {
+
 		return getData(
 			model, attributes, model.getPrimaryKeyAttribute(), criterion);
 	}
@@ -58,15 +59,15 @@ public class Query {
 			Criterion criterion)
 		throws Exception {
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
-		Map<Long, Data> dataMapByPK = new HashMap<Long, Data>();
+		Map<Long, Data> dataMap = new HashMap<>();
+		Map<Long, Data> dataMapByPK = new HashMap<>();
 
 		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
 			dataMapByPK = null;
 		}
 
-		List<String> validAttributes = new ArrayList<String>();
-		List<String> notValidAttributes = new ArrayList<String>();
+		List<String> validAttributes = new ArrayList<>();
+		List<String> notValidAttributes = new ArrayList<>();
 
 		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes, notValidAttributes);
@@ -80,8 +81,7 @@ public class Query {
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
 			criterion, projectionList);
 
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
+		String[] validAttributesArr = validAttributes.toArray(new String[0]);
 
 		long i = -1;
 
@@ -112,19 +112,19 @@ public class Query {
 			}
 
 			QueryUtil.addRelatedModelData(
-				dataMapByPK, relatedDataMap, new String[]{notValidAttribute});
+				dataMapByPK, relatedDataMap, new String[] {notValidAttribute});
 		}
 
 		return dataMap;
 	}
 
 	public static Map<Long, List<Data>> getDataWithDuplicates(
-		Model model, String[] attributes, String mapKeyAttribute,
-		Criterion criterion)
-	throws Exception {
+			Model model, String[] attributes, String mapKeyAttribute,
+			Criterion criterion)
+		throws Exception {
 
-		Map<Long, List<Data>> dataMap = new HashMap<Long, List<Data>>();
-		Map<Long, List<Data>> dataMapByPK = new HashMap<Long, List<Data>>();
+		Map<Long, List<Data>> dataMap = new HashMap<>();
+		Map<Long, List<Data>> dataMapByPK = new HashMap<>();
 
 		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
 			dataMapByPK = null;
@@ -134,8 +134,9 @@ public class Query {
 			attributes = model.getAttributesName();
 		}
 
-		List<String> validAttributes = new ArrayList<String>();
-		List<String> notValidAttributes = new ArrayList<String>();
+		List<String> validAttributes = new ArrayList<>();
+		List<String> notValidAttributes = new ArrayList<>();
+
 		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes, notValidAttributes);
 
@@ -143,8 +144,7 @@ public class Query {
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
 			criterion, projectionList);
 
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
+		String[] validAttributesArr = validAttributes.toArray(new String[0]);
 
 		long i = -1;
 
@@ -171,7 +171,7 @@ public class Query {
 			}
 
 			QueryUtil.addRelatedModelData(
-				dataMapByPK, relatedDataMap, new String[]{notValidAttribute});
+				dataMapByPK, relatedDataMap, new String[] {notValidAttribute});
 		}
 
 		return dataMap;
@@ -191,7 +191,7 @@ public class Query {
 			Model model, TableInfo tableInfo, String[] attributesName)
 		throws SQLException {
 
-		Set<Data> dataSet = new HashSet<Data>();
+		Set<Data> dataSet = new HashSet<>();
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -203,7 +203,7 @@ public class Query {
 			String attributes = cleanAttributeName(
 				tableInfo.getName(), (String)attributesName[0]);
 
-			for (int i = 1; i<attributesName.length; i++) {
+			for (int i = 1; i < attributesName.length; i++) {
 				String attribute = cleanAttributeName(
 					tableInfo.getName(), (String)attributesName[i]);
 
@@ -226,8 +226,8 @@ public class Query {
 			while (rs.next()) {
 				Object[] result = new Object[attributesName.length];
 
-				for (int i = 0; i<attributesName.length; i++) {
-					result[i] = rs.getObject(i+1);
+				for (int i = 0; i < attributesName.length; i++) {
+					result[i] = rs.getObject(i + 1);
 				}
 
 				Data data = DataUtil.createDataObject(
@@ -268,8 +268,8 @@ public class Query {
 	}
 
 	protected static void addDataToMapValueList(
-			Map<Long, List<Data>> dataMap, String mapKeyAttribute, Data data,
-			Long defaultValue) {
+		Map<Long, List<Data>> dataMap, String mapKeyAttribute, Data data,
+		Long defaultValue) {
 
 		if ((dataMap == null) || (data == null)) {
 			return;
@@ -287,17 +287,22 @@ public class Query {
 		}
 
 		if (!dataMap.containsKey(mappingAttributeValue)) {
-			List<Data> list = new ArrayList<Data>();
+			List<Data> list = new ArrayList<>();
+
 			list.add(data);
 			dataMap.put(mappingAttributeValue, list);
 		}
 		else {
-			dataMap.get(mappingAttributeValue).add(data);
+			dataMap.get(
+				mappingAttributeValue
+			).add(
+				data
+			);
 		}
 	}
 
 	protected static String cleanAttributeName(
-			String tableName, String attribute) {
+		String tableName, String attribute) {
 
 		if (Validator.isNull(attribute)) {
 			return StringPool.BLANK;
@@ -323,7 +328,7 @@ public class Query {
 			String mapKeyAttribute)
 		throws Exception {
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+		Map<Long, Data> dataMap = new HashMap<>();
 
 		long i = -1;
 

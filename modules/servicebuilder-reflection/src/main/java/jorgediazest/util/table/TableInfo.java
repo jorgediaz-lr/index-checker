@@ -40,17 +40,18 @@ public class TableInfo {
 		this.attributeNamesArr = new String[attributesArr.length];
 		this.attributeTypeArr = new Integer[attributesArr.length];
 
-		for (int i=0; i < attributesArr.length; i++) {
+		for (int i = 0; i < attributesArr.length; i++) {
 			attributeNamesArr[i] = (String)attributesArr[i][0];
 			attributeTypeArr[i] = (Integer)attributesArr[i][1];
 		}
+
 		this.name = name;
-		this.primaryKeyMultiAttribute = new String[0];
 		this.sqlCreate = sqlCreate;
 
+		this.primaryKeyMultiAttribute = new String[0];
+
 		if (hbmXmlInfo != null) {
-			Map<String,String> databaseColumnToAttributeMap =
-				new HashMap<String, String>();
+			Map<String, String> databaseColumnToAttributeMap = new HashMap<>();
 
 			Element id = hbmXmlInfo.element("id");
 
@@ -59,7 +60,8 @@ public class TableInfo {
 			}
 			else {
 				primaryKeyAttribute = id.attributeValue("name");
-				_addDatabaseColumnToAttributeMap(databaseColumnToAttributeMap, id);
+				_addDatabaseColumnToAttributeMap(
+					databaseColumnToAttributeMap, id);
 			}
 
 			Element compositeId = hbmXmlInfo.element("composite-id");
@@ -71,20 +73,23 @@ public class TableInfo {
 					primaryKeyMultiAttributeList.add(
 						property.attributeValue("name"));
 
-					_addDatabaseColumnToAttributeMap(databaseColumnToAttributeMap, property);
+					_addDatabaseColumnToAttributeMap(
+						databaseColumnToAttributeMap, property);
 				}
 
-				primaryKeyMultiAttribute =
-					primaryKeyMultiAttributeList.toArray(
-						new String[primaryKeyMultiAttributeList.size()]);
+				primaryKeyMultiAttribute = primaryKeyMultiAttributeList.toArray(
+					new String[0]);
 			}
 
 			for (Element property : hbmXmlInfo.elements("property")) {
-				_addDatabaseColumnToAttributeMap(databaseColumnToAttributeMap, property);
+				_addDatabaseColumnToAttributeMap(
+					databaseColumnToAttributeMap, property);
 			}
 
 			for (int i = 0; i < attributeNamesArr.length; i++) {
-				if (!databaseColumnToAttributeMap.containsKey(attributeNamesArr[i])) {
+				if (!databaseColumnToAttributeMap.containsKey(
+						attributeNamesArr[i])) {
+
 					continue;
 				}
 
@@ -120,14 +125,16 @@ public class TableInfo {
 				primaryKeyAttribute = primaryKeyMultiAttributeList.get(0);
 			}
 			else if (primaryKeyMultiAttributeList.size() > 1) {
-				primaryKeyMultiAttribute =
-					primaryKeyMultiAttributeList.toArray(
-						new String[primaryKeyMultiAttributeList.size()]);
+				primaryKeyMultiAttribute = primaryKeyMultiAttributeList.toArray(
+					new String[0]);
 			}
 		}
 
 		String[] arrDatabaseAttributes = _getCreateTableAttributes(
-			attributesStr).split(",");
+			attributesStr
+		).split(
+			","
+		);
 
 		for (String attr : arrDatabaseAttributes) {
 			String[] aux = attr.split(" ");
@@ -152,25 +159,14 @@ public class TableInfo {
 		}
 	}
 
-	private static void _addDatabaseColumnToAttributeMap(
-		Map<String, String> databaseColumnToAttributeMap, Element property) {
-
-		if ((property == null) || (property.attributeValue("column") == null)) {
-			return;
-		}
-
-		databaseColumnToAttributeMap.put(
-			property.attributeValue("column"),
-			property.attributeValue("name"));
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof TableInfo)) {
 			return false;
 		}
 
-		TableInfo tableInfo = ((TableInfo)obj);
+		TableInfo tableInfo = (TableInfo)obj;
+
 		return getName().equals(tableInfo.getName());
 	}
 
@@ -202,12 +198,12 @@ public class TableInfo {
 		int pos = -1;
 
 		for (int i = 0; i < attributeNamesArr.length; i++) {
-			if ((attributeNamesArr[i]).endsWith(StringPool.UNDERLINE) &&
-				(attributeNamesArr[i]).equals(nameWithUnderline)) {
+			if (attributeNamesArr[i].endsWith(StringPool.UNDERLINE) &&
+				attributeNamesArr[i].equals(nameWithUnderline)) {
 
 				pos = i;
 			}
-			else if ((attributeNamesArr[i]).equals(name)) {
+			else if (attributeNamesArr[i].equals(name)) {
 				pos = i;
 			}
 		}
@@ -241,11 +237,12 @@ public class TableInfo {
 		String[] attrNames = getAttributesName();
 		String destinationAttr = null;
 
-		for (int i = 0; i<attrNames.length; i++) {
+		for (int i = 0; i < attrNames.length; i++) {
 			if ((primaryKey != null) && !primaryKey.equals(attrNames[i]) &&
 				!"companyId".equals(attrNames[i])) {
 
 				destinationAttr = attrNames[i];
+
 				break;
 			}
 		}
@@ -287,6 +284,20 @@ public class TableInfo {
 		return toString;
 	}
 
+	protected Map<String, Integer> mapAttributePosition =
+		new ConcurrentHashMap<>();
+
+	private static void _addDatabaseColumnToAttributeMap(
+		Map<String, String> databaseColumnToAttributeMap, Element property) {
+
+		if ((property == null) || (property.attributeValue("column") == null)) {
+			return;
+		}
+
+		databaseColumnToAttributeMap.put(
+			property.attributeValue("column"), property.attributeValue("name"));
+	}
+
 	private static String _getCreateTableAttributes(String attributesStr) {
 		String aux = attributesStr;
 
@@ -296,9 +307,6 @@ public class TableInfo {
 
 		return aux;
 	}
-
-	protected Map<String, Integer> mapAttributePosition =
-		new ConcurrentHashMap<String, Integer>();
 
 	private String[] attributeNamesArr = null;
 	private Integer[] attributeTypeArr = null;
@@ -324,7 +332,6 @@ public class TableInfo {
 	 * null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75)
 	 * null,statusDate DATE null)
 	 */
-
 	private String primaryKeyAttribute = null;
 
 	private String[] primaryKeyMultiAttribute = null;

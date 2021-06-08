@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -38,11 +37,11 @@ public class Comparison {
 	public static List<Comparison> mergeComparisons(
 		Collection<Comparison> collection) {
 
-		List<Comparison> result = new ArrayList<Comparison>();
+		List<Comparison> result = new ArrayList<>();
 
 		Comparison merged = null;
 
-		Set<String> errors = new TreeSet<String>();
+		Set<String> errors = new TreeSet<>();
 
 		for (Comparison c : collection) {
 			if ((c.data != null) && (merged == null)) {
@@ -55,7 +54,12 @@ public class Comparison {
 				continue;
 			}
 
-			if ((c.data == null) || !merged.getModel().equals(c.getModel())) {
+			if ((c.data == null) ||
+				!merged.getModel(
+				).equals(
+					c.getModel()
+				)) {
+
 				result.add(c);
 
 				continue;
@@ -65,11 +69,11 @@ public class Comparison {
 				errors.add(c.getError());
 			}
 
-			for (Entry<String, Set<Data>> e : c.data.entrySet()) {
+			for (Map.Entry<String, Set<Data>> e : c.data.entrySet()) {
 				Set<Data> dataSet = merged.data.get(e.getKey());
 
 				if (dataSet == null) {
-					dataSet = new TreeSet<Data>();
+					dataSet = new TreeSet<>();
 
 					merged.data.put(e.getKey(), dataSet);
 				}
@@ -92,15 +96,19 @@ public class Comparison {
 			return;
 		}
 
-		_log.info("*** ClassName: "+ model.getName());
+		_log.info("*** ClassName: " + model.getName());
 
-		for (Entry<String, Set<Data>> entry : data.entrySet()) {
-			if (entry.getValue().size() != 0) {
+		for (Map.Entry<String, Set<Data>> entry : data.entrySet()) {
+			if (entry.getValue(
+				).size() != 0) {
+
 				_log.info("==" + entry.getKey() + "==");
 
 				for (Data d : entry.getValue()) {
 					_log.info(
-						d.getEntryClassName() + " " + d.getMap().toString());
+						d.getEntryClassName() + " " +
+							d.getMap(
+							).toString());
 				}
 			}
 		}
@@ -134,7 +142,7 @@ public class Comparison {
 	}
 
 	public Set<String> getOutputTypes() {
-		Set<String> outputTypes = new TreeSet<String>();
+		Set<String> outputTypes = new TreeSet<>();
 
 		for (String key : data.keySet()) {
 			if (key.startsWith("both-exact")) {
@@ -151,7 +159,7 @@ public class Comparison {
 	}
 
 	public Map<Long, Comparison> splitByAttribute(String attribute) {
-		Map<Long, Comparison> result = new TreeMap<Long, Comparison>();
+		Map<Long, Comparison> result = new TreeMap<>();
 
 		if (error != null) {
 			result.put(0L, this);
@@ -159,11 +167,12 @@ public class Comparison {
 			return result;
 		}
 
-		for (Entry<String, Set<Data>> entry : data.entrySet()) {
+		for (Map.Entry<String, Set<Data>> entry : data.entrySet()) {
 			String key = entry.getKey();
 
 			for (Data d : entry.getValue()) {
 				Long id;
+
 				try {
 					id = d.get(attribute, 0L);
 				}
@@ -181,8 +190,12 @@ public class Comparison {
 				Set<Data> set = c.data.get(key);
 
 				if (set == null) {
-					set = new TreeSet<Data>();
-					result.get(id).data.put(key, set);
+					set = new TreeSet<>();
+					result.get(
+						id
+					).data.put(
+						key, set
+					);
 				}
 
 				set.add(d);
@@ -193,15 +206,17 @@ public class Comparison {
 	}
 
 	protected Comparison(Model model, Map<String, Set<Data>> data) {
-		this.data = data;
-		this.error = null;
 		this.model = model;
+		this.data = data;
+
+		this.error = null;
 	}
 
 	protected Comparison(Model model, String error) {
-		this.data = new TreeMap<String, Set<Data>>();
-		this.error = error;
 		this.model = model;
+		this.error = error;
+
+		this.data = new TreeMap<>();
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(Comparison.class);

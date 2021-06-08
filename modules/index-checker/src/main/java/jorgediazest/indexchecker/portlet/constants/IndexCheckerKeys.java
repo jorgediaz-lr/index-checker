@@ -14,12 +14,12 @@
 
 package jorgediazest.indexchecker.portlet.constants;
 
-
 /**
-* @author Jorge Díaz
-*/
-
+ * @author Jorge Díaz
+ */
 public class IndexCheckerKeys {
+
 	public static final String INDEXCHECKER =
 		"jorgediazest_indexchecker_portlet_IndexCheckerPortlet";
+
 }

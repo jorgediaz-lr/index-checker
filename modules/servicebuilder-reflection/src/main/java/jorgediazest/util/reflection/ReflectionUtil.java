@@ -40,59 +40,72 @@ public class ReflectionUtil {
 			case Types.LONGVARCHAR:
 			case Types.CLOB:
 				result = String.class;
+
 				break;
 
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				result = java.math.BigDecimal.class;
+
 				break;
 
 			case Types.BIT:
 			case Types.BOOLEAN:
 				result = Boolean.class;
+
 				break;
 
 			case Types.TINYINT:
 				result = Byte.class;
+
 				break;
 
 			case Types.SMALLINT:
 				result = Short.class;
+
 				break;
 
 			case Types.INTEGER:
 				result = Integer.class;
+
 				break;
 
 			case Types.BIGINT:
 				result = Long.class;
+
 				break;
 
 			case Types.REAL:
 			case Types.FLOAT:
 				result = Float.class;
+
 				break;
 
 			case Types.DOUBLE:
 				result = Double.class;
+
 				break;
 
 			case Types.BINARY:
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
 				result = Byte[].class;
+
 				break;
 
 			case Types.DATE:
 				result = java.sql.Date.class;
+
 				break;
 
 			case Types.TIME:
 				result = java.sql.Time.class;
+
 				break;
 
 			case Types.TIMESTAMP:
 				result = java.sql.Timestamp.class;
+
 				break;
 		}
 
@@ -102,7 +115,7 @@ public class ReflectionUtil {
 	public static List<String> getLiferayModelImplMappingTablesFields(
 		Class<?> classLiferayModelImpl) {
 
-		List<String> mappingTablesFields = new ArrayList<String>();
+		List<String> mappingTablesFields = new ArrayList<>();
 
 		try {
 			Field[] fields = classLiferayModelImpl.getFields();
@@ -119,8 +132,9 @@ public class ReflectionUtil {
 		}
 		catch (Exception e) {
 			throw new RuntimeException(
-				"Error accessing to " +
-				classLiferayModelImpl.getName() + " fields", e);
+				"Error accessing to " + classLiferayModelImpl.getName() +
+					" fields",
+				e);
 		}
 
 		return mappingTablesFields;
@@ -131,9 +145,8 @@ public class ReflectionUtil {
 
 		Class<?> clazz = object.getClass();
 
-		Field field =
-			com.liferay.petra.reflect.ReflectionUtil.getDeclaredField(
-				clazz, fieldName);
+		Field field = com.liferay.petra.reflect.ReflectionUtil.getDeclaredField(
+			clazz, fieldName);
 
 		return field.get(object);
 	}
@@ -177,6 +190,7 @@ public class ReflectionUtil {
 
 		try {
 			Class<? extends Object> clazz = object.getClass();
+
 			Method method = clazz.getMethod(methodName);
 
 			if (method != null) {

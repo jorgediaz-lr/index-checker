@@ -52,11 +52,11 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		List<Long> groupIds, Date startModifiedDate, Date endModifiedDate,
 		Model model, Set<ExecutionMode> executionMode) {
 
+		this.queryCache = queryCache;
 		this.companyId = companyId;
 		this.groupIds = groupIds;
 		this.startModifiedDate = startModifiedDate;
 		this.endModifiedDate = endModifiedDate;
-		this.queryCache = queryCache;
 		this.model = model;
 		this.executionMode = executionMode;
 	}
@@ -93,8 +93,8 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				}
 
 				_log.info(
-					"Model: " + model.getName() + " - CompanyId: " +
-						companyId + " - GroupId: " + strGroupIds);
+					"Model: " + model.getName() + " - CompanyId: " + companyId +
+						" - GroupId: " + strGroupIds);
 			}
 
 			if (groupIds != null) {
@@ -137,23 +137,23 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 			Collection<String> exactAttributes =
 				ConfigurationUtil.getExactAttributesToCheck(model);
 
-			Set<Data> liferayData = new HashSet<Data>(liferayDataMap.values());
+			Set<Data> liferayData = new HashSet<>(liferayDataMap.values());
 
 			Set<Data> indexData;
 
 			IndexSearchHelper indexSearchHelper =
 				ConfigurationUtil.getIndexSearchHelper(model);
 
-			if ((!showOnlyIndex && liferayData.isEmpty())||
+			if ((!showOnlyIndex && liferayData.isEmpty()) ||
 				(indexSearchHelper == null)) {
 
-				indexData = new HashSet<Data>();
+				indexData = new HashSet<>();
 			}
 			else {
 				Set<Model> relatedModels = queryHelper.calculateRelatedModels(
 					model, checkRelatedData);
 
-				Set<String> indexAttributesToQuery = new HashSet<String>(
+				Set<String> indexAttributesToQuery = new HashSet<>(
 					ConfigurationUtil.getModelAttributesToQuery(model));
 
 				indexAttributesToQuery.addAll(exactAttributes);
@@ -167,7 +167,7 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 				}
 			}
 
-			List<String> exactAttributesList = new ArrayList<String>(
+			List<String> exactAttributesList = new ArrayList<>(
 				model.getKeyAttributes());
 
 			exactAttributesList.addAll(exactAttributes);

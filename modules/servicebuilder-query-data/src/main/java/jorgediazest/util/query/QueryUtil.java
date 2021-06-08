@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import jorgediazest.util.data.Data;
@@ -51,7 +50,7 @@ public class QueryUtil {
 			return;
 		}
 
-		for (Entry<Long, ?> entry : dataMap.entrySet()) {
+		for (Map.Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
 			if ((matched == null) || matched.isEmpty()) {
@@ -62,7 +61,9 @@ public class QueryUtil {
 				entry.getValue());
 
 			for (Data data : dataCollection) {
-				Model model = matched.get(0).getModel();
+				Model model = matched.get(
+					0
+				).getModel();
 
 				data.addModelTableInfo(model);
 
@@ -79,7 +80,7 @@ public class QueryUtil {
 			return;
 		}
 
-		for (Entry<Long, ?> entry : dataMap.entrySet()) {
+		for (Map.Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
 			if ((matched == null) || matched.isEmpty()) {
@@ -89,7 +90,9 @@ public class QueryUtil {
 			Collection<Data> dataCollection = castToDataCollection(
 				entry.getValue());
 
-			String classNameRelated = matched.get(0).getEntryClassName();
+			String classNameRelated = matched.get(
+				0
+			).getEntryClassName();
 
 			Object rawDataObject = getRawRelatedData(matched, attributes);
 
@@ -107,13 +110,13 @@ public class QueryUtil {
 			return Collections.emptyMap();
 		}
 
-		Map<Long, List<Data>> matchedMap = new HashMap<Long, List<Data>>();
+		Map<Long, List<Data>> matchedMap = new HashMap<>();
 
-		for (Entry<Long, Data> entry : dataMap.entrySet()) {
+		for (Map.Entry<Long, Data> entry : dataMap.entrySet()) {
 			Data data = entry.getValue();
 
 			List<Data> matched = data.getMatchingEntries(
-					relatedMap, mappingsSource, mappingsDest);
+				relatedMap, mappingsSource, mappingsDest);
 
 			if (!matched.isEmpty()) {
 				matchedMap.put(entry.getKey(), matched);
@@ -124,22 +127,19 @@ public class QueryUtil {
 	}
 
 	protected static void addMatchedData(
-		Data data, List<Data> matched, String[] attributes, 
+		Data data, List<Data> matched, String[] attributes,
 		boolean appendMode) {
 
 		if (matched.isEmpty()) {
 			return;
 		}
 
-		for (int k = 0; k<attributes.length; k++) {
-			String attribute = attributes[k];
-
+		for (String attribute : attributes) {
 			if (Validator.isNull(attribute)) {
 				continue;
 			}
 
-			Set<Object> values = new HashSet<Object>(
-				matched.size());
+			Set<Object> values = new HashSet<>(matched.size());
 
 			if (appendMode) {
 				Object existingValue = data.get(attribute);
@@ -168,12 +168,12 @@ public class QueryUtil {
 	protected static Object getRawRelatedData(
 		List<Data> matched, String[] attributes) {
 
-		Set<Object> values = new HashSet<Object>(matched.size());
+		Set<Object> values = new HashSet<>(matched.size());
 
 		for (Data m : matched) {
-			List<Object> list = new ArrayList<Object>();
+			List<Object> list = new ArrayList<>();
 
-			for (int k = 0; k<attributes.length; k++) {
+			for (int k = 0; k < attributes.length; k++) {
 				if (Validator.isNotNull(attributes[k])) {
 					Object value = m.get(attributes[k]);
 

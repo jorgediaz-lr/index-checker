@@ -14,12 +14,12 @@
 
 package jorgediazest.util.data;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -30,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -74,7 +73,9 @@ public class Data implements Comparable<Data> {
 
 		this.tableInfoSet.add(model.getTableInfo());
 
-		this.addTableInfo(model.getTableInfoMappings().values());
+		this.addTableInfo(
+			model.getTableInfoMappings(
+			).values());
 	}
 
 	public void addTableInfo(Collection<TableInfo> tableInfoCol) {
@@ -97,7 +98,7 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		Data data = ((Data)obj);
+		Data data = (Data)obj;
 
 		if (this == obj) {
 			return true;
@@ -153,13 +154,18 @@ public class Data implements Comparable<Data> {
 
 		if (pos != -1) {
 			prefix = attribute.substring(0, pos);
-			attribute = attribute.substring(pos+1);
+			attribute = attribute.substring(pos + 1);
 		}
 
 		Class<?> attributeClass = Object.class;
 
 		for (TableInfo tableInfo : tableInfoSet) {
-			if ((prefix != null) && !tableInfo.getName().equals(prefix)) {
+			if ((prefix != null) &&
+				!tableInfo.getName(
+				).equals(
+					prefix
+				)) {
+
 				continue;
 			}
 
@@ -185,7 +191,12 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String[] getAttributesArray() {
-		return map.keySet().toArray(new String[map.keySet().size()]);
+		return map.keySet(
+		).toArray(
+			new String
+				[map.keySet(
+				).size()]
+		);
 	}
 
 	public Long getCompanyId() {
@@ -213,7 +224,7 @@ public class Data implements Comparable<Data> {
 		Map<Long, List<Data>> dataMap, String[] mappingsSource,
 		String[] mappingsDest) {
 
-		List<Data> dataList = new ArrayList<Data>();
+		List<Data> dataList = new ArrayList<>();
 
 		Object key = this.get(mappingsSource[0]);
 
@@ -235,12 +246,12 @@ public class Data implements Comparable<Data> {
 		}
 
 		DataComparator dataComparator = getComparator();
-		List<Data> matched = new ArrayList<Data>();
+		List<Data> matched = new ArrayList<>();
 
 		for (Data data : dataList) {
 			boolean equalsAttributes = true;
 
-			for (int j = 1; j<mappingsSource.length; j++) {
+			for (int j = 1; j < mappingsSource.length; j++) {
 				String attr1 = mappingsSource[j];
 				String attr2 = mappingsDest[j];
 
@@ -327,7 +338,7 @@ public class Data implements Comparable<Data> {
 			}
 		}
 
-		if ((list != null) && (list.size()== 1)) {
+		if ((list != null) && (list.size() == 1)) {
 			return (BaseModel<?>)list.get(0);
 		}
 
@@ -384,7 +395,10 @@ public class Data implements Comparable<Data> {
 			transformedObject = DataUtil.transformArray(
 				type, ((Set)value).toArray());
 		}
-		else if (value instanceof Object[] || value.getClass().isArray()) {
+		else if ((value instanceof Object[]) ||
+				 value.getClass(
+				 ).isArray()) {
+
 			transformedObject = DataUtil.transformArray(type, (Object[])value);
 		}
 		else {
@@ -460,7 +474,7 @@ public class Data implements Comparable<Data> {
 
 		Map<String, Object> map = object.getModelAttributes();
 
-		for (Entry<String, Object> entry : map.entrySet()) {
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
 			set(entry.getKey(), entry.getValue());
 		}
 	}
@@ -478,7 +492,8 @@ public class Data implements Comparable<Data> {
 			Iterator<TableInfo> iterator = tableInfoSet.iterator();
 
 			if (iterator.hasNext()) {
-				name = iterator.next().getName();
+				name = iterator.next(
+				).getName();
 			}
 		}
 
@@ -516,17 +531,22 @@ public class Data implements Comparable<Data> {
 			return true;
 		}
 
-		return !("companyId".equals(attribute) || "groupId".equals(attribute) ||
-			 "resourcePrimKey".equals(attribute) || "uuid_".equals(attribute) ||
-			 "uuid".equals(attribute));
+		if (!("companyId".equals(attribute) || "groupId".equals(attribute) ||
+			  "resourcePrimKey".equals(attribute) ||
+			  "uuid_".equals(attribute) || "uuid".equals(attribute))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected Integer hashCode = null;
-	protected Map<String, Object> map = new LinkedHashMap<String, Object>();
+	protected Map<String, Object> map = new LinkedHashMap<>();
 	protected Model model = null;
 	protected BaseModel<?> object = null;
-	protected Set<Model> relatedModelsSet = new LinkedHashSet<Model>();
-	protected Set<TableInfo> tableInfoSet = new LinkedHashSet<TableInfo>();
+	protected Set<Model> relatedModelsSet = new LinkedHashSet<>();
+	protected Set<TableInfo> tableInfoSet = new LinkedHashSet<>();
 
 	private static Log _log = LogFactoryUtil.getLog(Data.class);
 

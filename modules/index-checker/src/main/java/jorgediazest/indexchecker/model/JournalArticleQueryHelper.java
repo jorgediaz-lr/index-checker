@@ -51,9 +51,10 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 		throws Exception {
 
 		Service service = model.getService();
+
 		DynamicQuery query = service.newDynamicQuery();
 
-		List<String> validAttributes = new ArrayList<String>();
+		List<String> validAttributes = new ArrayList<>();
 
 		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes, null);
@@ -81,7 +82,12 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 
 		articleVersionDynamicQuery.add(filterStatus);
 
-		query.add(model.getProperty("version").eq(articleVersionDynamicQuery));
+		query.add(
+			model.getProperty(
+				"version"
+			).eq(
+				articleVersionDynamicQuery
+			));
 
 		query.add(filterStatus);
 
@@ -89,8 +95,7 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 		List<Object[]> results = (List<Object[]>)service.executeDynamicQuery(
 			query);
 
-		String[] validAttributesArr = validAttributes.toArray(
-			new String[validAttributes.size()]);
+		String[] validAttributesArr = validAttributes.toArray(new String[0]);
 
 		for (Object[] result : results) {
 			Data data = DataUtil.createDataObject(
@@ -118,7 +123,7 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 		String[] attributesToQueryArr = attributesToQuery.toArray(
 			new String[0]);
 
-		Map<Long, Data> dataMap = new HashMap<Long, Data>();
+		Map<Long, Data> dataMap = new HashMap<>();
 
 		Criterion criterionStatusApproved = ModelUtil.generateSQLCriterion(
 			"(status=" + WorkflowConstants.STATUS_APPROVED + " or status=" +

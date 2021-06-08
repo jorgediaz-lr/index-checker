@@ -14,17 +14,16 @@
 
 package jorgediazest.indexchecker.output;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Map.Entry;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletURL;
@@ -52,7 +50,7 @@ public class IndexCheckerOutput {
 	public static List<String> generateCSVOutput(
 		PortletConfig portletConfig, RenderRequest renderRequest) {
 
-		String title = (String) renderRequest.getAttribute("title");
+		String title = (String)renderRequest.getAttribute("title");
 		EnumSet<ExecutionMode> executionMode =
 			(EnumSet<ExecutionMode>)renderRequest.getAttribute("executionMode");
 		Map<Company, Long> companyProcessTime =
@@ -60,11 +58,11 @@ public class IndexCheckerOutput {
 				"companyProcessTime");
 		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap =
 			(Map<Company, Map<Long, List<Comparison>>>)
-			renderRequest.getAttribute("companyResultDataMap");
+				renderRequest.getAttribute("companyResultDataMap");
 		Map<Company, String> companyError =
-			(Map<Company, String>) renderRequest.getAttribute("companyError");
+			(Map<Company, String>)renderRequest.getAttribute("companyError");
 
-		if ((executionMode == null)||(companyProcessTime == null)||
+		if ((executionMode == null) || (companyProcessTime == null) ||
 			(companyResultDataMap == null)) {
 
 			return null;
@@ -82,10 +80,9 @@ public class IndexCheckerOutput {
 		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap,
 		Map<Company, String> companyError) {
 
-		List<String> out = new ArrayList<String>();
+		List<String> out = new ArrayList<>();
 
-		ResourceBundle resourceBundle = portletConfig.getResourceBundle(
-				locale);
+		ResourceBundle resourceBundle = portletConfig.getResourceBundle(locale);
 
 		if (companyResultDataMap != null) {
 			String[] headerKeys;
@@ -94,12 +91,14 @@ public class IndexCheckerOutput {
 				headerKeys = new String[] {
 					"output.company", "output.groupid", "output.groupname",
 					"output.entityclass", "output.entityname",
-					"output.errortype", "output.count", "output.primarykeys"};
+					"output.errortype", "output.count", "output.primarykeys"
+				};
 			}
 			else {
 				headerKeys = new String[] {
 					"output.company", "output.entityclass", "output.entityname",
-					"output.errortype", "output.count", "output.primarykeys"};
+					"output.errortype", "output.count", "output.primarykeys"
+				};
 			}
 
 			List<String> headers = OutputUtils.getHeaders(
@@ -108,15 +107,16 @@ public class IndexCheckerOutput {
 			out.add(OutputUtils.getCSVRow(headers));
 		}
 
-		for (
-			Map.Entry<Company, Long> companyEntry :
+		for (Map.Entry<Company, Long> companyEntry :
 				companyProcessTime.entrySet()) {
 
 			Long processTime = companyEntry.getValue();
 
 			String companyOutput =
-				companyEntry.getKey().getCompanyId() + " - " +
-				companyEntry.getKey().getWebId();
+				companyEntry.getKey(
+				).getCompanyId() + " - " +
+					companyEntry.getKey(
+					).getWebId();
 
 			if (companyResultDataMap != null) {
 				Map<Long, List<Comparison>> resultDataMap =
@@ -124,8 +124,7 @@ public class IndexCheckerOutput {
 
 				int numberOfRows = 0;
 
-				for (
-					Map.Entry<Long, List<Comparison>> entry :
+				for (Map.Entry<Long, List<Comparison>> entry :
 						resultDataMap.entrySet()) {
 
 					String groupIdOutput = null;
@@ -133,9 +132,8 @@ public class IndexCheckerOutput {
 
 					if (groupBySite) {
 						try {
-							Group group =
-								GroupLocalServiceUtil.fetchGroup(
-									entry.getKey());
+							Group group = GroupLocalServiceUtil.fetchGroup(
+								entry.getKey());
 
 							if (group == null) {
 								groupIdOutput = LanguageUtil.get(
@@ -174,9 +172,9 @@ public class IndexCheckerOutput {
 							}
 
 							String line = OutputUtils.generateCSVRow(
-									resourceBundle, comp, companyOutput,
-									groupIdOutput, groupNameOutput, type,
-									attribute, locale);
+								resourceBundle, comp, companyOutput,
+								groupIdOutput, groupNameOutput, type, attribute,
+								locale);
 
 							if (line != null) {
 								numberOfRows++;
@@ -190,7 +188,7 @@ public class IndexCheckerOutput {
 					out.add(StringPool.BLANK);
 					out.add(
 						"No results found: your system is ok or perhaps " +
-						"you have to change some filters");
+							"you have to change some filters");
 				}
 			}
 
@@ -198,16 +196,19 @@ public class IndexCheckerOutput {
 
 			if (Validator.isNotNull(errorMessage)) {
 				out.add(
-					"Company: " + companyEntry.getKey().getCompanyId() +
-					" - " + companyEntry.getKey().getWebId());
+					"Company: " +
+						companyEntry.getKey(
+						).getCompanyId() + " - " +
+							companyEntry.getKey(
+							).getWebId());
 				out.add(errorMessage);
 			}
 
 			out.add(StringPool.BLANK);
 			out.add(
 				"Executed " + title + " for company " +
-				companyEntry.getKey().getCompanyId() + " in " + processTime +
-				" ms");
+					companyEntry.getKey(
+					).getCompanyId() + " in " + processTime + " ms");
 
 			out.add(StringPool.BLANK);
 		}
@@ -218,12 +219,11 @@ public class IndexCheckerOutput {
 	public static SearchContainer<Comparison> generateSearchContainer(
 		PortletConfig portletConfig, RenderRequest renderRequest,
 		boolean groupBySite, Map<Long, List<Comparison>> resultDataMap,
-		PortletURL serverURL) throws SystemException {
+		PortletURL serverURL) {
 
 		Locale locale = renderRequest.getLocale();
 
-		ResourceBundle resourceBundle = portletConfig.getResourceBundle(
-				locale);
+		ResourceBundle resourceBundle = portletConfig.getResourceBundle(locale);
 
 		String[] headerKeys;
 
@@ -231,26 +231,26 @@ public class IndexCheckerOutput {
 			headerKeys = new String[] {
 				"output.groupid", "output.groupname", "output.entityclass",
 				"output.entityname", "output.errortype", "output.count",
-				"output.primarykeys"};
+				"output.primarykeys"
+			};
 		}
 		else {
 			headerKeys = new String[] {
 				"output.entityclass", "output.entityname", "output.errortype",
-				"output.count", "output.primarykeys"};
+				"output.count", "output.primarykeys"
+			};
 		}
 
 		List<String> headerNames = OutputUtils.getHeaders(
 			portletConfig, locale, headerKeys);
 
-		SearchContainer<Comparison> searchContainer =
-			new SearchContainer<Comparison>(
-				renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
-				SearchContainer.MAX_DELTA, serverURL, headerNames, null);
+		SearchContainer<Comparison> searchContainer = new SearchContainer<>(
+			renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
+			SearchContainer.MAX_DELTA, serverURL, headerNames, null);
 
 		int numberOfRows = 0;
 
-		for (
-			Entry<Long, List<Comparison>> entry :
+		for (Map.Entry<Long, List<Comparison>> entry :
 				resultDataMap.entrySet()) {
 
 			String groupIdOutput = null;
@@ -263,8 +263,7 @@ public class IndexCheckerOutput {
 					groupIdOutput = LanguageUtil.get(
 						resourceBundle, "output.not-applicable-groupid");
 					groupNameOutput = LanguageUtil.get(
-						resourceBundle,
-						"output.not-applicable-groupname");
+						resourceBundle, "output.not-applicable-groupname");
 				}
 				else {
 					groupIdOutput = "" + group.getGroupId();
@@ -275,7 +274,7 @@ public class IndexCheckerOutput {
 			List<Comparison> results = searchContainer.getResults();
 
 			if ((results == null) || (results.size() == 0)) {
-				results = new ArrayList<Comparison>();
+				results = new ArrayList<>();
 			}
 
 			results.addAll(entry.getValue());

@@ -29,6 +29,7 @@ public class TableUtil {
 
 		if (posTableName <= 0) {
 			_log.error("Error, TABLE_NAME not found at TABLE_SQL_CREATE");
+
 			return null;
 		}
 

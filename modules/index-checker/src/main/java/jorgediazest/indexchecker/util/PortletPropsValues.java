@@ -23,16 +23,17 @@ import com.liferay.portal.kernel.util.GetterUtil;
  */
 public class PortletPropsValues {
 
+	public static final int INDEX_SEARCH_LIMIT = GetterUtil.getInteger(
+		PortletPropsValues._configuration.get(
+			PortletPropsKeys.INDEX_SEARCH_LIMIT),
+		10000);
+
+	public static final int NUMBER_THREADS = GetterUtil.getInteger(
+		PortletPropsValues._configuration.get(PortletPropsKeys.NUMBER_THREADS),
+		1);
+
 	private static final Configuration _configuration =
 		ConfigurationFactoryUtil.getConfiguration(
-				PortletPropsValues.class.getClassLoader(), "portlet");
-
-	public static final int INDEX_SEARCH_LIMIT =
-		GetterUtil.getInteger(
-			_configuration.get(PortletPropsKeys.INDEX_SEARCH_LIMIT), 10000);
-
-	public static final int NUMBER_THREADS =
-		GetterUtil.getInteger(
-			_configuration.get(PortletPropsKeys.NUMBER_THREADS), 1);
+			PortletPropsValues.class.getClassLoader(), "portlet");
 
 }

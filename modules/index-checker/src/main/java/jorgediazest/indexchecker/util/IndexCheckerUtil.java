@@ -14,11 +14,11 @@
 
 package jorgediazest.indexchecker.util;
 
-import java.lang.reflect.Method;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
+
+import java.lang.reflect.Method;
 
 import jorgediazest.util.reflection.ReflectionUtil;
 
@@ -26,18 +26,6 @@ import jorgediazest.util.reflection.ReflectionUtil;
  * @author Jorge Díaz
  */
 public class IndexCheckerUtil {
-
-	public static Object getCompanyConfigurationKey(
-			long companyId, ClassLoader classLoader,
-			String configurationClassName, String configurationKey)
-		throws Exception {
-
-		Class<?> configurationClass = classLoader.loadClass(
-				configurationClassName);
-
-		return getCompanyConfigurationKey(
-				companyId, configurationClass, configurationKey);
-	}
 
 	public static Object getCompanyConfigurationKey(
 			long companyId, Class<?> configurationClass,
@@ -48,25 +36,34 @@ public class IndexCheckerUtil {
 			ConfigurationProviderUtil.getCompanyConfiguration(
 				configurationClass, companyId);
 
-		Method indexAllVersionsMethod =
-			configurationClass.getMethod(configurationKey);
+		Method indexAllVersionsMethod = configurationClass.getMethod(
+			configurationKey);
 
 		return indexAllVersionsMethod.invoke(journalServiceConfiguration);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(IndexCheckerUtil.class);
+	public static Object getCompanyConfigurationKey(
+			long companyId, ClassLoader classLoader,
+			String configurationClassName, String configurationKey)
+		throws Exception {
+
+		Class<?> configurationClass = classLoader.loadClass(
+			configurationClassName);
+
+		return getCompanyConfigurationKey(
+			companyId, configurationClass, configurationKey);
+	}
 
 	public static String getPortletPropertiesKey(
 			ClassLoader classLoader, String configurationClassName,
 			String configurationKey)
 		throws ClassNotFoundException {
-	
-		Class<?> portletServiceConfigurationValuesClass =
-			classLoader.loadClass(configurationClassName);
-	
+
+		Class<?> portletServiceConfigurationValuesClass = classLoader.loadClass(
+			configurationClassName);
+
 		Object value = ReflectionUtil.getStaticFieldValue(
-				portletServiceConfigurationValuesClass,
-					configurationKey);
+			portletServiceConfigurationValuesClass, configurationKey);
 
 		if (value == null) {
 			return null;
@@ -74,5 +71,7 @@ public class IndexCheckerUtil {
 
 		return value.toString();
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(IndexCheckerUtil.class);
 
 }

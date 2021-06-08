@@ -14,23 +14,19 @@
 
 package jorgediazest.indexchecker.portlet;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 
 import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 
-@Component(
-		configurationPid = "jorgediazest.indexchecker.portlet.IndexCheckerConfiguration",
-		configurationPolicy = ConfigurationPolicy.OPTIONAL,
-		immediate = true,
-		property = {
-			"javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER
-		},
-		service = ConfigurationAction.class
-	)
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 
-	public class IndexCheckerConfiguration extends DefaultConfigurationAction {
-	}
+@Component(
+	configurationPid = "jorgediazest.indexchecker.portlet.IndexCheckerConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
+	property = {"javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER},
+	service = ConfigurationAction.class
+)
+public class IndexCheckerConfiguration extends DefaultConfigurationAction {
+}

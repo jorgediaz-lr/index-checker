@@ -39,7 +39,7 @@ public class DataUtil {
 			return new String[0];
 		}
 
-		if ((size > dataCollection.size())) {
+		if (size > dataCollection.size()) {
 			size = dataCollection.size();
 		}
 
@@ -51,13 +51,17 @@ public class DataUtil {
 			String value;
 
 			if (attrList.size() == 1) {
-				value = data.get(attrList.get(0)).toString();
+				value = data.get(
+					attrList.get(0)
+				).toString();
 			}
 			else {
 				String[] auxArr = new String[attrList.size()];
 
-				for (int j = 0; j<attrList.size(); j++) {
-					auxArr[j] = data.get(attrList.get(j)).toString();
+				for (int j = 0; j < attrList.size(); j++) {
+					auxArr[j] = data.get(
+						attrList.get(j)
+					).toString();
 				}
 
 				value = Arrays.toString(auxArr);

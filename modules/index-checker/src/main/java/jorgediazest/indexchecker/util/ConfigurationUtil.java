@@ -15,12 +15,9 @@
 package jorgediazest.indexchecker.util;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.patcher.PatcherUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -79,7 +76,10 @@ public class ConfigurationUtil {
 			attribute);
 
 		if ((indexAttribute == null) &&
-			model.getPrimaryKeyAttribute().equals(attribute)) {
+			model.getPrimaryKeyAttribute(
+			).equals(
+				attribute
+			)) {
 
 			indexAttribute = (String)indexAttributeNameMapping.get("pk");
 		}
@@ -95,6 +95,27 @@ public class ConfigurationUtil {
 		return (IndexSearchHelper)getModelInfo(model, "indexSearchHelperClass");
 	}
 
+	public static boolean getJournalArticleIndexAllVersions() {
+		try {
+			return _getJournalArticleIndexAllVersions();
+		}
+		catch (Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.warn(
+					"Error getting JournalServiceConfiguration." +
+						"indexAllArticleVersionsEnabled: " + e.getMessage(),
+					e);
+			}
+			else if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Error getting JournalServiceConfiguration." +
+						"indexAllArticleVersionsEnabled: " + e.getMessage());
+			}
+
+			return true;
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public static List<String> getKeyAttributes(Model model) {
 		return (List<String>)getModelInfo(model, "keyAttributes");
@@ -102,8 +123,8 @@ public class ConfigurationUtil {
 
 	@SuppressWarnings("unchecked")
 	public static Collection<String> getModelAttributesToQuery(Model model) {
-		Collection<String> attributesToCheck =
-			(Collection<String>) getModelInfo(model, "attributesToQuery");
+		Collection<String> attributesToCheck = (Collection<String>)getModelInfo(
+			model, "attributesToQuery");
 
 		if (attributesToCheck == null) {
 			return Collections.emptySet();
@@ -117,10 +138,9 @@ public class ConfigurationUtil {
 			return modelInfo;
 		}
 
-		synchronized(ConfigurationUtil.class) {
+		synchronized (ConfigurationUtil.class) {
 			if (modelInfo == null) {
-				Map<String, Map<String, Object>> modelInfoAux =
-					new HashMap<String, Map<String, Object>>();
+				Map<String, Map<String, Object>> modelInfoAux = new HashMap<>();
 
 				@SuppressWarnings("unchecked")
 				Collection<Map<String, Object>> modelInfoList =
@@ -128,7 +148,8 @@ public class ConfigurationUtil {
 						"modelInfo");
 
 				for (Map<String, Object> modelMap : modelInfoList) {
-					String model = (String) modelMap.get("model");
+					String model = (String)modelMap.get("model");
+
 					modelInfoAux.put(model, modelMap);
 				}
 
@@ -153,7 +174,12 @@ public class ConfigurationUtil {
 		}
 
 		if (model.isWorkflowEnabled()) {
-			value = getModelInfo().get("workflowedModel").get(entry);
+			value = getModelInfo(
+			).get(
+				"workflowedModel"
+			).get(
+				entry
+			);
 
 			if (value != null) {
 				return value;
@@ -161,14 +187,24 @@ public class ConfigurationUtil {
 		}
 
 		if (model.isResourcedModel()) {
-			value = getModelInfo().get("resourcedModel").get(entry);
+			value = getModelInfo(
+			).get(
+				"resourcedModel"
+			).get(
+				entry
+			);
 
 			if (value != null) {
 				return value;
 			}
 		}
 
-		return getModelInfo().get("default").get(entry);
+		return getModelInfo(
+		).get(
+			"default"
+		).get(
+			entry
+		);
 	}
 
 	public static IndexCheckerPermissionsHelper getPermissionsHelper(
@@ -185,7 +221,8 @@ public class ConfigurationUtil {
 	public static List<Map<String, Object>> getRelatedDataToQuery(Model model) {
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> relatedDataToQueryList =
-			(List<Map<String,Object>>)getModelInfo(model, "relatedDataToQuery");
+			(List<Map<String, Object>>)getModelInfo(
+				model, "relatedDataToQuery");
 
 		if (relatedDataToQueryList == null) {
 			return Collections.emptyList();
@@ -195,7 +232,7 @@ public class ConfigurationUtil {
 	}
 
 	public static String getStringFilter(Model model) {
-		return (String) getModelInfo(model, "filter");
+		return (String)getModelInfo(model, "filter");
 	}
 
 	public static boolean ignoreClassName(String className) {
@@ -219,7 +256,7 @@ public class ConfigurationUtil {
 		Collection<String> list = (Collection<String>)getConfigurationEntry(
 			configurationEntry);
 
-		return (list.contains(value));
+		return list.contains(value);
 	}
 
 	protected static Map<String, Object> getConfiguration() {
@@ -227,7 +264,7 @@ public class ConfigurationUtil {
 			return configuration;
 		}
 
-		synchronized(ConfigurationUtil.class) {
+		synchronized (ConfigurationUtil.class) {
 			if (configuration == null) {
 				configuration = readConfiguration(
 					CONFIGURATION_FILE_NAME, CONFIGURATION_FILE_EXT);
@@ -242,29 +279,66 @@ public class ConfigurationUtil {
 		}
 	}
 
+	protected static String readConfiguration(
+		ClassLoader classLoader, String configurationFile) {
+
+		try {
+			InputStream inputStream = classLoader.getResourceAsStream(
+				configurationFile);
+
+			if (inputStream == null) {
+				return null;
+			}
+
+			return StringUtil.read(inputStream);
+		}
+		catch (IOException ioException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(ioException, ioException);
+			}
+		}
+
+		return null;
+	}
+
+	private static boolean _getJournalArticleIndexAllVersions()
+		throws Exception {
+
+		Service journalArticleService = ServiceUtil.getService(
+			"com.liferay.journal.model.JournalArticle");
+
+		return (boolean)IndexCheckerUtil.getCompanyConfigurationKey(
+			CompanyThreadLocal.getCompanyId(),
+			journalArticleService.getClassLoader(),
+			"com.liferay.journal.configuration.JournalServiceConfiguration",
+			"indexAllArticleVersionsEnabled");
+	}
+
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> readConfiguration(
-			String configurationFileName, String configurationFileExt) {
+		String configurationFileName, String configurationFileExt) {
 
 		int liferayBuildNumber = ReleaseInfo.getBuildNumber();
 
 		ClassLoader classLoader = ConfigurationUtil.class.getClassLoader();
 
 		String configuration = readConfiguration(
-			classLoader, configurationFileName + CharPool.UNDERLINE +
-			liferayBuildNumber + CharPool.PERIOD + configurationFileExt);
+			classLoader,
+			configurationFileName + CharPool.UNDERLINE + liferayBuildNumber +
+				CharPool.PERIOD + configurationFileExt);
 
 		if (configuration == null) {
 			configuration = readConfiguration(
-				classLoader, configurationFileName + CharPool.UNDERLINE +
-				((int)liferayBuildNumber/100) + CharPool.PERIOD +
-				configurationFileExt);
+				classLoader,
+				configurationFileName + CharPool.UNDERLINE +
+					((int)liferayBuildNumber / 100) + CharPool.PERIOD +
+						configurationFileExt);
 		}
 
 		if (configuration == null) {
 			configuration = readConfiguration(
-				classLoader, configurationFileName + CharPool.PERIOD +
-				configurationFileExt);
+				classLoader,
+				configurationFileName + CharPool.PERIOD + configurationFileExt);
 		}
 
 		String journalArticleIndexPrimaryKeyAttribute;
@@ -285,63 +359,9 @@ public class ConfigurationUtil {
 		return (Map<String, Object>)yaml.load(configuration);
 	}
 
-	protected static String readConfiguration(
-			ClassLoader classLoader, String configurationFile) {
-	
-		try {
-			InputStream inputStream = classLoader.getResourceAsStream(
-				configurationFile);
-
-			if (inputStream == null) {
-				return null;
-			}
-	
-			return StringUtil.read(inputStream);
-		}
-		catch (IOException ioException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(ioException, ioException);
-			}
-		}
-
-		return null;
-	}
-
-	public static boolean getJournalArticleIndexAllVersions() {
-		try {
-			return _getJournalArticleIndexAllVersions();
-		}
-		catch(Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.warn(
-					"Error getting JournalServiceConfiguration." +
-						"indexAllArticleVersionsEnabled: " + e.getMessage(), e);
-			}
-			else if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Error getting JournalServiceConfiguration." +
-						"indexAllArticleVersionsEnabled: " + e.getMessage());
-			}
-
-			return true;
-		}
-	}
-
-	private static boolean _getJournalArticleIndexAllVersions()
-		throws Exception {
-
-		Service journalArticleService = ServiceUtil.getService(
-				"com.liferay.journal.model.JournalArticle");
-
-		return (boolean) IndexCheckerUtil.getCompanyConfigurationKey(
-				CompanyThreadLocal.getCompanyId(),
-				journalArticleService.getClassLoader(),
-				"com.liferay.journal.configuration.JournalServiceConfiguration",
-				"indexAllArticleVersionsEnabled");
-	}
+	private static final String CONFIGURATION_FILE_EXT = "yml";
 
 	private static final String CONFIGURATION_FILE_NAME = "configuration";
-	private static final String CONFIGURATION_FILE_EXT = "yml";
 
 	private static Log _log = LogFactoryUtil.getLog(ConfigurationUtil.class);
 

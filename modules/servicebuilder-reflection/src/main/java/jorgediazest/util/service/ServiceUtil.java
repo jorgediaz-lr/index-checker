@@ -14,6 +14,7 @@
 
 package jorgediazest.util.service;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -21,7 +22,6 @@ import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collections;
@@ -83,7 +83,8 @@ public class ServiceUtil {
 			}
 
 			if (obj instanceof ClassedModel) {
-				return obj.getClass().getName();
+				return obj.getClass(
+				).getName();
 			}
 		}
 		catch (Exception e) {
@@ -97,8 +98,9 @@ public class ServiceUtil {
 
 	public static Service getService(String className) {
 		BaseLocalService modelService =
-			(BaseLocalService)PersistedModelLocalServiceRegistryUtil.
-				getPersistedModelLocalService(className);
+			(BaseLocalService)
+				PersistedModelLocalServiceRegistryUtil.
+					getPersistedModelLocalService(className);
 
 		if (modelService != null) {
 			return new ServicePersistedModelImpl(modelService, className);
@@ -113,7 +115,10 @@ public class ServiceUtil {
 
 		try {
 			return (Class<? extends ClassedModel>)
-				PortalClassLoaderUtil.getClassLoader().loadClass(className);
+				PortalClassLoaderUtil.getClassLoader(
+				).loadClass(
+					className
+				);
 		}
 		catch (ClassNotFoundException e) {
 			if (_log.isDebugEnabled()) {
@@ -135,7 +140,10 @@ public class ServiceUtil {
 		}
 
 		try {
-			clazz = PortalClassLoaderUtil.getClassLoader().loadClass(className);
+			clazz = PortalClassLoaderUtil.getClassLoader(
+			).loadClass(
+				className
+			);
 		}
 		catch (ClassNotFoundException e) {
 		}
@@ -162,13 +170,12 @@ public class ServiceUtil {
 		}
 
 		String className =
-			packageName + ".service." + simpleName +
-				"LocalService";
+			packageName + ".service." + simpleName + "LocalService";
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				"LocalServiceUtil of " + packageName + "." + simpleName + ": " +
-				className);
+					className);
 		}
 
 		return className;
@@ -194,6 +201,7 @@ public class ServiceUtil {
 
 				if (service.getLiferayModelImplClass() != null) {
 					cachePortalServices.put(className, service);
+
 					return service;
 				}
 			}
@@ -207,6 +215,7 @@ public class ServiceUtil {
 		}
 
 		cacheNullPortalServices.add(className);
+
 		return null;
 	}
 
@@ -215,6 +224,6 @@ public class ServiceUtil {
 	private static Set<String> cacheNullPortalServices =
 		Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private static Map<String, ServiceClassInterfaceImpl> cachePortalServices =
-		new ConcurrentHashMap<String, ServiceClassInterfaceImpl>();
+		new ConcurrentHashMap<>();
 
 }

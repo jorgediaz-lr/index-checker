@@ -14,19 +14,18 @@
 
 package jorgediazest.indexchecker.portlet;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.portlet.ControlPanelEntry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 
 import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Control panel entry class IndexCheckerControlPanelEntry
@@ -34,17 +33,28 @@ import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
  * @author Jorge Díaz
  */
 @Component(
-		immediate = true,
-		property = {
-			"panel.category.key=" + PanelCategoryKeys.CONTROL_PANEL_APPS
-		},
-		service = PanelApp.class
-	)
+	immediate = true,
+	property = "panel.category.key=" + PanelCategoryKeys.CONTROL_PANEL_APPS,
+	service = PanelApp.class
+)
 public class IndexCheckerControlPanelEntry extends BasePanelApp {
 
 	@Override
 	public String getPortletId() {
 		return IndexCheckerKeys.INDEXCHECKER;
+	}
+
+	@Override
+	public boolean isShow(PermissionChecker permissionChecker, Group group)
+		throws PortalException {
+
+		if (permissionChecker.isOmniadmin() ||
+			permissionChecker.isCompanyAdmin()) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -56,10 +66,4 @@ public class IndexCheckerControlPanelEntry extends BasePanelApp {
 		super.setPortlet(portlet);
 	}
 
-	@Override
-	public boolean isShow(PermissionChecker permissionChecker, Group group)
-		throws PortalException {
-
-		return (permissionChecker.isOmniadmin() || permissionChecker.isCompanyAdmin());
-	}
 }

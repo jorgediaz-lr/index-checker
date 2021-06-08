@@ -26,8 +26,10 @@ public class DataComparatorMap extends DataBaseComparator {
 
 	@Override
 	public int compare(Data data1, Data data2) {
-		Set<String> k1 = data1.getMap().keySet();
-		Set<String> k2 = data2.getMap().keySet();
+		Set<String> k1 = data1.getMap(
+		).keySet();
+		Set<String> k2 = data2.getMap(
+		).keySet();
 
 		if (k1.size() != k2.size()) {
 			return k1.size() - k2.size();
@@ -60,8 +62,10 @@ public class DataComparatorMap extends DataBaseComparator {
 
 	@Override
 	public boolean equals(Data data1, Data data2) {
-		Set<String> k1 = data1.getMap().keySet();
-		Set<String> k2 = data2.getMap().keySet();
+		Set<String> k1 = data1.getMap(
+		).keySet();
+		Set<String> k2 = data2.getMap(
+		).keySet();
 
 		if (k1.size() != k2.size()) {
 			return false;
@@ -87,8 +91,12 @@ public class DataComparatorMap extends DataBaseComparator {
 	public Integer hashCode(Data data) {
 		int hashCode = 1;
 
-		for (Object o : data.getMap().values()) {
-			hashCode *= o.toString().hashCode();
+		for (Object o :
+				data.getMap(
+				).values()) {
+
+			hashCode *= o.toString(
+			).hashCode();
 		}
 
 		return hashCode;

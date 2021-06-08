@@ -78,14 +78,14 @@ public class IndexCheckerModelFactory extends ModelFactory {
 
 		if (endModifiedDate != null) {
 			Criterion endDateCriterion = getAttributeRangeCriterion(
-					model, "modifiedDate", endModifiedDate, false);
+				model, "modifiedDate", endModifiedDate, false);
 
 			criterion = ModelUtil.generateConjunctionCriterion(
 				endDateCriterion, criterion);
 		}
 
-		if ((criterion == null) && ((keyAttributes == null) ||
-			 keyAttributes.isEmpty())) {
+		if ((criterion == null) &&
+			((keyAttributes == null) || keyAttributes.isEmpty())) {
 
 			return model;
 		}

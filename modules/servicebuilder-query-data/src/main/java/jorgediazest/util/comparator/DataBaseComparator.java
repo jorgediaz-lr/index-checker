@@ -27,7 +27,7 @@ import jorgediazest.util.data.DataUtil;
  */
 public abstract class DataBaseComparator implements DataComparator {
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public int compareAttributes(
 		Class<?> type1, Class<?> type2, Object o1, Object o2) {
 
@@ -78,7 +78,11 @@ public abstract class DataBaseComparator implements DataComparator {
 		boolean isNull2 = DataUtil.isNull(o2);
 
 		if (isNull1 || isNull2) {
-			return (_ignoreNulls || (isNull1 && isNull2));
+			if (_ignoreNulls || (isNull1 && isNull2)) {
+				return true;
+			}
+
+			return false;
 		}
 
 		boolean equalsAttribute = o1.equals(o2);
@@ -110,7 +114,7 @@ public abstract class DataBaseComparator implements DataComparator {
 
 		boolean equalsAttribute = equalsAttributes(type1, type2, o1, o2);
 
-		if (_log.isDebugEnabled() && !(equalsAttribute)) {
+		if (_log.isDebugEnabled() && !equalsAttribute) {
 			_log.debug(
 				"data1=" + data1 + " data2=" + data2 + " attr1=" + attr1 +
 					" attr2=" + attr2 + " o1=" + o1 + " o2=" + o2 +
@@ -125,7 +129,8 @@ public abstract class DataBaseComparator implements DataComparator {
 	}
 
 	public Integer hashCode(Data data) {
-		return data.getMap().hashCode();
+		return data.getMap(
+		).hashCode();
 	}
 
 	public void setIgnoreNulls(boolean ignoreNulls) {

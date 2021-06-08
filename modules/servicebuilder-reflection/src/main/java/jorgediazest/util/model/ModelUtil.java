@@ -14,6 +14,7 @@
 
 package jorgediazest.util.model;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
@@ -24,10 +25,9 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassName;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,7 +70,7 @@ public class ModelUtil {
 	public static Criterion generateConjunctionCriterion(
 		Criterion... criterion) {
 
-		List<Criterion> criterionList = new ArrayList<Criterion>();
+		List<Criterion> criterionList = new ArrayList<>();
 
 		for (Criterion criterionAux : criterion) {
 			if (criterionAux != null) {
@@ -98,7 +98,7 @@ public class ModelUtil {
 	public static Criterion generateDisjunctionCriterion(
 		Criterion... criterion) {
 
-		List<Criterion> criterionList = new ArrayList<Criterion>();
+		List<Criterion> criterionList = new ArrayList<>();
 
 		for (Criterion criterionAux : criterion) {
 			if (criterionAux != null) {
@@ -144,7 +144,7 @@ public class ModelUtil {
 	public static List<String> getClassNameValues(
 		Collection<ClassName> classNames) {
 
-		List<String> classNameStr = new ArrayList<String>();
+		List<String> classNameStr = new ArrayList<>();
 
 		for (ClassName className : classNames) {
 			String value = className.getValue();
@@ -171,7 +171,7 @@ public class ModelUtil {
 	}
 
 	protected static Map<String, String> cachedAttributeNames =
-		new ConcurrentHashMap<String, String>();
+		new ConcurrentHashMap<>();
 
 	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
 

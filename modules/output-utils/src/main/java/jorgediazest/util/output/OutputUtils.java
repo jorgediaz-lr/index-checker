@@ -18,14 +18,15 @@ package jorgediazest.util.output;
  * @author Jorge Díaz
  */
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
@@ -33,7 +34,6 @@ import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -91,7 +91,7 @@ public class OutputUtils {
 
 			String fileName =
 				portletId + "_output_" + userId + "_" +
-				System.currentTimeMillis() + ".csv";
+					System.currentTimeMillis() + ".csv";
 
 			return OutputUtils.addPortletFileEntry(
 				repository, inputStream, userId, fileName, "text/plain");
@@ -116,8 +116,9 @@ public class OutputUtils {
 				repository.getGroupId(), repository.getDlFolderId());
 
 		for (FileEntry fileEntry : fileEntries) {
-			long fileEntryDate = fileEntry.getCreateDate().getTime();
-			long delta = minutes * 60 *1000;
+			long fileEntryDate = fileEntry.getCreateDate(
+			).getTime();
+			long delta = minutes * 60 * 1000;
 
 			if ((fileEntryDate + delta) < System.currentTimeMillis()) {
 				PortletFileRepositoryUtil.deletePortletFileEntry(
@@ -155,7 +156,8 @@ public class OutputUtils {
 			return null;
 		}
 
-		List<String> line = new ArrayList<String>();
+		List<String> line = new ArrayList<>();
+
 		line.add(companyOutput);
 
 		if (groupIdOutput != null) {
@@ -175,6 +177,7 @@ public class OutputUtils {
 		}
 
 		line.add(output);
+
 		return OutputUtils.getCSVRow(line);
 	}
 
@@ -219,6 +222,7 @@ public class OutputUtils {
 			outputStringTrimmed = HtmlUtil.escape(outputStringTrimmed);
 
 			String tagId = StringUtil.randomString() + "_" + numberOfRows;
+
 			String onClick =
 				"onclick=\"showHide('" + tagId + "');return false;\"";
 
@@ -241,9 +245,9 @@ public class OutputUtils {
 
 			outputString =
 				"<span id=\"" + tagId + "-show\" >" + outputStringTrimmed +
-				linkMore + "</span><span id=\"" + tagId +
-				"\" style=\"display: none;\" >" + outputString + " " +
-				linkCollapse + "</span>";
+					linkMore + "</span><span id=\"" + tagId +
+						"\" style=\"display: none;\" >" + outputString + " " +
+							linkCollapse + "</span>";
 		}
 
 		return OutputUtils.generateSearchContainerRow(
@@ -271,9 +275,9 @@ public class OutputUtils {
 		}
 
 		ResultRow row = new com.liferay.taglib.search.ResultRow(
-				comp, type, numberOfRows);
+			comp, type, numberOfRows);
 
-		if ((groupIdOutput != null) && (groupNameOutput!= null)) {
+		if ((groupIdOutput != null) && (groupNameOutput != null)) {
 			row.addText(groupIdOutput);
 			row.addText(groupNameOutput);
 		}
@@ -282,9 +286,10 @@ public class OutputUtils {
 		row.addText(HtmlUtil.escape(comp.getModelDisplayName(locale)));
 		row.addText(
 			HtmlUtil.escape(
-				LanguageUtil.get(
-					resourceBundle, "output." + type)).replace(
-						" ", "&nbsp;"));
+				LanguageUtil.get(resourceBundle, "output." + type)
+			).replace(
+				" ", "&nbsp;"
+			));
 
 		if (outputSize < 0) {
 			row.addText(StringPool.BLANK);
@@ -294,6 +299,7 @@ public class OutputUtils {
 		}
 
 		row.addText(htmlOutput);
+
 		return row;
 	}
 
@@ -327,9 +333,10 @@ public class OutputUtils {
 
 		List<String> headers = new ArrayList<>();
 
-		for (int i = 0; i<headerKeys.length; i++) {
+		for (int i = 0; i < headerKeys.length; i++) {
 			ResourceBundle resourceBundle = portletConfig.getResourceBundle(
 				locale);
+
 			headers.add(LanguageUtil.get(resourceBundle, headerKeys[i]));
 		}
 
@@ -349,8 +356,12 @@ public class OutputUtils {
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies(false);
 
-		long companyId = companies.get(0).getCompanyId();
-		long groupId = GroupServiceUtil.getCompanyGroup(companyId).getGroupId();
+		long companyId = companies.get(
+			0
+		).getCompanyId();
+		long groupId = GroupServiceUtil.getCompanyGroup(
+			companyId
+		).getGroupId();
 
 		Repository repository =
 			PortletFileRepositoryUtil.fetchPortletRepository(
@@ -369,7 +380,7 @@ public class OutputUtils {
 			return null;
 		}
 
-		StringBundler stringBundler = new StringBundler(out.size()*2);
+		StringBundler stringBundler = new StringBundler(out.size() * 2);
 
 		for (String s : out) {
 			stringBundler.append(s);
@@ -405,14 +416,14 @@ public class OutputUtils {
 
 			response.setProperty(
 				ResourceResponse.HTTP_STATUS_CODE,
-				Integer.toString(HttpServletResponse.SC_NOT_FOUND));
+				String.valueOf(HttpServletResponse.SC_NOT_FOUND));
 		}
 		catch (Exception e) {
 			_log.error(e, e);
 
 			response.setProperty(
 				ResourceResponse.HTTP_STATUS_CODE,
-				Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+				String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
 	}
 
@@ -423,7 +434,7 @@ public class OutputUtils {
 			return StringPool.BLANK;
 		}
 
-		return string.substring(1, string.length()-1);
+		return string.substring(1, string.length() - 1);
 	}
 
 	protected static String addCell(String line, String cell, String sep) {

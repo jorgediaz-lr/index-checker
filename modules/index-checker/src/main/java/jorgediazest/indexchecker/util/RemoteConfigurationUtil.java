@@ -46,7 +46,7 @@ public class RemoteConfigurationUtil {
 			return configuration;
 		}
 
-		synchronized(RemoteConfigurationUtil.class) {
+		synchronized (RemoteConfigurationUtil.class) {
 			if ((configuration == null) || isOutdatedConfiguration()) {
 				String remoteConfigurationUrl =
 					(String)ConfigurationUtil.getConfigurationEntry(
@@ -66,9 +66,13 @@ public class RemoteConfigurationUtil {
 			ConfigurationUtil.getConfigurationEntry(
 				"remoteConfigurationTimeoutMilis"),
 			0L);
-		long validCfgTimestamp = (configurationTimestamp + dayTimeMillis);
+		long validCfgTimestamp = configurationTimestamp + dayTimeMillis;
 
-		return (validCfgTimestamp < System.currentTimeMillis());
+		if (validCfgTimestamp < System.currentTimeMillis()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -1,5 +1,5 @@
 dependencies {
-	compileOnly group: "com.liferay.portal", name: "release.portal.api"
-
 	compile project(":modules:servicebuilder-query-data")
+
+	compileOnly group: "com.liferay.portal", name: "release.portal.api"
 }

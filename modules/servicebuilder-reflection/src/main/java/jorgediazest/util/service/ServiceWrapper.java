@@ -29,7 +29,7 @@ import jorgediazest.util.table.TableInfo;
 /**
  * @author Jorge Díaz
  */
-public class ServiceWrapper implements Service, Cloneable {
+public class ServiceWrapper implements Cloneable, Service {
 
 	public ServiceWrapper(Service service) {
 		this.service = service;
@@ -136,12 +136,12 @@ public class ServiceWrapper implements Service, Cloneable {
 			if (criterion != null) {
 				String filterString = ReflectionUtil.getWrappedString(
 					criterion, "getWrappedCriterion");
+
 				_log.debug("added filter: " + filterString);
 			}
 
-			String filterDynamicQuery =
-				ReflectionUtil.getWrappedString(
-					dynamicQuery, "getDetachedCriteria");
+			String filterDynamicQuery = ReflectionUtil.getWrappedString(
+				dynamicQuery, "getDetachedCriteria");
 
 			_log.debug("executing dynamicQuery: " + filterDynamicQuery);
 		}

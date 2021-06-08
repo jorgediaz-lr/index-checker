@@ -14,6 +14,7 @@
 
 package jorgediazest.util.model;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.Order;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -53,7 +53,6 @@ public class ModelImpl implements Model {
 		throws Exception {
 
 		this.modelFactory = modelFactory;
-
 		this.service = service;
 
 		this.className = className;
@@ -69,7 +68,10 @@ public class ModelImpl implements Model {
 
 	@Override
 	public int compareTo(Model o) {
-		return this.getClassName().compareTo(o.getClassName());
+		return this.getClassName(
+		).compareTo(
+			o.getClassName()
+		);
 	}
 
 	@Override
@@ -160,13 +162,14 @@ public class ModelImpl implements Model {
 		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 
 		int numberOfDisjuntions =
-			((list.size() + maxNumClauses - 1) / maxNumClauses);
+			(list.size() + maxNumClauses - 1) / maxNumClauses;
 
-		for (int i = 0; i<numberOfDisjuntions; i++) {
+		for (int i = 0; i < numberOfDisjuntions; i++) {
 			int start = i * maxNumClauses;
 			int end = Math.min(start + maxNumClauses, list.size());
 
 			List<T> subList = list.subList(start, end);
+
 			disjunction.add(property.in(subList));
 		}
 
@@ -181,7 +184,10 @@ public class ModelImpl implements Model {
 
 	@Override
 	public int getAttributePos(String name) {
-		return this.getTableInfo().getAttributePos(name);
+		return this.getTableInfo(
+		).getAttributePos(
+			name
+		);
 	}
 
 	@Override
@@ -220,11 +226,12 @@ public class ModelImpl implements Model {
 			return this;
 		}
 
-		if (count(criterion)==-1) {
+		if (count(criterion) == -1) {
 			return null;
 		}
 
 		ModelWrapper modelWrapper = new ModelWrapper(this);
+
 		modelWrapper.setCriterion(criterion);
 
 		if (Validator.isNotNull(nameSuffix)) {
@@ -247,7 +254,7 @@ public class ModelImpl implements Model {
 			return Collections.singletonList(primaryKeyAttribute);
 		}
 
-		List<String> primaryKeyAttributes = new ArrayList<String>();
+		List<String> primaryKeyAttributes = new ArrayList<>();
 
 		primaryKeyAttributes.add(primaryKeyAttribute);
 
@@ -302,7 +309,8 @@ public class ModelImpl implements Model {
 
 	@Override
 	public ProjectionList getPropertyProjection(String[] attributes) {
-		List<String> validAttributes = new ArrayList<String>();
+		List<String> validAttributes = new ArrayList<>();
+
 		ProjectionList projectionList = getPropertyProjection(
 			attributes, validAttributes, null);
 
@@ -318,7 +326,7 @@ public class ModelImpl implements Model {
 		String[] attributes, List<String> validAttributes,
 		List<String> notValidAttributes) {
 
-		if ((attributes == null)||(attributes.length == 0)) {
+		if ((attributes == null) || (attributes.length == 0)) {
 			return null;
 		}
 
@@ -327,7 +335,7 @@ public class ModelImpl implements Model {
 
 		boolean grouping = false;
 
-		for (int i = 0; i<attributes.length; i++) {
+		for (int i = 0; i < attributes.length; i++) {
 			String attribute = attributes[i];
 
 			if (attribute.indexOf("(") > 0) {
@@ -348,7 +356,7 @@ public class ModelImpl implements Model {
 		}
 
 		if (grouping) {
-			for (int i = 0; i<op.length; i++) {
+			for (int i = 0; i < op.length; i++) {
 				if (op[i] == null) {
 					op[i] = "groupProperty";
 				}
@@ -361,7 +369,7 @@ public class ModelImpl implements Model {
 
 		int numProjections = 0;
 
-		for (int i = 0; i<attributesAux.length; i++) {
+		for (int i = 0; i < attributesAux.length; i++) {
 			Projection projection = getPropertyProjection(
 				attributesAux[i], op[i]);
 
@@ -424,7 +432,7 @@ public class ModelImpl implements Model {
 
 		if (pos != -1) {
 			prefix = attribute.substring(0, pos);
-			attrWithoutPrefix = attribute.substring(pos+1);
+			attrWithoutPrefix = attribute.substring(pos + 1);
 		}
 
 		TableInfo tableInfo = getTableInfoMappings().get(attrWithoutPrefix);
@@ -443,8 +451,7 @@ public class ModelImpl implements Model {
 	@Override
 	public Map<String, TableInfo> getTableInfoMappings() {
 		if (tableInfoMappings == null) {
-			Map<String, TableInfo> mappings =
-				new ConcurrentHashMap<String, TableInfo>();
+			Map<String, TableInfo> mappings = new ConcurrentHashMap<>();
 
 			List<String> mappingTables = service.getMappingTables();
 
@@ -453,6 +460,7 @@ public class ModelImpl implements Model {
 
 				String destinationAttr = tableInfo.getDestinationAttr(
 					getPrimaryKeyAttribute());
+
 				mappings.put(destinationAttr, tableInfo);
 			}
 
@@ -466,7 +474,11 @@ public class ModelImpl implements Model {
 	public boolean hasAttribute(String attribute) {
 		attribute = cleanAttributeName(attribute);
 
-		return (getAttributePos(attribute) != -1);
+		if (getAttributePos(attribute) != -1) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -499,9 +511,8 @@ public class ModelImpl implements Model {
 
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -530,8 +541,7 @@ public class ModelImpl implements Model {
 	@Override
 	public boolean isStagedModel() {
 		if (hasAttribute("uuid") && hasAttribute("companyId") &&
-			hasAttribute("createDate") &&
-			hasAttribute("modifiedDate")) {
+			hasAttribute("createDate") && hasAttribute("modifiedDate")) {
 
 			return true;
 		}
@@ -552,7 +562,10 @@ public class ModelImpl implements Model {
 
 	@Override
 	public boolean modelEqualsClass(Class<?> clazz) {
-		return this.getClassName().equals(clazz.getName());
+		return this.getClassName(
+		).equals(
+			clazz.getName()
+		);
 	}
 
 	@Override

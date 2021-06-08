@@ -68,13 +68,14 @@ public class IndexSearchHelper {
 		}
 
 		String className = value.getEntryClassName();
+
 		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
 
 		indexer.delete(value.getCompanyId(), uid.toString());
 	}
 
 	public Map<Data, String> deleteAndCheck(Collection<Data> dataCollection) {
-		Map<Data, String> errors = new HashMap<Data, String>();
+		Map<Data, String> errors = new HashMap<>();
 
 		int i = 0;
 
@@ -85,7 +86,7 @@ public class IndexSearchHelper {
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
-						"Deleting " + (i++) + " uid: " + data.get(Field.UID));
+						"Deleting " + i++ + " uid: " + data.get(Field.UID));
 				}
 			}
 			catch (SearchException e) {
@@ -110,8 +111,10 @@ public class IndexSearchHelper {
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
 		data.set(Field.UID, doc.getUID());
 
-		Locale[] locales = LanguageUtil.getAvailableLocales().toArray(
-				new Locale[0]);
+		Locale[] locales = LanguageUtil.getAvailableLocales(
+		).toArray(
+			new Locale[0]
+		);
 		Locale siteLocale = LocaleUtil.getSiteDefault();
 
 		for (String attribute : attributes) {
@@ -142,7 +145,11 @@ public class IndexSearchHelper {
 				data.set(attribute, xml);
 			}
 			else if (doc.hasField(attrDoc)) {
-				data.set(attribute, doc.getField(attrDoc).getValues());
+				data.set(
+					attribute,
+					doc.getField(
+						attrDoc
+					).getValues());
 			}
 		}
 	}
@@ -172,11 +179,12 @@ public class IndexSearchHelper {
 			Sort[] sorts, SearchContext searchContext, BooleanQuery query)
 		throws ParseException, SearchException {
 
-		List<String> indexFieldsList = new ArrayList<String>();
+		List<String> indexFieldsList = new ArrayList<>();
+
 		indexFieldsList.add(Field.UID);
 		indexFieldsList.add(Field.ENTRY_CLASS_NAME);
 
-		for (int i=0;i<attributes.length;i++) {
+		for (int i = 0; i < attributes.length; i++) {
 			String indexField = ConfigurationUtil.getIndexAttributeName(
 				model, attributes[i]);
 
@@ -184,14 +192,13 @@ public class IndexSearchHelper {
 			indexFieldsList.add(indexField.concat("*"));
 		}
 
-		String[] indexFields = indexFieldsList.toArray(
-			new String[indexFieldsList.size()]);
+		String[] indexFields = indexFieldsList.toArray(new String[0]);
 
 		int indexSearchLimit = PortletPropsValues.INDEX_SEARCH_LIMIT;
 
 		int size = Math.min((int)model.count() * 2, indexSearchLimit);
 
-		Set<Data> indexData = new HashSet<Data>();
+		Set<Data> indexData = new HashSet<>();
 
 		TermRangeQuery termRangeQuery = null;
 
@@ -212,7 +219,6 @@ public class IndexSearchHelper {
 					continue;
 				}
 				else if (!entryClassName.equals(model.getClassName())) {
-
 					_log.warn("Wrong entryClassName: " + entryClassName);
 				}
 
@@ -242,7 +248,7 @@ public class IndexSearchHelper {
 	}
 
 	public Map<Data, String> reindex(Collection<Data> dataCollection) {
-		Map<Data, String> errors = new HashMap<Data, String>();
+		Map<Data, String> errors = new HashMap<>();
 
 		int i = 0;
 
@@ -252,7 +258,7 @@ public class IndexSearchHelper {
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(
-						"Reindexing " + (i++) + " pk: " + data.getPrimaryKey());
+						"Reindexing " + i++ + " pk: " + data.getPrimaryKey());
 				}
 			}
 			catch (SearchException e) {
@@ -269,6 +275,7 @@ public class IndexSearchHelper {
 
 	public void reindex(Data value) throws SearchException {
 		String className = value.getEntryClassName();
+
 		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
 
 		indexer.reindex(className, value.getPrimaryKey());
@@ -300,6 +307,7 @@ public class IndexSearchHelper {
 		searchContext.setEnd(size);
 
 		QueryConfig queryConfig = new QueryConfig();
+
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
 
@@ -337,8 +345,7 @@ public class IndexSearchHelper {
 
 		field = ConfigurationUtil.getIndexAttributeName(model, field);
 
-		return new TermRangeQueryImpl(
-			field, lowerTerm, upperTerm, true, true);
+		return new TermRangeQueryImpl(field, lowerTerm, upperTerm, true, true);
 	}
 
 	protected long getIdFromUID(String strValue) {
@@ -346,13 +353,14 @@ public class IndexSearchHelper {
 		String[] uidArr = strValue.split("_");
 
 		if ((uidArr != null) && (uidArr.length >= 3)) {
-			int pos = uidArr.length-2;
+			int pos = uidArr.length - 2;
+
 			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
 				pos = pos - 2;
 			}
 
 			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
-				id = DataUtil.castLong(uidArr[pos+1]);
+				id = DataUtil.castLong(uidArr[pos + 1]);
 			}
 		}
 
@@ -365,6 +373,7 @@ public class IndexSearchHelper {
 		throws ParseException {
 
 		BooleanQuery query = new BooleanQueryImpl();
+
 		query.addRequiredTerm(
 			Field.ENTRY_CLASS_NAME, "\"" + model.getClassName() + "\"");
 
@@ -382,8 +391,8 @@ public class IndexSearchHelper {
 			((startModifiedDate != null) || (endModifiedDate != null))) {
 
 			TermRangeQuery termRangeQuery = getDateTermRangeQuery(
-					searchContext, model, "modifiedDate", startModifiedDate,
-					endModifiedDate);
+				searchContext, model, "modifiedDate", startModifiedDate,
+				endModifiedDate);
 
 			query.add(termRangeQuery, BooleanClauseOccur.MUST);
 		}
@@ -393,6 +402,7 @@ public class IndexSearchHelper {
 
 	protected SearchContext getIndexSearchContext(Model model, long companyId) {
 		SearchContext searchContext = new SearchContext();
+
 		searchContext.setCompanyId(companyId);
 		searchContext.setEntryClassNames(new String[] {model.getClassName()});
 
@@ -400,7 +410,7 @@ public class IndexSearchHelper {
 	}
 
 	protected Sort[] getIndexSorting(Model model, String[] attributes) {
-		List<String> sortAttributesList = new ArrayList<String>();
+		List<String> sortAttributesList = new ArrayList<>();
 
 		for (String attribute : attributes) {
 			if (model.hasAttribute(attribute)) {
@@ -413,7 +423,7 @@ public class IndexSearchHelper {
 
 		Sort[] sorts = new Sort[sortAttributesList.size()];
 
-		for (int i = 0; i<sortAttributesList.size(); i++) {
+		for (int i = 0; i < sortAttributesList.size(); i++) {
 			sorts[i] = new Sort(
 				sortAttributesList.get(i), Sort.LONG_TYPE, false);
 		}
@@ -424,10 +434,10 @@ public class IndexSearchHelper {
 	protected List<Map<Locale, String>> getLocalizedMap(
 		Locale[] locales, Document doc, String attribute) {
 
-		List<Map<Locale, String>> listValueMap =
-			new ArrayList<Map<Locale, String>>();
+		List<Map<Locale, String>> listValueMap = new ArrayList<>();
 
 		int pos = 0;
+
 		while (true) {
 			Map<Locale, String> valueMap = getLocalizedMap(
 				locales, doc, attribute, pos++);
@@ -448,6 +458,7 @@ public class IndexSearchHelper {
 
 		for (Sort sort : sorts) {
 			String fieldName = sort.getFieldName();
+
 			String lowerTerm = lastDocument.get(fieldName);
 
 			if (Validator.isNull(lowerTerm)) {
@@ -478,9 +489,9 @@ public class IndexSearchHelper {
 	private Map<Locale, String> getLocalizedMap(
 		Locale[] locales, Document doc, String attribute, int pos) {
 
-		Map<Locale, String> valueMap = new HashMap<Locale, String>();
+		Map<Locale, String> valueMap = new HashMap<>();
 
-		for (int i = 0; i<locales.length; i++) {
+		for (int i = 0; i < locales.length; i++) {
 			String localizedFieldName = Field.getLocalizedName(
 				locales[i], attribute);
 
@@ -488,7 +499,9 @@ public class IndexSearchHelper {
 				continue;
 			}
 
-			String[] values = doc.getField(localizedFieldName).getValues();
+			String[] values = doc.getField(
+				localizedFieldName
+			).getValues();
 
 			if (values.length >= (pos + 1)) {
 				valueMap.put(locales[i], values[pos]);

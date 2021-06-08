@@ -44,7 +44,7 @@ public class ComparisonUtil {
 		Set<Data> rightData, boolean showBothExact, boolean showBothNotExact,
 		boolean showOnlyLeft, boolean showOnlyRight) {
 
-		Map<String, Set<Data>> data = new TreeMap<String, Set<Data>>();
+		Map<String, Set<Data>> data = new TreeMap<>();
 
 		if (showBothExact) {
 			data.put("both-exact-left", new TreeSet<Data>());
@@ -62,7 +62,7 @@ public class ComparisonUtil {
 			rightData, leftData);
 
 		if (showBothExact || showBothNotExact) {
-			for (int i = 0; i< bothArrSetRight.length; i++) {
+			for (int i = 0; i < bothArrSetRight.length; i++) {
 				Data dataLeft = bothArrSetLeft[i];
 				Data dataRight = bothArrSetRight[i];
 
@@ -73,28 +73,47 @@ public class ComparisonUtil {
 				boolean exact = exactDataComparator.equals(dataLeft, dataRight);
 
 				if (exact && showBothExact) {
-					data.get("both-exact-left").add(dataLeft);
-					data.get("both-exact-right").add(dataRight);
+					data.get(
+						"both-exact-left"
+					).add(
+						dataLeft
+					);
+					data.get(
+						"both-exact-right"
+					).add(
+						dataRight
+					);
 				}
 
 				if (!exact && showBothNotExact) {
-					data.get("both-notexact-left").add(dataLeft);
-					data.get("both-notexact-right").add(dataRight);
+					data.get(
+						"both-notexact-left"
+					).add(
+						dataLeft
+					);
+					data.get(
+						"both-notexact-right"
+					).add(
+						dataRight
+					);
 				}
 			}
 		}
 
-		Set<Data> bothDataSet = new HashSet<Data>(rightData);
+		Set<Data> bothDataSet = new HashSet<>(rightData);
+
 		bothDataSet.retainAll(leftData);
 
 		if (showOnlyLeft) {
 			Set<Data> leftOnlyData = leftData;
+
 			leftOnlyData.removeAll(bothDataSet);
 			data.put("only-left", new TreeSet<Data>(leftOnlyData));
 		}
 
 		if (showOnlyRight) {
 			Set<Data> rightOnlyData = rightData;
+
 			rightOnlyData.removeAll(bothDataSet);
 			data.put("only-right", new TreeSet<Data>(rightOnlyData));
 		}
@@ -110,8 +129,9 @@ public class ComparisonUtil {
 
 	public static Comparison getError(Model model, Throwable t) {
 		_log.error(
-			"Model: " + model.getName() + " EXCEPTION: " +
-				t.getClass() + " - " + t.getMessage(),t);
+			"Model: " + model.getName() + " EXCEPTION: " + t.getClass() +
+				" - " + t.getMessage(),
+			t);
 
 		return _getError(model, t.getClass() + " - " + t.getMessage());
 	}
@@ -119,21 +139,20 @@ public class ComparisonUtil {
 	public static List<Comparison> mergeComparisons(
 		Collection<Comparison> collection) {
 
-		Map<Model, List<Comparison>> modelMap =
-			new LinkedHashMap<Model, List<Comparison>>();
+		Map<Model, List<Comparison>> modelMap = new LinkedHashMap<>();
 
 		for (Comparison c : collection) {
 			List<Comparison> comparisonList = modelMap.get(c.getModel());
 
 			if (comparisonList == null) {
-				comparisonList = new ArrayList<Comparison>();
+				comparisonList = new ArrayList<>();
 				modelMap.put(c.getModel(), comparisonList);
 			}
 
 			comparisonList.add(c);
 		}
 
-		List<Comparison> resultComparison = new ArrayList<Comparison>();
+		List<Comparison> resultComparison = new ArrayList<>();
 
 		for (List<Comparison> comparisonList : modelMap.values()) {
 			resultComparison.addAll(
