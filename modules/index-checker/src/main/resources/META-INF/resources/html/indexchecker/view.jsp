@@ -37,6 +37,7 @@
 <%@ page import="com.liferay.portal.kernel.theme.PortletDisplay" %>
 <%@ page import="com.liferay.portal.kernel.theme.ThemeDisplay" %>
 <%@ page import="com.liferay.portal.kernel.util.GetterUtil" %>
+<%@ page import="com.liferay.portal.kernel.util.ReleaseInfo" %>
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.kernel.util.WebKeys" %>
 
@@ -367,10 +368,26 @@ if (filterGroupIdSelected.contains("-2")) {
 		submitForm(document.<portlet:namespace />fm);
 	}
 
+<%
+	if (ReleaseInfo.getBuildNumber() < 7300) {
+%>
 	Liferay.provide(window,'closePopupWindow', function(dialogId) {
 			var dialog = Liferay.Util.Window.getById(dialogId);
 			dialog.destroy();
 		},
 		['liferay-util-window']
 	);
+<%
+	}
+	else
+	{
+%>
+	window['closePopupWindow'] = function(dialogId) {
+		Liferay.fire('closeModal', {
+			id: dialogId,
+		});
+	};
+<%
+	}
+%>
 </aui:script>
