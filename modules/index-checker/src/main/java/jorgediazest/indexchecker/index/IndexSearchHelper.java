@@ -308,7 +308,6 @@ public class IndexSearchHelper {
 		}
 
 		mainQuery.setQueryConfig(queryConfig);
-		// TODO REVISAR: searchContext.setQueryConfig(queryConfig);
 
 		Hits hits = IndexSearcherHelperUtil.search(searchContext, mainQuery);
 
