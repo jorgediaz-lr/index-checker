@@ -14,6 +14,7 @@
 
 package jorgediazest.indexchecker.portlet;
 
+import com.liferay.portal.bundle.blacklist.BundleBlacklistManager;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
@@ -87,7 +88,10 @@ import javax.portlet.ResourceURL;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
@@ -1218,6 +1222,28 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			portletId, resourceId, request, response);
 	}
 
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		try {
+			_bundleBlacklistManager.addToBlacklistAndUninstall(
+				"index-checker-portlet");
+		}
+		catch (IOException ioException) {
+			_log.error(ioException,ioException);
+		}
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		try {
+			_bundleBlacklistManager.removeFromBlacklistAndInstall(
+				"index-checker-portlet");
+		}
+		catch (IOException ioException) {
+			_log.error(ioException,ioException);
+		}
+	}
+
 	protected Date getStartDate(long timeInMillis, long hoursToSubstract) {
 		CalendarFactory calendarFactory =
 			CalendarFactoryUtil.getCalendarFactory();
@@ -1244,4 +1270,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
 
+	@Reference
+	private BundleBlacklistManager _bundleBlacklistManager;
 }
