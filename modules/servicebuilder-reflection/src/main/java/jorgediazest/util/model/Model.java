@@ -58,9 +58,9 @@ public interface Model extends Comparable<Model> {
 
 	public <T> Criterion getAttributeCriterion(String attribute, T value);
 
-	public int getAttributePos(String name);
+	public String[] getAttributeNames();
 
-	public String[] getAttributesName();
+	public int getAttributePos(String name);
 
 	public String getClassName();
 

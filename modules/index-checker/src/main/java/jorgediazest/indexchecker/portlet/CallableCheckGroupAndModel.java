@@ -190,15 +190,15 @@ public class CallableCheckGroupAndModel implements Callable<Comparison> {
 		}
 	}
 
+	protected long companyId = -1;
+	protected Date endModifiedDate = null;
+	protected Set<ExecutionMode> executionMode = null;
+	protected List<Long> groupIds = null;
+	protected Model model = null;
+	protected Map<String, Map<Long, List<Data>>> queryCache = null;
+	protected Date startModifiedDate = null;
+
 	private static Log _log = LogFactoryUtil.getLog(
 		CallableCheckGroupAndModel.class);
-
-	private long companyId = -1;
-	private Date endModifiedDate = null;
-	private Set<ExecutionMode> executionMode = null;
-	private List<Long> groupIds = null;
-	private Model model = null;
-	private Map<String, Map<Long, List<Data>>> queryCache = null;
-	private Date startModifiedDate = null;
 
 }

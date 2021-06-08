@@ -17,8 +17,6 @@ package jorgediazest.util.service;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.util.MethodKey;
@@ -44,7 +42,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 		this.modelService = modelService;
 		this.className = className;
 
-		this.classSimpleName = className;
+		classSimpleName = className;
 
 		int pos = className.lastIndexOf(".");
 
@@ -54,10 +52,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassedModel addObject(ClassedModel object) {
-		String methodName =
-			"add" +
-				object.getModelClass(
-				).getSimpleName();
+		String methodName = "add" + _getSimpleName(object);
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
@@ -71,10 +66,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassedModel deleteObject(ClassedModel object) {
-		String methodName =
-			"delete" +
-				object.getModelClass(
-				).getSimpleName();
+		String methodName = "delete" + _getSimpleName(object);
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
@@ -137,8 +129,9 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassLoader getClassLoader() {
-		return modelService.getClass(
-		).getClassLoader();
+		Class<?> clazz = modelService.getClass();
+
+		return clazz.getClassLoader();
 	}
 
 	public DynamicQuery newDynamicQuery() {
@@ -163,10 +156,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 	}
 
 	public ClassedModel updateObject(ClassedModel object) {
-		String methodName =
-			"update" +
-				object.getModelClass(
-				).getSimpleName();
+		String methodName = "update" + _getSimpleName(object);
 
 		return (ClassedModel)executeServiceMethod(
 			methodName, object.getModelClass(), object);
@@ -186,9 +176,9 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 		if (localServiceMethods.containsKey(key)) {
 			try {
-				method = localServiceMethods.get(
-					key
-				).getMethod();
+				MethodKey methodKey = localServiceMethods.get(key);
+
+				method = methodKey.getMethod();
 			}
 			catch (NoSuchMethodException e) {
 			}
@@ -219,7 +209,10 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 		new ConcurrentHashMap<>();
 	protected BaseLocalService modelService = null;
 
-	private static Log _log = LogFactoryUtil.getLog(
-		ServicePersistedModelImpl.class);
+	private static String _getSimpleName(ClassedModel classedModel) {
+		Class<?> clazz = classedModel.getModelClass();
+
+		return clazz.getSimpleName();
+	}
 
 }

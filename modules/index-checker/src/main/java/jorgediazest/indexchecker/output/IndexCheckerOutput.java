@@ -50,7 +50,6 @@ public class IndexCheckerOutput {
 	public static List<String> generateCSVOutput(
 		PortletConfig portletConfig, RenderRequest renderRequest) {
 
-		String title = (String)renderRequest.getAttribute("title");
 		EnumSet<ExecutionMode> executionMode =
 			(EnumSet<ExecutionMode>)renderRequest.getAttribute("executionMode");
 		Map<Company, Long> companyProcessTime =
@@ -59,14 +58,16 @@ public class IndexCheckerOutput {
 		Map<Company, Map<Long, List<Comparison>>> companyResultDataMap =
 			(Map<Company, Map<Long, List<Comparison>>>)
 				renderRequest.getAttribute("companyResultDataMap");
-		Map<Company, String> companyError =
-			(Map<Company, String>)renderRequest.getAttribute("companyError");
 
 		if ((executionMode == null) || (companyProcessTime == null) ||
 			(companyResultDataMap == null)) {
 
 			return null;
 		}
+
+		String title = (String)renderRequest.getAttribute("title");
+		Map<Company, String> companyError =
+			(Map<Company, String>)renderRequest.getAttribute("companyError");
 
 		return generateCSVOutput(
 			portletConfig, title, renderRequest.getLocale(),
@@ -112,15 +113,14 @@ public class IndexCheckerOutput {
 
 			Long processTime = companyEntry.getValue();
 
+			Company company = companyEntry.getKey();
+
 			String companyOutput =
-				companyEntry.getKey(
-				).getCompanyId() + " - " +
-					companyEntry.getKey(
-					).getWebId();
+				company.getCompanyId() + " - " + company.getWebId();
 
 			if (companyResultDataMap != null) {
 				Map<Long, List<Comparison>> resultDataMap =
-					companyResultDataMap.get(companyEntry.getKey());
+					companyResultDataMap.get(company);
 
 				int numberOfRows = 0;
 
@@ -187,28 +187,24 @@ public class IndexCheckerOutput {
 				if (numberOfRows == 0) {
 					out.add(StringPool.BLANK);
 					out.add(
-						"No results found: your system is ok or perhaps " +
-							"you have to change some filters");
+						"No results found: your system is ok or perhaps you " +
+							"have to change some filters");
 				}
 			}
 
-			String errorMessage = companyError.get(companyEntry.getKey());
+			String errorMessage = companyError.get(company);
 
 			if (Validator.isNotNull(errorMessage)) {
 				out.add(
-					"Company: " +
-						companyEntry.getKey(
-						).getCompanyId() + " - " +
-							companyEntry.getKey(
-							).getWebId());
+					"Company: " + company.getCompanyId() + " - " +
+						company.getWebId());
 				out.add(errorMessage);
 			}
 
 			out.add(StringPool.BLANK);
 			out.add(
-				"Executed " + title + " for company " +
-					companyEntry.getKey(
-					).getCompanyId() + " in " + processTime + " ms");
+				"Executed " + title + " for company " + company.getCompanyId() +
+					" in " + processTime + " ms");
 
 			out.add(StringPool.BLANK);
 		}
@@ -273,7 +269,7 @@ public class IndexCheckerOutput {
 
 			List<Comparison> results = searchContainer.getResults();
 
-			if ((results == null) || (results.size() == 0)) {
+			if ((results == null) || results.isEmpty()) {
 				results = new ArrayList<>();
 			}
 

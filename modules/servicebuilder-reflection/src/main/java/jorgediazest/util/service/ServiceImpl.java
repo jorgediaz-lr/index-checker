@@ -185,7 +185,7 @@ public abstract class ServiceImpl implements Service {
 		for (Element element : rootElement.elements("class")) {
 			if (hibernateClassImpl.equals(element.attributeValue("name"))) {
 				return element;
-			};
+			}
 		}
 
 		return null;

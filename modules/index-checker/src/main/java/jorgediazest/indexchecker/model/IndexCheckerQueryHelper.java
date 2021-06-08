@@ -17,8 +17,7 @@ package jorgediazest.indexchecker.model;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -31,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import jorgediazest.indexchecker.util.ConfigurationUtil;
@@ -41,6 +41,10 @@ import jorgediazest.util.model.ModelFactory;
 import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.query.Query;
 import jorgediazest.util.query.QueryUtil;
+
+/**
+ * @author Jorge Díaz
+ */
 public class IndexCheckerQueryHelper {
 
 	public static Object processTreePath(Object treePath) {
@@ -109,6 +113,13 @@ public class IndexCheckerQueryHelper {
 			}
 
 			String relatedClassName = (String)rdtq.get("model");
+
+			Model relatedModel = modelFactory.getModelObject(relatedClassName);
+
+			if (relatedModel == null) {
+				continue;
+			}
+
 			List<String> mappingsSource = (List<String>)rdtq.get(
 				"mappingsSource");
 			List<String> mappingsRelated = (List<String>)rdtq.get(
@@ -117,22 +128,13 @@ public class IndexCheckerQueryHelper {
 				"attributesToQuery");
 			List<String> attributesAlias = (List<String>)rdtq.get(
 				"attributesAlias");
-			boolean rawData = GetterUtil.getBoolean(
-				(Boolean)rdtq.get("raw"), false);
-			boolean appendMode = GetterUtil.getBoolean(
-				(Boolean)rdtq.get("appendMode"), false);
-			String relatedFilterString = (String)rdtq.get("filter");
-
-			Model relatedModel = modelFactory.getModelObject(relatedClassName);
-
-			if (relatedModel == null) {
-				continue;
-			}
+			boolean rawData = GetterUtil.getBoolean(rdtq.get("raw"));
+			boolean appendMode = GetterUtil.getBoolean(rdtq.get("appendMode"));
 
 			addRelatedModelData(
 				queryCache, liferayDataMap, model, relatedModel, mappingsSource,
 				mappingsRelated, attributesToQuery, attributesAlias, rawData,
-				appendMode, groupCriterion, relatedFilterString);
+				appendMode, groupCriterion, (String)rdtq.get("filter"));
 		}
 	}
 
@@ -155,15 +157,15 @@ public class IndexCheckerQueryHelper {
 			relatedCriterion = groupCriterion;
 		}
 
-		if ("classPK".equals(mappingsRelated.get(0)) &&
+		if (Objects.equals("classPK", mappingsRelated.get(0)) &&
 			((relatedFilterString == null) ||
 			 !relatedFilterString.startsWith("classNameId"))) {
 
-			Criterion classNameIdCriterion = relatedModel.getProperty(
-				"classNameId"
-			).eq(
-				model.getClassNameId()
-			);
+			Property propertyClassNameId = relatedModel.getProperty(
+				"classNameId");
+
+			Criterion classNameIdCriterion = propertyClassNameId.eq(
+				model.getClassNameId());
 
 			relatedCriterion = ModelUtil.generateConjunctionCriterion(
 				classNameIdCriterion, relatedCriterion);
@@ -256,15 +258,13 @@ public class IndexCheckerQueryHelper {
 			Criterion relatedCriterion)
 		throws Exception {
 
-		Map<Long, List<Data>> relatedMap;
-
 		String attributes = Arrays.toString(relatedAttributes.toArray());
 
 		String cacheKey =
 			relatedModel.getName() + "_" + attributes + "_key_" +
 				mappingsRelated.get(0);
 
-		relatedMap = queryCache.get(cacheKey);
+		Map<Long, List<Data>> relatedMap = queryCache.get(cacheKey);
 
 		if (relatedMap == null) {
 			synchronized (relatedModel) {
@@ -300,7 +300,7 @@ public class IndexCheckerQueryHelper {
 	public void postProcessData(Data data) {
 		Object treePath = data.get("treePath");
 
-		treePath = IndexCheckerQueryHelper.processTreePath(treePath);
+		treePath = processTreePath(treePath);
 
 		data.set("treePath", treePath);
 	}
@@ -322,9 +322,11 @@ public class IndexCheckerQueryHelper {
 
 		for (int i = 0; i < attributes.size(); i++) {
 			String attribute = attributes.get(i);
+
 			String alias = aliases.get(i);
 
 			Set<Object> existing = _castToSet(data.get(alias));
+
 			Set<Object> added = _castToSet(data.get(attribute));
 
 			Set<Object> newSet = new HashSet<>();
@@ -335,8 +337,5 @@ public class IndexCheckerQueryHelper {
 			data.set(alias, newSet);
 		}
 	}
-
-	private static Log _log = LogFactoryUtil.getLog(
-		IndexCheckerQueryHelper.class);
 
 }

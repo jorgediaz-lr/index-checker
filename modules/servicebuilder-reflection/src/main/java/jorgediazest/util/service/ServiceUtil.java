@@ -50,7 +50,7 @@ public class ServiceUtil {
 			"ImplModelImpl", "ModelImpl");
 
 		try {
-			return ServiceUtil.getJavaClass(classloader, liferayModelImpl);
+			return getJavaClass(classloader, liferayModelImpl);
 		}
 		catch (ClassNotFoundException cnfe) {
 			if (_log.isDebugEnabled()) {
@@ -78,13 +78,14 @@ public class ServiceUtil {
 
 			Object obj = null;
 
-			if ((list != null) && (list.size() > 0)) {
+			if ((list != null) && !list.isEmpty()) {
 				obj = list.get(0);
 			}
 
 			if (obj instanceof ClassedModel) {
-				return obj.getClass(
-				).getName();
+				Class<?> clazz = obj.getClass();
+
+				return clazz.getName();
 			}
 		}
 		catch (Exception e) {
@@ -111,22 +112,13 @@ public class ServiceUtil {
 
 	@SuppressWarnings("unchecked")
 	protected static Class<? extends ClassedModel> getClassModelFromPortal(
-		String className) {
+			String className)
+		throws ClassNotFoundException {
 
-		try {
-			return (Class<? extends ClassedModel>)
-				PortalClassLoaderUtil.getClassLoader(
-				).loadClass(
-					className
-				);
-		}
-		catch (ClassNotFoundException e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug("ClassModel not found: " + className);
-			}
+		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 
-			return null;
-		}
+		return (Class<? extends ClassedModel>)portalClassLoader.loadClass(
+			className);
 	}
 
 	protected static Class<?> getJavaClass(
@@ -140,10 +132,7 @@ public class ServiceUtil {
 		}
 
 		try {
-			clazz = PortalClassLoaderUtil.getClassLoader(
-			).loadClass(
-				className
-			);
+			clazz = getClassModelFromPortal(className);
 		}
 		catch (ClassNotFoundException e) {
 		}
@@ -182,25 +171,33 @@ public class ServiceUtil {
 	}
 
 	protected static Service getServiceFromPortal(String className) {
-		if (cacheNullPortalServices.contains(className)) {
+		if (_cacheNullPortalServices.contains(className)) {
 			return null;
 		}
 
-		ServiceClassInterfaceImpl service = cachePortalServices.get(className);
+		ServiceClassInterfaceImpl service = _cachePortalServices.get(className);
 
 		if (service != null) {
 			return service;
 		}
 
-		Class<? extends ClassedModel> classInterface = getClassModelFromPortal(
-			className);
+		Class<? extends ClassedModel> classInterface = null;
+
+		try {
+			classInterface = getClassModelFromPortal(className);
+		}
+		catch (ClassNotFoundException e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("ClassModel not found: " + className);
+			}
+		}
 
 		if (classInterface != null) {
 			try {
 				service = new ServiceClassInterfaceImpl(classInterface);
 
 				if (service.getLiferayModelImplClass() != null) {
-					cachePortalServices.put(className, service);
+					_cachePortalServices.put(className, service);
 
 					return service;
 				}
@@ -214,16 +211,16 @@ public class ServiceUtil {
 			}
 		}
 
-		cacheNullPortalServices.add(className);
+		_cacheNullPortalServices.add(className);
 
 		return null;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(ServiceUtil.class);
 
-	private static Set<String> cacheNullPortalServices =
+	private static Set<String> _cacheNullPortalServices =
 		Collections.newSetFromMap(new ConcurrentHashMap<>());
-	private static Map<String, ServiceClassInterfaceImpl> cachePortalServices =
+	private static Map<String, ServiceClassInterfaceImpl> _cachePortalServices =
 		new ConcurrentHashMap<>();
 
 }

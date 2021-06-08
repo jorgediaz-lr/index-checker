@@ -35,25 +35,21 @@ import jorgediazest.util.model.Model;
  */
 public class ComparisonUtil {
 
-	public static Comparison _getError(Model model, String error) {
-		return new Comparison(model, error);
-	}
-
 	public static Comparison getComparison(
 		Model model, DataComparator exactDataComparator, Set<Data> leftData,
 		Set<Data> rightData, boolean showBothExact, boolean showBothNotExact,
 		boolean showOnlyLeft, boolean showOnlyRight) {
 
-		Map<String, Set<Data>> data = new TreeMap<>();
+		Map<String, Set<Data>> dataSetMap = new TreeMap<>();
 
 		if (showBothExact) {
-			data.put("both-exact-left", new TreeSet<Data>());
-			data.put("both-exact-right", new TreeSet<Data>());
+			dataSetMap.put("both-exact-left", new TreeSet<Data>());
+			dataSetMap.put("both-exact-right", new TreeSet<Data>());
 		}
 
 		if (showBothNotExact) {
-			data.put("both-notexact-left", new TreeSet<Data>());
-			data.put("both-notexact-right", new TreeSet<Data>());
+			dataSetMap.put("both-notexact-left", new TreeSet<Data>());
+			dataSetMap.put("both-notexact-right", new TreeSet<Data>());
 		}
 
 		Data[] bothArrSetLeft = DataUtil.getArrayCommonData(
@@ -62,6 +58,13 @@ public class ComparisonUtil {
 			rightData, leftData);
 
 		if (showBothExact || showBothNotExact) {
+			Set<Data> bothExactLeftSet = dataSetMap.get("both-exact-left");
+			Set<Data> bothExactRightSet = dataSetMap.get("both-exact-right");
+			Set<Data> bothNotExactLeftSet = dataSetMap.get(
+				"both-notexact-left");
+			Set<Data> bothNotExactRightSet = dataSetMap.get(
+				"both-notexact-right");
+
 			for (int i = 0; i < bothArrSetRight.length; i++) {
 				Data dataLeft = bothArrSetLeft[i];
 				Data dataRight = bothArrSetRight[i];
@@ -73,29 +76,13 @@ public class ComparisonUtil {
 				boolean exact = exactDataComparator.equals(dataLeft, dataRight);
 
 				if (exact && showBothExact) {
-					data.get(
-						"both-exact-left"
-					).add(
-						dataLeft
-					);
-					data.get(
-						"both-exact-right"
-					).add(
-						dataRight
-					);
+					bothExactLeftSet.add(dataLeft);
+					bothExactRightSet.add(dataRight);
 				}
 
 				if (!exact && showBothNotExact) {
-					data.get(
-						"both-notexact-left"
-					).add(
-						dataLeft
-					);
-					data.get(
-						"both-notexact-right"
-					).add(
-						dataRight
-					);
+					bothNotExactLeftSet.add(dataLeft);
+					bothNotExactRightSet.add(dataRight);
 				}
 			}
 		}
@@ -108,17 +95,19 @@ public class ComparisonUtil {
 			Set<Data> leftOnlyData = leftData;
 
 			leftOnlyData.removeAll(bothDataSet);
-			data.put("only-left", new TreeSet<Data>(leftOnlyData));
+
+			dataSetMap.put("only-left", new TreeSet<Data>(leftOnlyData));
 		}
 
 		if (showOnlyRight) {
 			Set<Data> rightOnlyData = rightData;
 
 			rightOnlyData.removeAll(bothDataSet);
-			data.put("only-right", new TreeSet<Data>(rightOnlyData));
+
+			dataSetMap.put("only-right", new TreeSet<Data>(rightOnlyData));
 		}
 
-		return new Comparison(model, data);
+		return new Comparison(model, dataSetMap);
 	}
 
 	public static Comparison getError(Model model, String error) {
@@ -133,7 +122,7 @@ public class ComparisonUtil {
 				" - " + t.getMessage(),
 			t);
 
-		return _getError(model, t.getClass() + " - " + t.getMessage());
+		return new Comparison(model, t.getClass() + " - " + t.getMessage());
 	}
 
 	public static List<Comparison> mergeComparisons(
@@ -146,6 +135,7 @@ public class ComparisonUtil {
 
 			if (comparisonList == null) {
 				comparisonList = new ArrayList<>();
+
 				modelMap.put(c.getModel(), comparisonList);
 			}
 

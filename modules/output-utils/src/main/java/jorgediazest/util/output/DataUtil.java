@@ -51,17 +51,13 @@ public class DataUtil {
 			String value;
 
 			if (attrList.size() == 1) {
-				value = data.get(
-					attrList.get(0)
-				).toString();
+				value = _getString(data, attrList.get(0));
 			}
 			else {
 				String[] auxArr = new String[attrList.size()];
 
 				for (int j = 0; j < attrList.size(); j++) {
-					auxArr[j] = data.get(
-						attrList.get(j)
-					).toString();
+					auxArr[j] = _getString(data, attrList.get(j));
 				}
 
 				value = Arrays.toString(auxArr);
@@ -88,6 +84,12 @@ public class DataUtil {
 
 		return getListAttr(
 			dataCollection, Collections.singletonList(attr), size);
+	}
+
+	private static String _getString(Data data, String attr) {
+		Object obj = data.get(attr);
+
+		return obj.toString();
 	}
 
 }

@@ -45,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import jorgediazest.indexchecker.model.IndexCheckerQueryHelper;
@@ -111,10 +112,10 @@ public class IndexSearchHelper {
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
 		data.set(Field.UID, doc.getUID());
 
-		Locale[] locales = LanguageUtil.getAvailableLocales(
-		).toArray(
-			new Locale[0]
-		);
+		Set<Locale> localesSet = LanguageUtil.getAvailableLocales();
+
+		Locale[] locales = localesSet.toArray(new Locale[0]);
+
 		Locale siteLocale = LocaleUtil.getSiteDefault();
 
 		for (String attribute : attributes) {
@@ -145,11 +146,9 @@ public class IndexSearchHelper {
 				data.set(attribute, xml);
 			}
 			else if (doc.hasField(attrDoc)) {
-				data.set(
-					attribute,
-					doc.getField(
-						attrDoc
-					).getValues());
+				Field field = doc.getField(attrDoc);
+
+				data.set(attribute, field.getValues());
 			}
 		}
 	}
@@ -184,9 +183,9 @@ public class IndexSearchHelper {
 		indexFieldsList.add(Field.UID);
 		indexFieldsList.add(Field.ENTRY_CLASS_NAME);
 
-		for (int i = 0; i < attributes.length; i++) {
+		for (String attribute : attributes) {
 			String indexField = ConfigurationUtil.getIndexAttributeName(
-				model, attributes[i]);
+				model, attribute);
 
 			indexFieldsList.add(indexField);
 			indexFieldsList.add(indexField.concat("*"));
@@ -355,11 +354,11 @@ public class IndexSearchHelper {
 		if ((uidArr != null) && (uidArr.length >= 3)) {
 			int pos = uidArr.length - 2;
 
-			while ((pos > 0) && !"PORTLET".equals(uidArr[pos])) {
+			while ((pos > 0) && !Objects.equals("PORTLET", uidArr[pos])) {
 				pos = pos - 2;
 			}
 
-			if ((pos > 0) && "PORTLET".equals(uidArr[pos])) {
+			if ((pos > 0) && Objects.equals("PORTLET", uidArr[pos])) {
 				id = DataUtil.castLong(uidArr[pos + 1]);
 			}
 		}
@@ -439,7 +438,7 @@ public class IndexSearchHelper {
 		int pos = 0;
 
 		while (true) {
-			Map<Locale, String> valueMap = getLocalizedMap(
+			Map<Locale, String> valueMap = _getLocalizedMap(
 				locales, doc, attribute, pos++);
 
 			if (valueMap.isEmpty()) {
@@ -486,25 +485,25 @@ public class IndexSearchHelper {
 		return null;
 	}
 
-	private Map<Locale, String> getLocalizedMap(
+	private Map<Locale, String> _getLocalizedMap(
 		Locale[] locales, Document doc, String attribute, int pos) {
 
 		Map<Locale, String> valueMap = new HashMap<>();
 
-		for (int i = 0; i < locales.length; i++) {
+		for (Locale locale : locales) {
 			String localizedFieldName = Field.getLocalizedName(
-				locales[i], attribute);
+				locale, attribute);
 
 			if (!doc.hasField(localizedFieldName)) {
 				continue;
 			}
 
-			String[] values = doc.getField(
-				localizedFieldName
-			).getValues();
+			Field field = doc.getField(localizedFieldName);
+
+			String[] values = field.getValues();
 
 			if (values.length >= (pos + 1)) {
-				valueMap.put(locales[i], values[pos]);
+				valueMap.put(locale, values[pos]);
 			}
 		}
 

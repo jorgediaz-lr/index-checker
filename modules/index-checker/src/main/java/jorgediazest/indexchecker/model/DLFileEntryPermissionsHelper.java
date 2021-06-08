@@ -37,7 +37,7 @@ public class DLFileEntryPermissionsHelper
 		long groupId = data.getGroupId();
 		long repositoryId = data.get("repositoryId", -1L);
 
-		boolean hiddenFolder = isHiddenFolder(groupId, repositoryId);
+		boolean hiddenFolder = _isHiddenFolder(groupId, repositoryId);
 
 		if (!hiddenFolder) {
 			return false;
@@ -63,7 +63,7 @@ public class DLFileEntryPermissionsHelper
 		"com.liferay.wiki.model.WikiPage"
 	};
 
-	private boolean isHiddenFolder(long groupId, long repositoryId) {
+	private boolean _isHiddenFolder(long groupId, long repositoryId) {
 		try {
 			if (groupId == repositoryId) {
 				return false;

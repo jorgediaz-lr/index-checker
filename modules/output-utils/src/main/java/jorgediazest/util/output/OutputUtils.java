@@ -14,9 +14,6 @@
 
 package jorgediazest.util.output;
 
-/**
- * @author Jorge Díaz
- */
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.ResultRow;
@@ -25,6 +22,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
@@ -44,6 +42,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -57,6 +56,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.Data;
+
+/**
+ * @author Jorge Díaz
+ */
 public class OutputUtils {
 
 	public static FileEntry addPortletFileEntry(
@@ -64,7 +67,7 @@ public class OutputUtils {
 			String title, String mimeType)
 		throws PortalException {
 
-		if (Validator.isNull(inputStream)) {
+		if (inputStream == null) {
 			return null;
 		}
 
@@ -85,15 +88,15 @@ public class OutputUtils {
 			InputStream inputStream = new ByteArrayInputStream(
 				outputContent.getBytes(StringPool.UTF8));
 
-			Repository repository = OutputUtils.getPortletRepository(portletId);
+			Repository repository = getPortletRepository(portletId);
 
-			OutputUtils.cleanupPortletFileEntries(repository, 8 * 60);
+			cleanupPortletFileEntries(repository, 8 * 60);
 
 			String fileName =
 				portletId + "_output_" + userId + "_" +
 					System.currentTimeMillis() + ".csv";
 
-			return OutputUtils.addPortletFileEntry(
+			return addPortletFileEntry(
 				repository, inputStream, userId, fileName, "text/plain");
 		}
 		catch (Exception e) {
@@ -116,8 +119,10 @@ public class OutputUtils {
 				repository.getGroupId(), repository.getDlFolderId());
 
 		for (FileEntry fileEntry : fileEntries) {
-			long fileEntryDate = fileEntry.getCreateDate(
-			).getTime();
+			Date createDate = fileEntry.getCreateDate();
+
+			long fileEntryDate = createDate.getTime();
+
 			long delta = minutes * 60 * 1000;
 
 			if ((fileEntryDate + delta) < System.currentTimeMillis()) {
@@ -140,9 +145,9 @@ public class OutputUtils {
 
 		String[] output = DataUtil.getListAttr(data, attributeList);
 
-		String outputString = OutputUtils.stringArrayToString(output);
+		String outputString = stringArrayToString(output);
 
-		return OutputUtils.generateCSVRow(
+		return generateCSVRow(
 			resourceBundle, comp, companyOutput, groupIdOutput, groupNameOutput,
 			type, locale, outputString, data.size());
 	}
@@ -178,7 +183,7 @@ public class OutputUtils {
 
 		line.add(output);
 
-		return OutputUtils.getCSVRow(line);
+		return getCSVRow(line);
 	}
 
 	public static String generateCSVRow(
@@ -204,11 +209,9 @@ public class OutputUtils {
 
 		String[] output = DataUtil.getListAttr(data, attributeList);
 
-		String outputString = OutputUtils.stringArrayToString(output);
+		String outputString = stringArrayToString(output);
 
 		outputString = HtmlUtil.escape(outputString);
-
-		String outputStringTrimmed = null;
 
 		int overflow = data.size() - maxSize;
 
@@ -216,8 +219,7 @@ public class OutputUtils {
 			String[] outputTrimmed = DataUtil.getListAttr(
 				data, attributeList, maxSize);
 
-			outputStringTrimmed = OutputUtils.stringArrayToString(
-				outputTrimmed);
+			String outputStringTrimmed = stringArrayToString(outputTrimmed);
 
 			outputStringTrimmed = HtmlUtil.escape(outputStringTrimmed);
 
@@ -250,7 +252,7 @@ public class OutputUtils {
 							linkCollapse + "</span>";
 		}
 
-		return OutputUtils.generateSearchContainerRow(
+		return generateSearchContainerRow(
 			resourceBundle, comp, groupIdOutput, groupNameOutput, type, locale,
 			numberOfRows, outputString, data.size());
 	}
@@ -282,14 +284,12 @@ public class OutputUtils {
 			row.addText(groupNameOutput);
 		}
 
+		String output = HtmlUtil.escape(
+			LanguageUtil.get(resourceBundle, "output." + type));
+
 		row.addText(HtmlUtil.escape(comp.getModelName()));
 		row.addText(HtmlUtil.escape(comp.getModelDisplayName(locale)));
-		row.addText(
-			HtmlUtil.escape(
-				LanguageUtil.get(resourceBundle, "output." + type)
-			).replace(
-				" ", "&nbsp;"
-			));
+		row.addText(output.replace(" ", "&nbsp;"));
 
 		if (outputSize < 0) {
 			row.addText(StringPool.BLANK);
@@ -322,7 +322,7 @@ public class OutputUtils {
 		String row = StringPool.BLANK;
 
 		for (String aux : rowData) {
-			row = OutputUtils.addCell(row, aux, sep);
+			row = addCell(row, aux, sep);
 		}
 
 		return row;
@@ -333,11 +333,11 @@ public class OutputUtils {
 
 		List<String> headers = new ArrayList<>();
 
-		for (int i = 0; i < headerKeys.length; i++) {
+		for (String headerKey : headerKeys) {
 			ResourceBundle resourceBundle = portletConfig.getResourceBundle(
 				locale);
 
-			headers.add(LanguageUtil.get(resourceBundle, headerKeys[i]));
+			headers.add(LanguageUtil.get(resourceBundle, headerKey));
 		}
 
 		return headers;
@@ -356,38 +356,35 @@ public class OutputUtils {
 
 		List<Company> companies = CompanyLocalServiceUtil.getCompanies(false);
 
-		long companyId = companies.get(
-			0
-		).getCompanyId();
-		long groupId = GroupServiceUtil.getCompanyGroup(
-			companyId
-		).getGroupId();
+		Company company = companies.get(0);
+
+		Group group = GroupServiceUtil.getCompanyGroup(company.getCompanyId());
 
 		Repository repository =
 			PortletFileRepositoryUtil.fetchPortletRepository(
-				groupId, portletId);
+				group.getGroupId(), portletId);
 
 		if (repository == null) {
 			repository = PortletFileRepositoryUtil.addPortletRepository(
-				groupId, portletId, new ServiceContext());
+				group.getGroupId(), portletId, new ServiceContext());
 		}
 
 		return repository;
 	}
 
 	public static String listStringToString(List<String> out) {
-		if (Validator.isNull(out)) {
+		if (out == null) {
 			return null;
 		}
 
-		StringBundler stringBundler = new StringBundler(out.size() * 2);
+		StringBundler sb = new StringBundler(out.size() * 2);
 
 		for (String s : out) {
-			stringBundler.append(s);
-			stringBundler.append(StringPool.NEW_LINE);
+			sb.append(s);
+			sb.append(StringPool.NEW_LINE);
 		}
 
-		return stringBundler.toString();
+		return sb.toString();
 	}
 
 	public static void servePortletFileEntry(
@@ -396,18 +393,15 @@ public class OutputUtils {
 		throws IOException {
 
 		try {
-			Repository repository = OutputUtils.getPortletRepository(portletId);
+			Repository repository = getPortletRepository(portletId);
 
-			FileEntry fileEntry = OutputUtils.getPortletFileEntry(
-				repository, title);
+			FileEntry fileEntry = getPortletFileEntry(repository, title);
 
 			InputStream inputStream = fileEntry.getContentStream();
 
-			String mimeType = fileEntry.getMimeType();
-
 			PortletResponseUtil.sendFile(
-				request, response, title, inputStream, -1, mimeType,
-				"attachment");
+				request, response, title, inputStream, -1,
+				fileEntry.getMimeType(), "attachment");
 		}
 		catch (NoSuchFileEntryException nsfe) {
 			if (_log.isWarnEnabled()) {

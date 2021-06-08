@@ -41,6 +41,7 @@ public class JournalArticleIndexSearchHelper extends IndexSearchHelper {
 
 		if (indexAllVersions) {
 			long id = getIdFromUID(doc.get(Field.UID));
+
 			data.setPrimaryKey(id);
 		}
 	}

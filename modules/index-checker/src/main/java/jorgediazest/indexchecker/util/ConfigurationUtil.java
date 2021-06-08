@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import jorgediazest.indexchecker.index.IndexSearchHelper;
 import jorgediazest.indexchecker.model.IndexCheckerPermissionsHelper;
@@ -76,10 +77,7 @@ public class ConfigurationUtil {
 			attribute);
 
 		if ((indexAttribute == null) &&
-			model.getPrimaryKeyAttribute(
-			).equals(
-				attribute
-			)) {
+			Objects.equals(attribute, model.getPrimaryKeyAttribute())) {
 
 			indexAttribute = (String)indexAttributeNameMapping.get("pk");
 		}
@@ -134,12 +132,12 @@ public class ConfigurationUtil {
 	}
 
 	public static Map<String, Map<String, Object>> getModelInfo() {
-		if (modelInfo != null) {
-			return modelInfo;
+		if (_modelInfo != null) {
+			return _modelInfo;
 		}
 
 		synchronized (ConfigurationUtil.class) {
-			if (modelInfo == null) {
+			if (_modelInfo == null) {
 				Map<String, Map<String, Object>> modelInfoAux = new HashMap<>();
 
 				@SuppressWarnings("unchecked")
@@ -153,33 +151,22 @@ public class ConfigurationUtil {
 					modelInfoAux.put(model, modelMap);
 				}
 
-				modelInfo = modelInfoAux;
+				_modelInfo = modelInfoAux;
 			}
 
-			return modelInfo;
+			return _modelInfo;
 		}
 	}
 
 	public static Object getModelInfo(Model model, String entry) {
-		Object value = null;
-
-		Map<String, Object> modelMap = getModelInfo().get(model.getClassName());
-
-		if (modelMap != null) {
-			value = modelMap.get(entry);
-		}
+		Object value = _getModelInfo(model.getClassName(), entry);
 
 		if (value != null) {
 			return value;
 		}
 
 		if (model.isWorkflowEnabled()) {
-			value = getModelInfo(
-			).get(
-				"workflowedModel"
-			).get(
-				entry
-			);
+			value = _getModelInfo("workflowedModel", entry);
 
 			if (value != null) {
 				return value;
@@ -187,24 +174,14 @@ public class ConfigurationUtil {
 		}
 
 		if (model.isResourcedModel()) {
-			value = getModelInfo(
-			).get(
-				"resourcedModel"
-			).get(
-				entry
-			);
+			value = _getModelInfo("resourcedModel", entry);
 
 			if (value != null) {
 				return value;
 			}
 		}
 
-		return getModelInfo(
-		).get(
-			"default"
-		).get(
-			entry
-		);
+		return _getModelInfo("default", entry);
 	}
 
 	public static IndexCheckerPermissionsHelper getPermissionsHelper(
@@ -260,22 +237,22 @@ public class ConfigurationUtil {
 	}
 
 	protected static Map<String, Object> getConfiguration() {
-		if (configuration != null) {
-			return configuration;
+		if (_configuration != null) {
+			return _configuration;
 		}
 
 		synchronized (ConfigurationUtil.class) {
-			if (configuration == null) {
-				configuration = readConfiguration(
-					CONFIGURATION_FILE_NAME, CONFIGURATION_FILE_EXT);
+			if (_configuration == null) {
+				_configuration = readConfiguration(
+					_CONFIGURATION_FILE_NAME, _CONFIGURATION_FILE_EXT);
 
-				if (configuration == null) {
+				if (_configuration == null) {
 					throw new RuntimeException(
-						"Error reading configuration file");
+						"Error reading _configuration file");
 				}
 			}
 
-			return configuration;
+			return _configuration;
 		}
 	}
 
@@ -301,21 +278,8 @@ public class ConfigurationUtil {
 		return null;
 	}
 
-	private static boolean _getJournalArticleIndexAllVersions()
-		throws Exception {
-
-		Service journalArticleService = ServiceUtil.getService(
-			"com.liferay.journal.model.JournalArticle");
-
-		return (boolean)IndexCheckerUtil.getCompanyConfigurationKey(
-			CompanyThreadLocal.getCompanyId(),
-			journalArticleService.getClassLoader(),
-			"com.liferay.journal.configuration.JournalServiceConfiguration",
-			"indexAllArticleVersionsEnabled");
-	}
-
 	@SuppressWarnings("unchecked")
-	private static Map<String, Object> readConfiguration(
+	protected static Map<String, Object> readConfiguration(
 		String configurationFileName, String configurationFileExt) {
 
 		int liferayBuildNumber = ReleaseInfo.getBuildNumber();
@@ -359,13 +323,36 @@ public class ConfigurationUtil {
 		return (Map<String, Object>)yaml.load(configuration);
 	}
 
-	private static final String CONFIGURATION_FILE_EXT = "yml";
+	private static boolean _getJournalArticleIndexAllVersions()
+		throws Exception {
 
-	private static final String CONFIGURATION_FILE_NAME = "configuration";
+		Service journalArticleService = ServiceUtil.getService(
+			"com.liferay.journal.model.JournalArticle");
+
+		return (boolean)IndexCheckerUtil.getCompanyConfigurationKey(
+			CompanyThreadLocal.getCompanyId(),
+			journalArticleService.getClassLoader(),
+			"com.liferay.journal.configuration.JournalServiceConfiguration",
+			"indexAllArticleVersionsEnabled");
+	}
+
+	private static Object _getModelInfo(String modelName, String key) {
+		Map<String, Object> modelMap = getModelInfo().get(modelName);
+
+		if (modelMap == null) {
+			return null;
+		}
+
+		return modelMap.get(key);
+	}
+
+	private static final String _CONFIGURATION_FILE_EXT = "yml";
+
+	private static final String _CONFIGURATION_FILE_NAME = "configuration";
 
 	private static Log _log = LogFactoryUtil.getLog(ConfigurationUtil.class);
 
-	private static Map<String, Object> configuration = null;
-	private static Map<String, Map<String, Object>> modelInfo = null;
+	private static Map<String, Object> _configuration = null;
+	private static Map<String, Map<String, Object>> _modelInfo = null;
 
 }

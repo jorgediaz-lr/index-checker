@@ -59,7 +59,6 @@ public class Query {
 			Criterion criterion)
 		throws Exception {
 
-		Map<Long, Data> dataMap = new HashMap<>();
 		Map<Long, Data> dataMapByPK = new HashMap<>();
 
 		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
@@ -72,10 +71,12 @@ public class Query {
 		ProjectionList projectionList = model.getPropertyProjection(
 			attributes, validAttributes, notValidAttributes);
 
-		if ((projectionList == null) && (notValidAttributes.size() > 0)) {
+		if ((projectionList == null) && !notValidAttributes.isEmpty()) {
 			return getDataFromMappingTables(
 				model, notValidAttributes, mapKeyAttribute);
 		}
+
+		Map<Long, Data> dataMap = new HashMap<>();
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> results = (List<Object[]>)model.executeDynamicQuery(
@@ -124,6 +125,7 @@ public class Query {
 		throws Exception {
 
 		Map<Long, List<Data>> dataMap = new HashMap<>();
+
 		Map<Long, List<Data>> dataMapByPK = new HashMap<>();
 
 		if (mapKeyAttribute.equals(model.getPrimaryKeyAttribute())) {
@@ -131,7 +133,7 @@ public class Query {
 		}
 
 		if (attributes == null) {
-			attributes = model.getAttributesName();
+			attributes = model.getAttributeNames();
 		}
 
 		List<String> validAttributes = new ArrayList<>();
@@ -180,11 +182,11 @@ public class Query {
 	public static Set<Data> queryTable(Model model, TableInfo tableInfo)
 		throws Exception {
 
-		if (Validator.isNull(tableInfo)) {
+		if (tableInfo == null) {
 			return Collections.emptySet();
 		}
 
-		return queryTable(model, tableInfo, tableInfo.getAttributesName());
+		return queryTable(model, tableInfo, tableInfo.getAttributeNames());
 	}
 
 	public static Set<Data> queryTable(
@@ -286,19 +288,15 @@ public class Query {
 			mappingAttributeValue = defaultValue;
 		}
 
-		if (!dataMap.containsKey(mappingAttributeValue)) {
-			List<Data> list = new ArrayList<>();
+		List<Data> list = dataMap.get(mappingAttributeValue);
 
-			list.add(data);
+		if (list == null) {
+			list = new ArrayList<>();
+
 			dataMap.put(mappingAttributeValue, list);
 		}
-		else {
-			dataMap.get(
-				mappingAttributeValue
-			).add(
-				data
-			);
-		}
+
+		list.add(data);
 	}
 
 	protected static String cleanAttributeName(
@@ -339,7 +337,7 @@ public class Query {
 				continue;
 			}
 
-			Set<Data> dataSet = Query.queryTable(
+			Set<Data> dataSet = queryTable(
 				model, tableInfo, new String[] {notValidAttribute});
 
 			for (Data data : dataSet) {
@@ -360,7 +358,7 @@ public class Query {
 			return null;
 		}
 
-		Set<Data> relateDataSet = Query.queryTable(
+		Set<Data> relateDataSet = queryTable(
 			model, tableInfo,
 			new String[] {model.getPrimaryKeyAttribute(), attribute});
 

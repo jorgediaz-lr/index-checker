@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
+import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -82,12 +83,9 @@ public class JournalArticleQueryHelper extends IndexCheckerQueryHelper {
 
 		articleVersionDynamicQuery.add(filterStatus);
 
-		query.add(
-			model.getProperty(
-				"version"
-			).eq(
-				articleVersionDynamicQuery
-			));
+		Property propertyVersion = model.getProperty("version");
+
+		query.add(propertyVersion.eq(articleVersionDynamicQuery));
 
 		query.add(filterStatus);
 

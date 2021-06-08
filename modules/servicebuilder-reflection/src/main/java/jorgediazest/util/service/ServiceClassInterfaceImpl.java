@@ -16,8 +16,6 @@ package jorgediazest.util.service;
 
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 
@@ -31,13 +29,13 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 	public ServiceClassInterfaceImpl(
 		Class<? extends ClassedModel> classInterface) {
 
-		String classPackageName = classInterface.getPackage(
-		).getName();
+		Package classPackage = classInterface.getPackage();
 
 		this.classInterface = classInterface;
 
-		this.classSimpleName = classInterface.getSimpleName();
-		this.className = classPackageName + "." + classSimpleName;
+		classSimpleName = classInterface.getSimpleName();
+
+		className = classPackage.getName() + "." + classSimpleName;
 	}
 
 	public List<?> executeDynamicQuery(DynamicQuery dynamicQuery) {
@@ -59,7 +57,5 @@ public class ServiceClassInterfaceImpl extends ServiceImpl {
 	}
 
 	protected Class<? extends ClassedModel> classInterface = null;
-
-	static Log _log = LogFactoryUtil.getLog(ServiceClassInterfaceImpl.class);
 
 }

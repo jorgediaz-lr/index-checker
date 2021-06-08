@@ -15,6 +15,7 @@
 package jorgediazest.util.comparator;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import jorgediazest.util.data.Data;
@@ -26,10 +27,11 @@ public class DataComparatorMap extends DataBaseComparator {
 
 	@Override
 	public int compare(Data data1, Data data2) {
-		Set<String> k1 = data1.getMap(
-		).keySet();
-		Set<String> k2 = data2.getMap(
-		).keySet();
+		Map<String, Object> map1 = data1.getMap();
+		Map<String, Object> map2 = data2.getMap();
+
+		Set<String> k1 = map1.keySet();
+		Set<String> k2 = map2.keySet();
 
 		if (k1.size() != k2.size()) {
 			return k1.size() - k2.size();
@@ -62,10 +64,11 @@ public class DataComparatorMap extends DataBaseComparator {
 
 	@Override
 	public boolean equals(Data data1, Data data2) {
-		Set<String> k1 = data1.getMap(
-		).keySet();
-		Set<String> k2 = data2.getMap(
-		).keySet();
+		Map<String, Object> map1 = data1.getMap();
+		Map<String, Object> map2 = data2.getMap();
+
+		Set<String> k1 = map1.keySet();
+		Set<String> k2 = map2.keySet();
 
 		if (k1.size() != k2.size()) {
 			return false;
@@ -91,12 +94,12 @@ public class DataComparatorMap extends DataBaseComparator {
 	public Integer hashCode(Data data) {
 		int hashCode = 1;
 
-		for (Object o :
-				data.getMap(
-				).values()) {
+		Map<String, Object> map = data.getMap();
 
-			hashCode *= o.toString(
-			).hashCode();
+		for (Object o : map.values()) {
+			String str = o.toString();
+
+			hashCode *= str.hashCode();
 		}
 
 		return hashCode;

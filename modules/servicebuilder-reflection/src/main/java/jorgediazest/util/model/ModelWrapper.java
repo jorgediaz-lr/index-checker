@@ -146,13 +146,13 @@ public class ModelWrapper implements Cloneable, Model {
 	}
 
 	@Override
-	public int getAttributePos(String name) {
-		return model.getAttributePos(name);
+	public String[] getAttributeNames() {
+		return model.getAttributeNames();
 	}
 
 	@Override
-	public String[] getAttributesName() {
-		return model.getAttributesName();
+	public int getAttributePos(String name) {
+		return model.getAttributePos(name);
 	}
 
 	@Override
@@ -344,7 +344,7 @@ public class ModelWrapper implements Cloneable, Model {
 
 		this.suffix = suffix;
 
-		this.name = getClassName() + "_" + this.suffix;
+		name = getClassName() + "_" + suffix;
 	}
 
 	@Override
@@ -352,12 +352,12 @@ public class ModelWrapper implements Cloneable, Model {
 		return getName();
 	}
 
-	protected static Log _log = LogFactoryUtil.getLog(ModelWrapper.class);
-
 	protected List<String> keyAttributes = null;
 	protected Model model;
 	protected String name = null;
 	protected ServiceWrapper serviceWrapper = null;
 	protected String suffix = null;
+
+	private static Log _log = LogFactoryUtil.getLog(ModelWrapper.class);
 
 }

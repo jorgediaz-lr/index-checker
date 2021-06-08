@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -54,12 +55,9 @@ public class Comparison {
 				continue;
 			}
 
-			if ((c.data == null) ||
-				!merged.getModel(
-				).equals(
-					c.getModel()
-				)) {
+			Model mergedModel = merged.getModel();
 
+			if ((c.data == null) || !mergedModel.equals(c.getModel())) {
 				result.add(c);
 
 				continue;
@@ -99,26 +97,25 @@ public class Comparison {
 		_log.info("*** ClassName: " + model.getName());
 
 		for (Map.Entry<String, Set<Data>> entry : data.entrySet()) {
-			if (entry.getValue(
-				).size() != 0) {
+			Set<Data> value = entry.getValue();
 
+			if (!value.isEmpty()) {
 				_log.info("==" + entry.getKey() + "==");
 
-				for (Data d : entry.getValue()) {
-					_log.info(
-						d.getEntryClassName() + " " +
-							d.getMap(
-							).toString());
+				for (Data d : value) {
+					Map<String, Object> map = d.getMap();
+
+					_log.info(d.getEntryClassName() + " " + map.toString());
 				}
 			}
 		}
 	}
 
 	public Set<Data> getData(String type) {
-		if ("both-exact".equals(type)) {
+		if (Objects.equals("both-exact", type)) {
 			type = "both-exact-left";
 		}
-		else if ("both-notexact".equals(type)) {
+		else if (Objects.equals("both-notexact", type)) {
 			type = "both-notexact-left";
 		}
 
@@ -184,6 +181,7 @@ public class Comparison {
 
 				if (c == null) {
 					c = new Comparison(model, new TreeMap<String, Set<Data>>());
+
 					result.put(id, c);
 				}
 
@@ -191,11 +189,8 @@ public class Comparison {
 
 				if (set == null) {
 					set = new TreeSet<>();
-					result.get(
-						id
-					).data.put(
-						key, set
-					);
+
+					c.data.put(key, set);
 				}
 
 				set.add(d);
@@ -209,20 +204,20 @@ public class Comparison {
 		this.model = model;
 		this.data = data;
 
-		this.error = null;
+		error = null;
 	}
 
 	protected Comparison(Model model, String error) {
 		this.model = model;
 		this.error = error;
 
-		this.data = new TreeMap<>();
+		data = new TreeMap<>();
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(Comparison.class);
+	protected Map<String, Set<Data>> data;
+	protected String error;
+	protected Model model;
 
-	private Map<String, Set<Data>> data;
-	private String error;
-	private Model model;
+	private static Log _log = LogFactoryUtil.getLog(Comparison.class);
 
 }

@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
+import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -448,19 +449,18 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		PortletConfig portletConfig = (PortletConfig)renderRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_CONFIG);
 
-		String updateMessage = getUpdateMessage(portletConfig);
-
-		renderRequest.setAttribute("updateMessage", updateMessage);
+		renderRequest.setAttribute(
+			"updateMessage", getUpdateMessage(portletConfig));
 
 		List<String> outputList = IndexCheckerOutput.generateCSVOutput(
 			portletConfig, renderRequest);
 
 		String portletId = portletConfig.getPortletName();
-		long userId = PortalUtil.getUserId(renderRequest);
+
 		String outputContent = OutputUtils.listStringToString(outputList);
 
 		FileEntry exportCsvFileEntry = OutputUtils.addPortletOutputFileEntry(
-			portletId, userId, outputContent);
+			portletId, PortalUtil.getUserId(renderRequest), outputContent);
 
 		if (exportCsvFileEntry != null) {
 			ResourceURL exportCsvResourceURL =
@@ -473,12 +473,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		try {
-			List<Long> siteGroupIds = this.getSiteGroupIds();
+			List<Long> siteGroupIds = getSiteGroupIds();
 
 			renderRequest.setAttribute("groupIdList", siteGroupIds);
 
 			List<String> groupDescriptionList = getSiteGroupDescriptions(
 				siteGroupIds, renderRequest.getLocale());
+
 			renderRequest.setAttribute(
 				"groupDescriptionList", groupDescriptionList);
 		}
@@ -487,15 +488,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		}
 
 		try {
-			List<Model> modelList = this.getModelList();
-			renderRequest.setAttribute("modelList", modelList);
+			renderRequest.setAttribute("modelList", getModelList());
 		}
 		catch (SystemException se) {
 			throw new PortletException(se);
 		}
 
 		long filterModifiedDate = ParamUtil.getLong(
-			renderRequest, "filterModifiedDate", 0L);
+			renderRequest, "filterModifiedDate");
 
 		renderRequest.setAttribute("filterModifiedDate", filterModifiedDate);
 
@@ -531,7 +531,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Date endModifiedDate = null;
 
 		long filterModifiedDate = ParamUtil.getLong(
-			request, "filterModifiedDate", 0L);
+			request, "filterModifiedDate");
 
 		if (filterModifiedDate > 0) {
 			long now = System.currentTimeMillis();
@@ -566,22 +566,24 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				Map<Long, List<Comparison>> resultDataMap =
-					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, startModifiedDate,
-						endModifiedDate, executionMode,
-						getNumberOfThreads(request));
+				Map<Long, List<Comparison>> resultDataMap = executeCheck(
+					company, groupIds, classNames, startModifiedDate,
+					endModifiedDate, executionMode,
+					getNumberOfThreads(request));
 
 				boolean groupBySite = executionMode.contains(
 					ExecutionMode.GROUP_BY_SITE);
 
-				if (groupBySite &&
-					(resultDataMap.keySet(
-					).size() == 1)) {
+				Set<Long> groupIdsSet = resultDataMap.keySet();
+
+				long numberOfGroupIds = groupIdsSet.size();
+
+				if (groupBySite && (numberOfGroupIds == 1)) {
+					Collection<List<Comparison>> values =
+						resultDataMap.values();
 
 					List<Comparison> listComparison =
-						(List<Comparison>)resultDataMap.values(
-						).toArray()[0];
+						(List<Comparison>)values.toArray()[0];
 
 					resultDataMap = new TreeMap<>();
 
@@ -604,10 +606,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					}
 				}
 
-				if (!groupBySite &&
-					(resultDataMap.keySet(
-					).size() > 1)) {
-
+				if (!groupBySite && (numberOfGroupIds > 1)) {
 					List<Comparison> tempComparisonList = new ArrayList<>();
 
 					for (List<Comparison> auxList : resultDataMap.values()) {
@@ -643,7 +642,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				PrintWriter pwt = new PrintWriter(swt);
 
 				pwt.println("Error during execution: " + t.getMessage());
+
 				t.printStackTrace(pwt);
+
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
@@ -685,7 +686,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		Date endModifiedDate = null;
 
 		long filterModifiedDate = ParamUtil.getLong(
-			request, "filterModifiedDate", 0L);
+			request, "filterModifiedDate");
 
 		if (filterModifiedDate > 0) {
 			long now = System.currentTimeMillis();
@@ -719,11 +720,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				Map<Long, List<Comparison>> resultDataMap =
-					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, startModifiedDate,
-						endModifiedDate, executionMode,
-						getNumberOfThreads(request));
+				Map<Long, List<Comparison>> resultDataMap = executeCheck(
+					company, groupIds, classNames, startModifiedDate,
+					endModifiedDate, executionMode,
+					getNumberOfThreads(request));
 
 				for (Map.Entry<Long, List<Comparison>> entry :
 						resultDataMap.entrySet()) {
@@ -733,14 +733,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					for (Comparison result : resultList) {
 						Map<Data, String> errors = reindex(result);
 						/* TODO Mover todo esto al JSP */
-						if (((errors != null) && (errors.size() > 0)) ||
+						if (((errors != null) && !errors.isEmpty()) ||
 							(result.getError() != null)) {
 
 							pw.println();
 							pw.println("----");
-							pw.println(
-								result.getModel(
-								).getName());
+							pw.println(result.getModelName());
 							pw.println("----");
 
 							for (Map.Entry<Data, String> e :
@@ -766,7 +764,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				PrintWriter pwt = new PrintWriter(swt);
 
 				pwt.println("Error during execution: " + t.getMessage());
+
 				t.printStackTrace(pwt);
+
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
@@ -831,10 +831,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 				long startTime = System.currentTimeMillis();
 
-				Map<Long, List<Comparison>> resultDataMap =
-					IndexCheckerPortlet.executeCheck(
-						company, groupIds, classNames, null, null,
-						executionMode, getNumberOfThreads(request));
+				Map<Long, List<Comparison>> resultDataMap = executeCheck(
+					company, groupIds, classNames, null, null, executionMode,
+					getNumberOfThreads(request));
 
 				for (Map.Entry<Long, List<Comparison>> entry :
 						resultDataMap.entrySet()) {
@@ -844,14 +843,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					for (Comparison result : resultList) {
 						Map<Data, String> errors = removeIndexOrphans(result);
 						/* TODO Mover todo esto al JSP */
-						if (((errors != null) && (errors.size() > 0)) ||
+						if (((errors != null) && !errors.isEmpty()) ||
 							(result.getError() != null)) {
 
 							pw.println();
 							pw.println("----");
-							pw.println(
-								result.getModel(
-								).getName());
+							pw.println(result.getModelName());
 							pw.println("----");
 
 							for (Map.Entry<Data, String> e :
@@ -877,7 +874,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				PrintWriter pwt = new PrintWriter(swt);
 
 				pwt.println("Error during execution: " + t.getMessage());
+
 				t.printStackTrace(pwt);
+
 				companyError.put(company, swt.toString());
 				_log.error(t, t);
 			}
@@ -969,15 +968,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		if (filterGroupIdArr != null) {
 			for (String filterGroupId : filterGroupIdArr) {
-				if ("0".equals(filterGroupId)) {
+				if (filterGroupId.equals("0")) {
 					groupIds.add(0L);
 				}
 
-				if ("-1".equals(filterGroupId)) {
+				if (filterGroupId.equals("-1")) {
 					allSites = true;
 				}
 
-				if ("-2".equals(filterGroupId)) {
+				if (filterGroupId.equals("-2")) {
 					userSites = true;
 				}
 			}
@@ -1011,8 +1010,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 			String groupIdStr = "" + group.getGroupId();
 
-			for (int i = 0; i < filterGroupIdArr.length; i++) {
-				if (groupIdStr.equals(filterGroupIdArr[i])) {
+			for (String filterGroupId : filterGroupIdArr) {
+				if (groupIdStr.equals(filterGroupId)) {
 					groupIds.add(group.getGroupId());
 
 					break;
@@ -1107,18 +1106,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
 
-		conjuntion.add(
-			groupModel.getProperty(
-				"classNameId"
-			).eq(
-				companyClassNameId
-			));
-		conjuntion.add(
-			groupModel.getProperty(
-				"liveGroupId"
-			).eq(
-				0L
-			));
+		Property classNameIdProperty = groupModel.getProperty("classNameId");
+		Property liveGroupIdProperty = groupModel.getProperty("liveGroupId");
+
+		conjuntion.add(classNameIdProperty.eq(companyClassNameId));
+		conjuntion.add(liveGroupIdProperty.eq(0L));
 
 		/* Get groupIds of live global groups */
 		List<Long> liveGlobalGroupIds =
@@ -1127,12 +1119,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		/* Get groupIds of staging and live global groups */
 		Disjunction disjunctionGlobal = RestrictionsFactoryUtil.disjunction();
 
-		disjunctionGlobal.add(
-			groupModel.getProperty(
-				"classNameId"
-			).eq(
-				companyClassNameId
-			));
+		classNameIdProperty = groupModel.getProperty("classNameId");
+
+		disjunctionGlobal.add(classNameIdProperty.eq(companyClassNameId));
+
 		disjunctionGlobal.add(
 			groupModel.getAttributeCriterion(
 				"liveGroupId", liveGlobalGroupIds));
@@ -1149,18 +1139,12 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		/* Get groupIds of staging and live normal groups */
 		Conjunction stagingSites = RestrictionsFactoryUtil.conjunction();
 
-		stagingSites.add(
-			groupModel.getProperty(
-				"site"
-			).eq(
-				false
-			));
-		stagingSites.add(
-			groupModel.getProperty(
-				"liveGroupId"
-			).ne(
-				0L
-			));
+		Property siteProperty = groupModel.getProperty("site");
+
+		liveGroupIdProperty = groupModel.getProperty("liveGroupId");
+
+		stagingSites.add(siteProperty.eq(false));
+		stagingSites.add(liveGroupIdProperty.ne(0L));
 		stagingSites.add(
 			RestrictionsFactoryUtil.not(
 				groupModel.getAttributeCriterion(
@@ -1168,18 +1152,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		Conjunction normalSites = RestrictionsFactoryUtil.conjunction();
 
-		normalSites.add(
-			groupModel.getProperty(
-				"site"
-			).eq(
-				true
-			));
-		normalSites.add(
-			groupModel.getProperty(
-				"classNameId"
-			).ne(
-				companyClassNameId
-			));
+		classNameIdProperty = groupModel.getProperty("classNameId");
+
+		siteProperty = groupModel.getProperty("site");
+
+		normalSites.add(siteProperty.eq(true));
+
+		normalSites.add(classNameIdProperty.ne(companyClassNameId));
 
 		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 
@@ -1201,8 +1180,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	public String getUpdateMessage(PortletConfig portletConfig) {
-		Bundle bundle = FrameworkUtil.getBundle(this.getClass());
-
 		@SuppressWarnings("unchecked")
 		Collection<String> lastAvalibleVersion =
 			(Collection<String>)RemoteConfigurationUtil.getConfigurationEntry(
@@ -1211,6 +1188,8 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		if ((lastAvalibleVersion == null) || lastAvalibleVersion.isEmpty()) {
 			return getUpdateMessageOffline(portletConfig);
 		}
+
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
 
 		Version version = bundle.getVersion();
 
@@ -1226,8 +1205,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		LiferayPortletContext context =
 			(LiferayPortletContext)portletConfig.getPortletContext();
 
-		long installationTimestamp = context.getPortlet(
-		).getTimestamp();
+		com.liferay.portal.kernel.model.Portlet portlet = context.getPortlet();
+
+		long installationTimestamp = portlet.getTimestamp();
 
 		if (installationTimestamp == 0L) {
 			return null;
@@ -1257,11 +1237,10 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		PortletConfig portletConfig = (PortletConfig)request.getAttribute(
 			JavaConstants.JAVAX_PORTLET_CONFIG);
 
-		String resourceId = request.getResourceID();
 		String portletId = portletConfig.getPortletName();
 
 		OutputUtils.servePortletFileEntry(
-			portletId, resourceId, request, response);
+			portletId, request.getResourceID(), request, response);
 	}
 
 	@Activate

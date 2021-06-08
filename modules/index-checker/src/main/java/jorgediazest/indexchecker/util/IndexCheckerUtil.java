@@ -14,8 +14,6 @@
 
 package jorgediazest.indexchecker.util;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 
 import java.lang.reflect.Method;
@@ -71,7 +69,5 @@ public class IndexCheckerUtil {
 
 		return value.toString();
 	}
-
-	private static Log _log = LogFactoryUtil.getLog(IndexCheckerUtil.class);
 
 }

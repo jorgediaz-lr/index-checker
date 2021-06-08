@@ -48,11 +48,12 @@ public class DataIndexCheckerModelComparator extends DataModelComparator {
 		if ((o1 instanceof Set) && (o2 instanceof Set)) {
 			for (Locale key : LanguageUtil.getAvailableLocales()) {
 				Set<String> values1 = new HashSet<>();
-				Set<String> values2 = new HashSet<>();
 
 				if (!fillMapValues(o1, key, values1)) {
 					return false;
 				}
+
+				Set<String> values2 = new HashSet<>();
 
 				if (!fillMapValues(o2, key, values2)) {
 					return false;

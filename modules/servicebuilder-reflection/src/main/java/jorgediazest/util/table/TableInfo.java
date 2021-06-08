@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.reflection.ReflectionUtil;
@@ -37,8 +38,8 @@ public class TableInfo {
 		String name, Object[][] attributesArr, String sqlCreate,
 		Element hbmXmlInfo) {
 
-		this.attributeNamesArr = new String[attributesArr.length];
-		this.attributeTypeArr = new Integer[attributesArr.length];
+		attributeNamesArr = new String[attributesArr.length];
+		attributeTypeArr = new Integer[attributesArr.length];
 
 		for (int i = 0; i < attributesArr.length; i++) {
 			attributeNamesArr[i] = (String)attributesArr[i][0];
@@ -48,7 +49,7 @@ public class TableInfo {
 		this.name = name;
 		this.sqlCreate = sqlCreate;
 
-		this.primaryKeyMultiAttribute = new String[0];
+		primaryKeyMultiAttribute = new String[0];
 
 		if (hbmXmlInfo != null) {
 			Map<String, String> databaseColumnToAttributeMap = new HashMap<>();
@@ -130,11 +131,9 @@ public class TableInfo {
 			}
 		}
 
-		String[] arrDatabaseAttributes = _getCreateTableAttributes(
-			attributesStr
-		).split(
-			","
-		);
+		String createTableAttributes = _getCreateTableAttributes(attributesStr);
+
+		String[] arrDatabaseAttributes = createTableAttributes.split(",");
 
 		for (String attr : arrDatabaseAttributes) {
 			String[] aux = attr.split(" ");
@@ -171,7 +170,7 @@ public class TableInfo {
 	}
 
 	public Class<?> getAttributeClass(String name) {
-		int type = this.getAttributeTypeId(name);
+		int type = getAttributeTypeId(name);
 
 		if (type == Types.NULL) {
 			return Object.class;
@@ -180,13 +179,23 @@ public class TableInfo {
 		return ReflectionUtil.getJdbcTypeClass(type);
 	}
 
+	public String[] getAttributeNames() {
+		String[] names = new String[attributeNamesArr.length];
+
+		for (int i = 0; i < attributeNamesArr.length; i++) {
+			names[i] = (String)attributeNamesArr[i];
+		}
+
+		return names;
+	}
+
 	public int getAttributePos(String name) {
 		if (mapAttributePosition.containsKey(name)) {
 			return mapAttributePosition.get(name);
 		}
 
-		if ("pk".equals(name)) {
-			name = this.getPrimaryKeyAttribute();
+		if (Objects.equals("pk", name)) {
+			name = getPrimaryKeyAttribute();
 		}
 
 		if (name.endsWith(StringPool.UNDERLINE)) {
@@ -213,18 +222,8 @@ public class TableInfo {
 		return pos;
 	}
 
-	public String[] getAttributesName() {
-		String[] names = new String[attributeNamesArr.length];
-
-		for (int i = 0; i < attributeNamesArr.length; i++) {
-			names[i] = (String)attributeNamesArr[i];
-		}
-
-		return names;
-	}
-
 	public int getAttributeTypeId(String name) {
-		int pos = this.getAttributePos(name);
+		int pos = getAttributePos(name);
 
 		if (pos == -1) {
 			return Types.NULL;
@@ -234,24 +233,15 @@ public class TableInfo {
 	}
 
 	public String getDestinationAttr(String primaryKey) {
-		String[] attrNames = getAttributesName();
-		String destinationAttr = null;
+		for (String attributeName : getAttributeNames()) {
+			if (!Objects.equals(primaryKey, attributeName) &&
+				!Objects.equals("companyId", attributeName)) {
 
-		for (int i = 0; i < attrNames.length; i++) {
-			if ((primaryKey != null) && !primaryKey.equals(attrNames[i]) &&
-				!"companyId".equals(attrNames[i])) {
-
-				destinationAttr = attrNames[i];
-
-				break;
+				return attributeName;
 			}
 		}
 
-		if (destinationAttr == null) {
-			destinationAttr = Arrays.toString(attrNames);
-		}
-
-		return destinationAttr;
+		return Arrays.toString(getAttributeNames());
 	}
 
 	public String getName() {
@@ -284,33 +274,11 @@ public class TableInfo {
 		return toString;
 	}
 
+	protected String[] attributeNamesArr = null;
+	protected Integer[] attributeTypeArr = null;
 	protected Map<String, Integer> mapAttributePosition =
 		new ConcurrentHashMap<>();
-
-	private static void _addDatabaseColumnToAttributeMap(
-		Map<String, String> databaseColumnToAttributeMap, Element property) {
-
-		if ((property == null) || (property.attributeValue("column") == null)) {
-			return;
-		}
-
-		databaseColumnToAttributeMap.put(
-			property.attributeValue("column"), property.attributeValue("name"));
-	}
-
-	private static String _getCreateTableAttributes(String attributesStr) {
-		String aux = attributesStr;
-
-		if (aux.indexOf('#') > 0) {
-			aux = aux.split("#")[0];
-		}
-
-		return aux;
-	}
-
-	private String[] attributeNamesArr = null;
-	private Integer[] attributeTypeArr = null;
-	private String name = null;
+	protected String name = null;
 
 	/**
 	 * primaries keys can be at following ways:
@@ -332,10 +300,31 @@ public class TableInfo {
 	 * null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75)
 	 * null,statusDate DATE null)
 	 */
-	private String primaryKeyAttribute = null;
+	protected String primaryKeyAttribute = null;
 
-	private String[] primaryKeyMultiAttribute = null;
-	private String sqlCreate = null;
-	private String toString = null;
+	protected String[] primaryKeyMultiAttribute = null;
+	protected String sqlCreate = null;
+	protected String toString = null;
+
+	private static void _addDatabaseColumnToAttributeMap(
+		Map<String, String> databaseColumnToAttributeMap, Element property) {
+
+		if ((property == null) || (property.attributeValue("column") == null)) {
+			return;
+		}
+
+		databaseColumnToAttributeMap.put(
+			property.attributeValue("column"), property.attributeValue("name"));
+	}
+
+	private static String _getCreateTableAttributes(String attributesStr) {
+		String aux = attributesStr;
+
+		if (aux.indexOf('#') > 0) {
+			aux = aux.split("#")[0];
+		}
+
+		return aux;
+	}
 
 }

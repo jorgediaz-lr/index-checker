@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collections;
 import java.util.Map;
@@ -42,31 +41,31 @@ public class RemoteConfigurationUtil {
 	}
 
 	protected static Map<String, Object> getConfiguration() {
-		if ((configuration != null) && !isOutdatedConfiguration()) {
-			return configuration;
+		if ((_configuration != null) && !_isOutdatedConfiguration()) {
+			return _configuration;
 		}
 
 		synchronized (RemoteConfigurationUtil.class) {
-			if ((configuration == null) || isOutdatedConfiguration()) {
+			if ((_configuration == null) || _isOutdatedConfiguration()) {
 				String remoteConfigurationUrl =
 					(String)ConfigurationUtil.getConfigurationEntry(
 						"remoteConfigurationUrl");
 
-				configuration = readConfiguration(remoteConfigurationUrl);
+				_configuration = _readConfiguration(remoteConfigurationUrl);
 
-				configurationTimestamp = System.currentTimeMillis();
+				_configurationTimestamp = System.currentTimeMillis();
 			}
 
-			return configuration;
+			return _configuration;
 		}
 	}
 
-	private static boolean isOutdatedConfiguration() {
+	private static boolean _isOutdatedConfiguration() {
 		long dayTimeMillis = GetterUtil.getLong(
 			ConfigurationUtil.getConfigurationEntry(
-				"remoteConfigurationTimeoutMilis"),
-			0L);
-		long validCfgTimestamp = configurationTimestamp + dayTimeMillis;
+				"remoteConfigurationTimeoutMilis"));
+
+		long validCfgTimestamp = _configurationTimestamp + dayTimeMillis;
 
 		if (validCfgTimestamp < System.currentTimeMillis()) {
 			return true;
@@ -76,7 +75,7 @@ public class RemoteConfigurationUtil {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Map<String, Object> readConfiguration(
+	private static Map<String, Object> _readConfiguration(
 		String configurationURL) {
 
 		Map<String, Object> tempConfiguration;
@@ -103,7 +102,7 @@ public class RemoteConfigurationUtil {
 					"remoteConfigurationBackup");
 		}
 
-		if (Validator.isNull(tempConfiguration)) {
+		if (tempConfiguration == null) {
 			return Collections.emptyMap();
 		}
 
@@ -126,7 +125,7 @@ public class RemoteConfigurationUtil {
 	private static Log _log = LogFactoryUtil.getLog(
 		RemoteConfigurationUtil.class);
 
-	private static Map<String, Object> configuration = null;
-	private static long configurationTimestamp = 0;
+	private static Map<String, Object> _configuration = null;
+	private static long _configurationTimestamp = 0;
 
 }

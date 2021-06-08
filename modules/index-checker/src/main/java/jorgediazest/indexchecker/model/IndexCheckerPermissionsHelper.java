@@ -16,8 +16,6 @@ package jorgediazest.indexchecker.model;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -42,15 +40,17 @@ import java.util.Set;
 import jorgediazest.util.data.Data;
 import jorgediazest.util.model.Model;
 import jorgediazest.util.model.ModelFactory;
+
+/**
+ * @author Jorge Díaz
+ */
 public class IndexCheckerPermissionsHelper {
 
 	public void addPermissionsClassNameGroupIdFields(Data data) {
 		String className = getPermissionsClassName(data);
 		long classPK = getPermissionsClassPK(data);
 
-		if (Validator.isNull(classPK) || Validator.isNull(className) ||
-			(classPK <= 0)) {
-
+		if (Validator.isNull(className) || (classPK <= 0)) {
 			return;
 		}
 
@@ -65,7 +65,9 @@ public class IndexCheckerPermissionsHelper {
 		Object groupIdObj = data.get("groupId", 0L);
 
 		if (groupIdObj instanceof Number) {
-			groupId = ((Number)groupIdObj).longValue();
+			Number groupIdNumber = (Number)groupIdObj;
+
+			groupId = groupIdNumber.longValue();
 
 			Group group = GroupLocalServiceUtil.fetchGroup(groupId);
 
@@ -115,6 +117,7 @@ public class IndexCheckerPermissionsHelper {
 
 		if (aux instanceof List) {
 			resourcePermissions = new HashSet<>();
+
 			resourcePermissions.add((List<Object>)aux);
 		}
 		else if (aux instanceof Set) {
@@ -147,12 +150,12 @@ public class IndexCheckerPermissionsHelper {
 					continue;
 				}
 
-				long groupId = data.get("permissionsGroupId", 0L);
-
 				int type = role.getType();
 
 				if ((type == RoleConstants.TYPE_ORGANIZATION) ||
 					(type == RoleConstants.TYPE_SITE)) {
+
+					long groupId = data.get("permissionsGroupId", 0L);
 
 					groupRoleIds.add(groupId + StringPool.DASH + roleId);
 				}
@@ -162,8 +165,9 @@ public class IndexCheckerPermissionsHelper {
 			}
 		}
 
-		ModelFactory modelFactory = data.getModel(
-		).getModelFactory();
+		Model model = data.getModel();
+
+		ModelFactory modelFactory = model.getModelFactory();
 
 		Model permissionsModel = modelFactory.getModelObject(
 			permissionsClassName);
@@ -218,9 +222,9 @@ public class IndexCheckerPermissionsHelper {
 			return data.get("classPK", -1L);
 		}
 
-		if (data.getModel(
-			).isResourcedModel()) {
+		Model model = data.getModel();
 
+		if (model.isResourcedModel()) {
 			return data.getResourcePrimKey();
 		}
 
@@ -232,8 +236,5 @@ public class IndexCheckerPermissionsHelper {
 	}
 
 	protected Map<String, Long> cacheActionIdBitwiseValue = new HashMap<>();
-
-	private static Log _log = LogFactoryUtil.getLog(
-		IndexCheckerPermissionsHelper.class);
 
 }

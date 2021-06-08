@@ -17,6 +17,7 @@ package jorgediazest.util.comparator;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
+import java.util.Map;
 import java.util.Objects;
 
 import jorgediazest.util.data.Data;
@@ -129,12 +130,13 @@ public abstract class DataBaseComparator implements DataComparator {
 	}
 
 	public Integer hashCode(Data data) {
-		return data.getMap(
-		).hashCode();
+		Map<String, Object> map = data.getMap();
+
+		return map.hashCode();
 	}
 
 	public void setIgnoreNulls(boolean ignoreNulls) {
-		this._ignoreNulls = ignoreNulls;
+		_ignoreNulls = ignoreNulls;
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(DataBaseComparator.class);

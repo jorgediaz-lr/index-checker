@@ -22,10 +22,13 @@ import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 
+/**
+ * @author Jorge Díaz
+ */
 @Component(
 	configurationPid = "jorgediazest.indexchecker.portlet.IndexCheckerConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = {"javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER},
+	property = "javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
 	service = ConfigurationAction.class
 )
 public class IndexCheckerConfiguration extends DefaultConfigurationAction {

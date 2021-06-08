@@ -22,8 +22,6 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -78,7 +76,7 @@ public class ModelUtil {
 			}
 		}
 
-		if (criterionList.size() == 0) {
+		if (criterionList.isEmpty()) {
 			return null;
 		}
 
@@ -106,7 +104,7 @@ public class ModelUtil {
 			}
 		}
 
-		if (criterionList.size() == 0) {
+		if (criterionList.isEmpty()) {
 			return null;
 		}
 
@@ -172,7 +170,5 @@ public class ModelUtil {
 
 	protected static Map<String, String> cachedAttributeNames =
 		new ConcurrentHashMap<>();
-
-	private static Log _log = LogFactoryUtil.getLog(ModelUtil.class);
 
 }

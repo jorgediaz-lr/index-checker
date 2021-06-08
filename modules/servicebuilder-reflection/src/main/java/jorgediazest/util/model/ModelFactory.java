@@ -77,7 +77,7 @@ public class ModelFactory {
 		try {
 			model = new ModelImpl(this, className, service);
 
-			if (model.getAttributesName() == null) {
+			if (model.getAttributeNames() == null) {
 				throw new Exception(
 					model.getName() + " error retrieving attributes");
 			}
@@ -88,10 +88,11 @@ public class ModelFactory {
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
+				Class<? extends Exception> clazz = e.getClass();
+
 				_log.warn(
 					"getModelObject(" + className + ") EXCEPTION " +
-						e.getClass(
-						).getName() + ": " + e.getMessage());
+						clazz.getName() + ": " + e.getMessage());
 			}
 
 			model = null;

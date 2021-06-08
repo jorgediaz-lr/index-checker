@@ -14,8 +14,6 @@
 
 package jorgediazest.util.query;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -57,14 +55,14 @@ public class QueryUtil {
 				continue;
 			}
 
-			Collection<Data> dataCollection = castToDataCollection(
+			Data matchedData = matched.get(0);
+
+			Model model = matchedData.getModel();
+
+			Collection<Data> dataCollection = _castToDataCollection(
 				entry.getValue());
 
 			for (Data data : dataCollection) {
-				Model model = matched.get(
-					0
-				).getModel();
-
 				data.addModelTableInfo(model);
 
 				addMatchedData(data, matched, attributes, appendMode);
@@ -87,12 +85,12 @@ public class QueryUtil {
 				continue;
 			}
 
-			Collection<Data> dataCollection = castToDataCollection(
+			Collection<Data> dataCollection = _castToDataCollection(
 				entry.getValue());
 
-			String classNameRelated = matched.get(
-				0
-			).getEntryClassName();
+			Data matchedData = matched.get(0);
+
+			String classNameRelated = matchedData.getEntryClassName();
 
 			Object rawDataObject = getRawRelatedData(matched, attributes);
 
@@ -173,9 +171,9 @@ public class QueryUtil {
 		for (Data m : matched) {
 			List<Object> list = new ArrayList<>();
 
-			for (int k = 0; k < attributes.length; k++) {
-				if (Validator.isNotNull(attributes[k])) {
-					Object value = m.get(attributes[k]);
+			for (String attribute : attributes) {
+				if (Validator.isNotNull(attribute)) {
+					Object value = m.get(attribute);
 
 					list.add(value);
 				}
@@ -192,7 +190,7 @@ public class QueryUtil {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Collection<Data> castToDataCollection(Object object) {
+	private static Collection<Data> _castToDataCollection(Object object) {
 		if (object instanceof Data) {
 			return Collections.singletonList((Data)object);
 		}
@@ -202,12 +200,12 @@ public class QueryUtil {
 		}
 
 		if (Map.class.isAssignableFrom(object.getClass())) {
-			return ((Map<?, Data>)object).values();
+			Map<?, Data> map = (Map<?, Data>)object;
+
+			return map.values();
 		}
 
 		return Collections.emptyList();
 	}
-
-	private static Log _log = LogFactoryUtil.getLog(QueryUtil.class);
 
 }

@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -49,6 +50,7 @@ public class Data implements Comparable<Data> {
 
 	public Data(Model model) {
 		this.model = model;
+
 		addModelTableInfo(model);
 	}
 
@@ -68,22 +70,22 @@ public class Data implements Comparable<Data> {
 		}
 
 		if ((this.model == null) || !this.model.equals(model)) {
-			this.relatedModelsSet.add(model);
+			relatedModelsSet.add(model);
 		}
 
-		this.tableInfoSet.add(model.getTableInfo());
+		tableInfoSet.add(model.getTableInfo());
 
-		this.addTableInfo(
-			model.getTableInfoMappings(
-			).values());
+		Map<String, TableInfo> map = model.getTableInfoMappings();
+
+		addTableInfo(map.values());
 	}
 
 	public void addTableInfo(Collection<TableInfo> tableInfoCol) {
-		this.tableInfoSet.addAll(tableInfoCol);
+		tableInfoSet.addAll(tableInfoCol);
 	}
 
 	public void addTableInfo(TableInfo tableInfo) {
-		this.tableInfoSet.add(tableInfo);
+		tableInfoSet.add(tableInfo);
 	}
 
 	@Override
@@ -98,13 +100,13 @@ public class Data implements Comparable<Data> {
 			return false;
 		}
 
-		Data data = (Data)obj;
-
 		if (this == obj) {
 			return true;
 		}
 
 		DataComparator comparator = getComparator();
+
+		Data data = (Data)obj;
 
 		return comparator.equals(this, data);
 	}
@@ -116,7 +118,9 @@ public class Data implements Comparable<Data> {
 
 		String primaryKeyAttribute = getPrimaryKeyAttribute();
 
-		if ("pk".equals(attribute) && !"pk".equals(primaryKeyAttribute)) {
+		if (Objects.equals("pk", attribute) &&
+			!Objects.equals("pk", primaryKeyAttribute)) {
+
 			return get(primaryKeyAttribute);
 		}
 
@@ -139,7 +143,7 @@ public class Data implements Comparable<Data> {
 
 	public <T> T get(String attribute, T defaultValue) {
 		@SuppressWarnings("unchecked")
-		T value = (T)this.get(attribute);
+		T value = (T)get(attribute);
 
 		if (value != null) {
 			return value;
@@ -161,10 +165,7 @@ public class Data implements Comparable<Data> {
 
 		for (TableInfo tableInfo : tableInfoSet) {
 			if ((prefix != null) &&
-				!tableInfo.getName(
-				).equals(
-					prefix
-				)) {
+				!Objects.equals(tableInfo.getName(), prefix)) {
 
 				continue;
 			}
@@ -177,7 +178,7 @@ public class Data implements Comparable<Data> {
 		}
 
 		if (String.class.equals(attributeClass) &&
-			("uuid".equals(attribute) || "uuid_".equals(attribute) ||
+			(attribute.equals("uuid") || attribute.equals("uuid_") ||
 			 attribute.endsWith("Uuid"))) {
 
 			attributeClass = UUID.class;
@@ -191,12 +192,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String[] getAttributesArray() {
-		return map.keySet(
-		).toArray(
-			new String
-				[map.keySet(
-				).size()]
-		);
+		return getAttributes().toArray(new String[getAttributes().size()]);
 	}
 
 	public Long getCompanyId() {
@@ -226,7 +222,7 @@ public class Data implements Comparable<Data> {
 
 		List<Data> dataList = new ArrayList<>();
 
-		Object key = this.get(mappingsSource[0]);
+		Object key = get(mappingsSource[0]);
 
 		if (key instanceof Set) {
 			for (Object k : (Set<Object>)key) {
@@ -262,12 +258,12 @@ public class Data implements Comparable<Data> {
 					continue;
 				}
 
-				Object value = this.get(attr1);
+				Object value = get(attr1);
 
 				if (value instanceof Set) {
 					Set<Object> valueSet = (Set<Object>)value;
 
-					Class<?> type1 = this.getAttributeClass(attr1);
+					Class<?> type1 = getAttributeClass(attr1);
 					Class<?> type2 = data.getAttributeClass(attr2);
 
 					for (Object setElement : valueSet) {
@@ -318,7 +314,7 @@ public class Data implements Comparable<Data> {
 		String primaryKeyAttribute = getPrimaryKeyAttribute();
 
 		if (Validator.isNull(primaryKeyAttribute) ||
-			"pk".equals(primaryKeyAttribute)) {
+			primaryKeyAttribute.equals("pk")) {
 
 			return null;
 		}
@@ -379,7 +375,7 @@ public class Data implements Comparable<Data> {
 
 	@SuppressWarnings("rawtypes")
 	public void set(String attribute, Object value) {
-		if ("pk".equals(attribute)) {
+		if (Objects.equals("pk", attribute)) {
 			attribute = getPrimaryKeyAttribute();
 		}
 
@@ -391,14 +387,14 @@ public class Data implements Comparable<Data> {
 
 		Object transformedObject;
 
-		if (value instanceof Set) {
-			transformedObject = DataUtil.transformArray(
-				type, ((Set)value).toArray());
-		}
-		else if ((value instanceof Object[]) ||
-				 value.getClass(
-				 ).isArray()) {
+		Class<?> clazz = value.getClass();
 
+		if (value instanceof Set) {
+			Set set = (Set)value;
+
+			transformedObject = DataUtil.transformArray(type, set.toArray());
+		}
+		else if ((value instanceof Object[]) || clazz.isArray()) {
 			transformedObject = DataUtil.transformArray(type, (Object[])value);
 		}
 		else {
@@ -413,7 +409,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Object[] values) {
-		if ("pk".equals(attribute)) {
+		if (Objects.equals("pk", attribute)) {
 			attribute = getPrimaryKeyAttribute();
 		}
 
@@ -433,7 +429,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Set<Object> values) {
-		if ("pk".equals(attribute)) {
+		if (Objects.equals("pk", attribute)) {
 			attribute = getPrimaryKeyAttribute();
 		}
 
@@ -454,18 +450,18 @@ public class Data implements Comparable<Data> {
 	}
 
 	public <T> void setArray(String[] attributes, T[] data) {
-		int i = 0;
-
 		if ((attributes == null) || (attributes.length == 0)) {
 			if ((data.length == 1) && (data[0] instanceof BaseModel<?>)) {
-				this.setObject((BaseModel<?>)data[0]);
+				setObject((BaseModel<?>)data[0]);
 			}
 
 			return;
 		}
 
+		int i = 0;
+
 		for (String attrib : attributes) {
-			this.set(attrib, data[i++]);
+			set(attrib, data[i++]);
 		}
 	}
 
@@ -484,16 +480,19 @@ public class Data implements Comparable<Data> {
 	}
 
 	public String toString() {
-		long pk = this.getPrimaryKey();
-		long rpk = this.getResourcePrimKey();
-		String name = this.getEntryClassName();
+		long pk = getPrimaryKey();
+
+		long rpk = getResourcePrimKey();
+
+		String name = getEntryClassName();
 
 		if (Validator.isNull(name)) {
 			Iterator<TableInfo> iterator = tableInfoSet.iterator();
 
 			if (iterator.hasNext()) {
-				name = iterator.next(
-				).getName();
+				TableInfo tableInfo = iterator.next();
+
+				name = tableInfo.getName();
 			}
 		}
 
@@ -531,9 +530,11 @@ public class Data implements Comparable<Data> {
 			return true;
 		}
 
-		if (!("companyId".equals(attribute) || "groupId".equals(attribute) ||
-			  "resourcePrimKey".equals(attribute) ||
-			  "uuid_".equals(attribute) || "uuid".equals(attribute))) {
+		if (!Objects.equals("companyId", attribute) &&
+			!Objects.equals("groupId", attribute) &&
+			!Objects.equals("resourcePrimKey", attribute) &&
+			!Objects.equals("uuid_", attribute) &&
+			!Objects.equals("uuid", attribute)) {
 
 			return true;
 		}

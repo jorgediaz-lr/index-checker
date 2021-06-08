@@ -34,7 +34,7 @@ import jorgediazest.util.model.ModelWrapper;
 public class IndexCheckerModelFactory extends ModelFactory {
 
 	public IndexCheckerModelFactory() {
-		this.companyId = 0L;
+		companyId = 0L;
 	}
 
 	public IndexCheckerModelFactory(
@@ -127,8 +127,8 @@ public class IndexCheckerModelFactory extends ModelFactory {
 		return property.lt(value);
 	}
 
-	private long companyId;
-	private Date endModifiedDate;
-	private Date startModifiedDate;
+	protected long companyId;
+	protected Date endModifiedDate;
+	protected Date startModifiedDate;
 
 }

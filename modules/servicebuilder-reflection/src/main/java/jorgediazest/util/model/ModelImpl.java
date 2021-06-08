@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jorgediazest.util.service.Service;
@@ -53,25 +54,21 @@ public class ModelImpl implements Model {
 		throws Exception {
 
 		this.modelFactory = modelFactory;
+		this.className = className;
 		this.service = service;
 
-		this.className = className;
-
-		this.classSimpleName = className;
+		classSimpleName = className;
 
 		int pos = className.lastIndexOf(".");
 
 		if (pos != -1) {
-			this.classSimpleName = className.substring(pos + 1);
+			classSimpleName = className.substring(pos + 1);
 		}
 	}
 
 	@Override
 	public int compareTo(Model o) {
-		return this.getClassName(
-		).compareTo(
-			o.getClassName()
-		);
+		return getClassName().compareTo(o.getClassName());
 	}
 
 	@Override
@@ -143,7 +140,7 @@ public class ModelImpl implements Model {
 
 	@Override
 	public <T> Criterion getAttributeCriterion(String attribute, List<T> list) {
-		if (!this.hasAttribute(attribute) || Validator.isNull(list)) {
+		if (!hasAttribute(attribute) || (list == null)) {
 			return null;
 		}
 
@@ -166,6 +163,7 @@ public class ModelImpl implements Model {
 
 		for (int i = 0; i < numberOfDisjuntions; i++) {
 			int start = i * maxNumClauses;
+
 			int end = Math.min(start + maxNumClauses, list.size());
 
 			List<T> subList = list.subList(start, end);
@@ -183,16 +181,13 @@ public class ModelImpl implements Model {
 	}
 
 	@Override
-	public int getAttributePos(String name) {
-		return this.getTableInfo(
-		).getAttributePos(
-			name
-		);
+	public String[] getAttributeNames() {
+		return getTableInfo().getAttributeNames();
 	}
 
 	@Override
-	public String[] getAttributesName() {
-		return getTableInfo().getAttributesName();
+	public int getAttributePos(String name) {
+		return getTableInfo().getAttributePos(name);
 	}
 
 	@Override
@@ -212,7 +207,7 @@ public class ModelImpl implements Model {
 
 	@Override
 	public String getDisplayName(Locale locale) {
-		return ModelUtil.getDisplayName(this.getClassName(), locale);
+		return ModelUtil.getDisplayName(getClassName(), locale);
 	}
 
 	@Override
@@ -258,7 +253,7 @@ public class ModelImpl implements Model {
 
 		primaryKeyAttributes.add(primaryKeyAttribute);
 
-		primaryKeyAttributes.addAll(Arrays.asList(primaryKeyMultiAttribute));
+		Collections.addAll(primaryKeyAttributes, primaryKeyMultiAttribute);
 
 		return primaryKeyAttributes;
 	}
@@ -347,8 +342,8 @@ public class ModelImpl implements Model {
 			else {
 				op[i] = null;
 
-				if ("pk".equals(attribute)) {
-					attribute = this.getPrimaryKeyAttribute();
+				if (Objects.equals("pk", attribute)) {
+					attribute = getPrimaryKeyAttribute();
 				}
 
 				attributesAux[i] = attribute;
@@ -437,15 +432,13 @@ public class ModelImpl implements Model {
 
 		TableInfo tableInfo = getTableInfoMappings().get(attrWithoutPrefix);
 
-		if (tableInfo == null) {
-			return null;
+		if ((prefix == null) || (tableInfo == null) ||
+			Objects.equals(prefix, tableInfo.getName())) {
+
+			return tableInfo;
 		}
 
-		if ((prefix != null) && !prefix.equals(tableInfo.getName())) {
-			return null;
-		}
-
-		return tableInfo;
+		return null;
 	}
 
 	@Override
@@ -464,7 +457,7 @@ public class ModelImpl implements Model {
 				mappings.put(destinationAttr, tableInfo);
 			}
 
-			this.tableInfoMappings = Collections.unmodifiableMap(mappings);
+			tableInfoMappings = Collections.unmodifiableMap(mappings);
 		}
 
 		return tableInfoMappings;
@@ -517,7 +510,7 @@ public class ModelImpl implements Model {
 
 	@Override
 	public boolean isPartOfPrimaryKeyMultiAttribute(String attribute) {
-		for (String primaryKeyAttribute : this.getPrimaryKeyMultiAttribute()) {
+		for (String primaryKeyAttribute : getPrimaryKeyMultiAttribute()) {
 			if (primaryKeyAttribute.equals(attribute)) {
 				return true;
 			}
@@ -562,10 +555,7 @@ public class ModelImpl implements Model {
 
 	@Override
 	public boolean modelEqualsClass(Class<?> clazz) {
-		return this.getClassName(
-		).equals(
-			clazz.getName()
-		);
+		return getClassName().equals(clazz.getName());
 	}
 
 	@Override
@@ -586,8 +576,8 @@ public class ModelImpl implements Model {
 
 		String prefix = attribute.substring(0, pos);
 
-		if (prefix.equals(this.getClassName()) ||
-			prefix.equals(this.getClassSimpleName())) {
+		if (prefix.equals(getClassName()) ||
+			prefix.equals(getClassSimpleName())) {
 
 			attribute = attribute.substring(pos + 1);
 		}
@@ -596,13 +586,13 @@ public class ModelImpl implements Model {
 	}
 
 	protected Projection getPropertyProjection(String attribute, String op) {
-		if ("rowCount".equals(op)) {
+		if (Objects.equals("rowCount", op)) {
 			return ProjectionFactoryUtil.rowCount();
 		}
 
 		attribute = cleanAttributeName(attribute);
 
-		if (!this.hasAttribute(attribute)) {
+		if (!hasAttribute(attribute)) {
 			return null;
 		}
 
@@ -615,29 +605,27 @@ public class ModelImpl implements Model {
 		if (Validator.isNull(op)) {
 			property = ProjectionFactoryUtil.property(attribute);
 		}
-		else if ("count".equals(op)) {
+		else if (Objects.equals("count", op)) {
 			property = ProjectionFactoryUtil.count(attribute);
 		}
-		else if ("countDistinct".equals(op)) {
+		else if (Objects.equals("countDistinct", op)) {
 			property = ProjectionFactoryUtil.countDistinct(attribute);
 		}
-		else if ("groupProperty".equals(op)) {
+		else if (Objects.equals("groupProperty", op)) {
 			property = ProjectionFactoryUtil.groupProperty(attribute);
 		}
-		else if ("max".equals(op)) {
+		else if (Objects.equals("max", op)) {
 			property = ProjectionFactoryUtil.max(attribute);
 		}
-		else if ("min".equals(op)) {
+		else if (Objects.equals("min", op)) {
 			property = ProjectionFactoryUtil.min(attribute);
 		}
-		else if ("sum".equals(op)) {
+		else if (Objects.equals("sum", op)) {
 			property = ProjectionFactoryUtil.sum(attribute);
 		}
 
 		return property;
 	}
-
-	protected static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
 	protected String className = null;
 	protected String classSimpleName = null;
@@ -645,5 +633,7 @@ public class ModelImpl implements Model {
 	protected Service service = null;
 	protected TableInfo tableInfo = null;
 	protected Map<String, TableInfo> tableInfoMappings = null;
+
+	private static Log _log = LogFactoryUtil.getLog(ModelImpl.class);
 
 }

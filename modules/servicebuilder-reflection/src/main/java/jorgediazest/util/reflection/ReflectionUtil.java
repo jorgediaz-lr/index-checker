@@ -21,6 +21,11 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import java.math.BigDecimal;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
 
 import java.util.ArrayList;
@@ -45,7 +50,7 @@ public class ReflectionUtil {
 
 			case Types.NUMERIC:
 			case Types.DECIMAL:
-				result = java.math.BigDecimal.class;
+				result = BigDecimal.class;
 
 				break;
 
@@ -94,17 +99,17 @@ public class ReflectionUtil {
 				break;
 
 			case Types.DATE:
-				result = java.sql.Date.class;
+				result = Date.class;
 
 				break;
 
 			case Types.TIME:
-				result = java.sql.Time.class;
+				result = Time.class;
 
 				break;
 
 			case Types.TIMESTAMP:
-				result = java.sql.Timestamp.class;
+				result = Timestamp.class;
 
 				break;
 		}

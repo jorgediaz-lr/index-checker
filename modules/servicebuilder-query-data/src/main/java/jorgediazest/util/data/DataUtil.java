@@ -64,7 +64,9 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return new BigDecimal(((Number)value).toString());
+			Number number = (Number)value;
+
+			return new BigDecimal(number.toString());
 		}
 
 		if (value instanceof String) {
@@ -112,7 +114,9 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return ((Number)value).byteValue();
+			Number number = (Number)value;
+
+			return number.byteValue();
 		}
 
 		if (value instanceof String) {
@@ -140,8 +144,10 @@ public class DataUtil {
 		}
 
 		if (value instanceof String) {
+			String string = (String)value;
+
 			try {
-				return ((String)value).getBytes();
+				return string.getBytes();
 			}
 			catch (Exception e) {
 			}
@@ -163,8 +169,7 @@ public class DataUtil {
 		else if (value instanceof String) {
 			date = stringToDate((String)value);
 		}
-
-		if (Validator.isNull(date)) {
+		else {
 			return castLong(value);
 		}
 
@@ -181,7 +186,9 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return ((Number)value).doubleValue();
+			Number number = (Number)value;
+
+			return number.doubleValue();
 		}
 
 		if (value instanceof String) {
@@ -209,7 +216,9 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return ((Number)value).floatValue();
+			Number number = (Number)value;
+
+			return number.floatValue();
 		}
 
 		if (value instanceof String) {
@@ -237,7 +246,9 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return ((Number)value).intValue();
+			Number number = (Number)value;
+
+			return number.intValue();
 		}
 
 		if (value instanceof String) {
@@ -257,7 +268,9 @@ public class DataUtil {
 		}
 
 		if (value instanceof Number) {
-			return ((Number)value).longValue();
+			Number number = (Number)value;
+
+			return number.longValue();
 		}
 
 		if (value instanceof String) {
@@ -332,11 +345,15 @@ public class DataUtil {
 		}
 
 		if (value instanceof Integer) {
-			return ((Integer)value).shortValue();
+			Integer integer = (Integer)value;
+
+			return integer.shortValue();
 		}
 
 		if (value instanceof Number) {
-			return ((Number)value).shortValue();
+			Number number = (Number)value;
+
+			return number.shortValue();
 		}
 
 		if (value instanceof String) {
@@ -355,13 +372,14 @@ public class DataUtil {
 
 		if (value.getClass() == byte[].class) {
 			byte[] valueArray = (byte[])value;
+
 			aux = new String(valueArray, 0, valueArray.length);
 		}
 		else {
 			aux = value.toString();
 		}
 
-		if (DataUtil.getIgnoreCase() && !Validator.isXml(aux)) {
+		if (getIgnoreCase() && !Validator.isXml(aux)) {
 			aux = StringUtil.toLowerCase(aux);
 		}
 
@@ -405,17 +423,15 @@ public class DataUtil {
 	}
 
 	public static String dateToString(Date date) {
-		return dateFormatyyyyMMddHHmmss.get(
-		).format(
-			date
-		);
+		DateFormat dateFormat = _dateFormatyyyyMMddHHmmss.get();
+
+		return dateFormat.format(date);
 	}
 
 	public static String dateToStringWithMillis(Date date) {
-		return dateFormatyyyyMMddHHmmssSSS.get(
-		).format(
-			date
-		);
+		DateFormat dateFormat = _dateFormatyyyyMMddHHmmssSSS.get();
+
+		return dateFormat.format(date);
 	}
 
 	public static Data[] getArrayCommonData(Set<Data> set1, Set<Data> set2) {
@@ -428,13 +444,13 @@ public class DataUtil {
 
 	public static DataComparator getDataComparator(Model model) {
 		if (model == null) {
-			return dataComparatorMap;
+			return _dataComparatorMap;
 		}
 
 		DataComparator dataComparator = null;
 
 		WeakReference<DataComparator> weakReference =
-			modelDataComparatorCache.get(model);
+			_modelDataComparatorCache.get(model);
 
 		if (weakReference != null) {
 			dataComparator = weakReference.get();
@@ -444,13 +460,13 @@ public class DataUtil {
 			List<String> keyAttributes = model.getKeyAttributes();
 
 			if ((keyAttributes == null) || keyAttributes.isEmpty()) {
-				dataComparator = dataComparatorMap;
+				dataComparator = _dataComparatorMap;
 			}
 			else {
 				dataComparator = new DataModelComparator(keyAttributes);
 			}
 
-			modelDataComparatorCache.put(
+			_modelDataComparatorCache.put(
 				model, new WeakReference<DataComparator>(dataComparator));
 		}
 
@@ -458,11 +474,11 @@ public class DataUtil {
 	}
 
 	public static ThreadLocal<Boolean> getIgnorecase() {
-		return DataUtil.ignoreCase;
+		return _ignoreCase;
 	}
 
 	public static boolean getIgnoreCase() {
-		return DataUtil.ignoreCase.get();
+		return _ignoreCase.get();
 	}
 
 	public static Map<Long, List<Data>> getMapFromSetData(
@@ -477,19 +493,15 @@ public class DataUtil {
 				continue;
 			}
 
-			if (!dataMap.containsKey(key)) {
-				List<Data> list = new ArrayList<>();
+			List<Data> list = dataMap.get(key);
 
-				list.add(data);
+			if (list == null) {
+				list = new ArrayList<>();
+
 				dataMap.put(key, list);
 			}
-			else {
-				dataMap.get(
-					key
-				).add(
-					data
-				);
-			}
+
+			list.add(data);
 		}
 
 		return dataMap;
@@ -505,21 +517,27 @@ public class DataUtil {
 		}
 
 		if (obj instanceof Double) {
-			if (((Double)obj).longValue() == 0) {
+			Double doubleObject = (Double)obj;
+
+			if (doubleObject.longValue() == 0) {
 				return true;
 			}
 
 			return false;
 		}
 		else if (obj instanceof Float) {
-			if (((Float)obj).longValue() == 0) {
+			Float floatObject = (Float)obj;
+
+			if (floatObject.longValue() == 0) {
 				return true;
 			}
 
 			return false;
 		}
 		else if (obj instanceof Integer) {
-			if (((Integer)obj).longValue() == 0) {
+			Integer integer = (Integer)obj;
+
+			if (integer.longValue() == 0) {
 				return true;
 			}
 
@@ -551,17 +569,16 @@ public class DataUtil {
 	}
 
 	public static void setIgnoreCase(boolean ignoreCase) {
-		DataUtil.ignoreCase.set(ignoreCase);
+		_ignoreCase.set(ignoreCase);
 	}
 
 	public static Date stringToDate(String dateString) {
 		Date date = null;
 
 		try {
-			date = dateFormatyyyyMMddHHmmss.get(
-			).parse(
-				dateString
-			);
+			DateFormat dateFormat = _dateFormatyyyyMMddHHmmss.get();
+
+			date = dateFormat.parse(dateString);
 		}
 		catch (Exception e) {
 		}
@@ -571,10 +588,9 @@ public class DataUtil {
 		}
 
 		try {
-			date = dateFormatyyyyMMddHHmmssSSS.get(
-			).parse(
-				dateString
-			);
+			DateFormat dateFormat = _dateFormatyyyyMMddHHmmssSSS.get();
+
+			date = dateFormat.parse(dateString);
 		}
 		catch (Exception e) {
 		}
@@ -621,7 +637,7 @@ public class DataUtil {
 			return o;
 		}
 
-		Object transformObject = DataUtil.castObject(type, o);
+		Object transformObject = castObject(type, o);
 
 		if (!(transformObject instanceof String)) {
 			return transformObject;
@@ -637,7 +653,7 @@ public class DataUtil {
 
 		Set<String> valuesSet = new HashSet<>(map.values());
 
-		if (valuesSet.size() == 0) {
+		if (valuesSet.isEmpty()) {
 			return null;
 		}
 
@@ -676,8 +692,8 @@ public class DataUtil {
 
 			String value = map.get(key);
 
-			if (DataUtil.isNotNull(value)) {
-				if (DataUtil.getIgnoreCase()) {
+			if (isNotNull(value)) {
+				if (getIgnoreCase()) {
 					value = StringUtil.toLowerCase(value);
 				}
 
@@ -822,9 +838,10 @@ public class DataUtil {
 		return (short)i.shortValue();
 	}
 
-	private static DataComparator dataComparatorMap = new DataComparatorMap();
+	private static final DataComparator _dataComparatorMap =
+		new DataComparatorMap();
 
-	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmss =
+	private static final ThreadLocal<DateFormat> _dateFormatyyyyMMddHHmmss =
 		new ThreadLocal<DateFormat>() {
 
 			@Override
@@ -835,7 +852,7 @@ public class DataUtil {
 
 		};
 
-	private static final ThreadLocal<DateFormat> dateFormatyyyyMMddHHmmssSSS =
+	private static final ThreadLocal<DateFormat> _dateFormatyyyyMMddHHmmssSSS =
 		new ThreadLocal<DateFormat>() {
 
 			@Override
@@ -846,7 +863,7 @@ public class DataUtil {
 
 		};
 
-	private static ThreadLocal<Boolean> ignoreCase =
+	private static ThreadLocal<Boolean> _ignoreCase =
 		new ThreadLocal<Boolean>() {
 
 			@Override
@@ -857,7 +874,7 @@ public class DataUtil {
 		};
 
 	private static Map<Model, WeakReference<DataComparator>>
-		modelDataComparatorCache = Collections.synchronizedMap(
+		_modelDataComparatorCache = Collections.synchronizedMap(
 			new WeakHashMap<Model, WeakReference<DataComparator>>());
 
 }
