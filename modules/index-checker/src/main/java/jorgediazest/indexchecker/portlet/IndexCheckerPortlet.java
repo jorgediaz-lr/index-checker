@@ -914,6 +914,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				continue;
 			}
 
+			if (!hasIndexerEnabled(className)) {
+				continue;
+			}
+
+			if (ConfigurationUtil.modelNotIndexed(className)) {
+				continue;
+			}
+
 			if (filterClassNameArr == null) {
 				classNames.add(className);
 
