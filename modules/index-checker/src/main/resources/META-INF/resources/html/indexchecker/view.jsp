@@ -338,10 +338,9 @@ if (filterGroupIdSelected.contains("-2")) {
 
 <aui:script>
 	function <portlet:namespace />disableOutputOnlyInIndex(event) {
-		<portlet:namespace />outputIndex.value=false;
+		<portlet:namespace />outputIndex.checked=false;
 		<portlet:namespace />outputIndex.disabled=true;
-		<portlet:namespace />outputIndexCheckbox.checked=false;
-		<portlet:namespace />outputIndexCheckbox.disabled=true;
+		<portlet:namespace />outputIndex.value=false;
 	}
 	function <portlet:namespace />disableReindexAndRemoveOrphansButtons(event) {
 		var reindexButton = document.getElementById("reindexButtonSpan");
