@@ -143,7 +143,8 @@ import org.osgi.service.component.annotations.Reference;
 public class IndexCheckerPortlet extends MVCPortlet {
 
 	public static void dumpToLog(
-		boolean groupBySite, Map<Long, List<Comparison>> comparisonDataMap) {
+		boolean groupBySite, Map<Long, List<Comparison>> comparisonDataMap,
+		Locale locale) {
 
 		if (!_log.isInfoEnabled()) {
 			return;
@@ -159,7 +160,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 				groupTitle = "N/A";
 			}
 			else if (group != null) {
-				groupTitle = group.getGroupId() + " - " + group.getName();
+				groupTitle = group.getGroupId() + " - " + group.getName(locale);
 			}
 
 			if (groupTitle != null) {
@@ -629,7 +630,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 					_log.info("COMPANY: " + company);
 
-					dumpToLog(groupBySite, resultDataMap);
+					dumpToLog(groupBySite, resultDataMap, request.getLocale());
 				}
 
 				companyResultDataMap.put(company, resultDataMap);

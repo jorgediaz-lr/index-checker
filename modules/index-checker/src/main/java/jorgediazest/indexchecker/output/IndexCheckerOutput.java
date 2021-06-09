@@ -145,7 +145,7 @@ public class IndexCheckerOutput {
 							}
 							else {
 								groupIdOutput = "" + group.getGroupId();
-								groupNameOutput = group.getName();
+								groupNameOutput = group.getName(locale);
 							}
 						}
 						catch (Exception e) {
@@ -263,7 +263,7 @@ public class IndexCheckerOutput {
 				}
 				else {
 					groupIdOutput = "" + group.getGroupId();
-					groupNameOutput = group.getName();
+					groupNameOutput = group.getName(locale);
 				}
 			}
 
