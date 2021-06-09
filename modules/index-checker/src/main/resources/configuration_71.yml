@@ -97,6 +97,7 @@ modelInfo: [{
 },
 {
     model: com.liferay.document.library.kernel.model.DLFolder,
+    filter: "mountPoint=[$FALSE$]",
     exactAttributesToCheck: [createDate,modifiedDate,status,version,folderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
 },
 {
@@ -126,13 +127,6 @@ modelInfo: [{
 {
     model: com.liferay.journal.model.JournalFolder,
     exactAttributesToCheck: [createDate,modifiedDate,status,version,folderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
-},
-{
-    model: com.liferay.message.boards.kernel.model.MBMessage,
-    permissionsHelperClass: !!jorgediazest.indexchecker.model.MBMessagePermissionsHelper {},
-    filter: "(status=0 or status=8) and (categoryId<>-1 or parentMessageId<>0)",
-    attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,version,categoryId],
-    exactAttributesToCheck: [createDate,modifiedDate,status,version,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
 },
 {
     model: com.liferay.message.boards.model.MBMessage,
@@ -165,7 +159,7 @@ modelInfo: [{
 },
 {
     model: com.liferay.wiki.model.WikiNode,
-    filter: "status=8"
+    filter: "status<>8"
 },
 {
     model: com.liferay.wiki.model.WikiPage,
@@ -175,7 +169,7 @@ modelInfo: [{
 }]
 
 #Configuration to retrieve remote configuration
-remoteConfigurationBackup: {62: {}, 70: {}, 71: {}, 72: {}}
+remoteConfigurationBackup: {62: {}, 70: {}, 71: {}, 72: {}, 73: {}, 74: {}}
 remoteConfigurationUrl: "https://gist.githubusercontent.com/jorgediaz-lr/205dc3f71bdcdc92b4f0558f583bf2cc/raw/index-checker_configuration.yml"
 remoteConfigurationTimeoutMilis: 86400000
 
