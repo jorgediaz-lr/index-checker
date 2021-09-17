@@ -154,15 +154,8 @@ public abstract class ServiceImpl implements Service {
 	}
 
 	protected Element getTableInfoFromHbmXml(Class<?> classLiferayModelImpl) {
-		ClassLoader classLoader = classLiferayModelImpl.getClassLoader();
-
-		InputStream inputStream = classLoader.getResourceAsStream(
-			"/META-INF/module-hbm.xml");
-
-		if (inputStream == null) {
-			inputStream = classLoader.getResourceAsStream(
-				"/META-INF/portal-hbm.xml");
-		}
+		InputStream inputStream = _getHbmXmlInputStream(
+			classLiferayModelImpl.getClassLoader());
 
 		Document document;
 
@@ -196,6 +189,24 @@ public abstract class ServiceImpl implements Service {
 	protected Class<?> liferayModelImplClass = null;
 	protected boolean liferayModelImplClassIsNull = false;
 
+	private InputStream _getHbmXmlInputStream(ClassLoader classLoader) {
+		for (String hbmXmlName : _hbmXmlNames) {
+			InputStream inputStream = classLoader.getResourceAsStream(
+				hbmXmlName);
+
+			if (inputStream != null) {
+				return inputStream;
+			}
+		}
+
+		return null;
+	}
+
 	private static Log _log = LogFactoryUtil.getLog(ServiceImpl.class);
+
+	private String[] _hbmXmlNames = {
+		"/META-INF/module-hbm.xml", "/META-INF/portal-hbm.xml",
+		"META-INF/portal-hbm.xml"
+	};
 
 }
