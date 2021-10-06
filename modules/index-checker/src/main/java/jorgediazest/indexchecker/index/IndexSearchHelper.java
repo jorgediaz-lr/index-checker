@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.TermRangeQueryImpl;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -166,6 +167,15 @@ public class IndexSearchHelper {
 
 		String[] sortAttributes = {"createDate", "modifiedDate"};
 
+		if (ReleaseInfo.getBuildNumber() >= 7401) {
+			/* 7.4.1 version includes LPS-132030, that LPS allows numerically sorting
+			 * by entryClassPK see commit https://github.com/liferay/liferay-portal/commit/93aa1b2f1d6f781a6467baaa2146fa73c673431b
+			 */
+			sortAttributes = new String[] {
+				Field.ENTRY_CLASS_PK, "createDate", "modifiedDate"
+			};
+		}
+
 		Sort[] sorts = getIndexSorting(model, sortAttributes);
 
 		return getIndexData(
@@ -182,6 +192,7 @@ public class IndexSearchHelper {
 
 		indexFieldsList.add(Field.UID);
 		indexFieldsList.add(Field.ENTRY_CLASS_NAME);
+		indexFieldsList.add(Field.ENTRY_CLASS_PK);
 
 		for (String attribute : attributes) {
 			String indexField = ConfigurationUtil.getIndexAttributeName(
@@ -412,6 +423,12 @@ public class IndexSearchHelper {
 		List<String> sortAttributesList = new ArrayList<>();
 
 		for (String attribute : attributes) {
+			if (attribute.equals(Field.ENTRY_CLASS_PK)) {
+				sortAttributesList.add(Field.ENTRY_CLASS_PK);
+
+				break;
+			}
+
 			if (model.hasAttribute(attribute)) {
 				String sortableFieldName =
 					ConfigurationUtil.getIndexAttributeName(model, attribute);
