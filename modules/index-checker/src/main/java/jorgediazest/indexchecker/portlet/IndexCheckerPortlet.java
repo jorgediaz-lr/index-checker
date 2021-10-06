@@ -1256,10 +1256,13 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	protected void activate(Map<String, Object> properties) {
 		try {
 			_bundleBlacklistManager.addToBlacklistAndUninstall(
-				"index-checker-portlet");
+				"index-checker-portlet", "index_checker-portlet");
 		}
-		catch (IOException ioException) {
-			_log.error(ioException, ioException);
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Error removing old WAR index checker version", exception);
+			}
 		}
 	}
 
@@ -1267,10 +1270,14 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	protected void deactivate() {
 		try {
 			_bundleBlacklistManager.removeFromBlacklistAndInstall(
-				"index-checker-portlet");
+				"index-checker-portlet", "index_checker-portlet");
 		}
-		catch (IOException ioException) {
-			_log.error(ioException, ioException);
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Error reactivating old WAR index checker version",
+					exception);
+			}
 		}
 	}
 
