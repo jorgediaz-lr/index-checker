@@ -128,7 +128,7 @@ public class ModelUtil {
 
 		sql = PortalUtil.transformSQL(sql);
 
-		return RestrictionsFactoryUtil.sqlRestriction(sql);
+		return RestrictionsFactoryUtil.sqlRestriction("(" + sql + ")");
 	}
 
 	public static String getCachedAttributeName(String attribute) {
