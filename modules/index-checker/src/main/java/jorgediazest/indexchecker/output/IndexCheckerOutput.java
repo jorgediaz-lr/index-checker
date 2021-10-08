@@ -41,6 +41,9 @@ import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.output.OutputUtils;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
 /**
  * @author Jorge Díaz
  */
@@ -208,6 +211,12 @@ public class IndexCheckerOutput {
 
 			out.add(StringPool.BLANK);
 		}
+
+		Bundle bundle = FrameworkUtil.getBundle(IndexCheckerOutput.class);
+
+		out.add("Version: " + bundle.getVersion());
+
+		out.add(StringPool.BLANK);
 
 		return out;
 	}

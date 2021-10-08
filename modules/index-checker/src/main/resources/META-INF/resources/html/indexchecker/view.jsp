@@ -31,6 +31,7 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
+<%@ page import="com.liferay.petra.string.StringPool" %>
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchContainer" %>
 <%@ page import="com.liferay.portal.kernel.log.Log" %>
 <%@ page import="com.liferay.portal.kernel.model.Company" %>
@@ -57,6 +58,9 @@
 
 <%@ page import="jorgediazest.util.data.Comparison" %>
 <%@ page import="jorgediazest.util.model.Model" %>
+
+<%@ page import="org.osgi.framework.Bundle" %>
+<%@ page import="org.osgi.framework.FrameworkUtil" %>
 
 <portlet:defineObjects />
 
@@ -332,7 +336,11 @@ if (filterGroupIdSelected.contains("-2")) {
 
 <%
 	}
+
+	Bundle bundle = FrameworkUtil.getBundle(IndexCheckerOutput.class);
 %>
+
+<br />Version: <%= bundle.getVersion() %><br />
 
 </div></div></div>
 
