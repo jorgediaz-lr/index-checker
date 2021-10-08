@@ -291,7 +291,7 @@ if (filterGroupIdSelected.contains("-2")) {
 			Long processTime = companyEntry.getValue();
 			%>
 
-			<h3>Company: <%= companyEntry.getKey().getCompanyId() %> - <%= companyEntry.getKey().getWebId() %></h3>
+			<h3>Instance: <%= companyEntry.getKey().getCompanyId() %> - <%= companyEntry.getKey().getWebId() %></h3>
 
 			<%
 			if (companyResultDataMap != null) {
@@ -324,7 +324,7 @@ if (filterGroupIdSelected.contains("-2")) {
 	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= errorMessage %>" />
 </c:if>
 
-<i>Executed <b><%= request.getAttribute("title") %></b> for company <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms</i><br />
+<i>Executed <b><%= request.getAttribute("title") %></b> for instance <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms</i><br />
 
 <%
 		}
