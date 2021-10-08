@@ -16,6 +16,7 @@ package jorgediazest.indexchecker.index;
 
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,15 +32,16 @@ import jorgediazest.util.data.Data;
 public class JournalArticleIndexSearchHelper extends IndexSearchHelper {
 
 	public JournalArticleIndexSearchHelper() throws Exception {
-		indexAllVersions =
-			ConfigurationUtil.getJournalArticleIndexAllVersions();
+		uidContainsPrimaryKey =
+			ConfigurationUtil.getJournalArticleIndexAllVersions() ||
+			(ReleaseInfo.getBuildNumber() >= 7300);
 	}
 
 	@Override
 	public void fillDataObject(Data data, String[] attributes, Document doc) {
 		super.fillDataObject(data, attributes, doc);
 
-		if (indexAllVersions) {
+		if (uidContainsPrimaryKey) {
 			long id = getIdFromUID(doc.get(Field.UID));
 
 			data.setPrimaryKey(id);
@@ -57,6 +59,6 @@ public class JournalArticleIndexSearchHelper extends IndexSearchHelper {
 		return super.reindex(articles.values());
 	}
 
-	protected boolean indexAllVersions;
+	protected boolean uidContainsPrimaryKey;
 
 }

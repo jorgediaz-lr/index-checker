@@ -45,6 +45,7 @@ modelInfo: [{
         {model: com.liferay.asset.kernel.model.AssetCategory, mappingsSource: [AssetEntries_AssetCategories.categoryId], mappingsRelated: [AssetCategory.categoryId], attributesToQuery: [AssetCategory.title], filter: ""},
         {model: com.liferay.asset.kernel.model.AssetTag, mappingsSource: [AssetEntries_AssetTags.tagId],  mappingsRelated: [AssetTag.tagId], attributesToQuery: [AssetTag.name], filter: ""}
     ],
+    keyAttributes: [resourcePrimKey],
     indexAttributeNameMapping: {
         resourcePrimKey: entryClassPK,
         groupId: scopeGroupId,
@@ -116,7 +117,8 @@ modelInfo: [{
     model: com.liferay.journal.model.JournalArticle,
     queryHelperClass: !!jorgediazest.indexchecker.model.JournalArticleQueryHelper {},
     indexSearchHelperClass: !!jorgediazest.indexchecker.index.JournalArticleIndexSearchHelper {},
-    filter: "classNameId=0"
+    filter: "classNameId=0",
+    keyAttributes: [pk],
 },
 {
     model: com.liferay.journal.model.JournalFolder,
