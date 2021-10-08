@@ -72,6 +72,10 @@ modelInfo: [{
     relatedDataToQuery: [{model: com.liferay.portal.kernel.model.ResourcePermission, mappingsSource: [permissionsClassPK], mappingsRelated: [primKeyId], attributesToQuery: [roleId,actionIds,scope], raw: true}]
 },
 {
+    model: com.liferay.blogs.model.BlogsEntry,
+    filter: "status=0 or status=1 or status=2 or status=8"
+},
+{
     model: com.liferay.calendar.model.CalendarBooking,
     filter: "status=0 or status=9",
     attributesToQuery: [pk,companyId,groupId,classPK,classNameId,createDate,modifiedDate,status,resourceBlockId,version,calendarId],
