@@ -7,7 +7,7 @@ It scans both database and index, displaying:
  - outdated ones
  - orphan data in index.
 
-### How it works?
+## How it works?
 
 In order to obtain the necessary data, this portlet compares primary keys, modified dates, status, version and other related data data of both database and index.
 
@@ -33,4 +33,22 @@ In the configuration page you will able to:
  - Execute queries site by site: You can save memory executing, but this will be slower.
  
  In the output you can also display the correctly indexed information just in case you want to double check it.
+
+## Installation
+
+**Index Checker 1.0.0:**
+   - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/1.0.0/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
+   - For more information [see 1.0.0 release](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.0.0)
+
+_Index Checker 1.0.0_ works in Liferay DXP/Portal from 7.1 to 7.4
+
+**Index Checker 0.9:**
+   - _**Liferay 6.2:**_ Download [index_checker-portlet-6.2.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_6.2/index_checker-portlet-6.2.0.9.war) and copy it to Liferay `deploy` folder.
+   - _**Liferay 7.0-7.2:**_ Download [index_checker-portlet-7.0.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_7.0/index_checker-portlet-7.0.0.9.war) and copy it to Liferay `deploy` folder.
+   - For more information see 0.9 [6.2](https://github.com/jorgediaz-lr/index-checker/releases/tag/0.9_release_6.2) and [7.x](https://github.com/jorgediaz-lr/index-checker/releases/tag/0.9_release_7.0) releases
+
+_Index Checker 0.9_ works in:
+  - Liferay Portal 6.2
+  - Liferay DXP/Portal 7.0 to 7.2
  
+
