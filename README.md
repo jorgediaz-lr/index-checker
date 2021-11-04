@@ -7,9 +7,9 @@ It scans both database and index, displaying:
  - outdated ones
  - orphan data in the index.
 
-## How it works?
+## How does it work?
 
-In order to obtain the necessary data, this portlet compares primary keys, modified dates, status, version, and other related data data of both database and index.
+In order to obtain the necessary data, this portlet compares primary keys, modified dates, status, version, and other related data of both database and index.
 
 After executing index check, the wrong data is displayed:
  - you will be able to reindex the missing or outdated objects
@@ -38,7 +38,7 @@ On the configuration page you will be able to:
 
 **Index Checker 1.0.0:**
    - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/1.0.0/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
-   - For more information [see 1.0.0 release](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.0.0)
+   - For more information [see the 1.0.0 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.0.0)
 
 _Index Checker 1.0.0_ works in Liferay DXP/Portal from 7.1 to 7.4
 
