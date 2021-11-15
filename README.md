@@ -7,6 +7,8 @@ It scans both database and index, displaying:
  - outdated ones
  - orphan data in the index.
 
+<img src="screenshots/index-checker-screenshot_1.png" height="400">
+
 ## How does it work?
 
 In order to obtain the necessary data, this portlet compares primary keys, modified dates, status, version, and other related data of both database and index.
@@ -14,6 +16,8 @@ In order to obtain the necessary data, this portlet compares primary keys, modif
 After executing index check, the wrong data is displayed:
  - you will be able to reindex the missing or outdated objects
  - you can also remove orphan data from the index.
+
+<img src="screenshots/index-checker-screenshot_2.png" height="400">
 
 ### Filtering data:
 
