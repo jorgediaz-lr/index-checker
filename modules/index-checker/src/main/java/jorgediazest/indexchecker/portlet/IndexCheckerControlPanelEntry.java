@@ -17,10 +17,20 @@ package jorgediazest.indexchecker.portlet;
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 
@@ -38,6 +48,29 @@ import org.osgi.service.component.annotations.Reference;
 	service = PanelApp.class
 )
 public class IndexCheckerControlPanelEntry extends BasePanelApp {
+
+	@Override
+	public String getLabel(Locale locale) {
+		try {
+			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+				locale, getClass());
+
+			return LanguageUtil.get(
+				resourceBundle,
+				JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+					getPortletId());
+		}
+		catch (MissingResourceException missingResourceException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(missingResourceException, missingResourceException);
+			}
+		}
+
+		return LanguageUtil.get(
+			locale,
+			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+				getPortletId());
+	}
 
 	@Override
 	public String getPortletId() {
@@ -65,5 +98,8 @@ public class IndexCheckerControlPanelEntry extends BasePanelApp {
 	public void setPortlet(Portlet portlet) {
 		super.setPortlet(portlet);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		IndexCheckerControlPanelEntry.class);
 
 }
