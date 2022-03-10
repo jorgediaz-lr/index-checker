@@ -5,3 +5,4 @@ Export-Package:\
 	jorgediazest.util.comparator,\
 	jorgediazest.util.data,\
 	jorgediazest.util.query
+-sources: true

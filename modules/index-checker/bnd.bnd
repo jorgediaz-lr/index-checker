@@ -2,3 +2,4 @@ Bundle-Name: index-checker
 Bundle-SymbolicName: jorgediazest.indexchecker.portlet
 Bundle-Version: 1.0.2
 Export-Package: jorgediazest.indexchecker.portlet.constants
+-sources: true

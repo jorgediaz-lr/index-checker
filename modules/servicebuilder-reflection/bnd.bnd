@@ -6,3 +6,4 @@ Export-Package:\
 	jorgediazest.util.reflection,\
 	jorgediazest.util.service,\
 	jorgediazest.util.table
+-sources: true
