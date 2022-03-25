@@ -3,6 +3,3 @@ dependencies {
 
 	compileOnly group: "com.liferay.portal", name: "release.portal.api"
 }
-
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"

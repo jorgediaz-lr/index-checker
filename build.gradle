@@ -1,1 +1,6 @@
-// Check GETTING_STARTED.markdown for information regarding usage.
+allprojects {
+	apply plugin: 'java'
+
+	sourceCompatibility = "1.8"
+	targetCompatibility = "1.8"
+}
