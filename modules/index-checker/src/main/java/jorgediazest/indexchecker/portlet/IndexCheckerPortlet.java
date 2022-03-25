@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.util.CalendarFactory;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -229,14 +230,11 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		if (executionMode.contains(ExecutionMode.QUERY_BY_SITE)) {
 			for (long groupId : groupIds) {
-				List<Long> groupIdsAux = new ArrayList<>();
-
-				groupIdsAux.add(groupId);
-
 				List<Future<Comparison>> futureResultList =
 					executeCallableCheckGroupAndModel(
-						queryCache, executor, modelList, companyId, groupIdsAux,
-						startModifiedDate, endModifiedDate, executionMode);
+						queryCache, executor, modelList, companyId,
+						ListUtil.fromArray(groupId), startModifiedDate,
+						endModifiedDate, executionMode);
 
 				futureResultDataMap.put(groupId, futureResultList);
 			}

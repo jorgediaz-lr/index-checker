@@ -148,7 +148,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 			Class<?> clazz = getClassLoader().loadClass(className);
 
-			return DynamicQueryFactoryUtil.forClass(clazz, alias, getClassLoader());
+			return DynamicQueryFactoryUtil.forClass(
+				clazz, alias, getClassLoader());
 		}
 		catch (ClassNotFoundException cnfe) {
 			throw new RuntimeException(cnfe);
