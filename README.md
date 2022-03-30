@@ -40,11 +40,11 @@ On the configuration page you will be able to:
 
 ## Installation
 
-**Index Checker 1.0.2:**
-   - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/1.0.2/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
-   - For more information [see the 1.0.2 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.0.2)
+**Index Checker 1.0.3:**
+   - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/1.0.3/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
+   - For more information [see the 1.0.3 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.0.3)
 
-_Index Checker 1.0.2_ works in Liferay DXP/Portal from 7.1 to 7.4
+_Index Checker 1.0.3_ works in Liferay DXP/Portal from 7.1 to 7.4
 
 **Index Checker 0.9:**
    - _**Liferay 6.2:**_ Download [index_checker-portlet-6.2.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_6.2/index_checker-portlet-6.2.0.9.war) and copy it to Liferay `deploy` folder.
