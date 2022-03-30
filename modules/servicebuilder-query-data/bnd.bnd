@@ -1,6 +1,6 @@
 Bundle-Name: servicebuilder-query-data
 Bundle-SymbolicName: jorgediazest.servicebuilder.query.data
-Bundle-Version: 1.0.3
+Bundle-Version: 1.0.4
 Export-Package:\
 	jorgediazest.util.comparator,\
 	jorgediazest.util.data,\
