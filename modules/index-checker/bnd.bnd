@@ -1,5 +1,5 @@
 Bundle-Name: index-checker
 Bundle-SymbolicName: jorgediazest.indexchecker.portlet
-Bundle-Version: 1.0.4
+Bundle-Version: 1.0.5
 Export-Package: jorgediazest.indexchecker.portlet.constants
 -sources: true
