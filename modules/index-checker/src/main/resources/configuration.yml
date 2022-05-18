@@ -158,6 +158,10 @@ modelInfo: [{
     ]
 },
 {
+    model: com.liferay.object.model.ObjectDefinition,
+    queryHelperClass: !!jorgediazest.indexchecker.model.ObjectDefinitionQueryHelper {},
+},
+{
     model: com.liferay.wiki.model.WikiNode,
     filter: "status<>8"
 },

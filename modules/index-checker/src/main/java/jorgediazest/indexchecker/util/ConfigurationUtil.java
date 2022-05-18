@@ -337,7 +337,8 @@ public class ConfigurationUtil {
 	}
 
 	private static Object _getModelInfo(String modelName, String key) {
-		Map<String, Object> modelMap = getModelInfo().get(modelName);
+		Map<String, Object> modelMap = getModelInfo().get(
+			modelName.split("#")[0]);
 
 		if (modelMap == null) {
 			return null;
