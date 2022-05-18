@@ -25,7 +25,10 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.lang.reflect.Method;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +43,7 @@ import jorgediazest.indexchecker.ExecutionMode;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.output.OutputUtils;
+import jorgediazest.util.reflection.ReflectionUtil;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -255,6 +259,22 @@ public class IndexCheckerOutput {
 
 		int numberOfRows = 0;
 
+		Method setResults = null;
+		Method setTotal = null;
+
+		try {
+			setResults = ReflectionUtil.getMethod(
+				searchContainer, Arrays.asList("_setResults", "setResults"),
+				List.class);
+
+			setTotal = ReflectionUtil.getMethod(
+				searchContainer, Arrays.asList("_setTotal", "setTotal"),
+				Integer.TYPE);
+		}
+		catch (NoSuchMethodException noSuchMethodException) {
+			throw new RuntimeException(noSuchMethodException);
+		}
+
 		for (Map.Entry<Long, List<Comparison>> entry :
 				resultDataMap.entrySet()) {
 
@@ -287,7 +307,12 @@ public class IndexCheckerOutput {
 			results = ListUtil.subList(
 				results, searchContainer.getStart(), searchContainer.getEnd());
 
-			searchContainer.setResults(results);
+			try {
+				setResults.invoke(searchContainer, results);
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
 
 			List<ResultRow> resultRows = searchContainer.getResultRows();
 
@@ -322,7 +347,12 @@ public class IndexCheckerOutput {
 			}
 		}
 
-		searchContainer.setTotal(numberOfRows);
+		try {
+			setTotal.invoke(searchContainer, numberOfRows);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		return searchContainer;
 	}

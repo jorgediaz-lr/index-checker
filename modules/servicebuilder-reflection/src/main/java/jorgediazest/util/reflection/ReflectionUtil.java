@@ -29,6 +29,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -145,6 +146,51 @@ public class ReflectionUtil {
 		return mappingTablesFields;
 	}
 
+	public static Method getMethod(
+			Object object, List<String> methodNames, Class... parameterTypes)
+		throws NoSuchMethodException {
+
+		Class<?> clazz = object.getClass();
+
+		if (object instanceof Class) {
+			clazz = (Class)object;
+		}
+
+		NoSuchMethodException savedThrowable = null;
+
+		for (String methodName : methodNames) {
+			try {
+				Method method = clazz.getDeclaredMethod(
+					methodName, parameterTypes);
+
+				method.setAccessible(true);
+
+				return method;
+			}
+			catch (NoSuchMethodException noSuchMethodException) {
+				savedThrowable = noSuchMethodException;
+			}
+		}
+
+		if (savedThrowable != null) {
+			throw savedThrowable;
+		}
+
+		return null;
+	}
+
+	public static Method getMethod(
+		Object object, String methodName, Class... parameterTypes) {
+
+		try {
+			return getMethod(
+				object, Collections.singletonList(methodName), parameterTypes);
+		}
+		catch (Throwable t) {
+			return null;
+		}
+	}
+
 	public static Object getPrivateField(Object object, String fieldName)
 		throws Exception {
 
@@ -198,9 +244,7 @@ public class ReflectionUtil {
 
 			Method method = clazz.getMethod(methodName);
 
-			if (method != null) {
-				return method.invoke(object);
-			}
+			return method.invoke(object);
 		}
 		catch (Throwable t) {
 		}
