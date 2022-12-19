@@ -10,5 +10,6 @@ jobs:
         with:
           java-version: 8
           distribution: 'adopt'
-      - name: Build with Gradle
-        run: ./gradlew deploy
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: deploy
