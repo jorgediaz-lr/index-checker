@@ -21,7 +21,7 @@ Import-Package: com.liferay.application.list,com.liferay.document.libr
  servlet,javax.servlet.http,org.osgi.framework
 Javac-Debug: on
 Javac-Deprecation: off
-Javac-Encoding: Cp1252
+Javac-Encoding: UTF-8
 Private-Package: jorgediazest.indexchecker,jorgediazest.indexchecker.d
  ata,jorgediazest.indexchecker.index,jorgediazest.indexchecker.model,j
  orgediazest.indexchecker.output,jorgediazest.indexchecker.portlet,jor
