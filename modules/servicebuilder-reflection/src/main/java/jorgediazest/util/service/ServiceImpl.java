@@ -157,6 +157,10 @@ public abstract class ServiceImpl implements Service {
 		InputStream inputStream = _getHbmXmlInputStream(
 			classLiferayModelImpl.getClassLoader());
 
+		if (inputStream == null) {
+			return null;
+		}
+
 		Document document;
 
 		try {
