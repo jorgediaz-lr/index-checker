@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -63,18 +62,14 @@ import jorgediazest.util.data.Data;
 public class OutputUtils {
 
 	public static FileEntry addPortletFileEntry(
-			Repository repository, InputStream inputStream, long userId,
-			String title, String mimeType)
+			Repository repository, byte[] bytes, long userId, String title,
+			String mimeType)
 		throws PortalException {
-
-		if (inputStream == null) {
-			return null;
-		}
 
 		return PortletFileRepositoryUtil.addPortletFileEntry(
 			repository.getGroupId(), userId, StringPool.BLANK, 0,
-			repository.getPortletId(), repository.getDlFolderId(), inputStream,
-			title, mimeType, true);
+			repository.getPortletId(), repository.getDlFolderId(), bytes, title,
+			mimeType, true);
 	}
 
 	public static FileEntry addPortletOutputFileEntry(
@@ -85,9 +80,6 @@ public class OutputUtils {
 		}
 
 		try {
-			InputStream inputStream = new ByteArrayInputStream(
-				outputContent.getBytes(StringPool.UTF8));
-
 			Repository repository = getPortletRepository(portletId);
 
 			cleanupPortletFileEntries(repository, 8 * 60);
@@ -97,7 +89,8 @@ public class OutputUtils {
 					System.currentTimeMillis() + ".csv";
 
 			return addPortletFileEntry(
-				repository, inputStream, userId, fileName, "text/plain");
+				repository, outputContent.getBytes(StringPool.UTF8), userId,
+				fileName, "text/plain");
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -354,7 +347,7 @@ public class OutputUtils {
 	public static Repository getPortletRepository(String portletId)
 		throws PortalException {
 
-		List<Company> companies = CompanyLocalServiceUtil.getCompanies(false);
+		List<Company> companies = CompanyLocalServiceUtil.getCompanies();
 
 		Company company = companies.get(0);
 
