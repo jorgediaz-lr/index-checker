@@ -316,7 +316,7 @@ public class IndexSearchHelper {
 		searchContext.setStart(0);
 		searchContext.setEnd(size);
 
-		QueryConfig queryConfig = new QueryConfig();
+		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
