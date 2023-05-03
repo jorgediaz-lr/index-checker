@@ -305,6 +305,18 @@ public class ConfigurationUtil {
 				configurationFileName + CharPool.PERIOD + configurationFileExt);
 		}
 
+		String guestUserFilter;
+
+		if (_hasNewUserTypeColumn()) {
+			guestUserFilter = "type_=1";
+		}
+		else {
+			guestUserFilter = "defaultUser=[$FALSE$]";
+		}
+
+		configuration = configuration.replace(
+			"$$GUEST_USER_FILTER$$", guestUserFilter);
+
 		String journalArticleIndexPrimaryKeyAttribute;
 
 		if (getJournalArticleIndexAllVersions()) {
@@ -345,6 +357,38 @@ public class ConfigurationUtil {
 		}
 
 		return modelMap.get(key);
+	}
+
+	private static boolean _hasNewUserTypeColumn() {
+		String version = ReleaseInfo.getVersion();
+
+		String[] versionArr = version.split("\\.");
+
+		if (!versionArr[0].equals("7") || !versionArr[1].equals("4")) {
+			return false;
+		}
+
+		long update = Long.MAX_VALUE;
+
+		try {
+			if (versionArr[2].equals("3") && (versionArr.length > 3)) {
+				update = Long.parseLong(versionArr[3]);
+			}
+			else if (versionArr[2].equals("13")) {
+				String versionDisplayName = ReleaseInfo.getVersionDisplayName();
+
+				update = Long.parseLong(versionDisplayName.split(" ")[2]);
+			}
+
+			if (update < 72) {
+				return false;
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return true;
 	}
 
 	private static final String _CONFIGURATION_FILE_EXT = "yml";
