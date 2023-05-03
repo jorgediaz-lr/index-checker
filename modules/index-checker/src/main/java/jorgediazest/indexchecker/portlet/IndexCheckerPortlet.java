@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
-import com.liferay.portal.kernel.util.CalendarFactory;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -1280,21 +1279,16 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	protected Date getStartDate(long timeInMillis, long hoursToSubstract) {
-		CalendarFactory calendarFactory =
-			CalendarFactoryUtil.getCalendarFactory();
-
 		long start = timeInMillis - (hoursToSubstract * 60 * 60 * 1000);
 
-		Calendar startCalendar = calendarFactory.getCalendar(start);
+		Calendar startCalendar = CalendarFactoryUtil.getCalendar(start);
 
 		return startCalendar.getTime();
 	}
 
 	protected Date getTomorrowDate(long timeInMillis) {
-		CalendarFactory calendarFactory =
-			CalendarFactoryUtil.getCalendarFactory();
-
-		Calendar tomorrowCalendar = calendarFactory.getCalendar(timeInMillis);
+		Calendar tomorrowCalendar = CalendarFactoryUtil.getCalendar(
+			timeInMillis);
 
 		tomorrowCalendar.add(Calendar.DATE, 1);
 		tomorrowCalendar.set(Calendar.HOUR_OF_DAY, 0);
