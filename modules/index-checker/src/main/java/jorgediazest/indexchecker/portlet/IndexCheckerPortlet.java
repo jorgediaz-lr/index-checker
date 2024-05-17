@@ -15,7 +15,6 @@
 package jorgediazest.indexchecker.portlet;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.bundle.blacklist.BundleBlacklistManager;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
@@ -83,6 +82,11 @@ import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.Version;
+import org.osgi.service.component.annotations.Component;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
@@ -1249,28 +1253,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			portletId, request.getResourceID(), request, response);
 	}
 
-	@Activate
-	protected void activate(Map<String, Object> properties) {
-		try {
-			_bundleBlacklistManager.addToBlacklistAndUninstall(
-				"index-checker-portlet");
-		}
-		catch (IOException ioException) {
-			_log.error(ioException, ioException);
-		}
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		try {
-			_bundleBlacklistManager.removeFromBlacklistAndInstall(
-				"index-checker-portlet");
-		}
-		catch (IOException ioException) {
-			_log.error(ioException, ioException);
-		}
-	}
-
 	protected Date getStartDate(long timeInMillis, long hoursToSubstract) {
 		long start = timeInMillis - (hoursToSubstract * 60 * 60 * 1000);
 
@@ -1293,7 +1275,5 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
 
-	@Reference
-	private BundleBlacklistManager _bundleBlacklistManager;
 
 }
