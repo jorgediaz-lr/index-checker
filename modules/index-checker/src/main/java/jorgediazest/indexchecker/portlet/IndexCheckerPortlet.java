@@ -126,7 +126,6 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.init-param.view-template=/html/indexchecker/view.jsp",
 		"javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
 		"javax.portlet.portlet-name=index_checker",
-		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=administrator,power-user,user"
 	},
 	service = Portlet.class

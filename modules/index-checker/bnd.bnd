@@ -2,4 +2,7 @@ Bundle-Name: index-checker
 Bundle-SymbolicName: jorgediazest.indexchecker.portlet
 Bundle-Version: 1.1.0
 Export-Package: jorgediazest.indexchecker.portlet.constants
+Provide-Capability:\
+	liferay.language.resources;\
+		resource.bundle.base.name="content.Language"
 -sources: true
