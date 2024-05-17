@@ -18,7 +18,6 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -243,8 +242,7 @@ public class ConfigurationUtil {
 
 		synchronized (ConfigurationUtil.class) {
 			if (_configuration == null) {
-				_configuration = readConfiguration(
-					_CONFIGURATION_FILE_NAME, _CONFIGURATION_FILE_EXT);
+				_configuration = readConfiguration();
 
 				if (_configuration == null) {
 					throw new RuntimeException(
@@ -256,8 +254,32 @@ public class ConfigurationUtil {
 		}
 	}
 
-	protected static String readConfiguration(
-		ClassLoader classLoader, String configurationFile) {
+	@SuppressWarnings("unchecked")
+	protected static Map<String, Object> readConfiguration() {
+		String configuration = readConfiguration(
+			_CONFIGURATION_FILE_NAME + CharPool.PERIOD +
+				_CONFIGURATION_FILE_EXT);
+
+		String journalArticleIndexPrimaryKeyAttribute;
+
+		if (getJournalArticleIndexAllVersions()) {
+			journalArticleIndexPrimaryKeyAttribute = "pk";
+		}
+		else {
+			journalArticleIndexPrimaryKeyAttribute = "resourcePrimKey";
+		}
+
+		configuration = configuration.replace(
+			"$$JOURNAL_ARTICLE_INDEX_PRIMARY_KEY_ATTRIBUTE$$",
+			journalArticleIndexPrimaryKeyAttribute);
+
+		Yaml yaml = new Yaml();
+
+		return (Map<String, Object>)yaml.load(configuration);
+	}
+
+	protected static String readConfiguration(String configurationFile) {
+		ClassLoader classLoader = ConfigurationUtil.class.getClassLoader();
 
 		try {
 			InputStream inputStream = classLoader.getResourceAsStream(
@@ -276,63 +298,6 @@ public class ConfigurationUtil {
 		}
 
 		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected static Map<String, Object> readConfiguration(
-		String configurationFileName, String configurationFileExt) {
-
-		int liferayBuildNumber = ReleaseInfo.getBuildNumber();
-
-		ClassLoader classLoader = ConfigurationUtil.class.getClassLoader();
-
-		String configuration = readConfiguration(
-			classLoader,
-			configurationFileName + CharPool.UNDERLINE + liferayBuildNumber +
-				CharPool.PERIOD + configurationFileExt);
-
-		if (configuration == null) {
-			configuration = readConfiguration(
-				classLoader,
-				configurationFileName + CharPool.UNDERLINE +
-					((int)liferayBuildNumber / 100) + CharPool.PERIOD +
-						configurationFileExt);
-		}
-
-		if (configuration == null) {
-			configuration = readConfiguration(
-				classLoader,
-				configurationFileName + CharPool.PERIOD + configurationFileExt);
-		}
-
-		String guestUserFilter;
-
-		if (_hasNewUserTypeColumn()) {
-			guestUserFilter = "type_=1";
-		}
-		else {
-			guestUserFilter = "defaultUser=[$FALSE$]";
-		}
-
-		configuration = configuration.replace(
-			"$$GUEST_USER_FILTER$$", guestUserFilter);
-
-		String journalArticleIndexPrimaryKeyAttribute;
-
-		if (getJournalArticleIndexAllVersions()) {
-			journalArticleIndexPrimaryKeyAttribute = "pk";
-		}
-		else {
-			journalArticleIndexPrimaryKeyAttribute = "resourcePrimKey";
-		}
-
-		configuration = configuration.replace(
-			"$$JOURNAL_ARTICLE_INDEX_PRIMARY_KEY_ATTRIBUTE$$",
-			journalArticleIndexPrimaryKeyAttribute);
-
-		Yaml yaml = new Yaml();
-
-		return (Map<String, Object>)yaml.load(configuration);
 	}
 
 	private static boolean _getJournalArticleIndexAllVersions()
@@ -357,38 +322,6 @@ public class ConfigurationUtil {
 		}
 
 		return modelMap.get(key);
-	}
-
-	private static boolean _hasNewUserTypeColumn() {
-		String version = ReleaseInfo.getVersion();
-
-		String[] versionArr = version.split("\\.");
-
-		if (!versionArr[0].equals("7") || !versionArr[1].equals("4")) {
-			return false;
-		}
-
-		long update = Long.MAX_VALUE;
-
-		try {
-			if (versionArr[2].equals("3") && (versionArr.length > 3)) {
-				update = Long.parseLong(versionArr[3]);
-			}
-			else if (versionArr[2].equals("13")) {
-				String versionDisplayName = ReleaseInfo.getVersionDisplayName();
-
-				update = Long.parseLong(versionDisplayName.split(" ")[2]);
-			}
-
-			if (update < 72) {
-				return false;
-			}
-		}
-		catch (Exception exception) {
-			_log.error(exception);
-		}
-
-		return true;
 	}
 
 	private static final String _CONFIGURATION_FILE_EXT = "yml";

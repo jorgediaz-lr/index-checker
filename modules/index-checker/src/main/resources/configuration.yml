@@ -141,7 +141,7 @@ modelInfo: [{
 },
 {
     model: com.liferay.portal.kernel.model.User,
-    filter: "$$GUEST_USER_FILTER$$",
+    filter: "type_=1",
     attributesToQuery: [pk,companyId,groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId],
     exactAttributesToCheck: [groupId,"<=modifiedDate",status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
