@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.portlet.LiferayPortletContext;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -83,18 +82,12 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.Version;
-import org.osgi.service.component.annotations.Component;
-
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
 import jorgediazest.indexchecker.model.IndexCheckerModelFactory;
 import jorgediazest.indexchecker.output.IndexCheckerOutput;
 import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 import jorgediazest.indexchecker.util.ConfigurationUtil;
-import jorgediazest.indexchecker.util.RemoteConfigurationUtil;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.ComparisonUtil;
@@ -105,13 +98,7 @@ import jorgediazest.util.model.ModelUtil;
 import jorgediazest.util.output.OutputUtils;
 import jorgediazest.util.reflection.ReflectionUtil;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.Version;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * Portlet implementation class IndexCheckerPortlet
@@ -450,9 +437,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		PortletConfig portletConfig = (PortletConfig)renderRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_CONFIG);
-
-		renderRequest.setAttribute(
-			"updateMessage", getUpdateMessage(portletConfig));
 
 		List<String> outputList = IndexCheckerOutput.generateCSVOutput(
 			portletConfig, renderRequest);
@@ -1189,57 +1173,6 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		return result;
 	}
 
-	public String getUpdateMessage(PortletConfig portletConfig) {
-		@SuppressWarnings("unchecked")
-		Collection<String> lastAvalibleVersion =
-			(Collection<String>)RemoteConfigurationUtil.getConfigurationEntry(
-				"lastAvalibleVersion");
-
-		if ((lastAvalibleVersion == null) || lastAvalibleVersion.isEmpty()) {
-			return getUpdateMessageOffline(portletConfig);
-		}
-
-		Bundle bundle = FrameworkUtil.getBundle(getClass());
-
-		Version version = bundle.getVersion();
-
-		if (lastAvalibleVersion.contains(version.toString())) {
-			return null;
-		}
-
-		return (String)RemoteConfigurationUtil.getConfigurationEntry(
-			"updateMessage");
-	}
-
-	public String getUpdateMessageOffline(PortletConfig portletConfig) {
-		LiferayPortletContext context =
-			(LiferayPortletContext)portletConfig.getPortletContext();
-
-		com.liferay.portal.kernel.model.Portlet portlet = context.getPortlet();
-
-		long installationTimestamp = portlet.getTimestamp();
-
-		if (installationTimestamp == 0L) {
-			return null;
-		}
-
-		long offlineUpdateTimeoutMilis =
-			(Long)ConfigurationUtil.getConfigurationEntry(
-				"offlineUpdateTimeoutMilis");
-
-		long offlineUpdateTimestamp =
-			installationTimestamp + offlineUpdateTimeoutMilis;
-
-		long currentTimeMillis = System.currentTimeMillis();
-
-		if (offlineUpdateTimestamp > currentTimeMillis) {
-			return null;
-		}
-
-		return (String)ConfigurationUtil.getConfigurationEntry(
-			"offlineUpdateMessage");
-	}
-
 	public void serveResource(
 			ResourceRequest request, ResourceResponse response)
 		throws IOException, PortletException {
@@ -1274,6 +1207,5 @@ public class IndexCheckerPortlet extends MVCPortlet {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(IndexCheckerPortlet.class);
-
 
 }
