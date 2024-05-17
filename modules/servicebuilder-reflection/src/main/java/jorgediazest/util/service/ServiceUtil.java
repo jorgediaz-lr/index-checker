@@ -20,9 +20,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.service.BaseLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 
 import java.util.Collections;
 import java.util.List;
