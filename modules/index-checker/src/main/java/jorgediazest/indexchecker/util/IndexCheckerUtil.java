@@ -14,7 +14,7 @@
 
 package jorgediazest.indexchecker.util;
 
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 
 import java.lang.reflect.Method;
 
