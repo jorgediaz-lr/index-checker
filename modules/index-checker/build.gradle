@@ -1,9 +1,3 @@
-import java.io.*;
-
-import java.nio.file.*;
-
-import java.util.*;
-
 dependencies {
 	compileInclude group: "org.yaml", name: "snakeyaml", version: "1.18"
 	compileInclude project(":modules:output-utils")
@@ -13,64 +7,4 @@ dependencies {
 	compileOnly group: "com.liferay.portal", name: "release.portal.api"
 
 	cssBuilder group: "com.liferay", name: "com.liferay.css.builder", version: "3.0.2"
-}
-
-jar {
-	doLast {
-		def projectDir = project.projectDir.getPath();
-		def manifestBackup = Paths.get(projectDir, "manifest", "MANIFEST.MF_backup");
-		def manifestOverride = Paths.get(projectDir, "manifest", "MANIFEST.MF_override");
-
-		def jarFileSystem = FileSystems.newFileSystem(archiveFile.get().getAsFile().toPath(), null);
-
-		try {
-			def newLines = new ArrayList<String>();
-
-			Path jarManifest = jarFileSystem.getPath("/META-INF/MANIFEST.MF");
-
-			BufferedReader bufferedReader = Files.newBufferedReader(jarManifest);
-			BufferedWriter bufferedWriterBackup = Files.newBufferedWriter(manifestBackup);
-
-			boolean replaceMode = false;
-
-			String line;
-
-			while ((line = bufferedReader.readLine()) != null) {
-				if (line.startsWith("Import-Package:")) {
-					replaceMode = true;
-				}
-
-				if (replaceMode) {
-					bufferedWriterBackup.write(line);
-					bufferedWriterBackup.newLine();
-				}
-				else {
-					newLines.add(line);
-				}
-			}
-
-			bufferedReader.close();
-			bufferedWriterBackup.close();
-
-			BufferedReader bufferedReaderOverride = Files.newBufferedReader(manifestOverride);
-
-			while ((line = bufferedReaderOverride.readLine()) != null) {
-				newLines.add(line);
-			}
-
-			bufferedReaderOverride.close();
-
-			BufferedWriter bufferedWriter = Files.newBufferedWriter(jarManifest);
-
-			for (String newLine : newLines) {
-				bufferedWriter.write(newLine);
-				bufferedWriter.newLine();
-			}
-
-			bufferedWriter.close();
-		}
-		finally {
-			jarFileSystem.close();
-		}
-	}
 }
