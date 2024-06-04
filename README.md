@@ -40,19 +40,30 @@ On the configuration page you will be able to:
 
 ## Installation
 
-**Index Checker 1.0.6:**
+Install the correct Index Checker version depending on the Liferay version you are using.
+
+**Liferay Quarterly Releases and Liferay 7.4 Update 100+**
+   - Use Index Checker version 1.1.0
+   - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/1.1.0/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
+   - For more information [see the 1.1.0 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.1.0)
+
+_Index Checker 1.1.0_ works in the Liferay Quarterly Releases and Liferay 7.4 Update 100+
+
+**Liferay DXP/Portal from 7.1 to 7.4 (up to Update 99)**
+   - Use Index Checker version 1.0.6
    - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/1.0.6/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
    - For more information [see the 1.0.6 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/1.0.6)
 
-_Index Checker 1.0.6_ works in Liferay DXP/Portal from 7.1 to 7.4
+_Index Checker 1.0.6_ works in Liferay DXP/Portal from 7.1 to 7.4 (up to Update 99)
 
-**Index Checker 0.9:**
-   - _**Liferay 6.2:**_ Download [index_checker-portlet-6.2.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_6.2/index_checker-portlet-6.2.0.9.war) and copy it to Liferay `deploy` folder.
-   - _**Liferay 7.0-7.2:**_ Download [index_checker-portlet-7.0.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_7.0/index_checker-portlet-7.0.0.9.war) and copy it to Liferay `deploy` folder.
+**Liferay 6.2 and 7.0**
+   - Use Index Checker version 0.9
+   - _**6.2:**_ Download [index_checker-portlet-6.2.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_6.2/index_checker-portlet-6.2.0.9.war) and copy it to Liferay `deploy` folder.
+   - _**7.0:**_ Download [index_checker-portlet-7.0.0.9.war](https://github.com/jorgediaz-lr/index-checker/releases/download/0.9_release_7.0/index_checker-portlet-7.0.0.9.war) and copy it to Liferay `deploy` folder.
    - For more information see 0.9 [6.2](https://github.com/jorgediaz-lr/index-checker/releases/tag/0.9_release_6.2) and [7.x](https://github.com/jorgediaz-lr/index-checker/releases/tag/0.9_release_7.0) releases
 
 _Index Checker 0.9_ works in:
   - Liferay Portal 6.2
-  - Liferay DXP/Portal 7.0 to 7.2
+  - Liferay DXP/Portal 7.0
  
 
