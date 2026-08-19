@@ -41,11 +41,11 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 
@@ -79,7 +79,7 @@ public class IndexCheckerControlPanelEntry implements PanelApp {
 
 			return LanguageUtil.get(
 				resourceBundle,
-				JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+				JavaConstants.JAKARTA_PORTLET_TITLE + StringPool.PERIOD +
 					getPortletId());
 		}
 		catch (MissingResourceException missingResourceException) {
@@ -90,7 +90,7 @@ public class IndexCheckerControlPanelEntry implements PanelApp {
 
 		return LanguageUtil.get(
 			locale,
-			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+			JavaConstants.JAKARTA_PORTLET_TITLE + StringPool.PERIOD +
 				getPortletId());
 	}
 
@@ -202,7 +202,7 @@ public class IndexCheckerControlPanelEntry implements PanelApp {
 		IndexCheckerControlPanelEntry.class);
 
 	@Reference(
-		target = "(javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER + ")"
+		target = "(jakarta.portlet.name=" + IndexCheckerKeys.INDEXCHECKER + ")"
 	)
 	private Portlet _portlet;
 

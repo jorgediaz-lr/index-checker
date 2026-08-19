@@ -28,7 +28,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 @Component(
 	configurationPid = "jorgediazest.indexchecker.portlet.IndexCheckerConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = "javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
+	property = "jakarta.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
 	service = ConfigurationAction.class
 )
 public class IndexCheckerConfiguration extends DefaultConfigurationAction {

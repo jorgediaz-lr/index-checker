@@ -35,9 +35,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
 
 import jorgediazest.indexchecker.ExecutionMode;
 
