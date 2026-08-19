@@ -1,5 +1,5 @@
 dependencies {
-	compile project(":modules:servicebuilder-reflection")
+	api project(":modules:servicebuilder-reflection")
 
-	compileOnly group: "com.liferay.portal", name: "release.portal.api"
+	compileOnly group: "com.liferay.portal", name: "release.dxp.api"
 }

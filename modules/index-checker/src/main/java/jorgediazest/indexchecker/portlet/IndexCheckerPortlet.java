@@ -70,17 +70,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.Portlet;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletException;
-import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-import javax.portlet.ResourceURL;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+import jakarta.portlet.ResourceURL;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchHelper;
@@ -117,16 +117,17 @@ import org.osgi.service.component.annotations.Component;
 		"com.liferay.portlet.icon=/icon.png",
 		"com.liferay.portlet.instanceable=false",
 		"com.liferay.portlet.single-page-application=false",
-		"javax.portlet.display-name=Index Checker",
-		"javax.portlet.info.keywords=search,index,check,checker,verify,reindex,lucene,solr,elasticsearch",
-		"javax.portlet.info.short-title=Index Checker",
-		"javax.portlet.info.title=Index Checker",
-		"javax.portlet.init-param.template-path=/",
-		"javax.portlet.init-param.config-template=/html/indexchecker/config.jsp",
-		"javax.portlet.init-param.view-template=/html/indexchecker/view.jsp",
-		"javax.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
-		"javax.portlet.portlet-name=index_checker",
-		"javax.portlet.security-role-ref=administrator,power-user,user"
+		"jakarta.portlet.display-name=Index Checker",
+		"jakarta.portlet.info.keywords=search,index,check,checker,verify,reindex,lucene,solr,elasticsearch",
+		"jakarta.portlet.info.short-title=Index Checker",
+		"jakarta.portlet.info.title=Index Checker",
+		"jakarta.portlet.init-param.template-path=/",
+		"jakarta.portlet.init-param.config-template=/html/indexchecker/config.jsp",
+		"jakarta.portlet.init-param.view-template=/html/indexchecker/view.jsp",
+		"jakarta.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
+		"jakarta.portlet.portlet-name=index_checker",
+		"jakarta.portlet.security-role-ref=administrator,power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -435,7 +436,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		PortletConfig portletConfig = (PortletConfig)renderRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+			JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		List<String> outputList = IndexCheckerOutput.generateCSVOutput(
 			portletConfig, renderRequest);
@@ -1177,7 +1178,7 @@ public class IndexCheckerPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		PortletConfig portletConfig = (PortletConfig)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+			JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		String portletId = portletConfig.getPortletName();
 

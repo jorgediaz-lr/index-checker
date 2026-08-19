@@ -1,10 +1,14 @@
 dependencies {
-	compileInclude group: "org.yaml", name: "snakeyaml", version: "1.18"
+	compileInclude(group: "org.yaml", name: "snakeyaml") {
+		version {
+			strictly "1.33"
+		}
+	}
 	compileInclude project(":modules:output-utils")
 	compileInclude project(":modules:servicebuilder-query-data")
 	compileInclude project(":modules:servicebuilder-reflection")
 
-	compileOnly group: "com.liferay.portal", name: "release.portal.api"
+	compileOnly group: "com.liferay.portal", name: "release.dxp.api"
 
 	cssBuilder group: "com.liferay", name: "com.liferay.css.builder", version: "3.0.2"
 }

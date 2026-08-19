@@ -16,12 +16,6 @@
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/xml" prefix="x" %>
-
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
 <%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
 <%@ taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %>
@@ -50,7 +44,7 @@
 <%@ page import="java.util.Map.Entry" %>
 <%@ page import="java.util.Set" %>
 
-<%@ page import="javax.portlet.PortletURL" %>
+<%@ page import="jakarta.portlet.PortletURL" %>
 
 <%@ page import="jorgediazest.indexchecker.ExecutionMode" %>
 <%@ page import="jorgediazest.indexchecker.output.IndexCheckerOutput" %>
@@ -313,9 +307,13 @@ if (filterGroupIdSelected.contains("-2")) {
 			String errorMessage = companyError.get(companyEntry.getKey());
 %>
 
-<c:if test="<%= Validator.isNotNull(errorMessage) %>">
+<%
+if (Validator.isNotNull(errorMessage)) {
+%>
 	<aui:input cssClass="lfr-textarea-container" name="output" resizable="<%= true %>" type="textarea" value="<%= errorMessage %>" />
-</c:if>
+<%
+}
+%>
 
 <i>Executed <b><%= request.getAttribute("title") %></b> for instance <%= companyEntry.getKey().getCompanyId() %> in <%=processTime %> ms</i><br />
 
