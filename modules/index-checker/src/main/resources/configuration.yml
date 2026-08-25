@@ -82,6 +82,29 @@ modelInfo: [{
     permissionsHelperClass: !!jorgediazest.indexchecker.model.CalendarBookingPermissionsHelper {},
 },
 {
+    # CPConfigurationEntryModelDocumentContributor indexes the primary key as
+    # classPK and the related CPConfigurationList as entryClassPK, the opposite
+    # of every other model. Read the primary key from classPK, otherwise every
+    # entry is reported both as not indexed and as an orphan entry.
+    model: com.liferay.commerce.product.model.CPConfigurationEntry,
+    indexAttributeNameMapping: {
+        pk: classPK,
+        groupId: scopeGroupId,
+        modifiedDate: modified,
+        AssetEntries_AssetCategories.categoryId: assetCategoryIds,
+        AssetCategory.title: assetCategoryTitles,
+        AssetEntries_AssetTags.tagId: assetTagIds,
+        AssetTag.name: assetTagNames,
+        RatingsStats.averageScore: ratings,
+        organizationId: organizationIds,
+        permissionsRoleId: roleId,
+        permissionsGroupRoleId: groupRoleId,
+        roleId: roleIds,
+        teamId: teamIds,
+        userGroupId: userGroupIds
+    }
+},
+{
     model: com.liferay.document.library.kernel.model.DLFileEntry,
     filter: "fileEntryId in (select fileEntryId from DLFileVersion where status=0 or status=8)",
     permissionsHelperClass: !!jorgediazest.indexchecker.model.DLFileEntryPermissionsHelper {},
