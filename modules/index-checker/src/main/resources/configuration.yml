@@ -185,6 +185,14 @@ modelInfo: [{
     ]
 },
 {
+    # KaleoDefinitionVersionModelDocumentContributor splits the version by the
+    # period and indexes only the first part as a number, so the "1.0" of the
+    # database is indexed as 1 and every version is reported as outdated. The
+    # index does not hold the whole version, so do not compare it.
+    model: com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion,
+    exactAttributesToCheck: [createDate,modifiedDate,status,folderId,parentFolderId,treePath,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name]
+},
+{
     model: com.liferay.object.model.ObjectDefinition,
     queryHelperClass: !!jorgediazest.indexchecker.model.ObjectDefinitionQueryHelper {},
 },
