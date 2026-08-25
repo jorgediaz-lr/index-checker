@@ -163,8 +163,12 @@ modelInfo: [{
     filter: "viewActionId=[$TRUE$] and primKeyId<>0 and name in (select value from ClassName_)"
 },
 {
+    # UserModelIndexerWriterContributor indexes every user that is not the guest
+    # user, and User.isGuestUser() is type_ = UserConstants.TYPE_GUEST = 0. So
+    # query every type except the guest one, otherwise the service account and
+    # the on demand users are reported as orphan entries.
     model: com.liferay.portal.kernel.model.User,
-    filter: "type_=1",
+    filter: "type_<>0",
     attributesToQuery: [pk,companyId,groupId,modifiedDate,status,organizationId,roleId,teamId,userGroupId],
     exactAttributesToCheck: [groupId,"<=modifiedDate",status,organizationId,roleId,teamId,userGroupId,permissionsRoleId,permissionsGroupRoleId,AssetEntries_AssetCategories.categoryId,AssetCategory.title,AssetEntries_AssetTags.tagId,AssetTag.name],
     relatedDataToQuery: [
