@@ -86,10 +86,10 @@ public class ModelImpl implements Model {
 				return (Long)list.get(0);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				"Error executing count for " + getName() + ": " +
-					e.getMessage());
+					exception.getMessage());
 		}
 
 		return -1;
@@ -451,10 +451,9 @@ public class ModelImpl implements Model {
 			for (String mappingTable : mappingTables) {
 				TableInfo tableInfo = service.getTableInfo(mappingTable);
 
-				String destinationAttr = tableInfo.getDestinationAttr(
-					getPrimaryKeyAttribute());
-
-				mappings.put(destinationAttr, tableInfo);
+				mappings.put(
+					tableInfo.getDestinationAttr(getPrimaryKeyAttribute()),
+					tableInfo);
 			}
 
 			tableInfoMappings = Collections.unmodifiableMap(mappings);
@@ -500,7 +499,7 @@ public class ModelImpl implements Model {
 	@Override
 	public boolean isGroupedModel() {
 		if (isAuditedModel() && hasAttribute("groupId") &&
-			!getPrimaryKeyAttribute().equals("groupId")) {
+			!Objects.equals(getPrimaryKeyAttribute(), "groupId")) {
 
 			return true;
 		}
@@ -522,7 +521,7 @@ public class ModelImpl implements Model {
 	@Override
 	public boolean isResourcedModel() {
 		if (hasAttribute("resourcePrimKey") &&
-			!getPrimaryKeyAttribute().equals("resourcePrimKey") &&
+			!Objects.equals(getPrimaryKeyAttribute(), "resourcePrimKey") &&
 			!isPartOfPrimaryKeyMultiAttribute("resourcePrimKey")) {
 
 			return true;
@@ -555,7 +554,7 @@ public class ModelImpl implements Model {
 
 	@Override
 	public boolean modelEqualsClass(Class<?> clazz) {
-		return getClassName().equals(clazz.getName());
+		return Objects.equals(getClassName(), clazz.getName());
 	}
 
 	@Override

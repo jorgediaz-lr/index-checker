@@ -86,13 +86,13 @@ public class ModelFactory {
 				model = null;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				Class<? extends Exception> clazz = e.getClass();
+				Class<? extends Exception> clazz = exception.getClass();
 
 				_log.warn(
 					"getModelObject(" + className + ") EXCEPTION " +
-						clazz.getName() + ": " + e.getMessage());
+						clazz.getName() + ": " + exception.getMessage());
 			}
 
 			model = null;

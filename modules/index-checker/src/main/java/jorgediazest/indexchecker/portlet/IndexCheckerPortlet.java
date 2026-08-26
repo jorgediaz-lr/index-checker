@@ -355,9 +355,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 					return false;
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
+					_log.debug(exception, exception);
 				}
 			}
 		}
@@ -366,9 +366,9 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			return (Boolean)ReflectionUtil.getWrappedObject(
 				indexer, "isIndexerEnabled");
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
 		}
 
@@ -469,15 +469,15 @@ public class IndexCheckerPortlet extends MVCPortlet {
 			renderRequest.setAttribute(
 				"groupDescriptionList", groupDescriptionList);
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 
 		try {
 			renderRequest.setAttribute("modelList", getModelList());
 		}
-		catch (SystemException se) {
-			throw new PortletException(se);
+		catch (SystemException systemException) {
+			throw new PortletException(systemException);
 		}
 
 		long filterModifiedDate = ParamUtil.getLong(
@@ -1098,17 +1098,17 @@ public class IndexCheckerPortlet extends MVCPortlet {
 
 		long companyClassNameId = PortalUtil.getClassNameId(Company.class);
 
-		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		Property classNameIdProperty = groupModel.getProperty("classNameId");
 		Property liveGroupIdProperty = groupModel.getProperty("liveGroupId");
 
-		conjuntion.add(classNameIdProperty.eq(companyClassNameId));
-		conjuntion.add(liveGroupIdProperty.eq(0L));
+		conjunction.add(classNameIdProperty.eq(companyClassNameId));
+		conjunction.add(liveGroupIdProperty.eq(0L));
 
 		/* Get groupIds of live global groups */
 		List<Long> liveGlobalGroupIds =
-			(List<Long>)groupModel.executeDynamicQuery(conjuntion, projection);
+			(List<Long>)groupModel.executeDynamicQuery(conjunction, projection);
 
 		/* Get groupIds of staging and live global groups */
 		Disjunction disjunctionGlobal = RestrictionsFactoryUtil.disjunction();

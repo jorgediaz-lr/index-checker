@@ -83,10 +83,10 @@ public class ModelWrapper implements Cloneable, Model {
 				return (Long)list.get(0);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				"Error executing count for " + getName() + ": " +
-					e.getMessage());
+					exception.getMessage());
 		}
 
 		return -1;

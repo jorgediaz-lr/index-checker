@@ -103,9 +103,9 @@ public class SearchQueryFactory {
 		Class<?> queryClass, String genericClassName) {
 
 		try {
-			ClassLoader classLoader = SearchQueryFactory.class.getClassLoader();
-
-			return Class.forName(genericClassName, false, classLoader);
+			return Class.forName(
+				genericClassName, false,
+				SearchQueryFactory.class.getClassLoader());
 		}
 		catch (ClassNotFoundException classNotFoundException) {
 			if (queryClass.isInterface()) {

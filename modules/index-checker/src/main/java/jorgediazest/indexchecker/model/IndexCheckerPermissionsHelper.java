@@ -54,7 +54,7 @@ public class IndexCheckerPermissionsHelper {
 			return;
 		}
 
-		Indexer indexer = IndexerRegistryUtil.getIndexer(className);
+		Indexer<?> indexer = IndexerRegistryUtil.getIndexer(className);
 
 		if (!indexer.isPermissionAware()) {
 			return;

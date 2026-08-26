@@ -68,7 +68,7 @@ public class IndexSearchHelper {
 
 		String className = value.getEntryClassName();
 
-		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+		Indexer<?> indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
 
 		indexer.delete(value.getCompanyId(), uid.toString());
 	}
@@ -88,11 +88,17 @@ public class IndexSearchHelper {
 						"Deleting " + i++ + " uid: " + data.get(Field.UID));
 				}
 			}
-			catch (SearchException e) {
-				errors.put(data, e.getClass() + " - " + e.getMessage());
+			catch (SearchException searchException) {
+				errors.put(
+					data,
+					searchException.getClass() + " - " +
+						searchException.getMessage());
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(e.getClass() + " - " + e.getMessage(), e);
+					_log.debug(
+						searchException.getClass() + " - " +
+							searchException.getMessage(),
+						searchException);
 				}
 			}
 
@@ -100,7 +106,7 @@ public class IndexSearchHelper {
 			try {
 				reindex(data);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -268,11 +274,17 @@ public class IndexSearchHelper {
 						"Reindexing " + i++ + " pk: " + data.getPrimaryKey());
 				}
 			}
-			catch (SearchException e) {
-				errors.put(data, e.getClass() + " - " + e.getMessage());
+			catch (SearchException searchException) {
+				errors.put(
+					data,
+					searchException.getClass() + " - " +
+						searchException.getMessage());
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(e.getClass() + " - " + e.getMessage(), e);
+					_log.debug(
+						searchException.getClass() + " - " +
+							searchException.getMessage(),
+						searchException);
 				}
 			}
 		}
@@ -283,7 +295,7 @@ public class IndexSearchHelper {
 	public void reindex(Data value) throws SearchException {
 		String className = value.getEntryClassName();
 
-		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
+		Indexer<?> indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
 
 		indexer.reindex(className, value.getPrimaryKey());
 	}

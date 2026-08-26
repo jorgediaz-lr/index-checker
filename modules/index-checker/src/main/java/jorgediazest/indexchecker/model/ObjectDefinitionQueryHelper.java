@@ -45,7 +45,7 @@ public class ObjectDefinitionQueryHelper extends IndexCheckerQueryHelper {
 
 		String className = model.getClassName();
 
-		if (className.indexOf(StringPool.POUND) != -1) {
+		if (className.contains(StringPool.POUND)) {
 			long objectDefinitionId = _getObjectDefinitionId(className, model);
 
 			Criterion objectDefinitionIdCriterion = model.getAttributeCriterion(

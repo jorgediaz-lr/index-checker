@@ -85,8 +85,8 @@ public class DLFileEntryPermissionsHelper
 
 			return dlFolder.isHidden();
 		}
-		catch (SystemException se) {
-			_log.error(se);
+		catch (SystemException systemException) {
+			_log.error(systemException);
 
 			return false;
 		}

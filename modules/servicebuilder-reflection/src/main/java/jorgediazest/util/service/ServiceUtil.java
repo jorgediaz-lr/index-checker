@@ -38,7 +38,7 @@ import jorgediazest.util.reflection.ReflectionUtil;
 public class ServiceUtil {
 
 	public static Class<?> getLiferayModelImplClass(
-		ClassLoader classloader, String liferayModelImpl) {
+		ClassLoader classLoader, String liferayModelImpl) {
 
 		if (Validator.isNull(liferayModelImpl)) {
 			return null;
@@ -50,14 +50,14 @@ public class ServiceUtil {
 			"ImplModelImpl", "ModelImpl");
 
 		try {
-			return getJavaClass(classloader, liferayModelImpl);
+			return getJavaClass(classLoader, liferayModelImpl);
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Class not found: " + liferayModelImpl);
 			}
 
-			throw new RuntimeException(cnfe);
+			throw new RuntimeException(classNotFoundException);
 		}
 	}
 
@@ -88,9 +88,9 @@ public class ServiceUtil {
 				return clazz.getName();
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
 		}
 
@@ -122,7 +122,7 @@ public class ServiceUtil {
 	}
 
 	protected static Class<?> getJavaClass(
-			ClassLoader classloader, String className)
+			ClassLoader classLoader, String className)
 		throws ClassNotFoundException {
 
 		Class<?> clazz = null;
@@ -134,16 +134,16 @@ public class ServiceUtil {
 		try {
 			clazz = getClassModelFromPortal(className);
 		}
-		catch (ClassNotFoundException e) {
+		catch (ClassNotFoundException classNotFoundException) {
 		}
 
-		if ((clazz == null) && (classloader != null)) {
-			clazz = classloader.loadClass(className);
+		if ((clazz == null) && (classLoader != null)) {
+			clazz = classLoader.loadClass(className);
 		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
-				"loaded class: " + clazz + " from classloader: " + classloader);
+				"loaded class: " + clazz + " from classLoader: " + classLoader);
 		}
 
 		return clazz;
@@ -175,10 +175,11 @@ public class ServiceUtil {
 			return null;
 		}
 
-		ServiceClassInterfaceImpl service = _cachePortalServices.get(className);
+		ServiceClassInterfaceImpl serviceClassInterfaceImpl =
+			_cachePortalServices.get(className);
 
-		if (service != null) {
-			return service;
+		if (serviceClassInterfaceImpl != null) {
+			return serviceClassInterfaceImpl;
 		}
 
 		Class<? extends ClassedModel> classInterface = null;
@@ -186,7 +187,7 @@ public class ServiceUtil {
 		try {
 			classInterface = getClassModelFromPortal(className);
 		}
-		catch (ClassNotFoundException e) {
+		catch (ClassNotFoundException classNotFoundException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("ClassModel not found: " + className);
 			}
@@ -194,19 +195,23 @@ public class ServiceUtil {
 
 		if (classInterface != null) {
 			try {
-				service = new ServiceClassInterfaceImpl(classInterface);
+				serviceClassInterfaceImpl = new ServiceClassInterfaceImpl(
+					classInterface);
 
-				if (service.getLiferayModelImplClass() != null) {
-					_cachePortalServices.put(className, service);
+				if (serviceClassInterfaceImpl.getLiferayModelImplClass() !=
+						null) {
 
-					return service;
+					_cachePortalServices.put(
+						className, serviceClassInterfaceImpl);
+
+					return serviceClassInterfaceImpl;
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Error creating ServiceClassInterfaceImpl: " +
-							e.getMessage());
+							exception.getMessage());
 				}
 			}
 		}

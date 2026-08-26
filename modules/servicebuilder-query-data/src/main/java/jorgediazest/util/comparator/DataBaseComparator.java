@@ -75,11 +75,11 @@ public abstract class DataBaseComparator implements DataComparator {
 	public boolean equalsAttributes(
 		Class<?> type1, Class<?> type2, Object o1, Object o2) {
 
-		boolean isNull1 = DataUtil.isNull(o1);
-		boolean isNull2 = DataUtil.isNull(o2);
+		boolean null1 = DataUtil.isNull(o1);
+		boolean null2 = DataUtil.isNull(o2);
 
-		if (isNull1 || isNull2) {
-			if (_ignoreNulls || (isNull1 && isNull2)) {
+		if (null1 || null2) {
+			if (_ignoreNulls || (null1 && null2)) {
 				return true;
 			}
 

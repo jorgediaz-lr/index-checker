@@ -103,9 +103,9 @@ public class Comparison {
 				_log.info("==" + entry.getKey() + "==");
 
 				for (Data d : value) {
-					Map<String, Object> map = d.getMap();
-
-					_log.info(d.getEntryClassName() + " " + map.toString());
+					_log.info(
+						d.getEntryClassName() + " " +
+							String.valueOf(d.getMap()));
 				}
 			}
 		}
@@ -173,7 +173,7 @@ public class Comparison {
 				try {
 					id = d.get(attribute, 0L);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					id = 0L;
 				}
 

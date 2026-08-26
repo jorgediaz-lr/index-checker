@@ -109,10 +109,9 @@ public class IndexCheckerOutput {
 				};
 			}
 
-			List<String> headers = OutputUtils.getHeaders(
-				portletConfig, locale, headerKeys);
-
-			out.add(OutputUtils.getCSVRow(headers));
+			out.add(
+				OutputUtils.getCSVRow(
+					OutputUtils.getHeaders(portletConfig, locale, headerKeys)));
 		}
 
 		for (Map.Entry<Company, Long> companyEntry :
@@ -155,7 +154,7 @@ public class IndexCheckerOutput {
 								groupNameOutput = group.getName(locale);
 							}
 						}
-						catch (Exception e) {
+						catch (Exception exception) {
 							groupIdOutput = "" + entry.getKey();
 						}
 					}
@@ -257,8 +256,6 @@ public class IndexCheckerOutput {
 			renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM,
 			SearchContainer.MAX_DELTA, serverURL, headerNames, null);
 
-		int numberOfRows = 0;
-
 		Method setResults = null;
 		Method setTotal = null;
 
@@ -274,6 +271,8 @@ public class IndexCheckerOutput {
 		catch (NoSuchMethodException noSuchMethodException) {
 			throw new RuntimeException(noSuchMethodException);
 		}
+
+		int numberOfRows = 0;
 
 		for (Map.Entry<Long, List<Comparison>> entry :
 				resultDataMap.entrySet()) {
@@ -298,7 +297,7 @@ public class IndexCheckerOutput {
 
 			List<Comparison> results = searchContainer.getResults();
 
-			if ((results == null) || results.isEmpty()) {
+			if (ListUtil.isEmpty(results)) {
 				results = new ArrayList<>();
 			}
 

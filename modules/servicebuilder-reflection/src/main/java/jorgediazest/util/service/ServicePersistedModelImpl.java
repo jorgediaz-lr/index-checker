@@ -100,15 +100,15 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 			return method.invoke(modelService, arg);
 		}
-		catch (NoSuchMethodException e) {
+		catch (NoSuchMethodException noSuchMethodException) {
 			throw new RuntimeException(
 				"executeMethod: " + methodName + " method not found for " +
 					modelService,
-				e);
+				noSuchMethodException);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			String cause = StringPool.BLANK;
-			Throwable rootException = e.getCause();
+			Throwable rootException = exception.getCause();
 
 			if (rootException != null) {
 				cause = " (root cause: " + rootException.getMessage() + ")";
@@ -117,7 +117,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 			throw new RuntimeException(
 				"executeMethod: " + methodName + " method for " + modelService +
 					": " + cause,
-				e);
+				exception);
 		}
 	}
 
@@ -151,8 +151,8 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 			return DynamicQueryFactoryUtil.forClass(
 				clazz, alias, getClassLoader());
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new RuntimeException(cnfe);
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new RuntimeException(classNotFoundException);
 		}
 	}
 
@@ -181,7 +181,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 
 				method = methodKey.getMethod();
 			}
-			catch (NoSuchMethodException e) {
+			catch (NoSuchMethodException noSuchMethodException) {
 			}
 		}
 

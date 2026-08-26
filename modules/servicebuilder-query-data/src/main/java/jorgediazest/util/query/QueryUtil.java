@@ -14,6 +14,7 @@
 
 package jorgediazest.util.query;
 
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class QueryUtil {
 		for (Map.Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
-			if ((matched == null) || matched.isEmpty()) {
+			if (ListUtil.isEmpty(matched)) {
 				continue;
 			}
 
@@ -81,7 +82,7 @@ public class QueryUtil {
 		for (Map.Entry<Long, ?> entry : dataMap.entrySet()) {
 			List<Data> matched = matchedMap.get(entry.getKey());
 
-			if ((matched == null) || matched.isEmpty()) {
+			if (ListUtil.isEmpty(matched)) {
 				continue;
 			}
 

@@ -305,9 +305,11 @@ public class Data implements Comparable<Data> {
 
 			return (BaseModel<?>)service.fetchObject(primaryKey);
 		}
-		catch (UnsupportedOperationException uoe) {
+		catch (UnsupportedOperationException unsupportedOperationException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("error calling fetchObject: " + uoe.getMessage());
+				_log.debug(
+					"error calling fetchObject: " +
+						unsupportedOperationException.getMessage());
 			}
 		}
 
@@ -327,10 +329,11 @@ public class Data implements Comparable<Data> {
 		try {
 			list = model.executeDynamicQuery(criterion);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"error calling executeDynamicQuery: " + e.getMessage());
+					"error calling executeDynamicQuery: " +
+						exception.getMessage());
 			}
 		}
 

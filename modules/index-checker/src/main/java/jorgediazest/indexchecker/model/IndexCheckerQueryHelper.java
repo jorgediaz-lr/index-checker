@@ -19,6 +19,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -193,7 +194,7 @@ public class IndexCheckerQueryHelper {
 			liferayDataMap, relatedMap, mappingsSource.toArray(new String[0]),
 			mappingsRelated.toArray(new String[0]));
 
-		if ((attributesAlias == null) || attributesAlias.isEmpty()) {
+		if (ListUtil.isEmpty(attributesAlias)) {
 			attributesAlias = attributesToQuery;
 		}
 		else {

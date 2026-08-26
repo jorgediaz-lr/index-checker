@@ -17,6 +17,7 @@ package jorgediazest.util.data;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -77,7 +78,7 @@ public class DataUtil {
 			try {
 				return new BigDecimal((String)value);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -97,7 +98,7 @@ public class DataUtil {
 			try {
 				return Boolean.parseBoolean((String)value);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -127,7 +128,7 @@ public class DataUtil {
 			try {
 				return Byte.parseByte((String)value);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -149,7 +150,7 @@ public class DataUtil {
 			try {
 				return string.getBytes();
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -199,7 +200,7 @@ public class DataUtil {
 			try {
 				return Double.parseDouble((String)value);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -229,7 +230,7 @@ public class DataUtil {
 			try {
 				return Float.parseFloat((String)value);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -459,7 +460,7 @@ public class DataUtil {
 		if (dataComparator == null) {
 			List<String> keyAttributes = model.getKeyAttributes();
 
-			if ((keyAttributes == null) || keyAttributes.isEmpty()) {
+			if (ListUtil.isEmpty(keyAttributes)) {
 				dataComparator = _dataComparatorMap;
 			}
 			else {
@@ -580,7 +581,7 @@ public class DataUtil {
 
 			date = dateFormat.parse(dateString);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		if (date != null) {
@@ -592,7 +593,7 @@ public class DataUtil {
 
 			date = dateFormat.parse(dateString);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		if (date != null) {
@@ -602,7 +603,7 @@ public class DataUtil {
 		try {
 			date = Timestamp.valueOf(dateString);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		if (date != null) {
@@ -612,7 +613,7 @@ public class DataUtil {
 		try {
 			date = Time.valueOf(dateString);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return date;

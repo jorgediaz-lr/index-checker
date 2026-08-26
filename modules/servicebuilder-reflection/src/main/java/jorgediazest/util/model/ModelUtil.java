@@ -84,13 +84,13 @@ public class ModelUtil {
 			return criterionList.get(0);
 		}
 
-		Conjunction conjuntion = RestrictionsFactoryUtil.conjunction();
+		Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
 
 		for (Criterion criterionAux : criterionList) {
-			conjuntion.add(criterionAux);
+			conjunction.add(criterionAux);
 		}
 
-		return conjuntion;
+		return conjunction;
 	}
 
 	public static Criterion generateDisjunctionCriterion(

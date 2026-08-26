@@ -11,6 +11,8 @@ jobs:
                     java-version: 21
             -   name: Setup Gradle
                 uses: gradle/actions/setup-gradle@v3
+            -   name: Check source formatting
+                run: ./gradlew checkSourceFormatting
             -   name: Execute Gradle deploy
                 run: ./gradlew deploy
             -   name: Upload jorgediazest.indexchecker.portlet jar

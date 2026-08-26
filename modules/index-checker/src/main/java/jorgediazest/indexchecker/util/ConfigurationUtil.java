@@ -94,19 +94,21 @@ public class ConfigurationUtil {
 
 	public static boolean getJournalArticleIndexAllVersions() {
 		try {
-			return _getJournalArticleIndexAllVersions();
+			return _isJournalArticleIndexAllVersions();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.warn(
 					"Error getting JournalServiceConfiguration." +
-						"indexAllArticleVersionsEnabled: " + e.getMessage(),
-					e);
+						"indexAllArticleVersionsEnabled: " +
+							exception.getMessage(),
+					exception);
 			}
 			else if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Error getting JournalServiceConfiguration." +
-						"indexAllArticleVersionsEnabled: " + e.getMessage());
+						"indexAllArticleVersionsEnabled: " +
+							exception.getMessage());
 			}
 
 			return true;
@@ -300,7 +302,18 @@ public class ConfigurationUtil {
 		return null;
 	}
 
-	private static boolean _getJournalArticleIndexAllVersions()
+	private static Object _getModelInfo(String modelName, String key) {
+		Map<String, Object> modelMap = getModelInfo().get(
+			modelName.split("#")[0]);
+
+		if (modelMap == null) {
+			return null;
+		}
+
+		return modelMap.get(key);
+	}
+
+	private static boolean _isJournalArticleIndexAllVersions()
 		throws Exception {
 
 		Service journalArticleService = ServiceUtil.getService(
@@ -311,17 +324,6 @@ public class ConfigurationUtil {
 			journalArticleService.getClassLoader(),
 			"com.liferay.journal.configuration.JournalServiceConfiguration",
 			"indexAllArticleVersionsEnabled");
-	}
-
-	private static Object _getModelInfo(String modelName, String key) {
-		Map<String, Object> modelMap = getModelInfo().get(
-			modelName.split("#")[0]);
-
-		if (modelMap == null) {
-			return null;
-		}
-
-		return modelMap.get(key);
 	}
 
 	private static final String _CONFIGURATION_FILE_EXT = "yml";

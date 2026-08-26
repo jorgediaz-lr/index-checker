@@ -166,7 +166,7 @@ public class TableInfo {
 
 		TableInfo tableInfo = (TableInfo)obj;
 
-		return getName().equals(tableInfo.getName());
+		return Objects.equals(getName(), tableInfo.getName());
 	}
 
 	public Class<?> getAttributeClass(String name) {

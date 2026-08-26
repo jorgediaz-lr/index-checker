@@ -91,7 +91,7 @@ public class DataIndexCheckerModelComparator extends DataModelComparator {
 				}
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 

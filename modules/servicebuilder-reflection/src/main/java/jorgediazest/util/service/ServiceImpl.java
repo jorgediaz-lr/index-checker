@@ -166,8 +166,8 @@ public abstract class ServiceImpl implements Service {
 		try {
 			document = SAXReaderUtil.read(inputStream);
 		}
-		catch (DocumentException e) {
-			_log.error(e, e);
+		catch (DocumentException documentException) {
+			_log.error(documentException, documentException);
 
 			return null;
 		}

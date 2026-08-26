@@ -92,8 +92,8 @@ public class OutputUtils {
 				repository, outputContent.getBytes(StringPool.UTF8), userId,
 				fileName, "text/plain");
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			return null;
 		}
@@ -327,10 +327,9 @@ public class OutputUtils {
 		List<String> headers = new ArrayList<>();
 
 		for (String headerKey : headerKeys) {
-			ResourceBundle resourceBundle = portletConfig.getResourceBundle(
-				locale);
-
-			headers.add(LanguageUtil.get(resourceBundle, headerKey));
+			headers.add(
+				LanguageUtil.get(
+					portletConfig.getResourceBundle(locale), headerKey));
 		}
 
 		return headers;
@@ -396,17 +395,17 @@ public class OutputUtils {
 				request, response, title, inputStream, -1,
 				fileEntry.getMimeType(), "attachment");
 		}
-		catch (NoSuchFileEntryException nsfe) {
+		catch (NoSuchFileEntryException noSuchFileEntryException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(nsfe.getMessage());
+				_log.warn(noSuchFileEntryException.getMessage());
 			}
 
 			response.setProperty(
 				ResourceResponse.HTTP_STATUS_CODE,
 				String.valueOf(HttpServletResponse.SC_NOT_FOUND));
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			response.setProperty(
 				ResourceResponse.HTTP_STATUS_CODE,

@@ -20,14 +20,13 @@ import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import jorgediazest.indexchecker.portlet.constants.IndexCheckerKeys;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 
 /**
  * @author Jorge Díaz
  */
 @Component(
 	configurationPid = "jorgediazest.indexchecker.portlet.IndexCheckerConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
+	immediate = true,
 	property = "jakarta.portlet.name=" + IndexCheckerKeys.INDEXCHECKER,
 	service = ConfigurationAction.class
 )

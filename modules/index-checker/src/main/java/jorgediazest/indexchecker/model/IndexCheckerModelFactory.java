@@ -17,6 +17,7 @@ package jorgediazest.indexchecker.model;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.Date;
 import java.util.List;
@@ -84,9 +85,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 				endDateCriterion, criterion);
 		}
 
-		if ((criterion == null) &&
-			((keyAttributes == null) || keyAttributes.isEmpty())) {
-
+		if ((criterion == null) && ListUtil.isEmpty(keyAttributes)) {
 			return model;
 		}
 
@@ -112,7 +111,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 	}
 
 	protected Criterion getAttributeRangeCriterion(
-		Model model, String attribute, Object value, boolean isStartValue) {
+		Model model, String attribute, Object value, boolean startValue) {
 
 		if (!model.hasAttribute(attribute)) {
 			return RestrictionsFactoryUtil.disjunction();
@@ -120,7 +119,7 @@ public class IndexCheckerModelFactory extends ModelFactory {
 
 		Property property = model.getProperty(attribute);
 
-		if (isStartValue) {
+		if (startValue) {
 			return property.ge(value);
 		}
 

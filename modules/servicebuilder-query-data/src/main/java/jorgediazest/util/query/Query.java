@@ -195,13 +195,7 @@ public class Query {
 
 		Set<Data> dataSet = new HashSet<>();
 
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try {
-			con = DataAccess.getConnection();
-
+		try (Connection con = DataAccess.getConnection()) {
 			String attributes = cleanAttributeName(
 				tableInfo.getName(), (String)attributesName[0]);
 
@@ -221,25 +215,22 @@ public class Query {
 				_log.debug("SQL: " + sql);
 			}
 
-			ps = con.prepareStatement(sql);
+			try (PreparedStatement ps = con.prepareStatement(sql)) {
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						Object[] result = new Object[attributesName.length];
 
-			rs = ps.executeQuery();
+						for (int i = 0; i < attributesName.length; i++) {
+							result[i] = rs.getObject(i + 1);
+						}
 
-			while (rs.next()) {
-				Object[] result = new Object[attributesName.length];
+						Data data = DataUtil.createDataObject(
+							tableInfo, attributesName, result);
 
-				for (int i = 0; i < attributesName.length; i++) {
-					result[i] = rs.getObject(i + 1);
+						dataSet.add(data);
+					}
 				}
-
-				Data data = DataUtil.createDataObject(
-					tableInfo, attributesName, result);
-
-				dataSet.add(data);
 			}
-		}
-		finally {
-			DataAccess.cleanUp(con, ps, rs);
 		}
 
 		return dataSet;

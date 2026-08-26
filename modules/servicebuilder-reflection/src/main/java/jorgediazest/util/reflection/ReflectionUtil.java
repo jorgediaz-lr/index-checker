@@ -136,11 +136,11 @@ public class ReflectionUtil {
 				}
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new RuntimeException(
 				"Error accessing to " + classLiferayModelImpl.getName() +
 					" fields",
-				e);
+				exception);
 		}
 
 		return mappingTablesFields;
@@ -156,7 +156,7 @@ public class ReflectionUtil {
 			clazz = (Class)object;
 		}
 
-		NoSuchMethodException savedThrowable = null;
+		NoSuchMethodException noSuchMethodException1 = null;
 
 		for (String methodName : methodNames) {
 			try {
@@ -167,13 +167,13 @@ public class ReflectionUtil {
 
 				return method;
 			}
-			catch (NoSuchMethodException noSuchMethodException) {
-				savedThrowable = noSuchMethodException;
+			catch (NoSuchMethodException noSuchMethodException2) {
+				noSuchMethodException1 = noSuchMethodException2;
 			}
 		}
 
-		if (savedThrowable != null) {
-			throw savedThrowable;
+		if (noSuchMethodException1 != null) {
+			throw noSuchMethodException1;
 		}
 
 		return null;
@@ -210,9 +210,10 @@ public class ReflectionUtil {
 
 			return field.get(null);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new RuntimeException(
-				"Error accessing to " + clazz.getName() + "#" + fieldName, e);
+				"Error accessing to " + clazz.getName() + "#" + fieldName,
+				exception);
 		}
 	}
 
