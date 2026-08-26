@@ -15,7 +15,6 @@
 package jorgediazest.indexchecker.model;
 
 import com.liferay.petra.string.StringPool;
-
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.util.GetterUtil;
 
@@ -49,9 +48,8 @@ public class ObjectDefinitionQueryHelper extends IndexCheckerQueryHelper {
 		if (className.indexOf(StringPool.POUND) != -1) {
 			long objectDefinitionId = _getObjectDefinitionId(className, model);
 
-			Criterion objectDefinitionIdCriterion =
-				model.getAttributeCriterion(
-					"objectDefinitionId", objectDefinitionId);
+			Criterion objectDefinitionIdCriterion = model.getAttributeCriterion(
+				"objectDefinitionId", objectDefinitionId);
 
 			criterion = ModelUtil.generateConjunctionCriterion(
 				criterion, objectDefinitionIdCriterion);
@@ -65,6 +63,8 @@ public class ObjectDefinitionQueryHelper extends IndexCheckerQueryHelper {
 
 		return Query.getData(model, attributesToQueryArr, criterion);
 	}
+
+	protected boolean indexAllVersions;
 
 	/**
 	 * Returns the object definition identifier of a custom object model.
@@ -132,7 +132,5 @@ public class ObjectDefinitionQueryHelper extends IndexCheckerQueryHelper {
 
 		return iterator.next();
 	}
-
-	protected boolean indexAllVersions;
 
 }

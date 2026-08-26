@@ -118,8 +118,8 @@ public class Data implements Comparable<Data> {
 
 		String primaryKeyAttribute = getPrimaryKeyAttribute();
 
-		if (Objects.equals("pk", attribute) &&
-			!Objects.equals("pk", primaryKeyAttribute)) {
+		if (Objects.equals(attribute, "pk") &&
+			!Objects.equals(primaryKeyAttribute, "pk")) {
 
 			return get(primaryKeyAttribute);
 		}
@@ -375,7 +375,7 @@ public class Data implements Comparable<Data> {
 
 	@SuppressWarnings("rawtypes")
 	public void set(String attribute, Object value) {
-		if (Objects.equals("pk", attribute)) {
+		if (Objects.equals(attribute, "pk")) {
 			attribute = getPrimaryKeyAttribute();
 		}
 
@@ -409,7 +409,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Object[] values) {
-		if (Objects.equals("pk", attribute)) {
+		if (Objects.equals(attribute, "pk")) {
 			attribute = getPrimaryKeyAttribute();
 		}
 
@@ -429,7 +429,7 @@ public class Data implements Comparable<Data> {
 	}
 
 	public void set(String attribute, Set<Object> values) {
-		if (Objects.equals("pk", attribute)) {
+		if (Objects.equals(attribute, "pk")) {
 			attribute = getPrimaryKeyAttribute();
 		}
 
@@ -530,11 +530,11 @@ public class Data implements Comparable<Data> {
 			return true;
 		}
 
-		if (!Objects.equals("companyId", attribute) &&
-			!Objects.equals("groupId", attribute) &&
-			!Objects.equals("resourcePrimKey", attribute) &&
-			!Objects.equals("uuid_", attribute) &&
-			!Objects.equals("uuid", attribute)) {
+		if (!Objects.equals(attribute, "companyId") &&
+			!Objects.equals(attribute, "groupId") &&
+			!Objects.equals(attribute, "resourcePrimKey") &&
+			!Objects.equals(attribute, "uuid_") &&
+			!Objects.equals(attribute, "uuid")) {
 
 			return true;
 		}

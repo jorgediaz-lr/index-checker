@@ -112,10 +112,10 @@ public class Comparison {
 	}
 
 	public Set<Data> getData(String type) {
-		if (Objects.equals("both-exact", type)) {
+		if (Objects.equals(type, "both-exact")) {
 			type = "both-exact-left";
 		}
-		else if (Objects.equals("both-notexact", type)) {
+		else if (Objects.equals(type, "both-notexact")) {
 			type = "both-notexact-left";
 		}
 

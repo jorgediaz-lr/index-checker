@@ -310,8 +310,8 @@ public class IndexSearchHelper {
 			_log.debug("Executing search: " + mainQuery);
 		}
 
-		searchContext.setStart(0);
 		searchContext.setEnd(size);
+		searchContext.setStart(0);
 
 		QueryConfig queryConfig = searchContext.getQueryConfig();
 
@@ -363,11 +363,11 @@ public class IndexSearchHelper {
 		if ((uidArr != null) && (uidArr.length >= 3)) {
 			int pos = uidArr.length - 2;
 
-			while ((pos > 0) && !Objects.equals("PORTLET", uidArr[pos])) {
+			while ((pos > 0) && !Objects.equals(uidArr[pos], "PORTLET")) {
 				pos = pos - 2;
 			}
 
-			if ((pos > 0) && Objects.equals("PORTLET", uidArr[pos])) {
+			if ((pos > 0) && Objects.equals(uidArr[pos], "PORTLET")) {
 				id = DataUtil.castLong(uidArr[pos + 1]);
 			}
 		}
@@ -383,8 +383,7 @@ public class IndexSearchHelper {
 		BooleanQuery query = SearchQueryFactory.newBooleanQuery();
 
 		SearchQueryFactory.addRequiredTerm(
-			query, Field.ENTRY_CLASS_NAME,
-			"\"" + model.getClassName() + "\"");
+			query, Field.ENTRY_CLASS_NAME, "\"" + model.getClassName() + "\"");
 
 		if (model.hasAttribute("groupId") && (groupIds != null)) {
 			BooleanQuery groupQuery = SearchQueryFactory.newBooleanQuery();

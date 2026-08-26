@@ -15,7 +15,6 @@
 package jorgediazest.indexchecker.index;
 
 import com.liferay.petra.reflect.ReflectionUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -162,6 +161,9 @@ public class SearchQueryFactory {
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		SearchQueryFactory.class);
+
 	private static Method _addMethod;
 	private static Method _addRequiredTermMethod;
 	private static Method _addTermMethod;
@@ -169,8 +171,6 @@ public class SearchQueryFactory {
 	private static Method _getFieldMethod;
 	private static Method _getLowerTermMethod;
 	private static ReflectiveOperationException _initFailure;
-	private static final Log _log = LogFactoryUtil.getLog(
-		SearchQueryFactory.class);
 	private static Method _setQueryConfigMethod;
 	private static Constructor<?> _termRangeQueryConstructor;
 

@@ -1,5 +1,4 @@
 dependencies {
 	api project(":modules:servicebuilder-query-data")
-
 	compileOnly group: "com.liferay.portal", name: "release.dxp.api"
 }

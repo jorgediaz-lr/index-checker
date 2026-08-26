@@ -194,7 +194,7 @@ public class TableInfo {
 			return mapAttributePosition.get(name);
 		}
 
-		if (Objects.equals("pk", name)) {
+		if (Objects.equals(name, "pk")) {
 			name = getPrimaryKeyAttribute();
 		}
 
@@ -235,7 +235,7 @@ public class TableInfo {
 	public String getDestinationAttr(String primaryKey) {
 		for (String attributeName : getAttributeNames()) {
 			if (!Objects.equals(primaryKey, attributeName) &&
-				!Objects.equals("companyId", attributeName)) {
+				!Objects.equals(attributeName, "companyId")) {
 
 				return attributeName;
 			}
@@ -306,7 +306,7 @@ public class TableInfo {
 	protected String sqlCreate = null;
 	protected String toString = null;
 
-	private static void _addDatabaseColumnToAttributeMap(
+	private void _addDatabaseColumnToAttributeMap(
 		Map<String, String> databaseColumnToAttributeMap, Element property) {
 
 		if ((property == null) || (property.attributeValue("column") == null)) {
@@ -317,7 +317,7 @@ public class TableInfo {
 			property.attributeValue("column"), property.attributeValue("name"));
 	}
 
-	private static String _getCreateTableAttributes(String attributesStr) {
+	private String _getCreateTableAttributes(String attributesStr) {
 		String aux = attributesStr;
 
 		if (aux.indexOf('#') > 0) {

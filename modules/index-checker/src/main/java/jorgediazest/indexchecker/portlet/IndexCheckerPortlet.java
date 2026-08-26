@@ -45,6 +45,18 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+import jakarta.portlet.ResourceURL;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -69,18 +81,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import jakarta.portlet.ActionRequest;
-import jakarta.portlet.ActionResponse;
-import jakarta.portlet.Portlet;
-import jakarta.portlet.PortletConfig;
-import jakarta.portlet.PortletException;
-import jakarta.portlet.PortletPreferences;
-import jakarta.portlet.RenderRequest;
-import jakarta.portlet.RenderResponse;
-import jakarta.portlet.ResourceRequest;
-import jakarta.portlet.ResourceResponse;
-import jakarta.portlet.ResourceURL;
 
 import jorgediazest.indexchecker.ExecutionMode;
 import jorgediazest.indexchecker.index.IndexSearchHelper;

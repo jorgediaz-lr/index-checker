@@ -35,6 +35,12 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -46,12 +52,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import jakarta.portlet.PortletConfig;
-import jakarta.portlet.ResourceRequest;
-import jakarta.portlet.ResourceResponse;
-
-import jakarta.servlet.http.HttpServletResponse;
 
 import jorgediazest.util.data.Comparison;
 import jorgediazest.util.data.Data;

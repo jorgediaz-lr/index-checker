@@ -210,7 +210,7 @@ public class ServicePersistedModelImpl extends ServiceImpl {
 		new ConcurrentHashMap<>();
 	protected BaseLocalService modelService = null;
 
-	private static String _getSimpleName(ClassedModel classedModel) {
+	private String _getSimpleName(ClassedModel classedModel) {
 		Class<?> clazz = classedModel.getModelClass();
 
 		return clazz.getSimpleName();

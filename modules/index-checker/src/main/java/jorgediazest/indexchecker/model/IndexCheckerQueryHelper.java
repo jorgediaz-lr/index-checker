@@ -157,7 +157,7 @@ public class IndexCheckerQueryHelper {
 			relatedCriterion = groupCriterion;
 		}
 
-		if (Objects.equals("classPK", mappingsRelated.get(0)) &&
+		if (Objects.equals(mappingsRelated.get(0), "classPK") &&
 			((relatedFilterString == null) ||
 			 !relatedFilterString.startsWith("classNameId"))) {
 

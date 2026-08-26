@@ -342,7 +342,7 @@ public class ModelImpl implements Model {
 			else {
 				op[i] = null;
 
-				if (Objects.equals("pk", attribute)) {
+				if (Objects.equals(attribute, "pk")) {
 					attribute = getPrimaryKeyAttribute();
 				}
 
@@ -586,7 +586,7 @@ public class ModelImpl implements Model {
 	}
 
 	protected Projection getPropertyProjection(String attribute, String op) {
-		if (Objects.equals("rowCount", op)) {
+		if (Objects.equals(op, "rowCount")) {
 			return ProjectionFactoryUtil.rowCount();
 		}
 
@@ -605,22 +605,22 @@ public class ModelImpl implements Model {
 		if (Validator.isNull(op)) {
 			property = ProjectionFactoryUtil.property(attribute);
 		}
-		else if (Objects.equals("count", op)) {
+		else if (Objects.equals(op, "count")) {
 			property = ProjectionFactoryUtil.count(attribute);
 		}
-		else if (Objects.equals("countDistinct", op)) {
+		else if (Objects.equals(op, "countDistinct")) {
 			property = ProjectionFactoryUtil.countDistinct(attribute);
 		}
-		else if (Objects.equals("groupProperty", op)) {
+		else if (Objects.equals(op, "groupProperty")) {
 			property = ProjectionFactoryUtil.groupProperty(attribute);
 		}
-		else if (Objects.equals("max", op)) {
+		else if (Objects.equals(op, "max")) {
 			property = ProjectionFactoryUtil.max(attribute);
 		}
-		else if (Objects.equals("min", op)) {
+		else if (Objects.equals(op, "min")) {
 			property = ProjectionFactoryUtil.min(attribute);
 		}
-		else if (Objects.equals("sum", op)) {
+		else if (Objects.equals(op, "sum")) {
 			property = ProjectionFactoryUtil.sum(attribute);
 		}
 

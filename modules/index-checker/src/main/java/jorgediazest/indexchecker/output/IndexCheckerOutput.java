@@ -25,6 +25,10 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
@@ -34,10 +38,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import jakarta.portlet.PortletConfig;
-import jakarta.portlet.PortletURL;
-import jakarta.portlet.RenderRequest;
 
 import jorgediazest.indexchecker.ExecutionMode;
 
