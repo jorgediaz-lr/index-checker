@@ -17,7 +17,6 @@ package jorgediazest.indexchecker.index;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -31,8 +30,6 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.TermRangeQuery;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.TermRangeQueryImpl;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
@@ -296,12 +293,12 @@ public class IndexSearchHelper {
 			TermRangeQuery termRangeQuery, String[] indexFields, int size)
 		throws ParseException, SearchException {
 
-		BooleanQuery mainQuery = new BooleanQueryImpl();
+		BooleanQuery mainQuery = SearchQueryFactory.newBooleanQuery();
 
-		mainQuery.add(query, BooleanClauseOccur.MUST);
+		SearchQueryFactory.addMust(mainQuery, query);
 
 		if (termRangeQuery != null) {
-			mainQuery.add(termRangeQuery, BooleanClauseOccur.MUST);
+			SearchQueryFactory.addMust(mainQuery, termRangeQuery);
 		}
 
 		if (sorts.length > 0) {
@@ -325,7 +322,7 @@ public class IndexSearchHelper {
 			queryConfig.setSelectedFieldNames(indexFields);
 		}
 
-		mainQuery.setQueryConfig(queryConfig);
+		SearchQueryFactory.setQueryConfig(mainQuery, queryConfig);
 
 		Hits hits = IndexSearcherHelperUtil.search(searchContext, mainQuery);
 
@@ -355,7 +352,8 @@ public class IndexSearchHelper {
 
 		field = ConfigurationUtil.getIndexAttributeName(model, field);
 
-		return new TermRangeQueryImpl(field, lowerTerm, upperTerm, true, true);
+		return SearchQueryFactory.newTermRangeQuery(
+			field, true, lowerTerm, upperTerm);
 	}
 
 	protected long getIdFromUID(String strValue) {
@@ -382,19 +380,21 @@ public class IndexSearchHelper {
 			Date endModifiedDate, SearchContext searchContext)
 		throws ParseException {
 
-		BooleanQuery query = new BooleanQueryImpl();
+		BooleanQuery query = SearchQueryFactory.newBooleanQuery();
 
-		query.addRequiredTerm(
-			Field.ENTRY_CLASS_NAME, "\"" + model.getClassName() + "\"");
+		SearchQueryFactory.addRequiredTerm(
+			query, Field.ENTRY_CLASS_NAME,
+			"\"" + model.getClassName() + "\"");
 
 		if (model.hasAttribute("groupId") && (groupIds != null)) {
-			BooleanQuery groupQuery = new BooleanQueryImpl();
+			BooleanQuery groupQuery = SearchQueryFactory.newBooleanQuery();
 
 			for (Long groupId : groupIds) {
-				groupQuery.addTerm(Field.SCOPE_GROUP_ID, groupId);
+				SearchQueryFactory.addTerm(
+					groupQuery, Field.SCOPE_GROUP_ID, groupId);
 			}
 
-			query.add(groupQuery, BooleanClauseOccur.MUST);
+			SearchQueryFactory.addMust(query, groupQuery);
 		}
 
 		if (model.hasAttribute("modifiedDate") &&
@@ -404,7 +404,7 @@ public class IndexSearchHelper {
 				searchContext, model, "modifiedDate", startModifiedDate,
 				endModifiedDate);
 
-			query.add(termRangeQuery, BooleanClauseOccur.MUST);
+			SearchQueryFactory.addMust(query, termRangeQuery);
 		}
 
 		return query;
@@ -489,14 +489,15 @@ public class IndexSearchHelper {
 			boolean includesLower = true;
 
 			if ((previousTermRangeQuery != null) &&
-				fieldName.equals(previousTermRangeQuery.getField())) {
+				fieldName.equals(
+					SearchQueryFactory.getField(previousTermRangeQuery))) {
 
 				includesLower = !lowerTerm.equals(
-					previousTermRangeQuery.getLowerTerm());
+					SearchQueryFactory.getLowerTerm(previousTermRangeQuery));
 			}
 
-			return new TermRangeQueryImpl(
-				fieldName, lowerTerm, null, includesLower, true);
+			return SearchQueryFactory.newTermRangeQuery(
+				fieldName, includesLower, lowerTerm, null);
 		}
 
 		return null;
