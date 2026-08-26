@@ -35,19 +35,19 @@ For example, if you have a lot of web contents in your system: _it is possible t
 On the configuration page you will be able to:
  - Group the output by sites.
  - Execute queries site by site: You can save memory executing, but this will be slower.
- 
+
  In the output, you can also display the correctly indexed information just in case you want to double-check it.
 
 ## Installation
 
 Install the correct Index Checker version depending on the Liferay version you are using.
 
-**Liferay Quarterly Releases 2025.Q3, 2025.Q4 and 2026.Q1**
-   - Use Index Checker version 2.0.0
-   - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/2.0.0/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
-   - For more information [see the 2.0.0 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/2.0.0)
+**Liferay Quarterly Releases 2025.Q3 and newer**
+   - Use Index Checker version 2.0.1
+   - Download [jorgediazest.indexchecker.portlet.jar](https://github.com/jorgediaz-lr/index-checker/releases/download/2.0.1/jorgediazest.indexchecker.portlet.jar) and copy it to Liferay `deploy` folder.
+   - For more information [see the 2.0.1 release documentation](https://github.com/jorgediaz-lr/index-checker/releases/tag/2.0.1)
 
-_Index Checker 2.0.0_ works in the Liferay Quarterly Releases 2025.Q3, 2025.Q4 and 2026.Q1, which use the Jakarta EE namespace instead of `javax.*`
+_Index Checker 2.0.1_ works in the Liferay Quarterly Releases from 2025.Q3 onwards, which use the Jakarta EE namespace instead of `javax.*`
 
 **Liferay Quarterly Releases up to 2025.Q2 and Liferay 7.4 Update 100+**
    - Use Index Checker version 1.1.0
@@ -72,5 +72,3 @@ _Index Checker 1.0.6_ works in Liferay DXP/Portal from 7.1 to 7.4 (up to Update 
 _Index Checker 0.9_ works in:
   - Liferay Portal 6.2
   - Liferay DXP/Portal 7.0
- 
-
