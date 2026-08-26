@@ -15,6 +15,7 @@
 package jorgediazest.util.output;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,7 +32,6 @@ import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
