@@ -1,5 +1,5 @@
 Bundle-Name: output-utils
 Bundle-SymbolicName: jorgediazest.output.utils
-Bundle-Version: 2.0.0
+Bundle-Version: 2.0.1
 Export-Package: jorgediazest.util.output
 -sources: true
