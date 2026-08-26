@@ -64,6 +64,19 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class IndexCheckerControlPanelEntry implements PanelApp {
 
+	/**
+	 * Returns the icon of the entry of the control panel.
+	 *
+	 * <p>
+	 * PanelApp declares this method from 2026.Q2 onwards, so it cannot be
+	 * annotated with Override: there is nothing to override in the earlier
+	 * releases and the annotation does not compile there.
+	 * </p>
+	 */
+	public String getIcon() {
+		return "search";
+	}
+
 	@Override
 	public String getKey() {
 		Class<?> clazz = getClass();
